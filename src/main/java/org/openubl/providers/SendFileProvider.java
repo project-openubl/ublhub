@@ -1,7 +1,7 @@
 package org.openubl.providers;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.openubl.jms.SendFileJMSProducer;
+import org.openubl.jms.DefaultJMSProducer;
 import org.openubl.models.SendFileModel;
 import org.openubl.models.DocumentType;
 import org.openubl.xml.SunatDocumentModel;
@@ -26,7 +26,7 @@ public class SendFileProvider {
     String sunatUrl1;
 
     @Inject
-    SendFileJMSProducer sunatJMSProducer;
+    DefaultJMSProducer sunatJMSProducer;
 
     @Inject
     SunatDocumentProvider sunatDocumentProvider;

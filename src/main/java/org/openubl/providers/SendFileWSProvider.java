@@ -3,7 +3,7 @@ package org.openubl.providers;
 import io.github.carlosthe19916.webservices.managers.BillServiceManager;
 import io.github.carlosthe19916.webservices.providers.BillServiceModel;
 import io.github.carlosthe19916.webservices.wrappers.ServiceConfig;
-import org.openubl.jms.SendCallbackJMSProducer;
+import org.openubl.jms.DefaultJMSProducer;
 import org.openubl.models.DocumentType;
 import org.openubl.models.SendFileModel;
 
@@ -15,7 +15,7 @@ import java.io.IOException;
 public class SendFileWSProvider {
 
     @Inject
-    SendCallbackJMSProducer sendCallbackJMSProducer;
+    DefaultJMSProducer sendCallbackJMSProducer;
 
     public void sendFile(SendFileModel sunatMessage, byte[] file) throws IOException {
         DocumentType documentType = DocumentType.valueFromDocumentType(sunatMessage.getDocumentType())

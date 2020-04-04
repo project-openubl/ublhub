@@ -60,8 +60,6 @@ public class ModelFactory {
     public static BillServiceModel getBillServiceModel(Message message) throws JMSException {
         BillServiceModel model = new BillServiceModel();
 
-        model.setCdr(message.getBody(byte[].class));
-
         Enumeration<?> enumeration = message.getPropertyNames();
         if (enumeration != null) {
             while (enumeration.hasMoreElements()) {
@@ -86,10 +84,10 @@ public class ModelFactory {
         return model;
     }
 
-    public static Map<String, Object> getAsMap(BillServiceModel model) {
-        Map<String, Object> map = new HashMap<>();
+    public static Map<String, String> getAsMap(BillServiceModel model) {
+        Map<String, String> map = new HashMap<>();
 
-        map.put("code", model.getCode());
+        map.put("code", model.getCode().toString());
         map.put("description", model.getDescription());
         map.put("ticket", model.getTicket());
         map.put("status", model.getStatus().toString());

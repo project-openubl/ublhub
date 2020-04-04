@@ -10,12 +10,7 @@ import org.openubl.providers.SendFileWSProvider;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSConsumer;
-import javax.jms.JMSContext;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.Session;
+import javax.jms.*;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -53,11 +48,15 @@ public class SendFileJMSConsumer implements Runnable {
                     return;
                 }
 
-                SendFileModel model = ModelFactory.getSendFilePropertiesModel(message);
-                sunatWSProvider.sendFile(model, message.getBody(byte[].class));
+                if (message instanceof BytesMessage) {
+                    SendFileModel model = ModelFactory.getSendFilePropertiesModel(message);
+                    sunatWSProvider.sendFile(model, message.getBody(byte[].class));
+                } else if (message instanceof TextMessage) {
+                    System.out.println("SendFileJMSConsumer can not send empty bytes[]");
+                }
             }
-        } catch (JMSException | IOException e) {
-            throw new RuntimeException(e);
+        } catch (Throwable e) {
+            System.out.println(e);
         }
     }
 
