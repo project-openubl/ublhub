@@ -1,6 +1,6 @@
 package org.openubl.xml;
 
-import org.openubl.providers.DocumentType;
+import org.openubl.models.DocumentType;
 
 public class SunatDocumentModel {
 

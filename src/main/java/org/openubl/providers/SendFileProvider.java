@@ -1,8 +1,9 @@
 package org.openubl.providers;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.openubl.jms.AppJmsProducer;
-import org.openubl.jms.SunatJMSMessageModel;
+import org.openubl.jms.SendFileJMSProducer;
+import org.openubl.models.SendFileModel;
+import org.openubl.models.DocumentType;
 import org.openubl.xml.SunatDocumentModel;
 import org.openubl.xml.SunatDocumentProvider;
 import org.xml.sax.SAXException;
@@ -16,7 +17,7 @@ import java.text.MessageFormat;
 import java.util.regex.Pattern;
 
 @ApplicationScoped
-public class SunatMessageProvider {
+public class SendFileProvider {
 
     public static final Pattern FACTURA_SERIE_REGEX = Pattern.compile("^[F|f].*$");
     public static final Pattern BOLETA_SERIE_REGEX = Pattern.compile("^[B|b].*$");
@@ -25,25 +26,26 @@ public class SunatMessageProvider {
     String sunatUrl1;
 
     @Inject
-    AppJmsProducer appJmsProducer;
+    SendFileJMSProducer sunatJMSProducer;
 
     @Inject
     SunatDocumentProvider sunatDocumentProvider;
 
-    public void sendMessage(byte[] file, String username, String password) throws IOException, SAXException, ParserConfigurationException {
+    public void sendFile(byte[] file, String username, String password) throws IOException, SAXException, ParserConfigurationException {
         SunatDocumentModel sunatDocument = sunatDocumentProvider.getSunatDocument(new ByteArrayInputStream(file));
 
         String serverUrl = getServerUrl(sunatDocument.getDocumentType());
         String fileName = getFileName(sunatDocument.getDocumentType(), sunatDocument.getRuc(), sunatDocument.getDocumentID());
 
-        SunatJMSMessageModel messageModel = SunatJMSMessageModel.Builder.aSunatJMSMessageModel()
+        SendFileModel messageModel = SendFileModel.Builder.aSunatJMSMessageModel()
                 .withServerUrl(serverUrl)
                 .withDocumentType(sunatDocument.getDocumentType().getDocumentType())
                 .withFileName(fileName)
                 .withUsername(username)
                 .withPassword(password)
                 .build();
-        appJmsProducer.sendMessage(messageModel, file);
+
+        sunatJMSProducer.produceSendFileMessage(messageModel, file);
     }
 
     private String getServerUrl(DocumentType documentType) {

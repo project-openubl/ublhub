@@ -1,31 +1,32 @@
 package org.openubl.jms;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.openubl.factories.ModelFactory;
+import org.openubl.models.SendFileModel;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.jms.*;
+import java.util.Map;
 
 @ApplicationScoped
-public class AppJmsProducer {
+public class SendFileJMSProducer {
+
+    @ConfigProperty(name = "openubl.sendFileQueue")
+    String sendFileQueue;
 
     @Inject
     ConnectionFactory connectionFactory;
 
-    @ConfigProperty(name = "openubl.queueName")
-    String queueName;
-
-    public void sendMessage(SunatJMSMessageModel messageModel, byte[] file) {
+    public void produceSendFileMessage(SendFileModel sendFileModel, byte[] file) {
         try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
             JMSProducer jmsProducer = context.createProducer();
 
-            jmsProducer.setProperty("fileName", messageModel.getFileName());
-            jmsProducer.setProperty("serverUrl", messageModel.getServerUrl());
-            jmsProducer.setProperty("documentType", messageModel.getDocumentType());
-            jmsProducer.setProperty("username", messageModel.getUsername());
-            jmsProducer.setProperty("password", messageModel.getPassword());
+            for (Map.Entry<String, String> entry : ModelFactory.getAsMap(sendFileModel).entrySet()) {
+                jmsProducer.setProperty(entry.getKey(), entry.getValue());
+            }
 
-            Queue queue = context.createQueue(queueName);
+            Queue queue = context.createQueue(sendFileQueue);
 
             BytesMessage message = context.createBytesMessage();
             message.writeBytes(file);
@@ -36,4 +37,5 @@ public class AppJmsProducer {
             System.out.println(ex);
         }
     }
+
 }

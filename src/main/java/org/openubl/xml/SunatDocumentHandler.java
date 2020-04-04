@@ -1,6 +1,6 @@
 package org.openubl.xml;
 
-import org.openubl.providers.DocumentType;
+import org.openubl.models.DocumentType;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;

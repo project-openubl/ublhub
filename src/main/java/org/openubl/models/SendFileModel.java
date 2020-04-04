@@ -1,24 +1,11 @@
-package org.openubl.jms;
+package org.openubl.models;
 
-import java.util.Map;
-
-public class SunatJMSMessageModel {
+public class SendFileModel {
     private String serverUrl;
     private String fileName;
     private String documentType;
     private String username;
     private String password;
-
-    public SunatJMSMessageModel() {
-    }
-
-    public SunatJMSMessageModel(Map<String, String> properties) {
-        this.serverUrl = properties.get("serverUrl");
-        this.fileName = properties.get("fileName");
-        this.documentType = properties.get("documentType");
-        this.username = properties.get("username");
-        this.password = properties.get("password");
-    }
 
     public String getServerUrl() {
         return serverUrl;
@@ -99,14 +86,14 @@ public class SunatJMSMessageModel {
             return this;
         }
 
-        public SunatJMSMessageModel build() {
-            SunatJMSMessageModel sunatJMSMessageModel = new SunatJMSMessageModel();
-            sunatJMSMessageModel.setServerUrl(serverUrl);
-            sunatJMSMessageModel.setFileName(fileName);
-            sunatJMSMessageModel.setDocumentType(documentType);
-            sunatJMSMessageModel.setUsername(username);
-            sunatJMSMessageModel.setPassword(password);
-            return sunatJMSMessageModel;
+        public SendFileModel build() {
+            SendFileModel sendMessageModel = new SendFileModel();
+            sendMessageModel.setServerUrl(serverUrl);
+            sendMessageModel.setFileName(fileName);
+            sendMessageModel.setDocumentType(documentType);
+            sendMessageModel.setUsername(username);
+            sendMessageModel.setPassword(password);
+            return sendMessageModel;
         }
     }
 }

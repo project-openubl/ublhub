@@ -3,19 +3,13 @@ package org.openubl.resources;
 import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
-import org.openubl.providers.SunatMessageProvider;
+import org.openubl.providers.SendFileProvider;
 import org.xml.sax.SAXException;
 
 import javax.inject.Inject;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -26,7 +20,7 @@ import java.util.Map;
 public class DocumentsResource {
 
     @Inject
-    SunatMessageProvider sunatMessageProvider;
+    SendFileProvider sendFileProvider;
 
     @POST
     @Path("/xml/send")
@@ -59,7 +53,7 @@ public class DocumentsResource {
             throw new BadRequestException("Could not extract required data from upload/form");
         }
 
-        sunatMessageProvider.sendMessage(xmlFile, username, password);
+        sendFileProvider.sendFile(xmlFile, username, password);
         return Response.status(201).build();
     }
 

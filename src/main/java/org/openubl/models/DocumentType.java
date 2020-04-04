@@ -1,4 +1,4 @@
-package org.openubl.providers;
+package org.openubl.models;
 
 import java.util.Optional;
 import java.util.stream.Stream;
