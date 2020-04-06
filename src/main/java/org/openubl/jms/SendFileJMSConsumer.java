@@ -3,6 +3,8 @@ package org.openubl.jms;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+import org.openubl.exceptions.InvalidXMLFileException;
 import org.openubl.factories.ModelFactory;
 import org.openubl.models.SendFileModel;
 import org.openubl.providers.SendFileWSProvider;
@@ -18,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
 public class SendFileJMSConsumer implements Runnable {
+
+    private static final Logger LOG = Logger.getLogger(SendFileJMSConsumer.class);
 
     @Inject
     SendFileWSProvider sunatWSProvider;
@@ -40,7 +44,7 @@ public class SendFileJMSConsumer implements Runnable {
 
     @Override
     public void run() {
-        try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
+        try (JMSContext context = connectionFactory.createContext(Session.CLIENT_ACKNOWLEDGE)) {
             JMSConsumer jmsConsumer = context.createConsumer(context.createQueue(sendFileQueue));
             while (true) {
                 Message message = jmsConsumer.receive();
@@ -48,15 +52,21 @@ public class SendFileJMSConsumer implements Runnable {
                     return;
                 }
 
-                if (message instanceof BytesMessage) {
-                    SendFileModel model = ModelFactory.getSendFilePropertiesModel(message);
-                    sunatWSProvider.sendFile(model, message.getBody(byte[].class));
-                } else if (message instanceof TextMessage) {
-                    System.out.println("SendFileJMSConsumer can not send empty bytes[]");
+                if (!(message instanceof BytesMessage)) {
+                    LOG.warn("Consumer can not consume messages other than Bytes Messages");
+                }
+
+                SendFileModel model = ModelFactory.getSendFilePropertiesModel(message);
+                boolean result = sunatWSProvider.sendFile(model, message.getBody(byte[].class));
+
+                if (result) {
+                    message.acknowledge();
                 }
             }
+        } catch (JMSException e) {
+            LOG.error(e);
         } catch (Throwable e) {
-            System.out.println(e);
+            LOG.error("Unexpected exception", e);
         }
     }
 

@@ -2,22 +2,20 @@ package org.openubl.jms;
 
 import io.github.carlosthe19916.webservices.providers.BillServiceModel;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 import org.openubl.factories.ModelFactory;
 import org.openubl.models.SendFileModel;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.Destroyed;
 import javax.inject.Inject;
 import javax.jms.*;
+import java.lang.IllegalStateException;
 import java.util.Map;
 
 @ApplicationScoped
-public class DefaultJMSProducer {
+public class SendCallbackJMSProducer {
 
-    @ConfigProperty(name = "openubl.sendFileQueue")
-    String sendFileQueue;
+    private static final Logger LOG = Logger.getLogger(SendCallbackJMSProducer.class);
 
     @ConfigProperty(name = "openubl.callbackQueue")
     String callbackQueue;
@@ -25,38 +23,29 @@ public class DefaultJMSProducer {
     @Inject
     ConnectionFactory connectionFactory;
 
-    public void produceSendFileMessage(SendFileModel sendFileModel, byte[] file) {
-        sendBytesMessage(sendFileQueue, ModelFactory.getAsMap(sendFileModel), file);
-    }
-
     public void produceSendCallbackMessage(BillServiceModel billServiceModel) {
-        sendBytesMessage(callbackQueue, ModelFactory.getAsMap(billServiceModel), billServiceModel.getCdr());
-    }
-
-    private void sendBytesMessage(String queueName, Map<String, String> properties, byte[] bytes) {
         try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
             JMSProducer jmsProducer = context.createProducer();
 
-            Queue queue = context.createQueue(queueName);
+            Queue queue = context.createQueue(callbackQueue);
 
             Message message;
-            if (bytes != null) {
+            if (billServiceModel.getCdr() != null) {
                 BytesMessage bytesMessage = context.createBytesMessage();
-                bytesMessage.writeBytes(bytes);
+                bytesMessage.writeBytes(billServiceModel.getCdr());
 
                 message = bytesMessage;
             } else {
-                message = context.createTextMessage();
+                message = context.createTextMessage("No CDR available");
             }
 
-            for (Map.Entry<String, String> entry : properties.entrySet()) {
+            for (Map.Entry<String, String> entry : ModelFactory.getAsMap(billServiceModel).entrySet()) {
                 message.setStringProperty(entry.getKey(), entry.getValue());
             }
 
             jmsProducer.send(queue, message);
-        } catch (Throwable ex) {
-            // handle exception (details omitted)
-            System.out.println(ex);
+        } catch (JMSException e) {
+            LOG.error("Error trying to send bytes message", e);
         }
     }
 

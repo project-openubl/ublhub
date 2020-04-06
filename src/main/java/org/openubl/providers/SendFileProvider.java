@@ -1,7 +1,8 @@
 package org.openubl.providers;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.openubl.jms.DefaultJMSProducer;
+import org.openubl.exceptions.InvalidXMLFileException;
+import org.openubl.jms.SendFileJMSProducer;
 import org.openubl.models.SendFileModel;
 import org.openubl.models.DocumentType;
 import org.openubl.xml.SunatDocumentModel;
@@ -26,13 +27,23 @@ public class SendFileProvider {
     String sunatUrl1;
 
     @Inject
-    DefaultJMSProducer sunatJMSProducer;
+    SendFileJMSProducer sunatJMSProducer;
 
     @Inject
     SunatDocumentProvider sunatDocumentProvider;
 
-    public void sendFile(byte[] file, String username, String password) throws IOException, SAXException, ParserConfigurationException {
-        SunatDocumentModel sunatDocument = sunatDocumentProvider.getSunatDocument(new ByteArrayInputStream(file));
+    /**
+     * @param file     file to be sent to SUNAT
+     * @param username username in SUNAT
+     * @param password password in SUNAT
+     */
+    public void sendFile(byte[] file, String username, String password) throws InvalidXMLFileException {
+        SunatDocumentModel sunatDocument;
+        try {
+            sunatDocument = sunatDocumentProvider.getSunatDocument(new ByteArrayInputStream(file));
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            throw new InvalidXMLFileException(e);
+        }
 
         String serverUrl = getServerUrl(sunatDocument.getDocumentType());
         String fileName = getFileName(sunatDocument.getDocumentType(), sunatDocument.getRuc(), sunatDocument.getDocumentID());
