@@ -4,12 +4,10 @@ import io.github.carlosthe19916.webservices.providers.BillServiceModel;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.openubl.factories.ModelFactory;
-import org.openubl.models.SendFileModel;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.jms.*;
-import java.lang.IllegalStateException;
 import java.util.Map;
 
 @ApplicationScoped

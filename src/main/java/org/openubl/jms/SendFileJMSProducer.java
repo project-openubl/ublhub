@@ -1,10 +1,9 @@
 package org.openubl.jms;
 
-import io.github.carlosthe19916.webservices.providers.BillServiceModel;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.openubl.factories.ModelFactory;
-import org.openubl.models.SendFileModel;
+import org.openubl.models.SendFileMessageModel;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -23,7 +22,7 @@ public class SendFileJMSProducer {
     @Inject
     ConnectionFactory connectionFactory;
 
-    public void produceSendFileMessage(SendFileModel sendFileModel, byte[] file) {
+    public void produceSendFileMessage(SendFileMessageModel sendFileMessageModel, byte[] file) throws JMSException {
         if (file == null || file.length == 0) {
             throw new IllegalStateException("Invalid file");
         }
@@ -36,13 +35,13 @@ public class SendFileJMSProducer {
             BytesMessage message = context.createBytesMessage();
             message.writeBytes(file);
 
-            for (Map.Entry<String, String> entry : ModelFactory.getAsMap(sendFileModel).entrySet()) {
+            for (Map.Entry<String, String> entry : ModelFactory.getAsMap(sendFileMessageModel).entrySet()) {
                 message.setStringProperty(entry.getKey(), entry.getValue());
             }
 
             jmsProducer.send(queue, message);
-        } catch (JMSException e) {
-            LOG.error("Error trying to send bytes message", e);
+        } finally {
+            LOG.info("File has been sent to the Broker");
         }
     }
 

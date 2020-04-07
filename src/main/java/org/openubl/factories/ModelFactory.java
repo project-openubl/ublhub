@@ -1,7 +1,7 @@
 package org.openubl.factories;
 
 import io.github.carlosthe19916.webservices.providers.BillServiceModel;
-import org.openubl.models.SendFileModel;
+import org.openubl.models.SendFileMessageModel;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -15,8 +15,8 @@ public class ModelFactory {
         // Just static methods
     }
 
-    public static SendFileModel getSendFilePropertiesModel(Message message) throws JMSException {
-        SendFileModel.Builder builder = SendFileModel.Builder.aSunatJMSMessageModel();
+    public static SendFileMessageModel getSendFilePropertiesModel(Message message) throws JMSException {
+        SendFileMessageModel.Builder builder = SendFileMessageModel.Builder.aSunatJMSMessageModel();
 
         Enumeration<?> enumeration = message.getPropertyNames();
         if (enumeration != null) {
@@ -45,7 +45,7 @@ public class ModelFactory {
         return builder.build();
     }
 
-    public static Map<String, String> getAsMap(SendFileModel model) {
+    public static Map<String, String> getAsMap(SendFileMessageModel model) {
         Map<String, String> map = new HashMap<>();
 
         map.put("fileName", model.getFileName());

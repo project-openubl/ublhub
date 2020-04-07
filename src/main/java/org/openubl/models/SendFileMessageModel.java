@@ -1,11 +1,12 @@
 package org.openubl.models;
 
-public class SendFileModel {
+public class SendFileMessageModel {
     private String serverUrl;
     private String fileName;
     private String documentType;
     private String username;
     private String password;
+    private String customId;
 
     public String getServerUrl() {
         return serverUrl;
@@ -47,17 +48,26 @@ public class SendFileModel {
         this.password = password;
     }
 
+    public String getCustomId() {
+        return customId;
+    }
+
+    public void setCustomId(String customId) {
+        this.customId = customId;
+    }
+
     public static final class Builder {
         private String serverUrl;
         private String fileName;
         private String documentType;
         private String username;
         private String password;
+        private String customId;
 
         private Builder() {
         }
 
-        public static Builder aSunatJMSMessageModel() {
+        public static Builder aSendFileMessageModel() {
             return new Builder();
         }
 
@@ -86,14 +96,20 @@ public class SendFileModel {
             return this;
         }
 
-        public SendFileModel build() {
-            SendFileModel sendMessageModel = new SendFileModel();
-            sendMessageModel.setServerUrl(serverUrl);
-            sendMessageModel.setFileName(fileName);
-            sendMessageModel.setDocumentType(documentType);
-            sendMessageModel.setUsername(username);
-            sendMessageModel.setPassword(password);
-            return sendMessageModel;
+        public Builder withCustomId(String customId) {
+            this.customId = customId;
+            return this;
+        }
+
+        public SendFileMessageModel build() {
+            SendFileMessageModel sendFileMessageModel = new SendFileMessageModel();
+            sendFileMessageModel.setServerUrl(serverUrl);
+            sendFileMessageModel.setFileName(fileName);
+            sendFileMessageModel.setDocumentType(documentType);
+            sendFileMessageModel.setUsername(username);
+            sendFileMessageModel.setPassword(password);
+            sendFileMessageModel.setCustomId(customId);
+            return sendFileMessageModel;
         }
     }
 }

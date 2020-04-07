@@ -4,16 +4,14 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-import org.openubl.exceptions.InvalidXMLFileException;
 import org.openubl.factories.ModelFactory;
-import org.openubl.models.SendFileModel;
+import org.openubl.models.SendFileMessageModel;
 import org.openubl.providers.SendFileWSProvider;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.jms.*;
-import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -56,7 +54,7 @@ public class SendFileJMSConsumer implements Runnable {
                     LOG.warn("Consumer can not consume messages other than Bytes Messages");
                 }
 
-                SendFileModel model = ModelFactory.getSendFilePropertiesModel(message);
+                SendFileMessageModel model = ModelFactory.getSendFilePropertiesModel(message);
                 boolean result = sunatWSProvider.sendFile(model, message.getBody(byte[].class));
 
                 if (result) {

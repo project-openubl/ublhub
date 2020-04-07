@@ -3,14 +3,19 @@ package org.openubl.providers;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.openubl.exceptions.InvalidXMLFileException;
 import org.openubl.jms.SendFileJMSProducer;
-import org.openubl.models.SendFileModel;
+import org.openubl.models.FileDeliveryStatusType;
+import org.openubl.models.SendFileMessageModel;
 import org.openubl.models.DocumentType;
+import org.openubl.models.jpa.FileDeliveryRepository;
+import org.openubl.models.jpa.entities.FileDeliveryEntity;
 import org.openubl.xml.SunatDocumentModel;
 import org.openubl.xml.SunatDocumentProvider;
 import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.jms.JMSException;
+import javax.transaction.Transactional;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -18,7 +23,7 @@ import java.text.MessageFormat;
 import java.util.regex.Pattern;
 
 @ApplicationScoped
-public class SendFileProvider {
+public class SendFileMessageProvider {
 
     public static final Pattern FACTURA_SERIE_REGEX = Pattern.compile("^[F|f].*$");
     public static final Pattern BOLETA_SERIE_REGEX = Pattern.compile("^[B|b].*$");
@@ -27,17 +32,22 @@ public class SendFileProvider {
     String sunatUrl1;
 
     @Inject
-    SendFileJMSProducer sunatJMSProducer;
+    SendFileJMSProducer sendFileJMSProducer;
 
     @Inject
     SunatDocumentProvider sunatDocumentProvider;
+
+    @Inject
+    FileDeliveryRepository fileDeliveryRepository;
 
     /**
      * @param file     file to be sent to SUNAT
      * @param username username in SUNAT
      * @param password password in SUNAT
+     * @return true if file was scheduled to be send
      */
-    public void sendFile(byte[] file, String username, String password) throws InvalidXMLFileException {
+    @Transactional
+    public FileDeliveryEntity sendFile(byte[] file, String username, String password, String customId) throws InvalidXMLFileException, JMSException {
         SunatDocumentModel sunatDocument;
         try {
             sunatDocument = sunatDocumentProvider.getSunatDocument(new ByteArrayInputStream(file));
@@ -48,15 +58,23 @@ public class SendFileProvider {
         String serverUrl = getServerUrl(sunatDocument.getDocumentType());
         String fileName = getFileName(sunatDocument.getDocumentType(), sunatDocument.getRuc(), sunatDocument.getDocumentID());
 
-        SendFileModel messageModel = SendFileModel.Builder.aSunatJMSMessageModel()
+        SendFileMessageModel messageModel = SendFileMessageModel.Builder.aSendFileMessageModel()
                 .withServerUrl(serverUrl)
                 .withDocumentType(sunatDocument.getDocumentType().getDocumentType())
                 .withFileName(fileName)
                 .withUsername(username)
                 .withPassword(password)
+                .withCustomId(customId)
                 .build();
 
-        sunatJMSProducer.produceSendFileMessage(messageModel, file);
+        sendFileJMSProducer.produceSendFileMessage(messageModel, file);
+
+        FileDeliveryEntity fileDeliveryEntity = FileDeliveryEntity.Builder.aFileDeliveryEntity()
+                .withStatus(FileDeliveryStatusType.SCHEDULED_TO_DELIVER)
+                .build();
+        fileDeliveryRepository.persist(fileDeliveryEntity);
+
+        return fileDeliveryEntity;
     }
 
     private String getServerUrl(DocumentType documentType) {

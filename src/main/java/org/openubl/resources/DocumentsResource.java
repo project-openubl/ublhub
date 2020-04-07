@@ -4,9 +4,11 @@ import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.openubl.exceptions.InvalidXMLFileException;
-import org.openubl.providers.SendFileProvider;
+import org.openubl.models.jpa.entities.FileDeliveryEntity;
+import org.openubl.providers.SendFileMessageProvider;
 
 import javax.inject.Inject;
+import javax.jms.JMSException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -23,7 +25,7 @@ public class DocumentsResource {
     private static final Logger LOG = Logger.getLogger(DocumentsResource.class);
 
     @Inject
-    SendFileProvider sendFileProvider;
+    SendFileMessageProvider sendFileMessageProvider;
 
     @POST
     @Path("/xml/send")
@@ -34,6 +36,7 @@ public class DocumentsResource {
         List<InputPart> fileInputParts = uploadForm.get("file");
         List<InputPart> usernameInputParts = uploadForm.get("username");
         List<InputPart> passwordInputParts = uploadForm.get("password");
+        List<InputPart> customIdInputParts = uploadForm.get("customId");
 
         if (fileInputParts == null || usernameInputParts == null || passwordInputParts == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("You should send: file, username, password").build();
@@ -42,6 +45,7 @@ public class DocumentsResource {
         byte[] xmlFile = null;
         String username = null;
         String password = null;
+        String customId = null;
 
         try {
             for (InputPart inputPart : fileInputParts) {
@@ -56,6 +60,10 @@ public class DocumentsResource {
             for (InputPart inputPart : passwordInputParts) {
                 password = inputPart.getBodyAsString();
             }
+
+            for (InputPart inputPart : customIdInputParts) {
+                customId = inputPart.getBodyAsString();
+            }
         } catch (IOException e) {
             throw new BadRequestException("Could not extract required data from upload/form");
         }
@@ -64,14 +72,18 @@ public class DocumentsResource {
             throw new BadRequestException("Invalid file");
         }
 
+        FileDeliveryEntity fileDeliveryEntity;
         try {
-            sendFileProvider.sendFile(xmlFile, username, password);
+            fileDeliveryEntity = sendFileMessageProvider.sendFile(xmlFile, username, password, customId);
         } catch (InvalidXMLFileException e) {
             LOG.error("File is not an XML or is corrupted");
             throw new BadRequestException("File is not an XML or is corrupted");
+        } catch (JMSException e) {
+            LOG.error(e);
+            throw new InternalServerErrorException("Error saving message in Broker");
         }
 
-        return Response.status(201).build();
+        return Response.status(201).entity(fileDeliveryEntity).build();
     }
 
 }

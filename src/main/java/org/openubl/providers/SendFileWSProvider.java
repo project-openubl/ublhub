@@ -5,9 +5,8 @@ import io.github.carlosthe19916.webservices.providers.BillServiceModel;
 import io.github.carlosthe19916.webservices.wrappers.ServiceConfig;
 import org.jboss.logging.Logger;
 import org.openubl.jms.SendCallbackJMSProducer;
-import org.openubl.jms.SendFileJMSProducer;
 import org.openubl.models.DocumentType;
-import org.openubl.models.SendFileModel;
+import org.openubl.models.SendFileMessageModel;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -24,7 +23,7 @@ public class SendFileWSProvider {
     /**
      * @return true if message was processed and don't need to be redelivered
      */
-    public boolean sendFile(SendFileModel sunatMessage, byte[] file) {
+    public boolean sendFile(SendFileMessageModel sunatMessage, byte[] file) {
 
         DocumentType documentType = DocumentType.valueFromDocumentType(sunatMessage.getDocumentType())
                 .orElseThrow(IllegalAccessError::new);
@@ -56,7 +55,7 @@ public class SendFileWSProvider {
         return true;
     }
 
-    private BillServiceModel sendBill(SendFileModel messageModel, byte[] file) throws IOException {
+    private BillServiceModel sendBill(SendFileMessageModel messageModel, byte[] file) throws IOException {
         ServiceConfig config = new ServiceConfig.Builder()
                 .url(messageModel.getServerUrl())
                 .username(messageModel.getUsername())
@@ -66,7 +65,7 @@ public class SendFileWSProvider {
         return BillServiceManager.sendBill(messageModel.getFileName(), file, config);
     }
 
-    private BillServiceModel sendSummary(SendFileModel messageModel, byte[] file) throws IOException {
+    private BillServiceModel sendSummary(SendFileMessageModel messageModel, byte[] file) throws IOException {
         ServiceConfig config = new ServiceConfig.Builder()
                 .url(messageModel.getServerUrl())
                 .username(messageModel.getServerUrl())
