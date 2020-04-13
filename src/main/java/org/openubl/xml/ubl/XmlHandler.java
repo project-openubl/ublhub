@@ -1,11 +1,10 @@
-package org.openubl.xml;
+package org.openubl.xml.ubl;
 
-import org.openubl.models.DocumentType;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-public class SunatDocumentHandler extends DefaultHandler {
+public class XmlHandler extends DefaultHandler {
 
     private static final String CBC = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2";
     private static final String CAC = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2";
@@ -17,7 +16,7 @@ public class SunatDocumentHandler extends DefaultHandler {
     private static final String CUSTOMER_ASSIGNED_ACCOUNT_ID = "CustomerAssignedAccountID";
 
 
-    private DocumentType documentType;
+    private String documentType;
     private String documentID;
     private String ruc;
 
@@ -35,8 +34,7 @@ public class SunatDocumentHandler extends DefaultHandler {
 
         // Root element
         if (documentType == null) {
-            documentType = DocumentType.valueFromDocumentType(currentElement)
-                    .orElseThrow(() -> new IllegalStateException("Not supported DocumentType:" + qName));
+            documentType = currentElement;
         }
 
         //
@@ -94,8 +92,8 @@ public class SunatDocumentHandler extends DefaultHandler {
         }
     }
 
-    public SunatDocumentModel getModel() {
-        return SunatDocumentModel.Builder.aSunatDocumentModel()
+    public XmlContentModel getModel() {
+        return XmlContentModel.Builder.aSunatDocumentModel()
                 .withDocumentType(documentType)
                 .withDocumentID(documentID)
                 .withRuc(ruc)

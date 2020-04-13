@@ -1,15 +1,17 @@
 package org.openubl.providers;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 import org.openubl.exceptions.InvalidXMLFileException;
+import org.openubl.exceptions.UnsupportedDocumentTypeException;
 import org.openubl.jms.SendFileJMSProducer;
 import org.openubl.models.FileDeliveryStatusType;
-import org.openubl.models.SendFileMessageModel;
+import org.openubl.models.MessageModel;
 import org.openubl.models.DocumentType;
 import org.openubl.models.jpa.FileDeliveryRepository;
 import org.openubl.models.jpa.entities.FileDeliveryEntity;
-import org.openubl.xml.SunatDocumentModel;
-import org.openubl.xml.SunatDocumentProvider;
+import org.openubl.xml.ubl.XmlContentModel;
+import org.openubl.xml.ubl.XmlContentProvider;
 import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -20,10 +22,13 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @ApplicationScoped
-public class SendFileMessageProvider {
+public class DocumentsManager {
+
+    private static final Logger LOG = Logger.getLogger(DocumentsManager.class);
 
     public static final Pattern FACTURA_SERIE_REGEX = Pattern.compile("^[F|f].*$");
     public static final Pattern BOLETA_SERIE_REGEX = Pattern.compile("^[B|b].*$");
@@ -35,7 +40,7 @@ public class SendFileMessageProvider {
     SendFileJMSProducer sendFileJMSProducer;
 
     @Inject
-    SunatDocumentProvider sunatDocumentProvider;
+    XmlContentProvider xmlContentProvider;
 
     @Inject
     FileDeliveryRepository fileDeliveryRepository;
@@ -47,34 +52,56 @@ public class SendFileMessageProvider {
      * @return true if file was scheduled to be send
      */
     @Transactional
-    public FileDeliveryEntity sendFile(byte[] file, String username, String password, String customId) throws InvalidXMLFileException, JMSException {
-        SunatDocumentModel sunatDocument;
+    public FileDeliveryEntity sendFile(byte[] file, String username, String password, String customId) throws InvalidXMLFileException, UnsupportedDocumentTypeException {
+        // Read file
+        XmlContentModel xmlContentModel;
         try {
-            sunatDocument = sunatDocumentProvider.getSunatDocument(new ByteArrayInputStream(file));
+            xmlContentModel = xmlContentProvider.getSunatDocument(new ByteArrayInputStream(file));
         } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new InvalidXMLFileException(e);
         }
 
-        String serverUrl = getServerUrl(sunatDocument.getDocumentType());
-        String fileName = getFileName(sunatDocument.getDocumentType(), sunatDocument.getRuc(), sunatDocument.getDocumentID());
+        //
+        Optional<DocumentType> documentTypeOptional = DocumentType.valueFromDocumentType(xmlContentModel.getDocumentType());
+        if (!documentTypeOptional.isPresent()) {
+            throw new UnsupportedDocumentTypeException(xmlContentModel.getDocumentType() + " is not supported yet");
+        }
 
-        SendFileMessageModel messageModel = SendFileMessageModel.Builder.aSendFileMessageModel()
+        DocumentType documentType = documentTypeOptional.get();
+        String serverUrl = getServerUrl(documentType);
+        String fileName = getFileName(documentType, xmlContentModel.getRuc(), xmlContentModel.getDocumentID());
+
+        // Create Entity in DB
+        FileDeliveryEntity deliveryEntity = FileDeliveryEntity.Builder.aFileDeliveryEntity()
+                .withRuc(xmlContentModel.getRuc())
+                .withDocumentID(xmlContentModel.getDocumentID())
+                .withDocumentType(documentType)
+                .withFilename(fileName)
+                .withDeliveryStatus(FileDeliveryStatusType.SCHEDULED_TO_DELIVER)
                 .withServerUrl(serverUrl)
-                .withDocumentType(sunatDocument.getDocumentType().getDocumentType())
-                .withFileName(fileName)
-                .withUsername(username)
-                .withPassword(password)
                 .withCustomId(customId)
                 .build();
 
-        sendFileJMSProducer.produceSendFileMessage(messageModel, file);
+        fileDeliveryRepository.persist(deliveryEntity);
 
-        FileDeliveryEntity fileDeliveryEntity = FileDeliveryEntity.Builder.aFileDeliveryEntity()
-                .withStatus(FileDeliveryStatusType.SCHEDULED_TO_DELIVER)
+        // Create JSM Message Object
+        MessageModel messageModel = MessageModel.Builder.aSendFileMessageModel()
+                .withEntityId(deliveryEntity.id)
+                .withUsername(username)
+                .withPassword(password)
                 .build();
-        fileDeliveryRepository.persist(fileDeliveryEntity);
 
-        return fileDeliveryEntity;
+        // Send JSM File
+        try {
+            sendFileJMSProducer.produceSendFileMessage(messageModel, file);
+        } catch (JMSException e) {
+            LOG.error(e);
+
+            deliveryEntity.deliveryStatus = FileDeliveryStatusType.SCHEDULED_TO_DELIVER_FAILED;
+            fileDeliveryRepository.persist(deliveryEntity);
+        }
+
+        return deliveryEntity;
     }
 
     private String getServerUrl(DocumentType documentType) {

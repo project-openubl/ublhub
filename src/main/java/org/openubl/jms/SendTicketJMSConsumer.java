@@ -17,9 +17,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
-public class SendFileJMSConsumer implements Runnable {
+public class SendTicketJMSConsumer implements Runnable {
 
-    private static final Logger LOG = Logger.getLogger(SendFileJMSConsumer.class);
+    private static final Logger LOG = Logger.getLogger(SendTicketJMSConsumer.class);
 
     @Inject
     WSProvider wsProvider;
@@ -27,8 +27,8 @@ public class SendFileJMSConsumer implements Runnable {
     @Inject
     ConnectionFactory connectionFactory;
 
-    @ConfigProperty(name = "openubl.sendFileQueue")
-    String sendFileQueue;
+    @ConfigProperty(name = "openubl.ticketQueue")
+    String ticketQueue;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -43,7 +43,7 @@ public class SendFileJMSConsumer implements Runnable {
     @Override
     public void run() {
         try (JMSContext context = connectionFactory.createContext(Session.CLIENT_ACKNOWLEDGE)) {
-            JMSConsumer consumer = context.createConsumer(context.createQueue(sendFileQueue));
+            JMSConsumer consumer = context.createConsumer(context.createQueue(ticketQueue));
             while (true) {
                 Message message = consumer.receive();
                 if (message == null) {
@@ -52,11 +52,10 @@ public class SendFileJMSConsumer implements Runnable {
 
                 MessageModel messageModel = ModelFactory.getSendFilePropertiesModel(message);
 
-                boolean result = wsProvider.sendFile(messageModel, message.getBody(byte[].class));
+                boolean result = wsProvider.checkTicket(messageModel, message.getBody(String.class));
 
                 if (result) {
                     message.acknowledge();
-                    LOG.debug("Message acknowledged");
                 }
             }
         } catch (JMSException e) {

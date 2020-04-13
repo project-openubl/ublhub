@@ -18,10 +18,13 @@ public class SendCallbackJMSProducer {
     @ConfigProperty(name = "openubl.callbackQueue")
     String callbackQueue;
 
+    @ConfigProperty(name = "openubl.ticketQueue")
+    String ticketQueue;
+
     @Inject
     ConnectionFactory connectionFactory;
 
-    public void produceSendCallbackMessage(BillServiceModel billServiceModel) {
+    public void produceCDRMessage(BillServiceModel billServiceModel) throws JMSException {
         try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
             JMSProducer jmsProducer = context.createProducer();
 
@@ -34,7 +37,7 @@ public class SendCallbackJMSProducer {
 
                 message = bytesMessage;
             } else {
-                message = context.createTextMessage("No CDR available");
+                message = context.createTextMessage("No CDR");
             }
 
             for (Map.Entry<String, String> entry : ModelFactory.getAsMap(billServiceModel).entrySet()) {
@@ -42,8 +45,22 @@ public class SendCallbackJMSProducer {
             }
 
             jmsProducer.send(queue, message);
-        } catch (JMSException e) {
-            LOG.error("Error trying to send bytes message", e);
+        }
+    }
+
+    public void produceTicketMessage(BillServiceModel billServiceModel) throws JMSException {
+        try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
+            JMSProducer jmsProducer = context.createProducer();
+
+            Queue queue = context.createQueue(ticketQueue);
+
+            Message message = context.createTextMessage(billServiceModel.getTicket());
+
+            for (Map.Entry<String, String> entry : ModelFactory.getAsMap(billServiceModel).entrySet()) {
+                message.setStringProperty(entry.getKey(), entry.getValue());
+            }
+
+            jmsProducer.send(queue, message);
         }
     }
 

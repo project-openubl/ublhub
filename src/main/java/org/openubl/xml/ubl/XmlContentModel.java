@@ -1,18 +1,16 @@
-package org.openubl.xml;
+package org.openubl.xml.ubl;
 
-import org.openubl.models.DocumentType;
+public class XmlContentModel {
 
-public class SunatDocumentModel {
-
-    private DocumentType documentType;
+    private String documentType;
     private String documentID;
     private String ruc;
 
-    public DocumentType getDocumentType() {
+    public String getDocumentType() {
         return documentType;
     }
 
-    public void setDocumentType(DocumentType documentType) {
+    public void setDocumentType(String documentType) {
         this.documentType = documentType;
     }
 
@@ -33,7 +31,7 @@ public class SunatDocumentModel {
     }
 
     public static final class Builder {
-        private DocumentType documentType;
+        private String documentType;
         private String documentID;
         private String ruc;
 
@@ -44,7 +42,7 @@ public class SunatDocumentModel {
             return new Builder();
         }
 
-        public Builder withDocumentType(DocumentType documentType) {
+        public Builder withDocumentType(String documentType) {
             this.documentType = documentType;
             return this;
         }
@@ -59,12 +57,12 @@ public class SunatDocumentModel {
             return this;
         }
 
-        public SunatDocumentModel build() {
-            SunatDocumentModel sunatDocumentModel = new SunatDocumentModel();
-            sunatDocumentModel.setDocumentType(documentType);
-            sunatDocumentModel.setDocumentID(documentID);
-            sunatDocumentModel.setRuc(ruc);
-            return sunatDocumentModel;
+        public XmlContentModel build() {
+            XmlContentModel xmlContentModel = new XmlContentModel();
+            xmlContentModel.setDocumentType(documentType);
+            xmlContentModel.setDocumentID(documentID);
+            xmlContentModel.setRuc(ruc);
+            return xmlContentModel;
         }
     }
 }

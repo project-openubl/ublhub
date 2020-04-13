@@ -1,4 +1,4 @@
-package org.openubl.xml;
+package org.openubl.xml.ubl;
 
 import org.xml.sax.SAXException;
 
@@ -10,10 +10,10 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @ApplicationScoped
-public class SunatDocumentProvider {
+public class XmlContentProvider {
 
-    public SunatDocumentModel getSunatDocument(InputStream is) throws ParserConfigurationException, SAXException, IOException {
-        SunatDocumentHandler handler = new SunatDocumentHandler();
+    public XmlContentModel getSunatDocument(InputStream is) throws ParserConfigurationException, SAXException, IOException {
+        XmlHandler handler = new XmlHandler();
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
         SAXParser parser = factory.newSAXParser();

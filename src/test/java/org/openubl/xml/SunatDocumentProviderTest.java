@@ -3,6 +3,8 @@ package org.openubl.xml;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 import org.openubl.models.DocumentType;
+import org.openubl.xml.ubl.XmlContentModel;
+import org.openubl.xml.ubl.XmlContentProvider;
 import org.xml.sax.SAXException;
 
 import javax.inject.Inject;
@@ -16,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SunatDocumentProviderTest {
 
     @Inject
-    SunatDocumentProvider sunatDocumentProvider;
+    XmlContentProvider xmlContentProvider;
 
     @Test
     void getSunatDocument_invoice() throws IOException, SAXException, ParserConfigurationException {
@@ -25,7 +27,7 @@ class SunatDocumentProviderTest {
         assertNotNull(inputStream);
 
         // When
-        SunatDocumentModel model = sunatDocumentProvider.getSunatDocument(inputStream);
+        XmlContentModel model = xmlContentProvider.getSunatDocument(inputStream);
 
         // Then
         assertNotNull(model);
@@ -41,7 +43,7 @@ class SunatDocumentProviderTest {
         assertNotNull(inputStream);
 
         // When
-        SunatDocumentModel model = sunatDocumentProvider.getSunatDocument(inputStream);
+        XmlContentModel model = xmlContentProvider.getSunatDocument(inputStream);
 
         // Then
         assertNotNull(model);
@@ -57,7 +59,7 @@ class SunatDocumentProviderTest {
         assertNotNull(inputStream);
 
         // When
-        SunatDocumentModel model = sunatDocumentProvider.getSunatDocument(inputStream);
+        XmlContentModel model = xmlContentProvider.getSunatDocument(inputStream);
 
         // Then
         assertNotNull(model);
@@ -73,7 +75,7 @@ class SunatDocumentProviderTest {
         assertNotNull(inputStream);
 
         // When
-        SunatDocumentModel model = sunatDocumentProvider.getSunatDocument(inputStream);
+        XmlContentModel model = xmlContentProvider.getSunatDocument(inputStream);
 
         // Then
         assertNotNull(model);
@@ -89,7 +91,7 @@ class SunatDocumentProviderTest {
         assertNotNull(inputStream);
 
         // When
-        SunatDocumentModel model = sunatDocumentProvider.getSunatDocument(inputStream);
+        XmlContentModel model = xmlContentProvider.getSunatDocument(inputStream);
 
         // Then
         assertNotNull(model);

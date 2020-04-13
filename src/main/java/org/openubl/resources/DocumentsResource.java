@@ -4,11 +4,13 @@ import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.openubl.exceptions.InvalidXMLFileException;
+import org.openubl.exceptions.UnsupportedDocumentTypeException;
+import org.openubl.models.FileDeliveryStatusType;
+import org.openubl.models.imd.ErrorRepresentation;
 import org.openubl.models.jpa.entities.FileDeliveryEntity;
-import org.openubl.providers.SendFileMessageProvider;
+import org.openubl.providers.DocumentsManager;
 
 import javax.inject.Inject;
-import javax.jms.JMSException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -25,7 +27,7 @@ public class DocumentsResource {
     private static final Logger LOG = Logger.getLogger(DocumentsResource.class);
 
     @Inject
-    SendFileMessageProvider sendFileMessageProvider;
+    DocumentsManager documentsManager;
 
     @POST
     @Path("/xml/send")
@@ -39,7 +41,8 @@ public class DocumentsResource {
         List<InputPart> customIdInputParts = uploadForm.get("customId");
 
         if (fileInputParts == null || usernameInputParts == null || passwordInputParts == null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("You should send: file, username, password").build();
+            ErrorRepresentation error = new ErrorRepresentation("Invalid request. Request must include file, username, and password");
+            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
         }
 
         byte[] xmlFile = null;
@@ -61,29 +64,36 @@ public class DocumentsResource {
                 password = inputPart.getBodyAsString();
             }
 
-            for (InputPart inputPart : customIdInputParts) {
-                customId = inputPart.getBodyAsString();
+            if (customIdInputParts != null) {
+                for (InputPart inputPart : customIdInputParts) {
+                    customId = inputPart.getBodyAsString();
+                }
             }
         } catch (IOException e) {
             throw new BadRequestException("Could not extract required data from upload/form");
         }
 
         if (xmlFile == null || xmlFile.length == 0) {
-            throw new BadRequestException("Invalid file");
+            ErrorRepresentation error = new ErrorRepresentation("Invalid file or corrupted");
+            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
         }
 
         FileDeliveryEntity fileDeliveryEntity;
         try {
-            fileDeliveryEntity = sendFileMessageProvider.sendFile(xmlFile, username, password, customId);
+            fileDeliveryEntity = documentsManager.sendFile(xmlFile, username, password, customId);
         } catch (InvalidXMLFileException e) {
-            LOG.error("File is not an XML or is corrupted");
-            throw new BadRequestException("File is not an XML or is corrupted");
-        } catch (JMSException e) {
             LOG.error(e);
-            throw new InternalServerErrorException("Error saving message in Broker");
+            ErrorRepresentation error = new ErrorRepresentation("File is not an XML or is corrupted");
+            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
+        } catch (UnsupportedDocumentTypeException e) {
+            ErrorRepresentation error = new ErrorRepresentation(e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
         }
 
-        return Response.status(201).entity(fileDeliveryEntity).build();
+        Response.Status status = fileDeliveryEntity.deliveryStatus.equals(FileDeliveryStatusType.SCHEDULED_TO_DELIVER)
+                ? Response.Status.OK
+                : Response.Status.INTERNAL_SERVER_ERROR;
+        return Response.status(status).entity(fileDeliveryEntity).build();
     }
 
 }
