@@ -1,4 +1,6 @@
 # xml-sender project
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fproject-openubl%2Fxml-sender.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fproject-openubl%2Fxml-sender?ref=badge_shield)
+
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
@@ -28,3 +30,6 @@ Or, if you don't have GraalVM installed, you can run the native executable build
 You can then execute your native executable with: `./target/xml-sender-1.0.0-SNAPSHOT-runner`
 
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/building-native-image-guide.
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fproject-openubl%2Fxml-sender.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fproject-openubl%2Fxml-sender?ref=badge_large)
