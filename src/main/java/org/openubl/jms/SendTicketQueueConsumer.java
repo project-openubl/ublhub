@@ -4,8 +4,6 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-import org.openubl.factories.ModelFactory;
-import org.openubl.models.MessageModel;
 import org.openubl.providers.WSProvider;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -17,9 +15,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
-public class SendFileJMSConsumer implements Runnable {
+public class SendTicketQueueConsumer implements Runnable {
 
-    private static final Logger LOG = Logger.getLogger(SendFileJMSConsumer.class);
+    private static final Logger LOG = Logger.getLogger(SendTicketQueueConsumer.class);
 
     @Inject
     WSProvider wsProvider;
@@ -27,8 +25,8 @@ public class SendFileJMSConsumer implements Runnable {
     @Inject
     ConnectionFactory connectionFactory;
 
-    @ConfigProperty(name = "openubl.sendFileQueue")
-    String sendFileQueue;
+    @ConfigProperty(name = "openubl.ticketQueue")
+    String ticketQueue;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -43,16 +41,25 @@ public class SendFileJMSConsumer implements Runnable {
     @Override
     public void run() {
         try (JMSContext context = connectionFactory.createContext(Session.CLIENT_ACKNOWLEDGE)) {
-            JMSConsumer consumer = context.createConsumer(context.createQueue(sendFileQueue));
+            JMSConsumer consumer = context.createConsumer(context.createQueue(ticketQueue));
             while (true) {
                 Message message = consumer.receive();
                 if (message == null) {
                     return;
                 }
 
-                MessageModel messageModel = ModelFactory.getSendFilePropertiesModel(message);
+                TextMessage textMessage = null;
+                if (message instanceof TextMessage) {
+                    textMessage = (TextMessage) message;
+                }
 
-                boolean result = wsProvider.sendFile(messageModel, message.getBody(byte[].class));
+                if (textMessage == null) {
+                    LOG.warn("ticketQueue can process only TextMessages");
+                    return;
+                }
+
+                String entityId = textMessage.getText();
+                boolean result = wsProvider.checkTicket(Long.parseLong(entityId));
 
                 if (result) {
                     message.acknowledge();

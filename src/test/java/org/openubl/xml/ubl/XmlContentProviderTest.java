@@ -1,10 +1,8 @@
-package org.openubl.xml;
+package org.openubl.xml.ubl;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 import org.openubl.models.DocumentType;
-import org.openubl.xml.ubl.XmlContentModel;
-import org.openubl.xml.ubl.XmlContentProvider;
 import org.xml.sax.SAXException;
 
 import javax.inject.Inject;
@@ -12,10 +10,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
-class SunatDocumentProviderTest {
+class XmlContentProviderTest {
 
     @Inject
     XmlContentProvider xmlContentProvider;
@@ -31,7 +30,7 @@ class SunatDocumentProviderTest {
 
         // Then
         assertNotNull(model);
-        assertEquals(DocumentType.INVOICE, model.getDocumentType());
+        assertEquals(DocumentType.INVOICE.getDocumentType(), model.getDocumentType());
         assertEquals("F001-1", model.getDocumentID());
         assertEquals("12345678912", model.getRuc());
     }
@@ -47,7 +46,7 @@ class SunatDocumentProviderTest {
 
         // Then
         assertNotNull(model);
-        assertEquals(DocumentType.CREDIT_NOTE, model.getDocumentType());
+        assertEquals(DocumentType.CREDIT_NOTE.getDocumentType(), model.getDocumentType());
         assertEquals("BC01-1", model.getDocumentID());
         assertEquals("12345678912", model.getRuc());
     }
@@ -63,7 +62,7 @@ class SunatDocumentProviderTest {
 
         // Then
         assertNotNull(model);
-        assertEquals(DocumentType.DEBIT_NOTE, model.getDocumentType());
+        assertEquals(DocumentType.DEBIT_NOTE.getDocumentType(), model.getDocumentType());
         assertEquals("BD01-1", model.getDocumentID());
         assertEquals("12345678912", model.getRuc());
     }
@@ -79,7 +78,7 @@ class SunatDocumentProviderTest {
 
         // Then
         assertNotNull(model);
-        assertEquals(DocumentType.VOIDED_DOCUMENT, model.getDocumentType());
+        assertEquals(DocumentType.VOIDED_DOCUMENT.getDocumentType(), model.getDocumentType());
         assertEquals("RA-20191224-1", model.getDocumentID());
         assertEquals("12345678912", model.getRuc());
     }
@@ -95,7 +94,7 @@ class SunatDocumentProviderTest {
 
         // Then
         assertNotNull(model);
-        assertEquals(DocumentType.SUMMARY_DOCUMENT, model.getDocumentType());
+        assertEquals(DocumentType.SUMMARY_DOCUMENT.getDocumentType(), model.getDocumentType());
         assertEquals("RC-20191224-1", model.getDocumentID());
         assertEquals("12345678912", model.getRuc());
     }

@@ -1,22 +1,21 @@
 package org.openubl.providers;
 
-import io.github.carlosthe19916.webservices.exceptions.UnknownWebServiceException;
-import io.github.carlosthe19916.webservices.managers.BillServiceManager;
-import io.github.carlosthe19916.webservices.providers.BillServiceModel;
-import io.github.carlosthe19916.webservices.wrappers.ServiceConfig;
-import org.apache.camel.CamelContext;
+import io.github.project.openubl.xmlsenderws.webservices.exceptions.UnknownWebServiceException;
+import io.github.project.openubl.xmlsenderws.webservices.managers.BillServiceManager;
+import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
+import io.github.project.openubl.xmlsenderws.webservices.wrappers.ServiceConfig;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-import org.openubl.exceptions.WSNotAvailableException;
-import org.openubl.jms.SendCallbackJMSProducer;
+import org.openubl.managers.FilesManager;
 import org.openubl.models.DocumentType;
 import org.openubl.models.FileDeliveryStatusType;
-import org.openubl.models.MessageModel;
+import org.openubl.models.FileType;
 import org.openubl.models.jpa.FileDeliveryRepository;
 import org.openubl.models.jpa.entities.FileDeliveryEntity;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.jms.JMSException;
+import javax.jms.*;
 import javax.transaction.Transactional;
 import java.io.IOException;
 
@@ -26,20 +25,32 @@ public class WSProvider {
     private static final Logger LOG = Logger.getLogger(WSProvider.class);
 
     @Inject
-    SendCallbackJMSProducer sendCallbackJMSProducer;
-
-    @Inject
     FileDeliveryRepository fileDeliveryRepository;
 
     @Inject
-    CamelContext camelContext;
+    FilesManager filesManager;
+
+    @Inject
+    ConnectionFactory connectionFactory;
+
+    @ConfigProperty(name = "openubl.callbackQueue")
+    String callbackQueue;
+
+    @ConfigProperty(name = "openubl.ticketQueue")
+    String ticketQueue;
+
+    @ConfigProperty(name = "openubl.username")
+    String username;
+
+    @ConfigProperty(name = "openubl.password")
+    String password;
 
     /**
      * @return true if message was processed and don't need to be redelivered
      */
     @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public boolean sendFile(MessageModel messageModel, byte[] file) {
-        FileDeliveryEntity deliveryEntity = fileDeliveryRepository.findById(messageModel.getEntityId());
+    public boolean sendFileDelivery(Long id) {
+        FileDeliveryEntity deliveryEntity = fileDeliveryRepository.findById(id);
         if (deliveryEntity == null) {
             LOG.warn("Not found entity, will not acknowledge");
             return false;
@@ -47,14 +58,15 @@ public class WSProvider {
 
         DocumentType documentType = deliveryEntity.documentType;
 
+        byte[] file = filesManager.getFileAsBytes(deliveryEntity.fileID);
+
         // Send to SUNAT
         ServiceConfig config = new ServiceConfig.Builder()
                 .url(deliveryEntity.serverUrl)
-                .username(messageModel.getUsername())
-                .password(messageModel.getPassword())
+                .username(username)
+                .password(password)
                 .build();
 
-        // Send file to SUNAT
         BillServiceModel billServiceModel;
         try {
             switch (documentType) {
@@ -76,7 +88,7 @@ public class WSProvider {
         } catch (IOException | UnknownWebServiceException e) {
             LOG.error(e);
 
-            deliveryEntity = fileDeliveryRepository.findById(messageModel.getEntityId());
+            deliveryEntity = fileDeliveryRepository.findById(id);
             deliveryEntity.deliveryStatus = FileDeliveryStatusType.RESCHEDULED_TO_DELIVER;
             fileDeliveryRepository.persist(deliveryEntity);
 
@@ -90,8 +102,8 @@ public class WSProvider {
      * @return true if message was processed and don't need to be redelivered
      */
     @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public boolean checkTicket(MessageModel messageModel, String ticket) {
-        FileDeliveryEntity deliveryEntity = fileDeliveryRepository.findById(messageModel.getEntityId());
+    public boolean checkTicket(long fileDeliveryID) {
+        FileDeliveryEntity deliveryEntity = fileDeliveryRepository.findById(fileDeliveryID);
         if (deliveryEntity == null) {
             LOG.warn("Not found entity, will not acknowledge");
             return false;
@@ -104,14 +116,14 @@ public class WSProvider {
         try {
             ServiceConfig config = new ServiceConfig.Builder()
                     .url(deliveryEntity.serverUrl)
-                    .username(messageModel.getUsername())
-                    .password(messageModel.getPassword())
+                    .username(username)
+                    .password(password)
                     .build();
-            billServiceModel = BillServiceManager.getStatus(ticket, config);
+            billServiceModel = BillServiceManager.getStatus(deliveryEntity.sunatTicket, config);
         } catch (UnknownWebServiceException e) {
             LOG.error(e);
 
-            deliveryEntity = fileDeliveryRepository.findById(messageModel.getEntityId());
+            deliveryEntity = fileDeliveryRepository.findById(fileDeliveryID);
             deliveryEntity.deliveryStatus = FileDeliveryStatusType.RESCHEDULED_CHECK_TICKET;
             fileDeliveryRepository.persist(deliveryEntity);
 
@@ -127,7 +139,7 @@ public class WSProvider {
         // Save CDR in storage
         String cdrID = null;
         if (billServiceModel.getCdr() != null) {
-            cdrID = camelContext.createProducerTemplate().requestBody("direct:save-file", billServiceModel.getCdr(), String.class);
+            cdrID = filesManager.upload(billServiceModel.getCdr(), deliveryEntity.filename + ".cdr.zip", FileType.ZIP);
         }
 
         // Update DB
@@ -140,16 +152,7 @@ public class WSProvider {
         fileDeliveryRepository.persist(deliveryEntity);
 
         // JMS
-        try {
-            sendCallbackJMSProducer.produceCDRMessage(billServiceModel);
-        } catch (JMSException e) {
-            LOG.error("Error trying to broker a cdr message:", e);
-
-            deliveryEntity.deliveryStatus = FileDeliveryStatusType.ERROR_SCHEDULING_CALLBACK;
-            fileDeliveryRepository.persist(deliveryEntity);
-        }
-
-
+        produceCallbackMessage(deliveryEntity);
     }
 
     @Transactional
@@ -158,15 +161,27 @@ public class WSProvider {
         deliveryEntity.deliveryStatus = FileDeliveryStatusType.SCHEDULED_CHECK_TICKET;
         deliveryEntity.sunatTicket = billServiceModel.getTicket();
 
-        // JMS
-        try {
-            sendCallbackJMSProducer.produceTicketMessage(billServiceModel);
-        } catch (JMSException e) {
-            LOG.error("Error trying to send to broker a ticket message:", e);
+        deliveryEntity.persist();
 
-            deliveryEntity.deliveryStatus = FileDeliveryStatusType.ERROR_SCHEDULING_CHECK_TICKET;
-            fileDeliveryRepository.persist(deliveryEntity);
+        // JMS
+        produceTicketMessage(deliveryEntity);
+    }
+
+    public void produceTicketMessage(FileDeliveryEntity deliveryEntity) {
+        try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
+            JMSProducer producer = context.createProducer();
+            Queue queue = context.createQueue(ticketQueue);
+            Message message = context.createTextMessage(deliveryEntity.id.toString());
+            producer.send(queue, message);
         }
     }
 
+    public void produceCallbackMessage(FileDeliveryEntity deliveryEntity) {
+        try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
+            JMSProducer producer = context.createProducer();
+            Queue queue = context.createQueue(callbackQueue);
+            Message message = context.createTextMessage(deliveryEntity.id.toString());
+            producer.send(queue, message);
+        }
+    }
 }

@@ -1,6 +1,6 @@
 package org.openubl.providers;
 
-import io.github.carlosthe19916.webservices.providers.BillServiceModel;
+import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;

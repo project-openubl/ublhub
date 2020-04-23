@@ -1,13 +1,13 @@
-package org.openubl.providers;
+package org.openubl.managers;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.openubl.exceptions.InvalidXMLFileException;
+import org.openubl.exceptions.StorageException;
 import org.openubl.exceptions.UnsupportedDocumentTypeException;
-import org.openubl.jms.SendFileJMSProducer;
-import org.openubl.models.FileDeliveryStatusType;
-import org.openubl.models.MessageModel;
 import org.openubl.models.DocumentType;
+import org.openubl.models.FileDeliveryStatusType;
+import org.openubl.models.FileType;
 import org.openubl.models.jpa.FileDeliveryRepository;
 import org.openubl.models.jpa.entities.FileDeliveryEntity;
 import org.openubl.xml.ubl.XmlContentModel;
@@ -16,11 +16,12 @@ import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.jms.JMSException;
+import javax.jms.*;
 import javax.transaction.Transactional;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.IllegalStateException;
 import java.text.MessageFormat;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -36,8 +37,17 @@ public class DocumentsManager {
     @ConfigProperty(name = "openubl.sunatUrl1")
     String sunatUrl1;
 
+    @ConfigProperty(name = "openubl.sendFileQueue")
+    String sendFileQueue;
+
+    @ConfigProperty(name = "openubl.message.delay")
+    Long messageDelay;
+
     @Inject
-    SendFileJMSProducer sendFileJMSProducer;
+    FilesManager filesManager;
+
+    @Inject
+    ConnectionFactory connectionFactory;
 
     @Inject
     XmlContentProvider xmlContentProvider;
@@ -45,14 +55,15 @@ public class DocumentsManager {
     @Inject
     FileDeliveryRepository fileDeliveryRepository;
 
+
     /**
-     * @param file     file to be sent to SUNAT
-     * @param username username in SUNAT
-     * @param password password in SUNAT
+     * @param file file to be sent to SUNAT
      * @return true if file was scheduled to be send
      */
     @Transactional
-    public FileDeliveryEntity sendFile(byte[] file, String username, String password, String customId) throws InvalidXMLFileException, UnsupportedDocumentTypeException {
+    public FileDeliveryEntity createFileDeliveryAndSchedule(
+            byte[] file, String customId
+    ) throws InvalidXMLFileException, UnsupportedDocumentTypeException, StorageException {
         // Read file
         XmlContentModel xmlContentModel;
         try {
@@ -61,7 +72,7 @@ public class DocumentsManager {
             throw new InvalidXMLFileException(e);
         }
 
-        //
+        // Check document type is supported
         Optional<DocumentType> documentTypeOptional = DocumentType.valueFromDocumentType(xmlContentModel.getDocumentType());
         if (!documentTypeOptional.isPresent()) {
             throw new UnsupportedDocumentTypeException(xmlContentModel.getDocumentType() + " is not supported yet");
@@ -71,12 +82,19 @@ public class DocumentsManager {
         String serverUrl = getServerUrl(documentType);
         String fileName = getFileName(documentType, xmlContentModel.getRuc(), xmlContentModel.getDocumentID());
 
+        // Save XML File
+        String fileID = filesManager.upload(file, fileName, FileType.XML);
+        if (fileID == null) {
+            throw new StorageException("Could not save xml file in storage");
+        }
+
         // Create Entity in DB
         FileDeliveryEntity deliveryEntity = FileDeliveryEntity.Builder.aFileDeliveryEntity()
+                .withFileID(fileID)
+                .withFilename(fileName)
                 .withRuc(xmlContentModel.getRuc())
                 .withDocumentID(xmlContentModel.getDocumentID())
                 .withDocumentType(documentType)
-                .withFilename(fileName)
                 .withDeliveryStatus(FileDeliveryStatusType.SCHEDULED_TO_DELIVER)
                 .withServerUrl(serverUrl)
                 .withCustomId(customId)
@@ -84,24 +102,24 @@ public class DocumentsManager {
 
         fileDeliveryRepository.persist(deliveryEntity);
 
-        // Create JSM Message Object
-        MessageModel messageModel = MessageModel.Builder.aSendFileMessageModel()
-                .withEntityId(deliveryEntity.id)
-                .withUsername(username)
-                .withPassword(password)
-                .build();
-
         // Send JSM File
-        try {
-            sendFileJMSProducer.produceSendFileMessage(messageModel, file);
-        } catch (JMSException e) {
-            LOG.error(e);
+        produceMessage(deliveryEntity);
 
-            deliveryEntity.deliveryStatus = FileDeliveryStatusType.SCHEDULED_TO_DELIVER_FAILED;
-            fileDeliveryRepository.persist(deliveryEntity);
-        }
-
+        // return result
         return deliveryEntity;
+    }
+
+    private void produceMessage(FileDeliveryEntity deliveryEntity) {
+        try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
+            JMSProducer producer = context.createProducer();
+            producer.setDeliveryDelay(messageDelay);
+
+            Queue queue = context.createQueue(sendFileQueue);
+            Message message = context.createTextMessage(deliveryEntity.id.toString());
+            producer.send(queue, message);
+        } finally {
+            LOG.debug(deliveryEntity + " was sent to:" + sendFileQueue);
+        }
     }
 
     private String getServerUrl(DocumentType documentType) {
@@ -131,7 +149,7 @@ public class DocumentsManager {
             case SUMMARY_DOCUMENT:
                 return MessageFormat.format("{0}-{1}.xml", ruc, documentID);
             default:
-                throw new IllegalStateException("Invalid type of UBL Document, can not extract Serie Numero to create fileName");
+                throw new IllegalStateException("Invalid type of UBL Document, can not extract Serie-Numero to create fileName");
         }
     }
 

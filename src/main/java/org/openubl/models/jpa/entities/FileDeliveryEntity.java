@@ -29,6 +29,10 @@ public class FileDeliveryEntity extends PanacheEntity {
     public String filename;
 
     @NotNull
+    @Column(name = "file_id")
+    public String fileID;
+
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "delivery_status")
     public FileDeliveryStatusType deliveryStatus;
@@ -60,6 +64,7 @@ public class FileDeliveryEntity extends PanacheEntity {
         public String documentID;
         public DocumentType documentType;
         public String filename;
+        public String fileID;
         public FileDeliveryStatusType deliveryStatus;
         public String serverUrl;
         public String cdrID;
@@ -93,6 +98,11 @@ public class FileDeliveryEntity extends PanacheEntity {
 
         public Builder withFilename(String filename) {
             this.filename = filename;
+            return this;
+        }
+
+        public Builder withFileID(String fileID) {
+            this.fileID = fileID;
             return this;
         }
 
@@ -138,18 +148,19 @@ public class FileDeliveryEntity extends PanacheEntity {
 
         public FileDeliveryEntity build() {
             FileDeliveryEntity fileDeliveryEntity = new FileDeliveryEntity();
-            fileDeliveryEntity.cdrID = this.cdrID;
-            fileDeliveryEntity.documentID = this.documentID;
-            fileDeliveryEntity.filename = this.filename;
             fileDeliveryEntity.documentType = this.documentType;
-            fileDeliveryEntity.sunatTicket = this.sunatTicket;
-            fileDeliveryEntity.serverUrl = this.serverUrl;
-            fileDeliveryEntity.customId = this.customId;
-            fileDeliveryEntity.sunatDescription = this.sunatDescription;
-            fileDeliveryEntity.deliveryStatus = this.deliveryStatus;
-            fileDeliveryEntity.sunatCode = this.sunatCode;
-            fileDeliveryEntity.ruc = this.ruc;
             fileDeliveryEntity.sunatStatus = this.sunatStatus;
+            fileDeliveryEntity.filename = this.filename;
+            fileDeliveryEntity.cdrID = this.cdrID;
+            fileDeliveryEntity.serverUrl = this.serverUrl;
+            fileDeliveryEntity.deliveryStatus = this.deliveryStatus;
+            fileDeliveryEntity.sunatTicket = this.sunatTicket;
+            fileDeliveryEntity.customId = this.customId;
+            fileDeliveryEntity.ruc = this.ruc;
+            fileDeliveryEntity.sunatDescription = this.sunatDescription;
+            fileDeliveryEntity.documentID = this.documentID;
+            fileDeliveryEntity.fileID = this.fileID;
+            fileDeliveryEntity.sunatCode = this.sunatCode;
             return fileDeliveryEntity;
         }
     }
