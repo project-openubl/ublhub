@@ -17,10 +17,6 @@
 package io.github.project.openubl.xmlsender.exceptions;
 
 public class StorageException extends Exception {
-    public StorageException(Exception e) {
-        super(e);
-    }
-
     public StorageException(String message) {
         super(message);
     }

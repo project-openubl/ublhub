@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.xmlsender.models;
 
-public enum FileDeliveryStatusType {
+public enum DeliveryStatusType {
     SCHEDULED_TO_DELIVER,
     SCHEDULED_TO_DELIVER_FAILED,
     RESCHEDULED_TO_DELIVER,

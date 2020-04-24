@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xmlsender.providers;
+package io.github.project.openubl.xmlsender.ws;
 
 import io.github.project.openubl.xmlsender.managers.FilesManager;
 import io.github.project.openubl.xmlsender.models.DocumentType;
-import io.github.project.openubl.xmlsender.models.FileDeliveryStatusType;
+import io.github.project.openubl.xmlsender.models.DeliveryStatusType;
 import io.github.project.openubl.xmlsender.models.FileType;
-import io.github.project.openubl.xmlsender.models.jpa.FileDeliveryRepository;
-import io.github.project.openubl.xmlsender.models.jpa.entities.FileDeliveryEntity;
+import io.github.project.openubl.xmlsender.models.jpa.DocumentRepository;
+import io.github.project.openubl.xmlsender.models.jpa.entities.DocumentEntity;
 import io.github.project.openubl.xmlsenderws.webservices.exceptions.UnknownWebServiceException;
 import io.github.project.openubl.xmlsenderws.webservices.managers.BillServiceManager;
 import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
@@ -37,13 +37,14 @@ import java.io.IOException;
 import java.lang.IllegalStateException;
 import java.util.Optional;
 
+@Transactional
 @ApplicationScoped
-public class WSProvider {
+public class WSSunatClient {
 
-    private static final Logger LOG = Logger.getLogger(WSProvider.class);
+    private static final Logger LOG = Logger.getLogger(WSSunatClient.class);
 
     @Inject
-    FileDeliveryRepository fileDeliveryRepository;
+    DocumentRepository documentRepository;
 
     @Inject
     FilesManager filesManager;
@@ -69,21 +70,15 @@ public class WSProvider {
     /**
      * @return true if message was processed and don't need to be redelivered
      */
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public boolean sendFileDelivery(Long id) {
-        FileDeliveryEntity deliveryEntity = fileDeliveryRepository.findById(id);
-        if (deliveryEntity == null) {
-            LOG.warn("Not found entity, will not acknowledge");
-            return false;
-        }
+    public boolean sendDocument(Long documentId) {
+        DocumentEntity deliveryEntity = documentRepository.findById(documentId);
 
         DocumentType documentType = deliveryEntity.documentType;
-
         byte[] file = filesManager.getFileAsBytesWithoutUnzipping(deliveryEntity.fileID);
 
         // Send to SUNAT
         ServiceConfig config = new ServiceConfig.Builder()
-                .url(deliveryEntity.serverUrl)
+                .url(deliveryEntity.deliveryURL)
                 .username(deliveryEntity.sunatUsername != null ? deliveryEntity.sunatUsername : sunatUsername.orElseThrow(IllegalStateException::new))
                 .password(deliveryEntity.sunatPassword != null ? deliveryEntity.sunatPassword : sunatPassword.orElseThrow(IllegalStateException::new))
                 .build();
@@ -94,12 +89,12 @@ public class WSProvider {
                 case INVOICE:
                 case CREDIT_NOTE:
                 case DEBIT_NOTE:
-                    billServiceModel = BillServiceManager.sendBill(deliveryEntity.filename + ".zip", file, config);
+                    billServiceModel = BillServiceManager.sendBill(FileType.getFilename(deliveryEntity.filenameWithoutExtension, FileType.ZIP), file, config);
                     processCDR(billServiceModel, deliveryEntity);
                     break;
                 case VOIDED_DOCUMENT:
                 case SUMMARY_DOCUMENT:
-                    billServiceModel = BillServiceManager.sendSummary(deliveryEntity.filename + ".zip", file, config);
+                    billServiceModel = BillServiceManager.sendSummary(FileType.getFilename(deliveryEntity.filenameWithoutExtension, FileType.ZIP), file, config);
                     processTicket(billServiceModel, deliveryEntity);
                     break;
                 default:
@@ -109,9 +104,8 @@ public class WSProvider {
         } catch (IOException | UnknownWebServiceException e) {
             LOG.error(e);
 
-            deliveryEntity = fileDeliveryRepository.findById(id);
-            deliveryEntity.deliveryStatus = FileDeliveryStatusType.RESCHEDULED_TO_DELIVER;
-            fileDeliveryRepository.persist(deliveryEntity);
+            deliveryEntity.deliveryStatus = DeliveryStatusType.RESCHEDULED_TO_DELIVER;
+            documentRepository.persist(deliveryEntity);
 
             return false;
         }
@@ -122,21 +116,14 @@ public class WSProvider {
     /**
      * @return true if message was processed and don't need to be redelivered
      */
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public boolean checkTicket(long fileDeliveryID) {
-        FileDeliveryEntity deliveryEntity = fileDeliveryRepository.findById(fileDeliveryID);
-        if (deliveryEntity == null) {
-            LOG.warn("Not found entity, will not acknowledge");
-            return false;
-        }
-
-        DocumentType documentType = deliveryEntity.documentType;
+    public boolean checkDocumentTicket(long documentId) {
+        DocumentEntity deliveryEntity = documentRepository.findById(documentId);
 
         // Send to SUNAT
         BillServiceModel billServiceModel;
         try {
             ServiceConfig config = new ServiceConfig.Builder()
-                    .url(deliveryEntity.serverUrl)
+                    .url(deliveryEntity.deliveryURL)
                     .username(deliveryEntity.sunatUsername != null
                             ? deliveryEntity.sunatUsername
                             : sunatUsername.orElseThrow(() -> new IllegalStateException("Could not find a username for sending to SUNAT"))
@@ -150,9 +137,8 @@ public class WSProvider {
         } catch (UnknownWebServiceException e) {
             LOG.error(e);
 
-            deliveryEntity = fileDeliveryRepository.findById(fileDeliveryID);
-            deliveryEntity.deliveryStatus = FileDeliveryStatusType.RESCHEDULED_CHECK_TICKET;
-            fileDeliveryRepository.persist(deliveryEntity);
+            deliveryEntity.deliveryStatus = DeliveryStatusType.RESCHEDULED_CHECK_TICKET;
+            documentRepository.persist(deliveryEntity);
 
             return false;
         }
@@ -161,13 +147,12 @@ public class WSProvider {
         return true;
     }
 
-    @Transactional
-    private void processCDR(BillServiceModel billServiceModel, FileDeliveryEntity deliveryEntity) {
+    private void processCDR(BillServiceModel billServiceModel, DocumentEntity deliveryEntity) {
         // Save CDR in storage
         String cdrID = null;
         if (billServiceModel.getCdr() != null) {
             // The filename does not really matter here
-            cdrID = filesManager.uploadFile(billServiceModel.getCdr(), deliveryEntity.filename, FileType.ZIP);
+            cdrID = filesManager.createFile(billServiceModel.getCdr(), deliveryEntity.filenameWithoutExtension, FileType.ZIP);
         }
 
         // Update DB
@@ -175,18 +160,17 @@ public class WSProvider {
         deliveryEntity.sunatCode = billServiceModel.getCode();
         deliveryEntity.sunatDescription = billServiceModel.getDescription();
         deliveryEntity.sunatStatus = billServiceModel.getStatus().toString();
-        deliveryEntity.deliveryStatus = FileDeliveryStatusType.SCHEDULED_CALLBACK;
+        deliveryEntity.deliveryStatus = DeliveryStatusType.SCHEDULED_CALLBACK;
 
-        fileDeliveryRepository.persist(deliveryEntity);
+        documentRepository.persist(deliveryEntity);
 
         // JMS
         produceCallbackMessage(deliveryEntity);
     }
 
-    @Transactional
-    private void processTicket(BillServiceModel billServiceModel, FileDeliveryEntity deliveryEntity) {
+    private void processTicket(BillServiceModel billServiceModel, DocumentEntity deliveryEntity) {
         // Update DB
-        deliveryEntity.deliveryStatus = FileDeliveryStatusType.SCHEDULED_CHECK_TICKET;
+        deliveryEntity.deliveryStatus = DeliveryStatusType.SCHEDULED_CHECK_TICKET;
         deliveryEntity.sunatTicket = billServiceModel.getTicket();
 
         deliveryEntity.persist();
@@ -195,7 +179,7 @@ public class WSProvider {
         produceTicketMessage(deliveryEntity);
     }
 
-    public void produceTicketMessage(FileDeliveryEntity deliveryEntity) {
+    public void produceTicketMessage(DocumentEntity deliveryEntity) {
         try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
             JMSProducer producer = context.createProducer();
             producer.setDeliveryDelay(messageDelay);
@@ -205,7 +189,7 @@ public class WSProvider {
         }
     }
 
-    public void produceCallbackMessage(FileDeliveryEntity deliveryEntity) {
+    public void produceCallbackMessage(DocumentEntity deliveryEntity) {
         try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
             JMSProducer producer = context.createProducer();
             producer.setDeliveryDelay(messageDelay);

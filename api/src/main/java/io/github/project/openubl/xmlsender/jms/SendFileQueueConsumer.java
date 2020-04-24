@@ -20,7 +20,7 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-import io.github.project.openubl.xmlsender.providers.WSProvider;
+import io.github.project.openubl.xmlsender.ws.WSSunatClient;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
@@ -36,7 +36,7 @@ public class SendFileQueueConsumer implements Runnable {
     private static final Logger LOG = Logger.getLogger(SendFileQueueConsumer.class);
 
     @Inject
-    WSProvider wsProvider;
+    WSSunatClient wsSunatClient;
 
     @Inject
     ConnectionFactory connectionFactory;
@@ -74,8 +74,8 @@ public class SendFileQueueConsumer implements Runnable {
                     return;
                 }
 
-                String entityId = textMessage.getText();
-                boolean result = wsProvider.sendFileDelivery(Long.valueOf(entityId));
+                String documentId = textMessage.getText();
+                boolean result = wsSunatClient.sendDocument(Long.valueOf(documentId));
 
                 if (result) {
                     message.acknowledge();

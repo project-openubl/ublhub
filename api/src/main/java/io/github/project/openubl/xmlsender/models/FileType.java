@@ -20,7 +20,7 @@ public enum FileType {
     XML("xml"),
     ZIP("zip");
 
-    private String extension;
+    private final String extension;
 
     FileType(String extension) {
         this.extension = extension;
@@ -28,6 +28,10 @@ public enum FileType {
 
     public String getExtension() {
         return extension;
+    }
+
+    public static String getFilename(String filenameWithoutExtension, FileType fileType) {
+        return filenameWithoutExtension + "." + fileType.getExtension();
     }
 
 }

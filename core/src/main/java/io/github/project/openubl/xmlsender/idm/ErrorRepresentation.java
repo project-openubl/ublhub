@@ -14,13 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xmlsender.models.jpa;
+package io.github.project.openubl.xmlsender.idm;
 
-import io.github.project.openubl.xmlsender.models.jpa.entities.FileDeliveryEntity;
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
-import javax.enterprise.context.ApplicationScoped;
+@RegisterForReflection
+public class ErrorRepresentation {
 
-@ApplicationScoped
-public class FileDeliveryRepository implements PanacheRepository<FileDeliveryEntity> {
+    private String error;
+
+    public ErrorRepresentation() {
+    }
+
+    public ErrorRepresentation(String error) {
+        this.error = error;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
 }

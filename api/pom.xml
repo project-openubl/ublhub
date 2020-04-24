@@ -37,6 +37,11 @@
             <version>${sunat-web-services.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>io.github.project-openubl</groupId>
+            <artifactId>xml-sender-core</artifactId>
+        </dependency>
+
         <!--Quarkus-->
         <dependency>
             <groupId>io.quarkus</groupId>

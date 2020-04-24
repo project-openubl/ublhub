@@ -19,17 +19,23 @@ package io.github.project.openubl.xmlsender.resources;
 import io.github.project.openubl.xmlsender.exceptions.InvalidXMLFileException;
 import io.github.project.openubl.xmlsender.exceptions.StorageException;
 import io.github.project.openubl.xmlsender.exceptions.UnsupportedDocumentTypeException;
+import io.github.project.openubl.xmlsender.idm.ErrorRepresentation;
 import io.github.project.openubl.xmlsender.managers.DocumentsManager;
-import io.github.project.openubl.xmlsender.models.FileDeliveryStatusType;
-import io.github.project.openubl.xmlsender.models.imd.ErrorRepresentation;
-import io.github.project.openubl.xmlsender.models.jpa.entities.FileDeliveryEntity;
+import io.github.project.openubl.xmlsender.models.jpa.entities.DocumentEntity;
+import io.github.project.openubl.xmlsender.models.utils.EntityToRepresentation;
 import org.apache.commons.io.IOUtils;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.transaction.Transactional;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +44,8 @@ import java.util.Map;
 
 @Path("/documents")
 @Produces("application/json")
+@Transactional
+@ApplicationScoped
 public class DocumentsResource {
 
     private static final Logger LOG = Logger.getLogger(DocumentsResource.class);
@@ -98,9 +106,9 @@ public class DocumentsResource {
             return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
         }
 
-        FileDeliveryEntity fileDeliveryEntity;
+        DocumentEntity documentEntity;
         try {
-            fileDeliveryEntity = documentsManager.createFileDeliveryAndSchedule(xmlFile, username, password, customId);
+            documentEntity = documentsManager.createDocumentAndScheduleDelivery(xmlFile, username, password, customId);
         } catch (InvalidXMLFileException e) {
             LOG.error(e);
             ErrorRepresentation error = new ErrorRepresentation("Form[file] is not a valid XML file or is corrupted");
@@ -109,14 +117,14 @@ public class DocumentsResource {
             ErrorRepresentation error = new ErrorRepresentation(e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
         } catch (StorageException e) {
+            LOG.error(e);
             ErrorRepresentation error = new ErrorRepresentation(e.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(error).build();
         }
 
-        Response.Status status = fileDeliveryEntity.deliveryStatus.equals(FileDeliveryStatusType.SCHEDULED_TO_DELIVER)
-                ? Response.Status.OK
-                : Response.Status.INTERNAL_SERVER_ERROR;
-        return Response.status(status).entity(fileDeliveryEntity).build();
+        return Response.status(Response.Status.OK)
+                .entity(EntityToRepresentation.toRepresentation(documentEntity))
+                .build();
     }
 
 }

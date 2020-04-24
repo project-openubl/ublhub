@@ -30,8 +30,6 @@ import java.util.Map;
 @ApplicationScoped
 public class FilesManager {
 
-    private static final Logger LOG = Logger.getLogger(FilesManager.class);
-
     @Inject
     CamelContext camelContext;
 
@@ -41,7 +39,7 @@ public class FilesManager {
     /**
      * Uploads a file and zip it if necessary
      */
-    public String uploadFile(byte[] file, String fileName, FileType fileType) {
+    public String createFile(byte[] file, String fileName, FileType fileType) {
         Map<String, Object> headers = new HashMap<>();
         headers.put("isZipFile", fileType.equals(FileType.ZIP));
         headers.put(Exchange.FILE_NAME, fileName);

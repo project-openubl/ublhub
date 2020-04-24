@@ -22,17 +22,22 @@ import io.github.project.openubl.xmlsender.exceptions.InvalidXMLFileException;
 import io.github.project.openubl.xmlsender.exceptions.StorageException;
 import io.github.project.openubl.xmlsender.exceptions.UnsupportedDocumentTypeException;
 import io.github.project.openubl.xmlsender.models.DocumentType;
-import io.github.project.openubl.xmlsender.models.FileDeliveryStatusType;
+import io.github.project.openubl.xmlsender.models.DeliveryStatusType;
 import io.github.project.openubl.xmlsender.models.FileType;
-import io.github.project.openubl.xmlsender.models.jpa.FileDeliveryRepository;
-import io.github.project.openubl.xmlsender.models.jpa.entities.FileDeliveryEntity;
+import io.github.project.openubl.xmlsender.models.jpa.DocumentRepository;
+import io.github.project.openubl.xmlsender.models.jpa.entities.DocumentEntity;
 import io.github.project.openubl.xmlsender.xml.ubl.XmlContentModel;
 import io.github.project.openubl.xmlsender.xml.ubl.XmlContentProvider;
 import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.jms.*;
+import javax.jms.ConnectionFactory;
+import javax.jms.JMSContext;
+import javax.jms.JMSProducer;
+import javax.jms.Message;
+import javax.jms.Queue;
+import javax.jms.Session;
 import javax.transaction.Transactional;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
@@ -42,6 +47,7 @@ import java.text.MessageFormat;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+@Transactional
 @ApplicationScoped
 public class DocumentsManager {
 
@@ -69,15 +75,9 @@ public class DocumentsManager {
     XmlContentProvider xmlContentProvider;
 
     @Inject
-    FileDeliveryRepository fileDeliveryRepository;
+    DocumentRepository documentRepository;
 
-
-    /**
-     * @param file file to be sent to SUNAT
-     * @return true if file was scheduled to be send
-     */
-    @Transactional
-    public FileDeliveryEntity createFileDeliveryAndSchedule(
+    public DocumentEntity createDocumentAndScheduleDelivery(
             byte[] file, String username, String password, String customId
     ) throws InvalidXMLFileException, UnsupportedDocumentTypeException, StorageException {
         // Read file
@@ -95,39 +95,39 @@ public class DocumentsManager {
         }
 
         DocumentType documentType = documentTypeOptional.get();
-        String serverUrl = getServerUrl(documentType);
+        String deliveryURL = getDeliveryURL(documentType);
         String fileNameWithoutExtension = getFileNameWithoutExtension(documentType, xmlContentModel.getRuc(), xmlContentModel.getDocumentID());
 
         // Save XML File
-        String fileID = filesManager.uploadFile(file, fileNameWithoutExtension + ".xml" ,FileType.XML);
+        String fileID = filesManager.createFile(file, FileType.getFilename(fileNameWithoutExtension, FileType.XML), FileType.XML);
         if (fileID == null) {
             throw new StorageException("Could not save xml file in storage");
         }
 
         // Create Entity in DB
-        FileDeliveryEntity deliveryEntity = FileDeliveryEntity.Builder.aFileDeliveryEntity()
+        DocumentEntity documentEntity = DocumentEntity.Builder.aDocumentEntity()
                 .withFileID(fileID)
-                .withFilename(fileNameWithoutExtension)
+                .withFilenameWithoutExtension(fileNameWithoutExtension)
                 .withRuc(xmlContentModel.getRuc())
                 .withDocumentID(xmlContentModel.getDocumentID())
                 .withDocumentType(documentType)
-                .withDeliveryStatus(FileDeliveryStatusType.SCHEDULED_TO_DELIVER)
-                .withServerUrl(serverUrl)
+                .withDeliveryStatus(DeliveryStatusType.SCHEDULED_TO_DELIVER)
+                .withDeliveryURL(deliveryURL)
                 .withSunatUsername(username)
                 .withSunatPassword(password)
                 .withCustomId(customId)
                 .build();
 
-        fileDeliveryRepository.persist(deliveryEntity);
+        documentRepository.persist(documentEntity);
 
         // Send JSM File
-        produceMessage(deliveryEntity);
+        produceMessage(documentEntity);
 
         // return result
-        return deliveryEntity;
+        return documentEntity;
     }
 
-    private void produceMessage(FileDeliveryEntity deliveryEntity) {
+    private void produceMessage(DocumentEntity deliveryEntity) {
         try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
             JMSProducer producer = context.createProducer();
             producer.setDeliveryDelay(messageDelay);
@@ -140,7 +140,7 @@ public class DocumentsManager {
         }
     }
 
-    private String getServerUrl(DocumentType documentType) {
+    private String getDeliveryURL(DocumentType documentType) {
         return sunatUrl1;
     }
 

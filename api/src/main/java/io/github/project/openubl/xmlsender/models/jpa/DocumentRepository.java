@@ -14,22 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xmlsender.providers;
+package io.github.project.openubl.xmlsender.models.jpa;
 
-import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
-import org.jboss.logging.Logger;
+import io.github.project.openubl.xmlsender.models.jpa.entities.DocumentEntity;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
 
 import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class CallbackRSProvider {
-
-    private static final Logger LOG = Logger.getLogger(CallbackRSProvider.class);
-
-    public boolean sendCallback(BillServiceModel billServiceModel) {
-        System.out.println("finish hime");
-
-        return true;
-    }
-
+public class DocumentRepository implements PanacheRepository<DocumentEntity> {
 }

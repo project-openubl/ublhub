@@ -18,14 +18,15 @@ package io.github.project.openubl.xmlsender.models.jpa.entities;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.github.project.openubl.xmlsender.models.DocumentType;
-import io.github.project.openubl.xmlsender.models.FileDeliveryStatusType;
+import io.github.project.openubl.xmlsender.models.DeliveryStatusType;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity
+@Table(name = "DOCUMENT")
 @Cacheable
-public class FileDeliveryEntity extends PanacheEntity {
+public class DocumentEntity extends PanacheEntity {
 
     @NotNull
     @Column(name = "ruc")
@@ -41,8 +42,8 @@ public class FileDeliveryEntity extends PanacheEntity {
     public DocumentType documentType;
 
     @NotNull
-    @Column(name = "filename")
-    public String filename;
+    @Column(name = "filename_without_extension")
+    public String filenameWithoutExtension;
 
     @NotNull
     @Column(name = "file_id")
@@ -51,11 +52,11 @@ public class FileDeliveryEntity extends PanacheEntity {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "delivery_status")
-    public FileDeliveryStatusType deliveryStatus;
+    public DeliveryStatusType deliveryStatus;
 
     @NotNull
-    @Column(name = "server_url")
-    public String serverUrl;
+    @Column(name = "delivery_url")
+    public String deliveryURL;
 
     @Column(name = "crd_id")
     public String cdrID;
@@ -85,10 +86,10 @@ public class FileDeliveryEntity extends PanacheEntity {
         public String ruc;
         public String documentID;
         public DocumentType documentType;
-        public String filename;
+        public String filenameWithoutExtension;
         public String fileID;
-        public FileDeliveryStatusType deliveryStatus;
-        public String serverUrl;
+        public DeliveryStatusType deliveryStatus;
+        public String deliveryURL;
         public String cdrID;
         public String sunatUsername;
         public String sunatPassword;
@@ -101,7 +102,7 @@ public class FileDeliveryEntity extends PanacheEntity {
         private Builder() {
         }
 
-        public static Builder aFileDeliveryEntity() {
+        public static Builder aDocumentEntity() {
             return new Builder();
         }
 
@@ -120,8 +121,8 @@ public class FileDeliveryEntity extends PanacheEntity {
             return this;
         }
 
-        public Builder withFilename(String filename) {
-            this.filename = filename;
+        public Builder withFilenameWithoutExtension(String filenameWithoutExtension) {
+            this.filenameWithoutExtension = filenameWithoutExtension;
             return this;
         }
 
@@ -130,13 +131,13 @@ public class FileDeliveryEntity extends PanacheEntity {
             return this;
         }
 
-        public Builder withDeliveryStatus(FileDeliveryStatusType deliveryStatus) {
+        public Builder withDeliveryStatus(DeliveryStatusType deliveryStatus) {
             this.deliveryStatus = deliveryStatus;
             return this;
         }
 
-        public Builder withServerUrl(String serverUrl) {
-            this.serverUrl = serverUrl;
+        public Builder withDeliveryURL(String deliveryURL) {
+            this.deliveryURL = deliveryURL;
             return this;
         }
 
@@ -180,24 +181,24 @@ public class FileDeliveryEntity extends PanacheEntity {
             return this;
         }
 
-        public FileDeliveryEntity build() {
-            FileDeliveryEntity fileDeliveryEntity = new FileDeliveryEntity();
-            fileDeliveryEntity.sunatPassword = this.sunatPassword;
-            fileDeliveryEntity.sunatStatus = this.sunatStatus;
-            fileDeliveryEntity.fileID = this.fileID;
-            fileDeliveryEntity.serverUrl = this.serverUrl;
-            fileDeliveryEntity.ruc = this.ruc;
-            fileDeliveryEntity.sunatUsername = this.sunatUsername;
-            fileDeliveryEntity.filename = this.filename;
-            fileDeliveryEntity.sunatDescription = this.sunatDescription;
-            fileDeliveryEntity.sunatCode = this.sunatCode;
-            fileDeliveryEntity.documentID = this.documentID;
-            fileDeliveryEntity.cdrID = this.cdrID;
-            fileDeliveryEntity.customId = this.customId;
-            fileDeliveryEntity.documentType = this.documentType;
-            fileDeliveryEntity.deliveryStatus = this.deliveryStatus;
-            fileDeliveryEntity.sunatTicket = this.sunatTicket;
-            return fileDeliveryEntity;
+        public DocumentEntity build() {
+            DocumentEntity documentEntity = new DocumentEntity();
+            documentEntity.deliveryStatus = this.deliveryStatus;
+            documentEntity.ruc = this.ruc;
+            documentEntity.sunatTicket = this.sunatTicket;
+            documentEntity.deliveryURL = this.deliveryURL;
+            documentEntity.documentType = this.documentType;
+            documentEntity.sunatDescription = this.sunatDescription;
+            documentEntity.customId = this.customId;
+            documentEntity.fileID = this.fileID;
+            documentEntity.cdrID = this.cdrID;
+            documentEntity.documentID = this.documentID;
+            documentEntity.sunatStatus = this.sunatStatus;
+            documentEntity.sunatCode = this.sunatCode;
+            documentEntity.filenameWithoutExtension = this.filenameWithoutExtension;
+            documentEntity.sunatUsername = this.sunatUsername;
+            documentEntity.sunatPassword = this.sunatPassword;
+            return documentEntity;
         }
     }
 }

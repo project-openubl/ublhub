@@ -26,7 +26,7 @@ public enum DocumentType {
     VOIDED_DOCUMENT("VoidedDocuments"),
     SUMMARY_DOCUMENT("SummaryDocuments");
 
-    private String documentType;
+    private final String documentType;
 
     DocumentType(String documentType) {
         this.documentType = documentType;
