@@ -31,8 +31,4 @@
     <artifactId>quarkus-extensions-parent</artifactId>
 
     <packaging>pom</packaging>
-
-    <modules>
-        <module>bouncycastle</module>
-    </modules>
 </project>

@@ -37,12 +37,10 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <quarkus-plugin.version>1.3.2.Final</quarkus-plugin.version>
-        <quarkus.platform.version>1.3.2.Final</quarkus.platform.version>
+        <quarkus.version>1.3.2.Final</quarkus.version>
         <surefire-plugin.version>2.22.1</surefire-plugin.version>
 
-        <bouncycastle.version>1.64</bouncycastle.version>
-        <sunat-web-services.version>2.0.0.Final</sunat-web-services.version>
+        <sunat-web-services.version>2.0.1-SNAPSHOT</sunat-web-services.version>
         <docker-plugin.version>0.33.0</docker-plugin.version>
     </properties>
     <dependencyManagement>
@@ -50,7 +48,7 @@
             <dependency>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-universe-bom</artifactId>
-                <version>${quarkus.platform.version}</version>
+                <version>${quarkus.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -95,6 +93,7 @@
                         <exclude>**/src/test/resources/**</exclude>
                         <exclude>**/src/main/resources/**</exclude>
                         <exclude>.github/**</exclude>
+                        <exclude>.mvn/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
