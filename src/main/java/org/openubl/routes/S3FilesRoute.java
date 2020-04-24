@@ -7,6 +7,7 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.aws.s3.S3Constants;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -67,7 +68,7 @@ public class S3FilesRoute extends RouteBuilder {
         from("direct:s3-save-file")
                 .id("s3-save-file")
                 .choice()
-                    .when(header("fileType").isEqualTo(FileType.XML))
+                    .when(header("isZipFile").isEqualTo(false))
                         .marshal().zipFile()
                     .endChoice()
                 .end()
@@ -94,7 +95,11 @@ public class S3FilesRoute extends RouteBuilder {
                 .pollEnrich().simple("aws-s3:"+ s3Bucket + "?amazonS3Client=#s3client&deleteAfterRead=false&fileName=${body}")
                 .setHeader("Content-Disposition", simple("$header.CamelAwsS3ContentDisposition"))
                 .setHeader(Exchange.CONTENT_TYPE, simple("$header.CamelAwsS3ContentType"))
-                .convertBodyTo(byte[].class);
+                .choice()
+                    .when(header("shouldUnzip").isEqualTo(true))
+                        .unmarshal().zipFile()
+                    .endChoice()
+                .end();
 
         from("direct:s3-get-file-link")
                 .id("s3-get-file-link")

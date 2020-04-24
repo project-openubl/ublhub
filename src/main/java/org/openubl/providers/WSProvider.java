@@ -18,6 +18,8 @@ import javax.inject.Inject;
 import javax.jms.*;
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.lang.IllegalStateException;
+import java.util.Optional;
 
 @ApplicationScoped
 public class WSProvider {
@@ -33,17 +35,20 @@ public class WSProvider {
     @Inject
     ConnectionFactory connectionFactory;
 
-    @ConfigProperty(name = "openubl.callbackQueue")
+    @ConfigProperty(name = "openubl.jms.delay")
+    Long messageDelay;
+
+    @ConfigProperty(name = "openubl.jms.callbackQueue")
     String callbackQueue;
 
-    @ConfigProperty(name = "openubl.ticketQueue")
+    @ConfigProperty(name = "openubl.jms.ticketQueue")
     String ticketQueue;
 
-    @ConfigProperty(name = "openubl.username")
-    String username;
+    @ConfigProperty(name = "openubl.sunat.username")
+    Optional<String> sunatUsername;
 
-    @ConfigProperty(name = "openubl.password")
-    String password;
+    @ConfigProperty(name = "openubl.sunat.password")
+    Optional<String> sunatPassword;
 
     /**
      * @return true if message was processed and don't need to be redelivered
@@ -58,13 +63,13 @@ public class WSProvider {
 
         DocumentType documentType = deliveryEntity.documentType;
 
-        byte[] file = filesManager.getFileAsBytes(deliveryEntity.fileID);
+        byte[] file = filesManager.getFileAsBytesWithoutUnzipping(deliveryEntity.fileID);
 
         // Send to SUNAT
         ServiceConfig config = new ServiceConfig.Builder()
                 .url(deliveryEntity.serverUrl)
-                .username(username)
-                .password(password)
+                .username(deliveryEntity.sunatUsername != null ? deliveryEntity.sunatUsername : sunatUsername.orElseThrow(IllegalStateException::new))
+                .password(deliveryEntity.sunatPassword != null ? deliveryEntity.sunatPassword : sunatPassword.orElseThrow(IllegalStateException::new))
                 .build();
 
         BillServiceModel billServiceModel;
@@ -73,12 +78,12 @@ public class WSProvider {
                 case INVOICE:
                 case CREDIT_NOTE:
                 case DEBIT_NOTE:
-                    billServiceModel = BillServiceManager.sendBill(deliveryEntity.filename, file, config);
+                    billServiceModel = BillServiceManager.sendBill(deliveryEntity.filename + ".zip", file, config);
                     processCDR(billServiceModel, deliveryEntity);
                     break;
                 case VOIDED_DOCUMENT:
                 case SUMMARY_DOCUMENT:
-                    billServiceModel = BillServiceManager.sendSummary(deliveryEntity.filename, file, config);
+                    billServiceModel = BillServiceManager.sendSummary(deliveryEntity.filename + ".zip", file, config);
                     processTicket(billServiceModel, deliveryEntity);
                     break;
                 default:
@@ -116,8 +121,14 @@ public class WSProvider {
         try {
             ServiceConfig config = new ServiceConfig.Builder()
                     .url(deliveryEntity.serverUrl)
-                    .username(username)
-                    .password(password)
+                    .username(deliveryEntity.sunatUsername != null
+                            ? deliveryEntity.sunatUsername
+                            : sunatUsername.orElseThrow(() -> new IllegalStateException("Could not find a username for sending to SUNAT"))
+                    )
+                    .password(deliveryEntity.sunatPassword != null
+                            ? deliveryEntity.sunatPassword
+                            : sunatPassword.orElseThrow(() -> new IllegalStateException("Could not find a username for sending to SUNAT"))
+                    )
                     .build();
             billServiceModel = BillServiceManager.getStatus(deliveryEntity.sunatTicket, config);
         } catch (UnknownWebServiceException e) {
@@ -139,7 +150,8 @@ public class WSProvider {
         // Save CDR in storage
         String cdrID = null;
         if (billServiceModel.getCdr() != null) {
-            cdrID = filesManager.upload(billServiceModel.getCdr(), deliveryEntity.filename + ".cdr.zip", FileType.ZIP);
+            // The filename does not really matter here
+            cdrID = filesManager.uploadFile(billServiceModel.getCdr(), deliveryEntity.filename, FileType.ZIP);
         }
 
         // Update DB
@@ -170,6 +182,7 @@ public class WSProvider {
     public void produceTicketMessage(FileDeliveryEntity deliveryEntity) {
         try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
             JMSProducer producer = context.createProducer();
+            producer.setDeliveryDelay(messageDelay);
             Queue queue = context.createQueue(ticketQueue);
             Message message = context.createTextMessage(deliveryEntity.id.toString());
             producer.send(queue, message);
@@ -179,6 +192,7 @@ public class WSProvider {
     public void produceCallbackMessage(FileDeliveryEntity deliveryEntity) {
         try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
             JMSProducer producer = context.createProducer();
+            producer.setDeliveryDelay(messageDelay);
             Queue queue = context.createQueue(callbackQueue);
             Message message = context.createTextMessage(deliveryEntity.id.toString());
             producer.send(queue, message);

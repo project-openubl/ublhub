@@ -25,7 +25,7 @@ public class SendFileQueueConsumer implements Runnable {
     @Inject
     ConnectionFactory connectionFactory;
 
-    @ConfigProperty(name = "openubl.sendFileQueue")
+    @ConfigProperty(name = "openubl.jms.sendFileQueue")
     String sendFileQueue;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();

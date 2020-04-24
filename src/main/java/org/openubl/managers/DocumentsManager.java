@@ -34,14 +34,14 @@ public class DocumentsManager {
     public static final Pattern FACTURA_SERIE_REGEX = Pattern.compile("^[F|f].*$");
     public static final Pattern BOLETA_SERIE_REGEX = Pattern.compile("^[B|b].*$");
 
-    @ConfigProperty(name = "openubl.sunatUrl1")
-    String sunatUrl1;
+    @ConfigProperty(name = "openubl.jms.delay")
+    Long messageDelay;
 
-    @ConfigProperty(name = "openubl.sendFileQueue")
+    @ConfigProperty(name = "openubl.jms.sendFileQueue")
     String sendFileQueue;
 
-    @ConfigProperty(name = "openubl.message.delay")
-    Long messageDelay;
+    @ConfigProperty(name = "openubl.sunat.url1")
+    String sunatUrl1;
 
     @Inject
     FilesManager filesManager;
@@ -62,7 +62,7 @@ public class DocumentsManager {
      */
     @Transactional
     public FileDeliveryEntity createFileDeliveryAndSchedule(
-            byte[] file, String customId
+            byte[] file, String username, String password, String customId
     ) throws InvalidXMLFileException, UnsupportedDocumentTypeException, StorageException {
         // Read file
         XmlContentModel xmlContentModel;
@@ -74,16 +74,16 @@ public class DocumentsManager {
 
         // Check document type is supported
         Optional<DocumentType> documentTypeOptional = DocumentType.valueFromDocumentType(xmlContentModel.getDocumentType());
-        if (!documentTypeOptional.isPresent()) {
+        if (documentTypeOptional.isEmpty()) {
             throw new UnsupportedDocumentTypeException(xmlContentModel.getDocumentType() + " is not supported yet");
         }
 
         DocumentType documentType = documentTypeOptional.get();
         String serverUrl = getServerUrl(documentType);
-        String fileName = getFileName(documentType, xmlContentModel.getRuc(), xmlContentModel.getDocumentID());
+        String fileNameWithoutExtension = getFileNameWithoutExtension(documentType, xmlContentModel.getRuc(), xmlContentModel.getDocumentID());
 
         // Save XML File
-        String fileID = filesManager.upload(file, fileName, FileType.XML);
+        String fileID = filesManager.uploadFile(file, fileNameWithoutExtension + ".xml" ,FileType.XML);
         if (fileID == null) {
             throw new StorageException("Could not save xml file in storage");
         }
@@ -91,12 +91,14 @@ public class DocumentsManager {
         // Create Entity in DB
         FileDeliveryEntity deliveryEntity = FileDeliveryEntity.Builder.aFileDeliveryEntity()
                 .withFileID(fileID)
-                .withFilename(fileName)
+                .withFilename(fileNameWithoutExtension)
                 .withRuc(xmlContentModel.getRuc())
                 .withDocumentID(xmlContentModel.getDocumentID())
                 .withDocumentType(documentType)
                 .withDeliveryStatus(FileDeliveryStatusType.SCHEDULED_TO_DELIVER)
                 .withServerUrl(serverUrl)
+                .withSunatUsername(username)
+                .withSunatPassword(password)
                 .withCustomId(customId)
                 .build();
 
@@ -126,7 +128,7 @@ public class DocumentsManager {
         return sunatUrl1;
     }
 
-    private String getFileName(DocumentType type, String ruc, String documentID) {
+    private String getFileNameWithoutExtension(DocumentType type, String ruc, String documentID) {
         String codigoDocumento;
         switch (type) {
             case INVOICE:
@@ -138,16 +140,16 @@ public class DocumentsManager {
                     throw new IllegalStateException("Invalid Serie, can not detect code");
                 }
 
-                return MessageFormat.format("{0}-{1}-{2}.xml", ruc, codigoDocumento, documentID);
+                return MessageFormat.format("{0}-{1}-{2}", ruc, codigoDocumento, documentID);
             case CREDIT_NOTE:
                 codigoDocumento = "07";
-                return MessageFormat.format("{0}-{1}-{2}.xml", ruc, codigoDocumento, documentID);
+                return MessageFormat.format("{0}-{1}-{2}", ruc, codigoDocumento, documentID);
             case DEBIT_NOTE:
                 codigoDocumento = "08";
-                return MessageFormat.format("{0}-{1}-{2}.xml", ruc, codigoDocumento, documentID);
+                return MessageFormat.format("{0}-{1}-{2}", ruc, codigoDocumento, documentID);
             case VOIDED_DOCUMENT:
             case SUMMARY_DOCUMENT:
-                return MessageFormat.format("{0}-{1}.xml", ruc, documentID);
+                return MessageFormat.format("{0}-{1}", ruc, documentID);
             default:
                 throw new IllegalStateException("Invalid type of UBL Document, can not extract Serie-Numero to create fileName");
         }

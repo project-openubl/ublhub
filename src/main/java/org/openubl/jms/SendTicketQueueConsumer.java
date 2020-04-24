@@ -25,7 +25,7 @@ public class SendTicketQueueConsumer implements Runnable {
     @Inject
     ConnectionFactory connectionFactory;
 
-    @ConfigProperty(name = "openubl.ticketQueue")
+    @ConfigProperty(name = "openubl.jms.ticketQueue")
     String ticketQueue;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();

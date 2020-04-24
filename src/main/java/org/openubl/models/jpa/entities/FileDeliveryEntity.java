@@ -44,6 +44,12 @@ public class FileDeliveryEntity extends PanacheEntity {
     @Column(name = "crd_id")
     public String cdrID;
 
+    @Column(name = "sunat_username")
+    public String sunatUsername;
+
+    @Column(name = "sunat_password")
+    public String sunatPassword;
+
     @Column(name = "sunat_ticket")
     public String sunatTicket;
 
@@ -68,6 +74,8 @@ public class FileDeliveryEntity extends PanacheEntity {
         public FileDeliveryStatusType deliveryStatus;
         public String serverUrl;
         public String cdrID;
+        public String sunatUsername;
+        public String sunatPassword;
         public String sunatTicket;
         public String sunatStatus;
         public Integer sunatCode;
@@ -121,6 +129,16 @@ public class FileDeliveryEntity extends PanacheEntity {
             return this;
         }
 
+        public Builder withSunatUsername(String sunatUsername) {
+            this.sunatUsername = sunatUsername;
+            return this;
+        }
+
+        public Builder withSunatPassword(String sunatPassword) {
+            this.sunatPassword = sunatPassword;
+            return this;
+        }
+
         public Builder withSunatTicket(String sunatTicket) {
             this.sunatTicket = sunatTicket;
             return this;
@@ -148,19 +166,21 @@ public class FileDeliveryEntity extends PanacheEntity {
 
         public FileDeliveryEntity build() {
             FileDeliveryEntity fileDeliveryEntity = new FileDeliveryEntity();
-            fileDeliveryEntity.documentType = this.documentType;
+            fileDeliveryEntity.sunatPassword = this.sunatPassword;
             fileDeliveryEntity.sunatStatus = this.sunatStatus;
-            fileDeliveryEntity.filename = this.filename;
-            fileDeliveryEntity.cdrID = this.cdrID;
+            fileDeliveryEntity.fileID = this.fileID;
             fileDeliveryEntity.serverUrl = this.serverUrl;
+            fileDeliveryEntity.ruc = this.ruc;
+            fileDeliveryEntity.sunatUsername = this.sunatUsername;
+            fileDeliveryEntity.filename = this.filename;
+            fileDeliveryEntity.sunatDescription = this.sunatDescription;
+            fileDeliveryEntity.sunatCode = this.sunatCode;
+            fileDeliveryEntity.documentID = this.documentID;
+            fileDeliveryEntity.cdrID = this.cdrID;
+            fileDeliveryEntity.customId = this.customId;
+            fileDeliveryEntity.documentType = this.documentType;
             fileDeliveryEntity.deliveryStatus = this.deliveryStatus;
             fileDeliveryEntity.sunatTicket = this.sunatTicket;
-            fileDeliveryEntity.customId = this.customId;
-            fileDeliveryEntity.ruc = this.ruc;
-            fileDeliveryEntity.sunatDescription = this.sunatDescription;
-            fileDeliveryEntity.documentID = this.documentID;
-            fileDeliveryEntity.fileID = this.fileID;
-            fileDeliveryEntity.sunatCode = this.sunatCode;
             return fileDeliveryEntity;
         }
     }

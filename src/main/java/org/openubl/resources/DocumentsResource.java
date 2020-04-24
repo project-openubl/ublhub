@@ -36,6 +36,8 @@ public class DocumentsResource {
         Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
 
         List<InputPart> fileInputParts = uploadForm.get("file");
+        List<InputPart> usernameInputParts = uploadForm.get("username");
+        List<InputPart> passwordInputParts = uploadForm.get("password");
         List<InputPart> customIdInputParts = uploadForm.get("customId");
 
         if (fileInputParts == null) {
@@ -44,12 +46,26 @@ public class DocumentsResource {
         }
 
         byte[] xmlFile = null;
+        String username = null;
+        String password = null;
         String customId = null;
 
         try {
             for (InputPart inputPart : fileInputParts) {
                 InputStream fileInputStream = inputPart.getBody(InputStream.class, null);
                 xmlFile = IOUtils.toByteArray(fileInputStream);
+            }
+
+            if (usernameInputParts != null) {
+                for (InputPart inputPart : usernameInputParts) {
+                    username = inputPart.getBodyAsString();
+                }
+            }
+
+            if (passwordInputParts != null) {
+                for (InputPart inputPart : passwordInputParts) {
+                    password = inputPart.getBodyAsString();
+                }
             }
 
             if (customIdInputParts != null) {
@@ -68,7 +84,7 @@ public class DocumentsResource {
 
         FileDeliveryEntity fileDeliveryEntity;
         try {
-            fileDeliveryEntity = documentsManager.createFileDeliveryAndSchedule(xmlFile, customId);
+            fileDeliveryEntity = documentsManager.createFileDeliveryAndSchedule(xmlFile, username, password, customId);
         } catch (InvalidXMLFileException e) {
             LOG.error(e);
             ErrorRepresentation error = new ErrorRepresentation("Form[file] is not a valid XML file or is corrupted");
