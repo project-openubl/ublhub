@@ -34,3 +34,9 @@ If you want to learn more about building native executables, please consult http
 ./mvnw package -Pcoverage
 ./mvnw package -f coverage-report
 ```
+
+## License
+
+- [Eclipse Public License - v 2.0](./LICENSE)
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fproject-openubl%2Fxml-sender.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fproject-openubl%2Fxml-sender?ref=badge_large)
