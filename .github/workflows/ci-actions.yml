@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    paths-ignore:
+      - 'README.md'
+  pull_request:
+    types: [assigned, opened, synchronize, reopened, ready_for_review, edited]
+    paths-ignore:
+      - 'README.md'
+  schedule:
+    - cron:  '0 0 * * *'
+
+env:
+  JVM_TEST_MAVEN_OPTS: "-e -B"
+
+jobs:
+  build-jdk11:
+    name: "JDK 11 Build"
+    runs-on: ubuntu-latest
+    # Skip draft PRs and those with WIP in the subject, rerun as soon as its removed
+    if: "github.event_name != 'pull_request' || ( \
+           github.event.pull_request.draft == false && \
+           github.event.pull_request.state != 'closed' && \
+           contains(github.event.pull_request.title, 'wip ') == false && \
+           contains(github.event.pull_request.title, '[wip]') == false && \
+           (
+             github.event.action != 'edited' || \
+             contains(github.event.changes.title.from, 'wip ') || \
+             contains(github.event.changes.title.from, '[wip]') \
+           ) \
+         )"
+    steps:
+      - uses: actions/checkout@v2
+      - uses: n1hility/cancel-previous-runs@v2
+        if: github.event_name == 'pull_request'
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up JDK 11
+        # Uses sha for added security since tags can be updated
+        uses: joschi/setup-jdk@b9cc6eabf7e7e3889766b5cee486f874c9e1bd2d
+        with:
+          java-version: 11
+      - name: Build with Maven and Coverage
+        if: github.event_name == 'pull_request'
+        run: mvn verify -P coverage
+      - name: Build with Maven and Coverage/Sonar
+        if: github.event_name != 'pull_request'
+        run: mvn verify -P coverage,sonar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Codecov metrics
+        uses: codecov/codecov-action@v1
+      - name: Prepare failure archive (if maven failed)
+        if: failure()
+        shell: bash
+        run: find . -name '*-reports' -type d | tar -czvf test-reports.tgz -T -
+      - name: Upload failure Archive (if maven failed)
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: test-reports-linux-jvm11
+          path: 'test-reports.tgz'
