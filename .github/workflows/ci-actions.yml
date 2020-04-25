@@ -87,7 +87,7 @@ jobs:
           MINIO_SECRET_KEY: uvgz3LCwWM3e400cDkQIH/y1Y4xgU4iV91CwFSPC
         ports:
           - 127.0.0.1:9000:9000
-        options: --entrypoint "/usr/bin/docker-entrypoint.sh minio server /data"
+        options: --entrypoint "minio server /data"
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK ${{ matrix.java-version }}
