@@ -81,13 +81,12 @@ jobs:
           - 127.0.0.1:8161:8161
           - 127.0.0.1:61616:61616
       minio:
-        image: minio/minio
+        image: minio/minio server /data
         env:
           MINIO_ACCESS_KEY: BQA2GEXO711FVBVXDWKM
           MINIO_SECRET_KEY: uvgz3LCwWM3e400cDkQIH/y1Y4xgU4iV91CwFSPC
         ports:
           - 127.0.0.1:9000:9000
-        options: server /data
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK ${{ matrix.java-version }}
