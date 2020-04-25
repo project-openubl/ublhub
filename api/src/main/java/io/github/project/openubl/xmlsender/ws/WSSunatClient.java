@@ -119,14 +119,8 @@ public class WSSunatClient {
         try {
             ServiceConfig config = new ServiceConfig.Builder()
                     .url(documentEntity.deliveryURL)
-                    .username(documentEntity.sunatUsername != null
-                            ? documentEntity.sunatUsername
-                            : sunatUsername.orElseThrow(() -> new IllegalStateException("Could not find a username for sending to SUNAT"))
-                    )
-                    .password(documentEntity.sunatPassword != null
-                            ? documentEntity.sunatPassword
-                            : sunatPassword.orElseThrow(() -> new IllegalStateException("Could not find a username for sending to SUNAT"))
-                    )
+                    .username(documentEntity.sunatUsername != null ? documentEntity.sunatUsername : sunatUsername.orElseThrow(IllegalStateException::new))
+                    .password(documentEntity.sunatPassword != null ? documentEntity.sunatPassword : sunatPassword.orElseThrow(IllegalStateException::new))
                     .build();
             billServiceModel = BillServiceManager.getStatus(documentEntity.sunatTicket, config);
         } catch (UnknownWebServiceException e) {
@@ -147,11 +141,11 @@ public class WSSunatClient {
         }
 
         // Update DB
-        documentEntity.cdrID = cdrID;
-        documentEntity.sunatCode = billServiceModel.getCode();
-        documentEntity.sunatDescription = billServiceModel.getDescription();
-        documentEntity.sunatStatus = billServiceModel.getStatus().toString();
-        documentEntity.deliveryStatus = DeliveryStatusType.DELIVERED;
+        documentEntity.setCdrID(cdrID);
+        documentEntity.setSunatCode(billServiceModel.getCode());
+        documentEntity.setSunatDescription(billServiceModel.getDescription());
+        documentEntity.setSunatStatus(billServiceModel.getStatus().toString());
+        documentEntity.setDeliveryStatus(DeliveryStatusType.DELIVERED);
 
         documentRepository.persist(documentEntity);
 
@@ -161,8 +155,8 @@ public class WSSunatClient {
 
     private void processTicket(BillServiceModel billServiceModel, DocumentEntity documentEntity) {
         // Update DB
-        documentEntity.deliveryStatus = DeliveryStatusType.SCHEDULED_CHECK_TICKET;
-        documentEntity.sunatTicket = billServiceModel.getTicket();
+        documentEntity.setDeliveryStatus(DeliveryStatusType.SCHEDULED_CHECK_TICKET);
+        documentEntity.setSunatTicket(billServiceModel.getTicket());
 
         documentEntity.persist();
 

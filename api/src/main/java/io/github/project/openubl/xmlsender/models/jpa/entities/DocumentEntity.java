@@ -82,6 +82,126 @@ public class DocumentEntity extends PanacheEntity {
     @Column(name = "custom_id")
     public String customId;
 
+    public String getRuc() {
+        return ruc;
+    }
+
+    public void setRuc(String ruc) {
+        this.ruc = ruc;
+    }
+
+    public String getDocumentID() {
+        return documentID;
+    }
+
+    public void setDocumentID(String documentID) {
+        this.documentID = documentID;
+    }
+
+    public DocumentType getDocumentType() {
+        return documentType;
+    }
+
+    public void setDocumentType(DocumentType documentType) {
+        this.documentType = documentType;
+    }
+
+    public String getFilenameWithoutExtension() {
+        return filenameWithoutExtension;
+    }
+
+    public void setFilenameWithoutExtension(String filenameWithoutExtension) {
+        this.filenameWithoutExtension = filenameWithoutExtension;
+    }
+
+    public String getFileID() {
+        return fileID;
+    }
+
+    public void setFileID(String fileID) {
+        this.fileID = fileID;
+    }
+
+    public DeliveryStatusType getDeliveryStatus() {
+        return deliveryStatus;
+    }
+
+    public void setDeliveryStatus(DeliveryStatusType deliveryStatus) {
+        this.deliveryStatus = deliveryStatus;
+    }
+
+    public String getDeliveryURL() {
+        return deliveryURL;
+    }
+
+    public void setDeliveryURL(String deliveryURL) {
+        this.deliveryURL = deliveryURL;
+    }
+
+    public String getCdrID() {
+        return cdrID;
+    }
+
+    public void setCdrID(String cdrID) {
+        this.cdrID = cdrID;
+    }
+
+    public String getSunatUsername() {
+        return sunatUsername;
+    }
+
+    public void setSunatUsername(String sunatUsername) {
+        this.sunatUsername = sunatUsername;
+    }
+
+    public String getSunatPassword() {
+        return sunatPassword;
+    }
+
+    public void setSunatPassword(String sunatPassword) {
+        this.sunatPassword = sunatPassword;
+    }
+
+    public String getSunatTicket() {
+        return sunatTicket;
+    }
+
+    public void setSunatTicket(String sunatTicket) {
+        this.sunatTicket = sunatTicket;
+    }
+
+    public String getSunatStatus() {
+        return sunatStatus;
+    }
+
+    public void setSunatStatus(String sunatStatus) {
+        this.sunatStatus = sunatStatus;
+    }
+
+    public Integer getSunatCode() {
+        return sunatCode;
+    }
+
+    public void setSunatCode(Integer sunatCode) {
+        this.sunatCode = sunatCode;
+    }
+
+    public String getSunatDescription() {
+        return sunatDescription;
+    }
+
+    public void setSunatDescription(String sunatDescription) {
+        this.sunatDescription = sunatDescription;
+    }
+
+    public String getCustomId() {
+        return customId;
+    }
+
+    public void setCustomId(String customId) {
+        this.customId = customId;
+    }
+    
     public static final class Builder {
         public String ruc;
         public String documentID;
