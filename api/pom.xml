@@ -29,6 +29,7 @@
     </parent>
 
     <artifactId>xml-sender-api</artifactId>
+    <description>XML Sender :: API</description>
 
     <dependencies>
         <dependency>
@@ -41,12 +42,12 @@
             <groupId>io.github.project-openubl</groupId>
             <artifactId>xml-sender-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.github.project-openubl</groupId>
+            <artifactId>xml-sender-api-core</artifactId>
+        </dependency>
 
         <!--Quarkus-->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-arc</artifactId>
-        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy</artifactId>
@@ -133,11 +134,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-bootstrap-maven-plugin</artifactId>
-                <version>${quarkus.version}</version>
             </plugin>
 
             <plugin>

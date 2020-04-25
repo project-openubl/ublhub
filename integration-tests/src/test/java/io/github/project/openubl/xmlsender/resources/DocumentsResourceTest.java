@@ -1,13 +1,13 @@
 /**
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
- * <p>
+ *
  * Licensed under the Eclipse Public License - v 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  * https://www.eclipse.org/legal/epl-2.0/
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ class DocumentsResourceTest {
                 .when()
                 .header(new Header("content-type", "multipart/form-data"))
                 .multiPart("myParamName", "myParamValue")
-                .post("/documents")
+                .post(ApiApplication.API_BASE + "/documents")
                 .then()
                 .statusCode(400)
                 .body("error", is("Form[file] is required"));
@@ -57,7 +57,7 @@ class DocumentsResourceTest {
                 .when()
                 .header(new Header("content-type", "multipart/form-data"))
                 .multiPart("file", "")
-                .post("/documents")
+                .post(ApiApplication.API_BASE + "/documents")
                 .then()
                 .statusCode(400)
                 .body("error", is("Form[file] is empty"));
@@ -69,7 +69,7 @@ class DocumentsResourceTest {
                 .when()
                 .header(new Header("content-type", "multipart/form-data"))
                 .multiPart("file", "anyContent")
-                .post("/documents")
+                .post(ApiApplication.API_BASE + "/documents")
                 .then()
                 .statusCode(400)
                 .body("error", is("Form[file] is not a valid XML file or is corrupted"));
@@ -86,7 +86,7 @@ class DocumentsResourceTest {
                 .header(new Header("content-type", "multipart/form-data"))
                 .multiPart("file", file, "application/xml")
                 .formParam("customId", "myCustomSoftwareID")
-                .post("/documents")
+                .post(ApiApplication.API_BASE + "/documents")
                 .then()
                 .statusCode(200)
                 .body("id", notNullValue())
@@ -115,7 +115,7 @@ class DocumentsResourceTest {
                 .formParam("customId", "myCustomSoftwareID")
                 .formParam("username", "myUsername")
                 .formParam("password", "myPassword")
-                .post("/documents")
+                .post(ApiApplication.API_BASE + "/documents")
                 .then()
                 .statusCode(200)
                 .body("id", notNullValue())
@@ -142,7 +142,7 @@ class DocumentsResourceTest {
                 .header(new Header("content-type", "multipart/form-data"))
                 .multiPart("file", file, "application/xml")
                 .formParam("customId", "myCustomSoftwareID")
-                .post("/documents")
+                .post(ApiApplication.API_BASE + "/documents")
                 .then()
                 .statusCode(200)
                 .body("id", notNullValue())
@@ -150,7 +150,7 @@ class DocumentsResourceTest {
                 .as(DocumentRepresentation.class);
 
         Response response = given()
-                .when().get("/documents/" + rep.getId() + "/file")
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId() + "/file")
                 .thenReturn();
 
         assertEquals(200, response.getStatusCode());
@@ -172,7 +172,7 @@ class DocumentsResourceTest {
                 .formParam("customId", "myCustomSoftwareID")
                 .formParam("username", "12345678912MODDATOS")
                 .formParam("password", "MODDATOS")
-                .post("/documents")
+                .post(ApiApplication.API_BASE + "/documents")
                 .then()
                 .statusCode(200)
                 .body("id", notNullValue())
@@ -187,7 +187,7 @@ class DocumentsResourceTest {
                 .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
                 .until(() -> {
                     DocumentRepresentation currentRep = given()
-                            .when().get("/documents/" + rep.getId())
+                            .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
                             .then()
                             .extract()
                             .as(DocumentRepresentation.class);
@@ -196,7 +196,7 @@ class DocumentsResourceTest {
                 });
 
         given()
-                .when().get("/documents/" + rep.getId())
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
                 .then()
                 .statusCode(200)
 //                .body("id", is(rep.getId()))
@@ -209,7 +209,7 @@ class DocumentsResourceTest {
                 .body("sunatStatus.description", is("La Factura numero F001-1, ha sido aceptada"));
 
         given()
-                .when().get("/documents/" + rep.getId() + "/cdr")
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId() + "/cdr")
                 .then()
                 .statusCode(200);
     }
@@ -227,7 +227,7 @@ class DocumentsResourceTest {
                 .formParam("customId", "myCustomSoftwareID")
                 .formParam("username", "12345678912MODDATOS")
                 .formParam("password", "MODDATOS")
-                .post("/documents")
+                .post(ApiApplication.API_BASE + "/documents")
                 .then()
                 .statusCode(200)
                 .body("id", notNullValue())
@@ -242,7 +242,7 @@ class DocumentsResourceTest {
                 .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
                 .until(() -> {
                     DocumentRepresentation currentRep = given()
-                            .when().get("/documents/" + rep.getId())
+                            .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
                             .then()
                             .extract()
                             .as(DocumentRepresentation.class);
@@ -251,7 +251,7 @@ class DocumentsResourceTest {
                 });
 
         given()
-                .when().get("/documents/" + rep.getId())
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
                 .then()
                 .statusCode(200)
 //                .body("id", is(rep.getId()))
@@ -264,7 +264,7 @@ class DocumentsResourceTest {
                 .body("sunatStatus.description", is("La Comunicacion de baja RA-20200328-1, ha sido aceptada"));
 
         given()
-                .when().get("/documents/" + rep.getId() + "/cdr")
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId() + "/cdr")
                 .then()
                 .statusCode(200);
     }

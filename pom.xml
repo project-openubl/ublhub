@@ -26,8 +26,8 @@
     <artifactId>xml-sender</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
-    <name>XML Sender</name>
-    <description>SUNAT Microservice</description>
+    <name>XML Sender :: Parent</name>
+    <description>SUNAT Microservice for sending XMLs</description>
     <packaging>pom</packaging>
 
     <properties>
