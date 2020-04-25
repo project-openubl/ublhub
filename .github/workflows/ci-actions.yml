@@ -30,6 +30,24 @@ jobs:
              contains(github.event.changes.title.from, '[wip]') \
            ) \
          )"
+
+    services:
+      activemq-artemis:
+        image: vromero/activemq-artemis:2.9.0-alpine
+        env:
+          ARTEMIS_USERNAME: quarkus
+          ARTEMIS_PASSWORD: quarkus
+        ports:
+          - 127.0.0.1:8161:8161
+          - 127.0.0.1:61616:61616
+      minio:
+        image: minio/minio
+        env:
+          MINIO_ACCESS_KEY: BQA2GEXO711FVBVXDWKM
+          MINIO_SECRET_KEY: uvgz3LCwWM3e400cDkQIH/y1Y4xgU4iV91CwFSPC
+        ports:
+          - 127.0.0.1:9000:9000
+
     steps:
       - uses: actions/checkout@v2
       - uses: n1hility/cancel-previous-runs@v2
@@ -43,10 +61,10 @@ jobs:
           java-version: 11
       - name: Build with Maven and Coverage
         if: github.event_name == 'pull_request'
-        run: mvn verify -P coverage
+        run: mvn verify -P '!services,coverage'
       - name: Build with Maven and Coverage/Sonar
         if: github.event_name != 'pull_request'
-        run: mvn verify -P coverage,sonar
+        run: mvn verify -P '!services,coverage,sonar'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
