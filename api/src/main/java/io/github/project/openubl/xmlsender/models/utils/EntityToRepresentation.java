@@ -28,7 +28,6 @@ public class EntityToRepresentation {
         DocumentRepresentation rep = new DocumentRepresentation();
 
         rep.setId(documentEntity.id);
-
         rep.setCdrID(documentEntity.cdrID);
         rep.setFileID(documentEntity.fileID);
         rep.setDeliveryStatus(documentEntity.deliveryStatus.toString());
@@ -48,12 +47,16 @@ public class EntityToRepresentation {
         //
 
         DocumentRepresentation.SunatSecurityCredentialsRepresentation sunatCredentialsRep = new DocumentRepresentation.SunatSecurityCredentialsRepresentation();
+        rep.setSunatCredentials(sunatCredentialsRep);
+
         sunatCredentialsRep.setUsername(documentEntity.sunatUsername);
         sunatCredentialsRep.setPassword(documentEntity.sunatPassword != null ? "******" : null);
 
         //
 
         DocumentRepresentation.SunatStatusRepresentation sunatStatus = new DocumentRepresentation.SunatStatusRepresentation();
+        rep.setSunatStatus(sunatStatus);
+
         sunatStatus.setCode(documentEntity.sunatCode);
         sunatStatus.setTicket(documentEntity.sunatTicket);
         sunatStatus.setStatus(documentEntity.sunatStatus);

@@ -16,8 +16,16 @@
  */
 package io.github.project.openubl.xmlsender.models;
 
-public enum DeliveryStatusType {
-    SCHEDULED_TO_DELIVER,
-    SCHEDULED_CHECK_TICKET,
-    DELIVERED
+public interface DocumentEvent {
+    interface Created {
+        Long getId();
+    }
+
+    interface RequireCheckTicket {
+        Long getId();
+    }
+
+    interface Ready {
+        Long getId();
+    }
 }

@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.xmlsender.managers;
 
+import io.github.project.openubl.xmlsender.models.DocumentEvent;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import io.github.project.openubl.xmlsender.exceptions.InvalidXMLFileException;
@@ -31,13 +32,8 @@ import io.github.project.openubl.xmlsender.xml.ubl.XmlContentProvider;
 import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSContext;
-import javax.jms.JMSProducer;
-import javax.jms.Message;
-import javax.jms.Queue;
-import javax.jms.Session;
 import javax.transaction.Transactional;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
@@ -56,12 +52,6 @@ public class DocumentsManager {
     public static final Pattern FACTURA_SERIE_REGEX = Pattern.compile("^[F|f].*$");
     public static final Pattern BOLETA_SERIE_REGEX = Pattern.compile("^[B|b].*$");
 
-    @ConfigProperty(name = "openubl.jms.delay")
-    Long messageDelay;
-
-    @ConfigProperty(name = "openubl.jms.sendFileQueue")
-    String sendFileQueue;
-
     @ConfigProperty(name = "openubl.sunat.url1")
     String sunatUrl1;
 
@@ -69,13 +59,13 @@ public class DocumentsManager {
     FilesManager filesManager;
 
     @Inject
-    ConnectionFactory connectionFactory;
-
-    @Inject
     XmlContentProvider xmlContentProvider;
 
     @Inject
     DocumentRepository documentRepository;
+
+    @Inject
+    Event<DocumentEvent.Created> documentCreatedEvent;
 
     public DocumentEntity createDocumentAndScheduleDelivery(
             byte[] file, String username, String password, String customId
@@ -121,23 +111,10 @@ public class DocumentsManager {
         documentRepository.persist(documentEntity);
 
         // Send JSM File
-        produceMessage(documentEntity);
+        documentCreatedEvent.fire(() -> documentEntity.id);
 
         // return result
         return documentEntity;
-    }
-
-    private void produceMessage(DocumentEntity deliveryEntity) {
-        try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
-            JMSProducer producer = context.createProducer();
-            producer.setDeliveryDelay(messageDelay);
-
-            Queue queue = context.createQueue(sendFileQueue);
-            Message message = context.createTextMessage(deliveryEntity.id.toString());
-            producer.send(queue, message);
-        } finally {
-            LOG.debug(deliveryEntity + " was sent to:" + sendFileQueue);
-        }
     }
 
     private String getDeliveryURL(DocumentType documentType) {

@@ -17,6 +17,7 @@
 package io.github.project.openubl.xmlsender.ws;
 
 import io.github.project.openubl.xmlsender.managers.FilesManager;
+import io.github.project.openubl.xmlsender.models.DocumentEvent;
 import io.github.project.openubl.xmlsender.models.DocumentType;
 import io.github.project.openubl.xmlsender.models.DeliveryStatusType;
 import io.github.project.openubl.xmlsender.models.FileType;
@@ -30,8 +31,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
-import javax.jms.*;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.lang.IllegalStateException;
@@ -49,38 +50,36 @@ public class WSSunatClient {
     @Inject
     FilesManager filesManager;
 
-    @Inject
-    ConnectionFactory connectionFactory;
-
-    @ConfigProperty(name = "openubl.jms.delay")
-    Long messageDelay;
-
-    @ConfigProperty(name = "openubl.jms.callbackQueue")
-    String callbackQueue;
-
-    @ConfigProperty(name = "openubl.jms.ticketQueue")
-    String ticketQueue;
-
     @ConfigProperty(name = "openubl.sunat.username")
     Optional<String> sunatUsername;
 
     @ConfigProperty(name = "openubl.sunat.password")
     Optional<String> sunatPassword;
 
+    @Inject
+    Event<DocumentEvent.Ready> documentReadyEvent;
+
+    @Inject
+    Event<DocumentEvent.RequireCheckTicket> documentRequireCheckTicketEvent;
+
     /**
      * @return true if message was processed and don't need to be redelivered
      */
     public boolean sendDocument(Long documentId) {
-        DocumentEntity deliveryEntity = documentRepository.findById(documentId);
+        DocumentEntity documentEntity = documentRepository.findById(documentId);
+        if (documentEntity == null) {
+            LOG.warnf("Document[%s] does not exists", documentId);
+            return true;
+        }
 
-        DocumentType documentType = deliveryEntity.documentType;
-        byte[] file = filesManager.getFileAsBytesWithoutUnzipping(deliveryEntity.fileID);
+        DocumentType documentType = documentEntity.documentType;
+        byte[] file = filesManager.getFileAsBytesWithoutUnzipping(documentEntity.fileID);
 
         // Send to SUNAT
         ServiceConfig config = new ServiceConfig.Builder()
-                .url(deliveryEntity.deliveryURL)
-                .username(deliveryEntity.sunatUsername != null ? deliveryEntity.sunatUsername : sunatUsername.orElseThrow(IllegalStateException::new))
-                .password(deliveryEntity.sunatPassword != null ? deliveryEntity.sunatPassword : sunatPassword.orElseThrow(IllegalStateException::new))
+                .url(documentEntity.deliveryURL)
+                .username(documentEntity.sunatUsername != null ? documentEntity.sunatUsername : sunatUsername.orElseThrow(IllegalStateException::new))
+                .password(documentEntity.sunatPassword != null ? documentEntity.sunatPassword : sunatPassword.orElseThrow(IllegalStateException::new))
                 .build();
 
         BillServiceModel billServiceModel;
@@ -89,13 +88,13 @@ public class WSSunatClient {
                 case INVOICE:
                 case CREDIT_NOTE:
                 case DEBIT_NOTE:
-                    billServiceModel = BillServiceManager.sendBill(FileType.getFilename(deliveryEntity.filenameWithoutExtension, FileType.ZIP), file, config);
-                    processCDR(billServiceModel, deliveryEntity);
+                    billServiceModel = BillServiceManager.sendBill(FileType.getFilename(documentEntity.filenameWithoutExtension, FileType.ZIP), file, config);
+                    processCDR(billServiceModel, documentEntity);
                     break;
                 case VOIDED_DOCUMENT:
                 case SUMMARY_DOCUMENT:
-                    billServiceModel = BillServiceManager.sendSummary(FileType.getFilename(deliveryEntity.filenameWithoutExtension, FileType.ZIP), file, config);
-                    processTicket(billServiceModel, deliveryEntity);
+                    billServiceModel = BillServiceManager.sendSummary(FileType.getFilename(documentEntity.filenameWithoutExtension, FileType.ZIP), file, config);
+                    processTicket(billServiceModel, documentEntity);
                     break;
                 default:
                     LOG.warn("Unsupported file, will acknowledge and delete message:" + documentType);
@@ -103,10 +102,6 @@ public class WSSunatClient {
             }
         } catch (IOException | UnknownWebServiceException e) {
             LOG.error(e);
-
-            deliveryEntity.deliveryStatus = DeliveryStatusType.RESCHEDULED_TO_DELIVER;
-            documentRepository.persist(deliveryEntity);
-
             return false;
         }
 
@@ -117,85 +112,62 @@ public class WSSunatClient {
      * @return true if message was processed and don't need to be redelivered
      */
     public boolean checkDocumentTicket(long documentId) {
-        DocumentEntity deliveryEntity = documentRepository.findById(documentId);
+        DocumentEntity documentEntity = documentRepository.findById(documentId);
 
         // Send to SUNAT
         BillServiceModel billServiceModel;
         try {
             ServiceConfig config = new ServiceConfig.Builder()
-                    .url(deliveryEntity.deliveryURL)
-                    .username(deliveryEntity.sunatUsername != null
-                            ? deliveryEntity.sunatUsername
+                    .url(documentEntity.deliveryURL)
+                    .username(documentEntity.sunatUsername != null
+                            ? documentEntity.sunatUsername
                             : sunatUsername.orElseThrow(() -> new IllegalStateException("Could not find a username for sending to SUNAT"))
                     )
-                    .password(deliveryEntity.sunatPassword != null
-                            ? deliveryEntity.sunatPassword
+                    .password(documentEntity.sunatPassword != null
+                            ? documentEntity.sunatPassword
                             : sunatPassword.orElseThrow(() -> new IllegalStateException("Could not find a username for sending to SUNAT"))
                     )
                     .build();
-            billServiceModel = BillServiceManager.getStatus(deliveryEntity.sunatTicket, config);
+            billServiceModel = BillServiceManager.getStatus(documentEntity.sunatTicket, config);
         } catch (UnknownWebServiceException e) {
             LOG.error(e);
-
-            deliveryEntity.deliveryStatus = DeliveryStatusType.RESCHEDULED_CHECK_TICKET;
-            documentRepository.persist(deliveryEntity);
-
             return false;
         }
 
-        processCDR(billServiceModel, deliveryEntity);
+        processCDR(billServiceModel, documentEntity);
         return true;
     }
 
-    private void processCDR(BillServiceModel billServiceModel, DocumentEntity deliveryEntity) {
+    private void processCDR(BillServiceModel billServiceModel, DocumentEntity documentEntity) {
         // Save CDR in storage
         String cdrID = null;
         if (billServiceModel.getCdr() != null) {
             // The filename does not really matter here
-            cdrID = filesManager.createFile(billServiceModel.getCdr(), deliveryEntity.filenameWithoutExtension, FileType.ZIP);
+            cdrID = filesManager.createFile(billServiceModel.getCdr(), documentEntity.filenameWithoutExtension, FileType.ZIP);
         }
 
         // Update DB
-        deliveryEntity.cdrID = cdrID;
-        deliveryEntity.sunatCode = billServiceModel.getCode();
-        deliveryEntity.sunatDescription = billServiceModel.getDescription();
-        deliveryEntity.sunatStatus = billServiceModel.getStatus().toString();
-        deliveryEntity.deliveryStatus = DeliveryStatusType.SCHEDULED_CALLBACK;
+        documentEntity.cdrID = cdrID;
+        documentEntity.sunatCode = billServiceModel.getCode();
+        documentEntity.sunatDescription = billServiceModel.getDescription();
+        documentEntity.sunatStatus = billServiceModel.getStatus().toString();
+        documentEntity.deliveryStatus = DeliveryStatusType.DELIVERED;
 
-        documentRepository.persist(deliveryEntity);
+        documentRepository.persist(documentEntity);
 
-        // JMS
-        produceCallbackMessage(deliveryEntity);
+        // Event
+        documentReadyEvent.fire(() -> documentEntity.id);
     }
 
-    private void processTicket(BillServiceModel billServiceModel, DocumentEntity deliveryEntity) {
+    private void processTicket(BillServiceModel billServiceModel, DocumentEntity documentEntity) {
         // Update DB
-        deliveryEntity.deliveryStatus = DeliveryStatusType.SCHEDULED_CHECK_TICKET;
-        deliveryEntity.sunatTicket = billServiceModel.getTicket();
+        documentEntity.deliveryStatus = DeliveryStatusType.SCHEDULED_CHECK_TICKET;
+        documentEntity.sunatTicket = billServiceModel.getTicket();
 
-        deliveryEntity.persist();
+        documentEntity.persist();
 
         // JMS
-        produceTicketMessage(deliveryEntity);
+        documentRequireCheckTicketEvent.fire(() -> documentEntity.id);
     }
 
-    public void produceTicketMessage(DocumentEntity deliveryEntity) {
-        try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
-            JMSProducer producer = context.createProducer();
-            producer.setDeliveryDelay(messageDelay);
-            Queue queue = context.createQueue(ticketQueue);
-            Message message = context.createTextMessage(deliveryEntity.id.toString());
-            producer.send(queue, message);
-        }
-    }
-
-    public void produceCallbackMessage(DocumentEntity deliveryEntity) {
-        try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
-            JMSProducer producer = context.createProducer();
-            producer.setDeliveryDelay(messageDelay);
-            Queue queue = context.createQueue(callbackQueue);
-            Message message = context.createTextMessage(deliveryEntity.id.toString());
-            producer.send(queue, message);
-        }
-    }
 }

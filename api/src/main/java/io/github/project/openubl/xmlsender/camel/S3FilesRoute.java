@@ -28,6 +28,9 @@ import org.apache.camel.component.aws.s3.S3Constants;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -106,14 +109,22 @@ public class S3FilesRoute extends RouteBuilder {
 
         from("direct:s3-get-file")
                 .id("s3-get-file")
-                .pollEnrich().simple("aws-s3:"+ s3Bucket + "?amazonS3Client=#s3client&deleteAfterRead=false&fileName=${body}")
-                .setHeader("Content-Disposition", simple("$header.CamelAwsS3ContentDisposition"))
-                .setHeader(Exchange.CONTENT_TYPE, simple("$header.CamelAwsS3ContentType"))
                 .choice()
                     .when(header("shouldUnzip").isEqualTo(true))
+                        .pollEnrich().simple("aws-s3:"+ s3Bucket + "?amazonS3Client=#s3client&deleteAfterRead=false&fileName=${body}")
+                        .setHeader("Content-Disposition", simple("$header.CamelAwsS3ContentDisposition"))
+                        .setHeader(Exchange.CONTENT_TYPE, simple("$header.CamelAwsS3ContentType"))
                         .unmarshal().zipFile()
                     .endChoice()
+                    .otherwise()
+                        .pollEnrich().simple("aws-s3:"+ s3Bucket + "?amazonS3Client=#s3client&deleteAfterRead=false&fileName=${body}")
+                        .setHeader("Content-Disposition", simple("$header.CamelAwsS3ContentDisposition"))
+                        .setHeader(Exchange.CONTENT_TYPE, simple("$header.CamelAwsS3ContentType"))
+                    .endChoice()
                 .end();
+
+        from("direct:s3-get-file-util")
+                .pollEnrich().simple("aws-s3:"+ s3Bucket + "?amazonS3Client=#s3client&deleteAfterRead=false&fileName=${body}");
 
         from("direct:s3-get-file-link")
                 .id("s3-get-file-link")

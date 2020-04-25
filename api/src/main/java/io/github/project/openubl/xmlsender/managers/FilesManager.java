@@ -60,11 +60,17 @@ public class FilesManager {
 
     public byte[] getFileAsBytesWithoutUnzipping(String fileID) {
         Map<String, Object> headers = new HashMap<>();
-        headers.put("shouldUnzip", true);
+        headers.put("shouldUnzip", false);
 
         return camelContext
                 .createProducerTemplate()
                 .requestBodyAndHeaders("direct:" + storageType + "-get-file", fileID, headers, byte[].class);
+    }
+
+    public String getFileLink(String fileID) {
+        return camelContext
+                .createProducerTemplate()
+                .requestBody("direct:" + storageType + "-get-file-link", fileID, String.class);
     }
 
     public void delete(String fileID) {

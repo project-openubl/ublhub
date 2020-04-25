@@ -19,8 +19,11 @@ package io.github.project.openubl.xmlsender.resources;
 import io.github.project.openubl.xmlsender.exceptions.InvalidXMLFileException;
 import io.github.project.openubl.xmlsender.exceptions.StorageException;
 import io.github.project.openubl.xmlsender.exceptions.UnsupportedDocumentTypeException;
+import io.github.project.openubl.xmlsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xmlsender.idm.ErrorRepresentation;
 import io.github.project.openubl.xmlsender.managers.DocumentsManager;
+import io.github.project.openubl.xmlsender.managers.FilesManager;
+import io.github.project.openubl.xmlsender.models.jpa.DocumentRepository;
 import io.github.project.openubl.xmlsender.models.jpa.entities.DocumentEntity;
 import io.github.project.openubl.xmlsender.models.utils.EntityToRepresentation;
 import org.apache.commons.io.IOUtils;
@@ -31,11 +34,9 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.BadRequestException;
+import javax.ws.rs.*;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,12 +52,17 @@ public class DocumentsResource {
     private static final Logger LOG = Logger.getLogger(DocumentsResource.class);
 
     @Inject
+    DocumentRepository documentRepository;
+
+    @Inject
     DocumentsManager documentsManager;
 
+    @Inject
+    FilesManager filesManager;
+
     @POST
-    @Path("/xml/send")
     @Consumes("multipart/form-data")
-    public Response sendXML(MultipartFormDataInput input) {
+    public Response createDocument(MultipartFormDataInput input) {
         Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
 
         List<InputPart> fileInputParts = uploadForm.get("file");
@@ -127,5 +133,82 @@ public class DocumentsResource {
                 .build();
     }
 
+    @GET
+    @Path("/{id}")
+    @Produces("application/json")
+    public DocumentRepresentation getDocument(@PathParam("id") Long id) {
+        DocumentEntity documentEntity = documentRepository.findById(id);
+        if (documentEntity == null) {
+            throw new NotFoundException();
+        }
+
+        return EntityToRepresentation.toRepresentation(documentEntity);
+    }
+
+    @GET
+    @Path("/{id}/file")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
+    public Response getDocumentFile(@PathParam("id") Long id) {
+        DocumentEntity documentEntity = documentRepository.findById(id);
+        if (documentEntity == null) {
+            throw new NotFoundException();
+        }
+
+        byte[] file = filesManager.getFileAsBytesAfterUnzip(documentEntity.fileID);
+        return Response.ok(file)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + documentEntity.filenameWithoutExtension + ".xml" + "\""
+                )
+                .build();
+    }
+
+    @GET
+    @Path("/{id}/file-link")
+    @Produces("application/json")
+    public String getDocumentFileLink(@PathParam("id") Long id) {
+        DocumentEntity documentEntity = documentRepository.findById(id);
+        if (documentEntity == null) {
+            throw new NotFoundException();
+        }
+
+        return filesManager.getFileLink(documentEntity.fileID);
+    }
+
+    @GET
+    @Path("/{id}/cdr")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response getDocumentCdr(@PathParam("id") Long id) {
+        DocumentEntity documentEntity = documentRepository.findById(id);
+        if (documentEntity == null) {
+            throw new NotFoundException();
+        }
+        if (documentEntity.cdrID == null) {
+            throw new NotFoundException();
+        }
+
+        byte[] file = filesManager.getFileAsBytesWithoutUnzipping(documentEntity.cdrID);
+        return Response.ok(file)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + documentEntity.filenameWithoutExtension + ".zip" + "\""
+                )
+                .build();
+    }
+
+    @GET
+    @Path("/{id}/cdr-link")
+    @Produces("application/json")
+    public String getDocumentCdrLink(@PathParam("id") Long id) {
+        DocumentEntity documentEntity = documentRepository.findById(id);
+        if (documentEntity == null) {
+            throw new NotFoundException();
+        }
+        if (documentEntity.cdrID == null) {
+            throw new NotFoundException();
+        }
+
+        return filesManager.getFileLink(documentEntity.cdrID);
+    }
 }
 
