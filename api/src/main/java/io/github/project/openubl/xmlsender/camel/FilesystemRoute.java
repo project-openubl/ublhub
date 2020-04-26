@@ -16,7 +16,6 @@
  */
 package io.github.project.openubl.xmlsender.camel;
 
-import io.github.project.openubl.xmlsender.models.FileType;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -38,7 +37,7 @@ public class FilesystemRoute extends RouteBuilder {
         from("direct:filesystem-save-file")
                 .id("filesystem-save-file")
                 .choice()
-                    .when(header("fileType").isEqualTo(FileType.XML))
+                    .when(header("isZipFile").isEqualTo(false))
                         .marshal().zipFile()
                     .endChoice()
                 .end()
@@ -59,7 +58,12 @@ public class FilesystemRoute extends RouteBuilder {
                     String filename = exchange.getIn().getBody(String.class);
                     byte[] bytes = Files.readAllBytes(Paths.get(filename));
                     exchange.getIn().setBody(bytes);
-                });
+                })
+                .choice()
+                    .when(header("shouldUnzip").isEqualTo(true))
+                        .unmarshal().zipFile()
+                    .endChoice()
+                .end();
 
         from("direct:filesystem-get-file-link")
                 .id("filesystem-get-file-link")

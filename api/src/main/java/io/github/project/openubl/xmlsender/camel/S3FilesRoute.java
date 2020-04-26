@@ -101,7 +101,7 @@ public class S3FilesRoute extends RouteBuilder {
                     exchange.getIn().setHeader(S3Constants.CONTENT_TYPE, "application/zip");
                     exchange.getIn().setHeader(S3Constants.CONTENT_DISPOSITION, "attachment;filename=\"${header.CamelFileName}\"");
                 })
-                .to("aws-s3:" + s3Bucket + "?deleteAfterWrite=true&amazonS3Client=#s3client")
+                .toD("aws-s3:" + s3Bucket + "?deleteAfterWrite=true&amazonS3Client=#s3client")
                 .process(exchange -> {
                     String documentID = exchange.getIn().getHeader(S3Constants.KEY, String.class);
                     exchange.getIn().setBody(documentID);
@@ -123,15 +123,12 @@ public class S3FilesRoute extends RouteBuilder {
                     .endChoice()
                 .end();
 
-        from("direct:s3-get-file-util")
-                .pollEnrich().simple("aws-s3:"+ s3Bucket + "?amazonS3Client=#s3client&deleteAfterRead=false&fileName=${body}");
-
         from("direct:s3-get-file-link")
                 .id("s3-get-file-link")
                 .setHeader(S3Constants.KEY, simple("${body}"))
                 .setHeader(S3Constants.S3_OPERATION, constant("downloadLink"))
                 .setHeader(S3Constants.DOWNLOAD_LINK_EXPIRATION, constant(linkExpiration))
-                .to("aws-s3:" + s3Bucket + "?amazonS3Client=#s3client")
+                .toD("aws-s3:" + s3Bucket + "?amazonS3Client=#s3client")
                 .process(exchange -> {
                     String downloadLink = exchange.getIn().getHeader(S3Constants.DOWNLOAD_LINK, String.class);
                     exchange.getIn().setBody(downloadLink);
@@ -139,7 +136,7 @@ public class S3FilesRoute extends RouteBuilder {
 
         from("direct:s3-delete-file")
                 .id("s3-delete-file")
-                .to("aws-s3:"+ s3Bucket + "?amazonS3Client=#s3client&operation=deleteObject");
+                .toD("aws-s3:"+ s3Bucket + "?amazonS3Client=#s3client&operation=deleteObject");
     }
 
 }
