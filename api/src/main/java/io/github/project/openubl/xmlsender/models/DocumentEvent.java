@@ -25,7 +25,7 @@ public interface DocumentEvent {
         Long getId();
     }
 
-    interface Ready {
+    interface Delivered {
         Long getId();
     }
 }

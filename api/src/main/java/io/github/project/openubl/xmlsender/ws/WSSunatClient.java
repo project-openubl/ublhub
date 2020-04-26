@@ -57,7 +57,7 @@ public class WSSunatClient {
     Optional<String> sunatPassword;
 
     @Inject
-    Event<DocumentEvent.Ready> documentReadyEvent;
+    Event<DocumentEvent.Delivered> documentReadyEvent;
 
     @Inject
     Event<DocumentEvent.RequireCheckTicket> documentRequireCheckTicketEvent;

@@ -51,7 +51,7 @@ public class EventsManager {
         produceMessage(ticketQueue, event.getId());
     }
 
-    public void onDocumentReady(@Observes(during = TransactionPhase.AFTER_SUCCESS) DocumentEvent.Ready event) {
+    public void onDocumentDelivered(@Observes(during = TransactionPhase.AFTER_SUCCESS) DocumentEvent.Delivered event) {
         produceMessage(callbackQueue, event.getId());
     }
 
