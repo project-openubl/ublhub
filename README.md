@@ -13,17 +13,19 @@ docker run -e ARTEMIS_USERNAME=quarkus -e ARTEMIS_PASSWORD=quarkus \
 -p 8161:8161 -p 61616:61616 vromero/activemq-artemis:2.9.0-alpine
 ```
 
-### Init Minio
+### Init Storage Minio
 ```
 docker run -e MINIO_ACCESS_KEY=BQA2GEXO711FVBVXDWKM -e \
 MINIO_SECRET_KEY=uvgz3LCwWM3e400cDkQIH/y1Y4xgU4iV91CwFSPC \
 -p 9000:9000 minio/minio server /data
 ```
 
+### Init server
 You can run your application in dev mode that enables live coding using:
 
-```
-./mvnw quarkus:dev
+```shell script
+./mvnw install -DskipTests
+./mvnw compile quarkus:dev -f api/ -DnoDeps
 ```
 
 ## Packaging and running the application
