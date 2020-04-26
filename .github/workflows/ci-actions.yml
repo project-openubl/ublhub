@@ -103,17 +103,8 @@ jobs:
       - name: Extract Maven Repo
         shell: bash
         run: tar -xzvf maven-repo.tgz -C ~
-      - name: Build with Maven and Coverage
-        if: github.event_name == 'pull_request'
-        run: mvn verify -P '!services,coverage'
-      - name: Build with Maven and Coverage/Sonar
-        if: github.event_name != 'pull_request'
-        run: mvn verify -P '!services,coverage,sonar'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      - name: Codecov metrics
-        uses: codecov/codecov-action@v1
+      - name: Build with Maven
+        run: mvn test
       - name: Prepare failure archive (if maven failed)
         if: failure()
         shell: bash

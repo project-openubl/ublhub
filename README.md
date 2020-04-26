@@ -29,12 +29,6 @@ You can then execute your native executable with: `./target/xml-sender-1.0.0-SNA
 
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/building-native-image-guide.
 
-## Test Coverage
-```shell script
-./mvnw package -Pcoverage
-./mvnw package -f coverage-report
-```
-
 ## License
 
 - [Eclipse Public License - v 2.0](./LICENSE)
