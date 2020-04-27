@@ -131,3 +131,61 @@ jobs:
         with:
           name: test-reports-linux-jvm11
           path: 'test-reports.tgz'
+
+  java-artifacts:
+    name: Java Artifacts
+    needs: build-jdk11
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 11
+        # Uses sha for added security since tags can be updated
+        uses: joschi/setup-jdk@b9cc6eabf7e7e3889766b5cee486f874c9e1bd2d
+        with:
+          java-version: 11
+      - name: Download Maven Repo
+        uses: actions/download-artifact@v1
+        with:
+          name: maven-repo
+          path: .
+      - name: Extract Maven Repo
+        shell: bash
+        run: tar -xzvf maven-repo.tgz -C ~
+      - name: Build with Maven
+        run: |
+          mvn -DskipTests package
+      - name: Prepare XML Sender archive
+        shell: bash
+        run: |
+          find distribution/target -name 'lib' -o -name 'xml-sender-distribution-*-runner.jar' | tar -czvf xml-sender-java-artifacts.tgz -T -
+      - name: Upload Archive XML Builder
+        uses: actions/upload-artifact@v1
+        with:
+          name: xml-sender-java-artifacts
+          path: 'xml-sender-java-artifacts.tgz'
+
+  container-images:
+    name: Native Container Images
+    needs: build-jdk11
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download Java XML Sender Artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: xml-sender-java-artifacts
+          path: .
+      - name: Extract Java Artifacs
+        shell: bash
+        run: tar -xzvf xml-sender-java-artifacts.tgz
+      - name: Publish to Registry XML Builder
+        # Uses sha for added security since tags can be updated
+        uses: elgohr/Publish-Docker-Github-Action@b2f63259b466ca5a4be395c392546de447450334
+        with:
+          name: projectopenubl/xml-sender
+          dockerfile: distribution/src/main/docker/Dockerfile.jvm
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          snapshot: true
+          tags: "master"

@@ -111,6 +111,11 @@
                 <artifactId>xml-sender-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.github.project-openubl</groupId>
+                <artifactId>xml-sender-distribution</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -119,6 +124,7 @@
         <module>api</module>
         <module>api-core</module>
         <module>extensions</module>
+        <module>distribution</module>
         <module>integration-tests</module>
     </modules>
 
