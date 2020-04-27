@@ -165,8 +165,8 @@ jobs:
           path: 'xml-sender-java-artifacts.tgz'
 
   container-images:
-    name: Native Container Images
-    needs: build-jdk11
+    name: Container Images
+    needs: java-artifacts
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
