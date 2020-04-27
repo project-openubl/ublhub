@@ -22,7 +22,7 @@ import io.github.project.openubl.xmlsender.exceptions.UnsupportedDocumentTypeExc
 import io.github.project.openubl.xmlsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xmlsender.idm.ErrorRepresentation;
 import io.github.project.openubl.xmlsender.managers.DocumentsManager;
-import io.github.project.openubl.xmlsender.managers.FilesManager;
+import io.github.project.openubl.xmlsender.files.FilesManager;
 import io.github.project.openubl.xmlsender.models.jpa.DocumentRepository;
 import io.github.project.openubl.xmlsender.models.jpa.entities.DocumentEntity;
 import io.github.project.openubl.xmlsender.models.utils.EntityToRepresentation;

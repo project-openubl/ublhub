@@ -39,6 +39,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @QuarkusTest
 class DocumentsResourceTest {
 
+    static final long AWAIT_TIMEOUT = 10000;
+
     @Test
     void withNoFileShouldReturnError() {
         given()
@@ -183,7 +185,7 @@ class DocumentsResourceTest {
                 .as(DocumentRepresentation.class);
 
         await()
-                .atMost(10000, TimeUnit.MILLISECONDS)
+                .atMost(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS)
                 .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
                 .until(() -> {
                     DocumentRepresentation currentRep = given()
@@ -215,6 +217,263 @@ class DocumentsResourceTest {
     }
 
     @Test
+    void invalidInvoice_customCredentials_shouldBeSentToSunat() throws InterruptedException {
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/invoice.xml");
+        assertNotNull(resource);
+        File file = new File(resource.getPath());
+
+        DocumentRepresentation rep = given()
+                .when()
+                .header(new Header("content-type", "multipart/form-data"))
+                .multiPart("file", file, "application/xml")
+                .formParam("customId", "myCustomSoftwareID")
+                .formParam("username", "12345678912MODDATOS")
+                .formParam("password", "MODDATOS")
+                .post(ApiApplication.API_BASE + "/documents")
+                .then()
+                .statusCode(200)
+                .body("id", notNullValue())
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("SCHEDULED_TO_DELIVER"))
+                .extract()
+                .as(DocumentRepresentation.class);
+
+        await()
+                .atMost(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS)
+                .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
+                .until(() -> {
+                    DocumentRepresentation currentRep = given()
+                            .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                            .then()
+                            .extract()
+                            .as(DocumentRepresentation.class);
+
+                    return currentRep.getDeliveryStatus().equals(DeliveryStatusType.DELIVERED.toString());
+                });
+
+        given()
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                .then()
+                .statusCode(200)
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("DELIVERED"))
+                .body("sunatStatus.code", is(2335))
+                .body("sunatStatus.ticket", nullValue())
+                .body("sunatStatus.status", is("RECHAZADO"))
+                .body("sunatStatus.description", is("El documento electrónico ingresado ha sido alterado"));
+    }
+
+    @Test
+    void validCreditNote_customCredentials_shouldBeSentToSunat() throws InterruptedException {
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/credit-note_signed.xml");
+        assertNotNull(resource);
+        File file = new File(resource.getPath());
+
+        DocumentRepresentation rep = given()
+                .when()
+                .header(new Header("content-type", "multipart/form-data"))
+                .multiPart("file", file, "application/xml")
+                .formParam("customId", "myCustomSoftwareID")
+                .formParam("username", "12345678912MODDATOS")
+                .formParam("password", "MODDATOS")
+                .post(ApiApplication.API_BASE + "/documents")
+                .then()
+                .statusCode(200)
+                .body("id", notNullValue())
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("SCHEDULED_TO_DELIVER"))
+                .extract()
+                .as(DocumentRepresentation.class);
+
+        await()
+                .atMost(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS)
+                .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
+                .until(() -> {
+                    DocumentRepresentation currentRep = given()
+                            .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                            .then()
+                            .extract()
+                            .as(DocumentRepresentation.class);
+
+                    return currentRep.getDeliveryStatus().equals(DeliveryStatusType.DELIVERED.toString());
+                });
+
+        given()
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                .then()
+                .statusCode(200)
+//                .body("id", is(rep.getId()))
+                .body("cdrID", notNullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("DELIVERED"))
+                .body("sunatStatus.code", is(0))
+                .body("sunatStatus.ticket", nullValue())
+                .body("sunatStatus.status", is("ACEPTADO"))
+                .body("sunatStatus.description", is("La Nota de Credito numero F001-1, ha sido aceptada"));
+
+        given()
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId() + "/cdr")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void invalidCreditNote_customCredentials_shouldBeSentToSunat() throws InterruptedException {
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/credit-note.xml");
+        assertNotNull(resource);
+        File file = new File(resource.getPath());
+
+        DocumentRepresentation rep = given()
+                .when()
+                .header(new Header("content-type", "multipart/form-data"))
+                .multiPart("file", file, "application/xml")
+                .formParam("customId", "myCustomSoftwareID")
+                .formParam("username", "12345678912MODDATOS")
+                .formParam("password", "MODDATOS")
+                .post(ApiApplication.API_BASE + "/documents")
+                .then()
+                .statusCode(200)
+                .body("id", notNullValue())
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("SCHEDULED_TO_DELIVER"))
+                .extract()
+                .as(DocumentRepresentation.class);
+
+        await()
+                .atMost(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS)
+                .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
+                .until(() -> {
+                    DocumentRepresentation currentRep = given()
+                            .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                            .then()
+                            .extract()
+                            .as(DocumentRepresentation.class);
+
+                    return currentRep.getDeliveryStatus().equals(DeliveryStatusType.DELIVERED.toString());
+                });
+
+        given()
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                .then()
+                .statusCode(200)
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("DELIVERED"))
+                .body("sunatStatus.code", is(2335))
+                .body("sunatStatus.ticket", nullValue())
+                .body("sunatStatus.status", is("RECHAZADO"))
+                .body("sunatStatus.description", is("El documento electrónico ingresado ha sido alterado"));
+    }
+
+    @Test
+    void validDebitNote_customCredentials_shouldBeSentToSunat() throws InterruptedException {
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/debit-note_signed.xml");
+        assertNotNull(resource);
+        File file = new File(resource.getPath());
+
+        DocumentRepresentation rep = given()
+                .when()
+                .header(new Header("content-type", "multipart/form-data"))
+                .multiPart("file", file, "application/xml")
+                .formParam("customId", "myCustomSoftwareID")
+                .formParam("username", "12345678912MODDATOS")
+                .formParam("password", "MODDATOS")
+                .post(ApiApplication.API_BASE + "/documents")
+                .then()
+                .statusCode(200)
+                .body("id", notNullValue())
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("SCHEDULED_TO_DELIVER"))
+                .extract()
+                .as(DocumentRepresentation.class);
+
+        await()
+                .atMost(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS)
+                .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
+                .until(() -> {
+                    DocumentRepresentation currentRep = given()
+                            .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                            .then()
+                            .extract()
+                            .as(DocumentRepresentation.class);
+
+                    return currentRep.getDeliveryStatus().equals(DeliveryStatusType.DELIVERED.toString());
+                });
+
+        given()
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                .then()
+                .statusCode(200)
+//                .body("id", is(rep.getId()))
+                .body("cdrID", notNullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("DELIVERED"))
+                .body("sunatStatus.code", is(0))
+                .body("sunatStatus.ticket", nullValue())
+                .body("sunatStatus.status", is("ACEPTADO"))
+                .body("sunatStatus.description", is("La Nota de Debito numero F001-1, ha sido aceptada"));
+
+        given()
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId() + "/cdr")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void invalidDebitNote_customCredentials_shouldBeSentToSunat() throws InterruptedException {
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/debit-note.xml");
+        assertNotNull(resource);
+        File file = new File(resource.getPath());
+
+        DocumentRepresentation rep = given()
+                .when()
+                .header(new Header("content-type", "multipart/form-data"))
+                .multiPart("file", file, "application/xml")
+                .formParam("customId", "myCustomSoftwareID")
+                .formParam("username", "12345678912MODDATOS")
+                .formParam("password", "MODDATOS")
+                .post(ApiApplication.API_BASE + "/documents")
+                .then()
+                .statusCode(200)
+                .body("id", notNullValue())
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("SCHEDULED_TO_DELIVER"))
+                .extract()
+                .as(DocumentRepresentation.class);
+
+        await()
+                .atMost(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS)
+                .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
+                .until(() -> {
+                    DocumentRepresentation currentRep = given()
+                            .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                            .then()
+                            .extract()
+                            .as(DocumentRepresentation.class);
+
+                    return currentRep.getDeliveryStatus().equals(DeliveryStatusType.DELIVERED.toString());
+                });
+
+        given()
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                .then()
+                .statusCode(200)
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("DELIVERED"))
+                .body("sunatStatus.code", is(2335))
+                .body("sunatStatus.ticket", nullValue())
+                .body("sunatStatus.status", is("RECHAZADO"))
+                .body("sunatStatus.description", is("El documento electrónico ingresado ha sido alterado"));
+    }
+
+    @Test
     void validVoidedDocument_customCredentials_shouldBeSentToSunat() throws InterruptedException {
         URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/voided-document_signed.xml");
         assertNotNull(resource);
@@ -238,7 +497,7 @@ class DocumentsResourceTest {
                 .as(DocumentRepresentation.class);
 
         await()
-                .atMost(10000, TimeUnit.MILLISECONDS)
+                .atMost(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS)
                 .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
                 .until(() -> {
                     DocumentRepresentation currentRep = given()
@@ -267,5 +526,158 @@ class DocumentsResourceTest {
                 .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId() + "/cdr")
                 .then()
                 .statusCode(200);
+    }
+
+    @Test
+    void invalidVoidedDocument_customCredentials_shouldBeSentToSunat() throws InterruptedException {
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/voided-document.xml");
+        assertNotNull(resource);
+        File file = new File(resource.getPath());
+
+        DocumentRepresentation rep = given()
+                .when()
+                .header(new Header("content-type", "multipart/form-data"))
+                .multiPart("file", file, "application/xml")
+                .formParam("customId", "myCustomSoftwareID")
+                .formParam("username", "12345678912MODDATOS")
+                .formParam("password", "MODDATOS")
+                .post(ApiApplication.API_BASE + "/documents")
+                .then()
+                .statusCode(200)
+                .body("id", notNullValue())
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("SCHEDULED_TO_DELIVER"))
+                .extract()
+                .as(DocumentRepresentation.class);
+
+        await()
+                .atMost(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS)
+                .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
+                .until(() -> {
+                    DocumentRepresentation currentRep = given()
+                            .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                            .then()
+                            .extract()
+                            .as(DocumentRepresentation.class);
+
+                    return currentRep.getDeliveryStatus().equals(DeliveryStatusType.DELIVERED.toString());
+                });
+
+        given()
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                .then()
+                .statusCode(200)
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("DELIVERED"))
+                .body("sunatStatus.code", is(2335))
+                .body("sunatStatus.ticket", nullValue())
+                .body("sunatStatus.status", is("RECHAZADO"))
+                .body("sunatStatus.description", is("El documento electrónico ingresado ha sido alterado"));
+    }
+
+    @Test
+    void validSummaryDocument_customCredentials_shouldBeSentToSunat() throws InterruptedException {
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/summary-document_signed.xml");
+        assertNotNull(resource);
+        File file = new File(resource.getPath());
+
+        DocumentRepresentation rep = given()
+                .when()
+                .header(new Header("content-type", "multipart/form-data"))
+                .multiPart("file", file, "application/xml")
+                .formParam("customId", "myCustomSoftwareID")
+                .formParam("username", "12345678912MODDATOS")
+                .formParam("password", "MODDATOS")
+                .post(ApiApplication.API_BASE + "/documents")
+                .then()
+                .statusCode(200)
+                .body("id", notNullValue())
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("SCHEDULED_TO_DELIVER"))
+                .extract()
+                .as(DocumentRepresentation.class);
+
+        await()
+                .atMost(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS)
+                .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
+                .until(() -> {
+                    DocumentRepresentation currentRep = given()
+                            .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                            .then()
+                            .extract()
+                            .as(DocumentRepresentation.class);
+
+                    return currentRep.getDeliveryStatus().equals(DeliveryStatusType.DELIVERED.toString());
+                });
+
+        given()
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                .then()
+                .statusCode(200)
+//                .body("id", is(rep.getId()))
+                .body("cdrID", notNullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("DELIVERED"))
+                .body("sunatStatus.code", is(0))
+                .body("sunatStatus.ticket", notNullValue())
+                .body("sunatStatus.status", is("ACEPTADO"))
+                .body("sunatStatus.description", is("El Resumen diario RC-20200328-1, ha sido aceptado"));
+
+        given()
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId() + "/cdr")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void invalidSummaryDocument_customCredentials_shouldBeSentToSunat() throws InterruptedException {
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/summary-document.xml");
+        assertNotNull(resource);
+        File file = new File(resource.getPath());
+
+        DocumentRepresentation rep = given()
+                .when()
+                .header(new Header("content-type", "multipart/form-data"))
+                .multiPart("file", file, "application/xml")
+                .formParam("customId", "myCustomSoftwareID")
+                .formParam("username", "12345678912MODDATOS")
+                .formParam("password", "MODDATOS")
+                .post(ApiApplication.API_BASE + "/documents")
+                .then()
+                .statusCode(200)
+                .body("id", notNullValue())
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("SCHEDULED_TO_DELIVER"))
+                .extract()
+                .as(DocumentRepresentation.class);
+
+        await()
+                .atMost(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS)
+                .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
+                .until(() -> {
+                    DocumentRepresentation currentRep = given()
+                            .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                            .then()
+                            .extract()
+                            .as(DocumentRepresentation.class);
+
+                    return currentRep.getDeliveryStatus().equals(DeliveryStatusType.DELIVERED.toString());
+                });
+
+        given()
+                .when().get(ApiApplication.API_BASE + "/documents/" + rep.getId())
+                .then()
+                .statusCode(200)
+                .body("cdrID", nullValue())
+                .body("fileID", notNullValue())
+                .body("deliveryStatus", is("DELIVERED"))
+                .body("sunatStatus.code", is(2513))
+                .body("sunatStatus.ticket", nullValue())
+                .body("sunatStatus.status", is("RECHAZADO"))
+                .body("sunatStatus.description", is("Dato no cumple con formato de acuerdo al número de comprobante"));
     }
 }

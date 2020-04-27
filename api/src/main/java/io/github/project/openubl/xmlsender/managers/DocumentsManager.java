@@ -16,6 +16,9 @@
  */
 package io.github.project.openubl.xmlsender.managers;
 
+import io.github.project.openubl.xmlsender.events.EventProvider;
+import io.github.project.openubl.xmlsender.events.EventProviderLiteral;
+import io.github.project.openubl.xmlsender.files.FilesManager;
 import io.github.project.openubl.xmlsender.models.DocumentEvent;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -54,6 +57,9 @@ public class DocumentsManager {
 
     @ConfigProperty(name = "openubl.sunat.url1")
     String sunatUrl1;
+
+    @ConfigProperty(name = "openubl.event-manager")
+    EventProvider.Type eventManager;
 
     @Inject
     FilesManager filesManager;
@@ -110,8 +116,10 @@ public class DocumentsManager {
 
         documentRepository.persist(documentEntity);
 
-        // Send JSM File
-        documentCreatedEvent.fire(() -> documentEntity.id);
+        // Fire Event
+        documentCreatedEvent
+                .select(new EventProviderLiteral(eventManager))
+                .fire(() -> documentEntity.id);
 
         // return result
         return documentEntity;

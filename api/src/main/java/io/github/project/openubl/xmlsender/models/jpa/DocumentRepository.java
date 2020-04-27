@@ -16,11 +16,22 @@
  */
 package io.github.project.openubl.xmlsender.models.jpa;
 
+import io.github.project.openubl.xmlsender.models.DeliveryStatusType;
 import io.github.project.openubl.xmlsender.models.jpa.entities.DocumentEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.util.List;
 
 @ApplicationScoped
 public class DocumentRepository implements PanacheRepository<DocumentEntity> {
+
+    public List<DocumentEntity> findDocumentScheduled(){
+        return list("deliveryStatus", DeliveryStatusType.SCHEDULED_TO_DELIVER);
+    }
+
+    public List<DocumentEntity> findTickedCheckScheduled(){
+        return list("deliveryStatus", DeliveryStatusType.SCHEDULED_CHECK_TICKET);
+    }
+
 }

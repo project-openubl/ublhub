@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xmlsender.managers;
+package io.github.project.openubl.xmlsender.files;
 
 import io.github.project.openubl.xmlsender.models.FileType;
 import org.apache.camel.CamelContext;

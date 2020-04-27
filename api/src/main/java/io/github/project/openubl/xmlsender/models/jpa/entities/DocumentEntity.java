@@ -24,62 +24,62 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "DOCUMENT")
+@Table(name = "XMLSENDER_DOCUMENT")
 @Cacheable
 public class DocumentEntity extends PanacheEntity {
 
     @NotNull
-    @Column(name = "ruc")
+    @Column(name = "RUC")
     public String ruc;
 
     @NotNull
-    @Column(name = "document_id")
+    @Column(name = "DOCUMENT_ID")
     public String documentID;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "document_type")
+    @Column(name = "DOCUMENT_TYPE")
     public DocumentType documentType;
 
     @NotNull
-    @Column(name = "filename_without_extension")
+    @Column(name = "FILENAME_WITHOUT_EXTENSION")
     public String filenameWithoutExtension;
 
     @NotNull
-    @Column(name = "file_id")
+    @Column(name = "FILE_ID")
     public String fileID;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "delivery_status")
+    @Column(name = "DELIVERY_STATUS")
     public DeliveryStatusType deliveryStatus;
 
     @NotNull
-    @Column(name = "delivery_url")
+    @Column(name = "DELIVERY_URL")
     public String deliveryURL;
 
-    @Column(name = "crd_id")
+    @Column(name = "CDR_ID")
     public String cdrID;
 
-    @Column(name = "sunat_username")
+    @Column(name = "SUNAT_USERNAME")
     public String sunatUsername;
 
-    @Column(name = "sunat_password")
+    @Column(name = "SUNAT_PASSWORD")
     public String sunatPassword;
 
-    @Column(name = "sunat_ticket")
+    @Column(name = "SUNAT_TICKET")
     public String sunatTicket;
 
-    @Column(name = "sunat_status")
+    @Column(name = "SUNAT_STATUS")
     public String sunatStatus;
 
-    @Column(name = "sunat_code")
+    @Column(name = "SUNAT_CODE")
     public Integer sunatCode;
 
-    @Column(name = "sunat_description")
+    @Column(name = "SUNAT_DESCRIPTION")
     public String sunatDescription;
 
-    @Column(name = "custom_id")
+    @Column(name = "CUSTOM_ID")
     public String customId;
 
     public String getRuc() {
@@ -201,7 +201,7 @@ public class DocumentEntity extends PanacheEntity {
     public void setCustomId(String customId) {
         this.customId = customId;
     }
-    
+
     public static final class Builder {
         public String ruc;
         public String documentID;

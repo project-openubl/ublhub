@@ -1,13 +1,13 @@
 /**
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
- *
+ * <p>
  * Licensed under the Eclipse Public License - v 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * https://www.eclipse.org/legal/epl-2.0/
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,9 @@
  */
 package io.github.project.openubl.xmlsender.ws;
 
-import io.github.project.openubl.xmlsender.managers.FilesManager;
+import io.github.project.openubl.xmlsender.events.EventProvider;
+import io.github.project.openubl.xmlsender.events.EventProviderLiteral;
+import io.github.project.openubl.xmlsender.files.FilesManager;
 import io.github.project.openubl.xmlsender.models.DocumentEvent;
 import io.github.project.openubl.xmlsender.models.DocumentType;
 import io.github.project.openubl.xmlsender.models.DeliveryStatusType;
@@ -24,6 +26,7 @@ import io.github.project.openubl.xmlsender.models.FileType;
 import io.github.project.openubl.xmlsender.models.jpa.DocumentRepository;
 import io.github.project.openubl.xmlsender.models.jpa.entities.DocumentEntity;
 import io.github.project.openubl.xmlsenderws.webservices.exceptions.UnknownWebServiceException;
+import io.github.project.openubl.xmlsenderws.webservices.exceptions.ValidationWebServiceException;
 import io.github.project.openubl.xmlsenderws.webservices.managers.BillServiceManager;
 import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
 import io.github.project.openubl.xmlsenderws.webservices.wrappers.ServiceConfig;
@@ -50,6 +53,9 @@ public class WSSunatClient {
     @Inject
     FilesManager filesManager;
 
+    @ConfigProperty(name = "openubl.event-manager")
+    EventProvider.Type eventManager;
+
     @ConfigProperty(name = "openubl.sunat.username")
     Optional<String> sunatUsername;
 
@@ -57,7 +63,7 @@ public class WSSunatClient {
     Optional<String> sunatPassword;
 
     @Inject
-    Event<DocumentEvent.Delivered> documentReadyEvent;
+    Event<DocumentEvent.Delivered> documentDeliveredEvent;
 
     @Inject
     Event<DocumentEvent.RequireCheckTicket> documentRequireCheckTicketEvent;
@@ -65,6 +71,7 @@ public class WSSunatClient {
     /**
      * @return true if message was processed and don't need to be redelivered
      */
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     public boolean sendDocument(Long documentId) {
         DocumentEntity documentEntity = documentRepository.findById(documentId);
         if (documentEntity == null) {
@@ -103,6 +110,10 @@ public class WSSunatClient {
         } catch (IOException | UnknownWebServiceException e) {
             LOG.error(e);
             return false;
+        } catch (ValidationWebServiceException e) {
+            LOG.error(e.getMessage());
+            handleValidationWebServiceException(e, documentEntity);
+            return true;
         }
 
         return true;
@@ -111,6 +122,7 @@ public class WSSunatClient {
     /**
      * @return true if message was processed and don't need to be redelivered
      */
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     public boolean checkDocumentTicket(long documentId) {
         DocumentEntity documentEntity = documentRepository.findById(documentId);
 
@@ -126,10 +138,29 @@ public class WSSunatClient {
         } catch (UnknownWebServiceException e) {
             LOG.error(e);
             return false;
+        } catch (ValidationWebServiceException e) {
+            LOG.error(e.getMessage());
+            handleValidationWebServiceException(e, documentEntity);
+            return true;
         }
 
         processCDR(billServiceModel, documentEntity);
         return true;
+    }
+
+
+    private void handleValidationWebServiceException(ValidationWebServiceException e, DocumentEntity documentEntity) {
+        documentEntity.setSunatCode(e.getSUNATErrorCode());
+        documentEntity.setSunatDescription(e.getSUNATErrorMessage(255));
+        documentEntity.setSunatStatus(BillServiceModel.Status.RECHAZADO.toString());
+        documentEntity.setDeliveryStatus(DeliveryStatusType.DELIVERED);
+
+        documentRepository.persist(documentEntity);
+
+        // Fire event
+        documentDeliveredEvent
+                .select(new EventProviderLiteral(eventManager))
+                .fire(() -> documentEntity.id);
     }
 
     private void processCDR(BillServiceModel billServiceModel, DocumentEntity documentEntity) {
@@ -149,8 +180,10 @@ public class WSSunatClient {
 
         documentRepository.persist(documentEntity);
 
-        // Event
-        documentReadyEvent.fire(() -> documentEntity.id);
+        // Fire event
+        documentDeliveredEvent
+                .select(new EventProviderLiteral(eventManager))
+                .fire(() -> documentEntity.id);
     }
 
     private void processTicket(BillServiceModel billServiceModel, DocumentEntity documentEntity) {
@@ -160,8 +193,10 @@ public class WSSunatClient {
 
         documentEntity.persist();
 
-        // JMS
-        documentRequireCheckTicketEvent.fire(() -> documentEntity.id);
+        // Fire event
+        documentRequireCheckTicketEvent
+                .select(new EventProviderLiteral(eventManager))
+                .fire(() -> documentEntity.id);
     }
 
 }

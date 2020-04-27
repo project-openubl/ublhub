@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xmlsender.jms;
+package io.github.project.openubl.xmlsender.events.jms;
 
+import io.github.project.openubl.xmlsender.events.EventProvider;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -31,9 +32,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
-public class SendTicketQueueConsumer implements Runnable {
+public class SendFileQueueConsumer implements Runnable {
 
-    private static final Logger LOG = Logger.getLogger(SendTicketQueueConsumer.class);
+    private static final Logger LOG = Logger.getLogger(SendFileQueueConsumer.class);
+
+    @ConfigProperty(name = "openubl.event-manager")
+    EventProvider.Type eventManager;
 
     @Inject
     WSSunatClient wsSunatClient;
@@ -41,23 +45,29 @@ public class SendTicketQueueConsumer implements Runnable {
     @Inject
     ConnectionFactory connectionFactory;
 
-    @ConfigProperty(name = "openubl.jms.ticketQueue")
-    String ticketQueue;
+    @ConfigProperty(name = "openubl.event-manager.jms.sendFileQueue")
+    String sendFileQueue;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     void onStart(@Observes StartupEvent ev) {
-        scheduler.scheduleWithFixedDelay(this, 0L, 5L, TimeUnit.SECONDS);
+        if (eventManager.equals(EventProvider.Type.jms)) {
+            scheduler.scheduleWithFixedDelay(this, 0L, 5L, TimeUnit.SECONDS);
+        } else {
+            scheduler.shutdown();
+        }
     }
 
     void onStop(@Observes ShutdownEvent ev) {
-        scheduler.shutdown();
+        if (!scheduler.isShutdown()) {
+            scheduler.shutdown();
+        }
     }
 
     @Override
     public void run() {
         try (JMSContext context = connectionFactory.createContext(Session.CLIENT_ACKNOWLEDGE)) {
-            JMSConsumer consumer = context.createConsumer(context.createQueue(ticketQueue));
+            JMSConsumer consumer = context.createConsumer(context.createQueue(sendFileQueue));
             while (true) {
                 Message message = consumer.receive();
                 if (message == null) {
@@ -70,12 +80,12 @@ public class SendTicketQueueConsumer implements Runnable {
                 }
 
                 if (textMessage == null) {
-                    LOG.warn("ticketQueue can process only TextMessages");
+                    LOG.warn("sendFileQueue can process only TextMessages");
                     return;
                 }
 
-                String entityId = textMessage.getText();
-                boolean result = wsSunatClient.checkDocumentTicket(Long.parseLong(entityId));
+                String documentId = textMessage.getText();
+                boolean result = wsSunatClient.sendDocument(Long.valueOf(documentId));
 
                 if (result) {
                     message.acknowledge();

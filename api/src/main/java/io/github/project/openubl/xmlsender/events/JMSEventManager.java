@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xmlsender.managers;
+package io.github.project.openubl.xmlsender.events;
 
 import io.github.project.openubl.xmlsender.models.DocumentEvent;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -26,32 +26,41 @@ import javax.inject.Inject;
 import javax.jms.*;
 
 @ApplicationScoped
-public class EventsManager {
+public class JMSEventManager {
 
-    @ConfigProperty(name = "openubl.jms.delay")
+    @ConfigProperty(name = "openubl.event-manager.jms.delay")
     Long messageDelay;
 
-    @ConfigProperty(name = "openubl.jms.sendFileQueue")
+    @ConfigProperty(name = "openubl.event-manager.jms.sendFileQueue")
     String sendFileQueue;
 
-    @ConfigProperty(name = "openubl.jms.callbackQueue")
+    @ConfigProperty(name = "openubl.event-manager.jms.callbackQueue")
     String callbackQueue;
 
-    @ConfigProperty(name = "openubl.jms.ticketQueue")
+    @ConfigProperty(name = "openubl.event-manager.jms.ticketQueue")
     String ticketQueue;
 
     @Inject
     ConnectionFactory connectionFactory;
 
-    public void onDocumentCreate(@Observes(during = TransactionPhase.AFTER_SUCCESS) DocumentEvent.Created event) {
+    public void onDocumentCreate(
+            @Observes(during = TransactionPhase.AFTER_SUCCESS)
+            @EventProvider(EventProvider.Type.jms) DocumentEvent.Created event
+    ) {
         produceMessage(sendFileQueue, event.getId());
     }
 
-    public void onDocumentRequireCheckTicket(@Observes(during = TransactionPhase.AFTER_SUCCESS) DocumentEvent.RequireCheckTicket event) {
+    public void onDocumentRequireCheckTicket(
+            @Observes(during = TransactionPhase.AFTER_SUCCESS)
+            @EventProvider(EventProvider.Type.jms) DocumentEvent.RequireCheckTicket event
+    ) {
         produceMessage(ticketQueue, event.getId());
     }
 
-    public void onDocumentDelivered(@Observes(during = TransactionPhase.AFTER_SUCCESS) DocumentEvent.Delivered event) {
+    public void onDocumentDelivered(
+            @Observes(during = TransactionPhase.AFTER_SUCCESS)
+            @EventProvider(EventProvider.Type.jms) DocumentEvent.Delivered event
+    ) {
         produceMessage(callbackQueue, event.getId());
     }
 
