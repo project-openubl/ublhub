@@ -24,12 +24,12 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-@Path("/xml-sender")
+@Path("/")
 @RegisterRestClient(configKey="xml-sender-callback-api")
 public interface CallbackClientService {
 
     @POST
-    @Path("/callback")
+    @Path("/")
     @Produces("application/json")
     void callback(DocumentRepresentation rep);
 }
