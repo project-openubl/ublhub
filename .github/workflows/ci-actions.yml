@@ -87,7 +87,40 @@ jobs:
         shell: bash
         run: tar -xzvf maven-repo.tgz -C ~
       - name: Build with Maven
-        run: mvn test
+        run: mvn test -P '!services'
+      - name: Prepare failure archive (if maven failed)
+        if: failure()
+        shell: bash
+        run: find . -name '*-reports' -type d | tar -czvf test-reports.tgz -T -
+      - name: Upload failure Archive (if maven failed)
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: test-reports-linux-jvm11
+          path: 'test-reports.tgz'
+
+  linux-jvm-tests-ee:
+    name: JDK 11 JVM Tests EE
+    timeout-minutes: 120
+    needs: build-jdk11
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK ${{ matrix.java-version }}
+        # Uses sha for added security since tags can be updated
+        uses: joschi/setup-jdk@b9cc6eabf7e7e3889766b5cee486f874c9e1bd2d
+        with:
+          java-version: 11
+      - name: Download Maven Repo
+        uses: actions/download-artifact@v1
+        with:
+          name: maven-repo
+          path: .
+      - name: Extract Maven Repo
+        shell: bash
+        run: tar -xzvf maven-repo.tgz -C ~
+      - name: Build with Maven
+        run: mvn test -P services -Dopenubl.storage.type=s3 -Dopenubl.event-manager=jms
       - name: Prepare failure archive (if maven failed)
         if: failure()
         shell: bash
