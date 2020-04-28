@@ -158,7 +158,7 @@ jobs:
         shell: bash
         run: |
           find distribution/target -name 'lib' -o -name 'xml-sender-distribution-*-runner.jar' | tar -czvf xml-sender-java-artifacts.tgz -T -
-      - name: Upload Archive XML Builder
+      - name: Upload Archive XML Sender
         uses: actions/upload-artifact@v1
         with:
           name: xml-sender-java-artifacts
