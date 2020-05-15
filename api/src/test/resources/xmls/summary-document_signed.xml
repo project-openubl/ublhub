@@ -2,11 +2,11 @@
 <SummaryDocuments xmlns="urn:sunat:names:specification:ubl:peru:schema:xsd:SummaryDocuments-1" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ccts="urn:un:unece:uncefact:documentation:2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:ns11="urn:sunat:names:specification:ubl:peru:schema:xsd:Perception-1" xmlns:qdt="urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2" xmlns:sac="urn:sunat:names:specification:ubl:peru:schema:xsd:SunatAggregateComponents-1" xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ext:UBLExtensions>
         <ext:UBLExtension>
-            <ext:ExtensionContent><ds:Signature Id="SignID" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><ds:Reference URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><ds:DigestValue>oKqdy8/EUx+8T8wbCzTKjP79bxg=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>XMwPUAFvDtoZStDvWDpfCQX2d1y2Qgn6mRSRfwsLDxda6yP+Tikx7gfQxQl7wiOCsT3oDcMxgfKh
-4EmmC0Xl9miHhnRAuV+lhgD1lKBWjoGuZ8EYgCUtDazTLQWZ5oaJERcLONfA7G+vVBAY6pBn2pjf
-fCS/43rFgtBiB1utvSWayWGIC+r6tNMZRcrNmhrG9YTnGvcu/hbuHPgfJ0vdkYEksfycNBGdeg4N
-NmGN9dOBAIQLWtOIvmjwZBfqJ3b9BePShiv8gv2wQRC2YbkB9HEQYHQgGbhRzrZGnfCqFynzEaxy
-RPGi6+TgukJFlrje+k9wd7jg9un3zXrUSO+OKg==</ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIICmzCCAYMCBgFxQLzLUjANBgkqhkiG9w0BAQsFADARMQ8wDQYDVQQDDAZtYXN0ZXIwHhcNMjAw
+            <ext:ExtensionContent><ds:Signature Id="SignID" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><ds:Reference URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><ds:DigestValue>cBuufLkc5NEo8DGXLROOcyVReUw=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>KTHUkKj51ekPVXDaJ7lyDAuqQx3K/uihrsyRBzwLbeGIoS4IuQm/mjCoB61YytHYX8kReoLsWLna
++YmRDFApDRgCtFb6+4JX9ViIuI0lp1Mf4/4kkI5hpVww8WieAvtWhCP9NG6tOpce9CyLIFm35/k9
+8R8Sbql30pHQmwL1B32lI673t5dDPquBh9MyCP0NxpqtrjmmNcV8wM69LeLYe+1JHMfgYYfbhYSX
+y036q0NNCtUaQJGcPg7TEZ07oAFlgOCF3G9faLltu2zbk3i89X+96hTbdJiLR8b2EKSI2MBCApoQ
+Gph9GWPPe5pz2NYG4Km2frgQ2n0MrITaIIhVFg==</ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIICmzCCAYMCBgFxQLzLUjANBgkqhkiG9w0BAQsFADARMQ8wDQYDVQQDDAZtYXN0ZXIwHhcNMjAw
 NDAzMTU0OTA2WhcNMzAwNDAzMTU1MDQ2WjARMQ8wDQYDVQQDDAZtYXN0ZXIwggEiMA0GCSqGSIb3
 DQEBAQUAA4IBDwAwggEKAoIBAQCBFvkmIdnA8xd4LlEPigj/bcSYJg1KKgARd/QmTlcW80TLuYJ0
 FZuvXpf26iIT9HbkKTEkbaCqA+vCz5gIXhSiKaKuwy8FE0sagxVr93mfT/MK0x4yxijE4gyhQcY5
@@ -56,7 +56,7 @@ z3QCqD69SPpu1QuTS86iQ5dYxK70uE47yH0erb0UQ5+dNH5OMSjO8mQdGtw=</ds:X509Certificate
     <sac:SummaryDocumentsLine>
         <cbc:LineID>1</cbc:LineID>
         <cbc:DocumentTypeCode>07</cbc:DocumentTypeCode>
-        <cbc:ID>BC001-1</cbc:ID>
+        <cbc:ID>BC01-1</cbc:ID>
         <cac:AccountingCustomerParty>
             <cbc:CustomerAssignedAccountID>12345678912</cbc:CustomerAssignedAccountID>
             <cbc:AdditionalAccountID>6</cbc:AdditionalAccountID>

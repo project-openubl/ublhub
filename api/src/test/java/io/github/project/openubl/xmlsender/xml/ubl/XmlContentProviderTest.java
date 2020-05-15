@@ -63,7 +63,7 @@ class XmlContentProviderTest {
         // Then
         assertNotNull(model);
         assertEquals(DocumentType.CREDIT_NOTE.getDocumentType(), model.getDocumentType());
-        assertEquals("BC01-1", model.getDocumentID());
+        assertEquals("F001-1", model.getDocumentID());
         assertEquals("12345678912", model.getRuc());
     }
 
@@ -79,7 +79,7 @@ class XmlContentProviderTest {
         // Then
         assertNotNull(model);
         assertEquals(DocumentType.DEBIT_NOTE.getDocumentType(), model.getDocumentType());
-        assertEquals("BD01-1", model.getDocumentID());
+        assertEquals("F001-1", model.getDocumentID());
         assertEquals("12345678912", model.getRuc());
     }
 
@@ -95,7 +95,7 @@ class XmlContentProviderTest {
         // Then
         assertNotNull(model);
         assertEquals(DocumentType.VOIDED_DOCUMENT.getDocumentType(), model.getDocumentType());
-        assertEquals("RA-20191224-1", model.getDocumentID());
+        assertEquals("RA-20200328-1", model.getDocumentID());
         assertEquals("12345678912", model.getRuc());
     }
 
@@ -111,7 +111,7 @@ class XmlContentProviderTest {
         // Then
         assertNotNull(model);
         assertEquals(DocumentType.SUMMARY_DOCUMENT.getDocumentType(), model.getDocumentType());
-        assertEquals("RC-20191224-1", model.getDocumentID());
+        assertEquals("RC-20200328-1", model.getDocumentID());
         assertEquals("12345678912", model.getRuc());
     }
 }
