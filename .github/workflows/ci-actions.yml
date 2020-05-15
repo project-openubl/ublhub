@@ -157,7 +157,7 @@ jobs:
       - name: Prepare XML Sender archive
         shell: bash
         run: |
-          find distribution/target -name 'lib' -o -name 'xml-sender-distribution-*-runner.jar' | tar -czvf xml-sender-java-artifacts.tgz -T -
+          find api/target -name 'lib' -o -name 'xml-sender-api-*-runner.jar' | tar -czvf xml-sender-java-artifacts.tgz -T -
       - name: Upload Archive XML Sender
         uses: actions/upload-artifact@v1
         with:
@@ -184,7 +184,7 @@ jobs:
         uses: elgohr/Publish-Docker-Github-Action@b2f63259b466ca5a4be395c392546de447450334
         with:
           name: projectopenubl/xml-sender
-          dockerfile: distribution/src/main/docker/Dockerfile.jvm
+          dockerfile: api/src/main/docker/Dockerfile.jvm
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           snapshot: true

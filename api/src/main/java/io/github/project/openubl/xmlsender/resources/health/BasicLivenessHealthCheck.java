@@ -14,29 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xmlsender.resources;
+package io.github.project.openubl.xmlsender.resources.health;
 
-import io.github.project.openubl.xmlsender.models.jpa.DocumentRepository;
-import io.github.project.openubl.xmlsender.models.jpa.entities.DocumentEntity;
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
-import org.eclipse.microprofile.health.Readiness;
+import org.eclipse.microprofile.health.Liveness;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
-@Readiness
+@Liveness
 @ApplicationScoped
-public class BasicReadinessHealthCheck implements HealthCheck {
-
-    @Inject
-    DocumentRepository documentRepository;
+public class BasicLivenessHealthCheck implements HealthCheck {
 
     @Override
     public HealthCheckResponse call() {
-        // Not doing anything with entity since it just checks DB readiness
-        DocumentEntity documentEntity = documentRepository.findById(0L);
-        return HealthCheckResponse.up("Server readiness running");
+        return HealthCheckResponse.up("Server liveness running");
     }
 
 }
