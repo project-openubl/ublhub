@@ -25,7 +25,7 @@ You can run your application in dev mode that enables live coding using:
 
 ```shell script
 ./mvnw install -DskipTests
-./mvnw compile quarkus:dev -f distribution/ -DnoDeps
+./mvnw compile quarkus:dev -f api/ -DnoDeps
 ```
 
 ## Packaging and running the application

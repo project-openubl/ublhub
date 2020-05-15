@@ -18,6 +18,7 @@ package io.github.project.openubl.xmlsender.resources;
 
 import io.github.project.openubl.xmlsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xmlsender.models.DeliveryStatusType;
+import io.github.project.openubl.xmlsender.resources.ApiApplication;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.Header;
 import io.restassured.response.Response;
@@ -79,7 +80,7 @@ class DocumentsResourceTest {
 
     @Test
     void invoice_withSystemCredentials_shouldReturnOK() {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/invoice.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/invoice.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 
@@ -106,7 +107,7 @@ class DocumentsResourceTest {
 
     @Test
     void invoice_withCustomCredentials_shouldReturnOK() {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/invoice.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/invoice.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 
@@ -135,7 +136,7 @@ class DocumentsResourceTest {
 
     @Test
     void invoice_downloadFile() throws IOException {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/invoice.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/invoice.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 
@@ -163,7 +164,7 @@ class DocumentsResourceTest {
 
     @Test
     void validInvoice_customCredentials_shouldBeSentToSunat() throws InterruptedException {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/invoice_signed.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/invoice_signed.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 
@@ -218,7 +219,7 @@ class DocumentsResourceTest {
 
     @Test
     void invalidInvoice_customCredentials_shouldBeSentToSunat() throws InterruptedException {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/invoice.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/invoice.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 
@@ -267,7 +268,7 @@ class DocumentsResourceTest {
 
     @Test
     void validCreditNote_customCredentials_shouldBeSentToSunat() throws InterruptedException {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/credit-note_signed.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/credit-note_signed.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 
@@ -322,7 +323,7 @@ class DocumentsResourceTest {
 
     @Test
     void invalidCreditNote_customCredentials_shouldBeSentToSunat() throws InterruptedException {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/credit-note.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/credit-note.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 
@@ -371,7 +372,7 @@ class DocumentsResourceTest {
 
     @Test
     void validDebitNote_customCredentials_shouldBeSentToSunat() throws InterruptedException {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/debit-note_signed.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/debit-note_signed.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 
@@ -426,7 +427,7 @@ class DocumentsResourceTest {
 
     @Test
     void invalidDebitNote_customCredentials_shouldBeSentToSunat() throws InterruptedException {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/debit-note.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/debit-note.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 
@@ -475,7 +476,7 @@ class DocumentsResourceTest {
 
     @Test
     void validVoidedDocument_customCredentials_shouldBeSentToSunat() throws InterruptedException {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/voided-document_signed.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/voided-document_signed.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 
@@ -530,7 +531,7 @@ class DocumentsResourceTest {
 
     @Test
     void invalidVoidedDocument_customCredentials_shouldBeSentToSunat() throws InterruptedException {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/voided-document.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/voided-document.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 
@@ -579,7 +580,7 @@ class DocumentsResourceTest {
 
     @Test
     void validSummaryDocument_customCredentials_shouldBeSentToSunat() throws InterruptedException {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/summary-document_signed.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/summary-document_signed.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 
@@ -634,7 +635,7 @@ class DocumentsResourceTest {
 
     @Test
     void invalidSummaryDocument_customCredentials_shouldBeSentToSunat() throws InterruptedException {
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls/summary-document.xml");
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("xmls2/summary-document.xml");
         assertNotNull(resource);
         File file = new File(resource.getPath());
 

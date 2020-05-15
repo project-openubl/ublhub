@@ -14,22 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xmlsender.resources.client;
+package io.github.project.openubl.xmlsender.resources.health;
 
+import org.eclipse.microprofile.health.HealthCheck;
+import org.eclipse.microprofile.health.HealthCheckResponse;
+import org.eclipse.microprofile.health.Liveness;
 
-import io.github.project.openubl.xmlsender.idm.DocumentRepresentation;
-import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import javax.enterprise.context.ApplicationScoped;
 
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+@Liveness
+@ApplicationScoped
+public class BasicLivenessHealthCheck implements HealthCheck {
 
-@Path("/")
-@RegisterRestClient(configKey="xml-sender-callback-api")
-public interface CallbackClientService {
+    @Override
+    public HealthCheckResponse call() {
+        return HealthCheckResponse.up("Server liveness running");
+    }
 
-    @POST
-    @Path("/")
-    @Produces("application/json")
-    void callback(DocumentRepresentation rep);
 }
