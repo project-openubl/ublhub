@@ -16,23 +16,14 @@
  */
 package io.github.project.openubl.xmlsender.events;
 
-import io.github.project.openubl.xmlsender.events.jms.SendTicketQueueConsumer;
-import io.github.project.openubl.xmlsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xmlsender.models.DocumentEvent;
-import io.github.project.openubl.xmlsender.models.jpa.DocumentRepository;
-import io.github.project.openubl.xmlsender.models.jpa.entities.DocumentEntity;
-import io.github.project.openubl.xmlsender.models.utils.EntityToRepresentation;
-import io.github.project.openubl.xmlsender.resources.client.CallbackClientService;
 import io.github.project.openubl.xmlsender.ws.WSSunatClient;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
-import javax.ws.rs.WebApplicationException;
 
 @ApplicationScoped
 public class BasicEventManager {
@@ -41,13 +32,6 @@ public class BasicEventManager {
 
     @Inject
     WSSunatClient wsSunatClient;
-
-    @Inject
-    @RestClient
-    CallbackClientService callbackClientService;
-
-    @Inject
-    DocumentRepository documentRepository;
 
     public void onDocumentCreate(
             @Observes(during = TransactionPhase.AFTER_SUCCESS)
@@ -63,18 +47,11 @@ public class BasicEventManager {
         wsSunatClient.checkDocumentTicket(event.getId());
     }
 
-    @Transactional
     public void onDocumentDelivered(
             @Observes(during = TransactionPhase.AFTER_SUCCESS)
             @EventProvider(EventProvider.Type.basic) DocumentEvent.Delivered event
     ) {
-        DocumentEntity documentEntity = documentRepository.findById(event.getId());
-        DocumentRepresentation rep = EntityToRepresentation.toRepresentation(documentEntity);
-        try {
-            callbackClientService.callback(rep);
-        } catch (WebApplicationException e) {
-            LOG.error("Could not send webhook callback, message=" + e.getMessage());
-        }
+        LOG.warn("Could not notify client since BASIC even manager does not support it.");
     }
 
 }
