@@ -16,7 +16,13 @@
  */
 package io.github.project.openubl.xmlsender.events;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.project.openubl.xmlsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xmlsender.models.DocumentEvent;
+import io.github.project.openubl.xmlsender.models.jpa.DocumentRepository;
+import io.github.project.openubl.xmlsender.models.jpa.entities.DocumentEntity;
+import io.github.project.openubl.xmlsender.models.utils.EntityToRepresentation;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -24,6 +30,7 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 import javax.jms.*;
+import java.lang.IllegalStateException;
 
 @ApplicationScoped
 public class JMSEventManager {
@@ -43,33 +50,47 @@ public class JMSEventManager {
     @Inject
     ConnectionFactory connectionFactory;
 
+    @Inject
+    DocumentRepository documentRepository;
+
     public void onDocumentCreate(
             @Observes(during = TransactionPhase.AFTER_SUCCESS)
             @EventProvider(EventProvider.Type.jms) DocumentEvent.Created event
     ) {
-        produceMessage(sendFileQueue, event.getId());
+        produceMessage(sendFileQueue, String.valueOf(event.getId()));
     }
 
     public void onDocumentRequireCheckTicket(
             @Observes(during = TransactionPhase.AFTER_SUCCESS)
             @EventProvider(EventProvider.Type.jms) DocumentEvent.RequireCheckTicket event
     ) {
-        produceMessage(ticketQueue, event.getId());
+        produceMessage(ticketQueue, String.valueOf(event.getId()));
     }
 
     public void onDocumentDelivered(
             @Observes(during = TransactionPhase.AFTER_SUCCESS)
             @EventProvider(EventProvider.Type.jms) DocumentEvent.Delivered event
     ) {
-        produceMessage(callbackQueue, event.getId());
+        DocumentEntity documentEntity = documentRepository.findById(event.getId());
+        DocumentRepresentation representation = EntityToRepresentation.toRepresentation(documentEntity);
+
+        String callbackObj;
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            callbackObj = mapper.writeValueAsString(representation);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
+
+        produceMessage(callbackQueue, callbackObj);
     }
 
-    private void produceMessage(String queueName, Long documentId) {
+    private void produceMessage(String queueName, String messageBody) {
         try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
             JMSProducer producer = context.createProducer();
             producer.setDeliveryDelay(messageDelay);
             Queue queue = context.createQueue(queueName);
-            Message message = context.createTextMessage(documentId.toString());
+            Message message = context.createTextMessage(messageBody);
             producer.send(queue, message);
         }
     }
