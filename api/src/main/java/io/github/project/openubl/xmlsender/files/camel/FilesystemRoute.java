@@ -29,7 +29,7 @@ import java.nio.file.Paths;
 @ApplicationScoped
 public class FilesystemRoute extends RouteBuilder {
 
-    @ConfigProperty(name = "openubl.storage.filesystem.folder", defaultValue = "xml-sender-filesystem")
+    @ConfigProperty(name = "openubl.storage.filesystem.folder", defaultValue = "xsender-server-filesystem")
     String fileSystemFolder;
 
     @Override

@@ -157,12 +157,12 @@ jobs:
       - name: Prepare XML Sender archive
         shell: bash
         run: |
-          find api/target -name 'lib' -o -name 'xml-sender-api-*-runner.jar' | tar -czvf xml-sender-java-artifacts.tgz -T -
+          find api/target -name 'lib' -o -name 'xsender-server-api-*-runner.jar' | tar -czvf xsender-server-java-artifacts.tgz -T -
       - name: Upload Archive XML Sender
         uses: actions/upload-artifact@v1
         with:
-          name: xml-sender-java-artifacts
-          path: 'xml-sender-java-artifacts.tgz'
+          name: xsender-server-java-artifacts
+          path: 'xsender-server-java-artifacts.tgz'
 
   container-images:
     name: Container Images
@@ -174,18 +174,18 @@ jobs:
       - name: Download Java XML Sender Artifacts
         uses: actions/download-artifact@v1
         with:
-          name: xml-sender-java-artifacts
+          name: xsender-server-java-artifacts
           path: .
       - name: Extract Java Artifacs
         shell: bash
-        run: tar -xzvf xml-sender-java-artifacts.tgz
+        run: tar -xzvf xsender-server-java-artifacts.tgz
       - name: Publish to Registry XML Builder
         # Uses sha for added security since tags can be updated
         uses: elgohr/Publish-Docker-Github-Action@b2f63259b466ca5a4be395c392546de447450334
         with:
-          name: projectopenubl/xml-sender
+          name: projectopenubl/xsender-server
           dockerfile: api/src/main/docker/Dockerfile.jvm
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          snapshot: true
+          snapshot: false
           tags: "master"

@@ -7,11 +7,11 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.jvm -t quarkus/xml-sender-jvm .
+# docker build -f src/main/docker/Dockerfile.jvm -t quarkus/xsender-server-jvm .
 #
 # Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/xml-sender-jvm
+# docker run -i --rm -p 8080:8080 quarkus/xsender-server-jvm
 #
 ###
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.1

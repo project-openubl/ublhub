@@ -1,4 +1,4 @@
-# xml-sender project
+# xsender-server project
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
@@ -31,10 +31,10 @@ You can run your application in dev mode that enables live coding using:
 ## Packaging and running the application
 
 The application can be packaged using `./mvnw package`.
-It produces the `xml-sender-1.0.0-SNAPSHOT-runner.jar` file in the `/target` directory.
+It produces the `xsender-server-1.0.0-SNAPSHOT-runner.jar` file in the `/target` directory.
 Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/lib` directory.
 
-The application is now runnable using `java -jar target/xml-sender-1.0.0-SNAPSHOT-runner.jar`.
+The application is now runnable using `java -jar target/xsender-server-1.0.0-SNAPSHOT-runner.jar`.
 
 ## Creating a native executable
 
@@ -42,7 +42,7 @@ You can create a native executable using: `./mvnw package -Pnative`.
 
 Or, if you don't have GraalVM installed, you can run the native executable build in a container using: `./mvnw package -Pnative -Dquarkus.native.container-build=true`.
 
-You can then execute your native executable with: `./target/xml-sender-1.0.0-SNAPSHOT-runner`
+You can then execute your native executable with: `./target/xsender-server-1.0.0-SNAPSHOT-runner`
 
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/building-native-image-guide.
 
@@ -50,4 +50,4 @@ If you want to learn more about building native executables, please consult http
 
 - [Eclipse Public License - v 2.0](./LICENSE)
 
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fproject-openubl%2Fxml-sender.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fproject-openubl%2Fxml-sender?ref=badge_large)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fproject-openubl%2Fxsender-server.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fproject-openubl%2Fxsender-server?ref=badge_large)

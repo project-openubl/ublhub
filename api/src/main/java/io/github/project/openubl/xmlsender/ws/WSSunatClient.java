@@ -107,7 +107,7 @@ public class WSSunatClient {
                     LOG.warn("Unsupported file, will acknowledge and delete message:" + documentType);
                     return true;
             }
-        } catch (IOException | UnknownWebServiceException e) {
+        } catch (UnknownWebServiceException e) {
             LOG.error(e);
             return false;
         } catch (ValidationWebServiceException e) {

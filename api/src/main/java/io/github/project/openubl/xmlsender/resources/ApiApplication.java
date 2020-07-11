@@ -30,7 +30,7 @@ import javax.ws.rs.core.Application;
                 version = "1.0.0",
                 contact = @Contact(
                         name = "XML Sender API Support",
-                        url = "https://github.com/project-openubl/xml-sender/issues",
+                        url = "https://github.com/project-openubl/xsender-server/issues",
                         email = "projectopenubl+subscribe@googlegroups.com"
                 ),
                 license = @License(

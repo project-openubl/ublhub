@@ -23,13 +23,13 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.github.project-openubl</groupId>
-        <artifactId>xml-sender</artifactId>
+        <artifactId>xsender-server</artifactId>
         <version>1.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>xml-sender-core</artifactId>
-    <name>XML Sender :: Core</name>
+    <artifactId>xsender-server-core</artifactId>
+    <name>XSender Server :: Core</name>
 
     <dependencies>
         <!--Quarkus-->
