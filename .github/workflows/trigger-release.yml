@@ -1,0 +1,29 @@
+name: Trigger release
+on:
+  workflow_dispatch:
+    inputs:
+      release-version:
+        description: Release version
+        default: 1.0.0.Final
+        required: true
+jobs:
+  release-version:
+    name: Bump Package Version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 11
+        # Uses sha for added security since tags can be updated
+        uses: joschi/setup-jdk@b9cc6eabf7e7e3889766b5cee486f874c9e1bd2d
+        with:
+          java-version: 11
+      - name: Setup git
+        run: |
+          git config user.name "Carlos Feria"
+          git config user.email "<carlosthe19916@gmail.com>"
+      - name: Build release
+        run: |
+          mvn versions:set -DnewVersion="${{ github.event.inputs.release-version }}"
+          git add .
+          git commit -m "Release ${{ github.event.inputs.release-version }}"
+          git push origin master
