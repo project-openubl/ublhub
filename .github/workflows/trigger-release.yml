@@ -12,7 +12,7 @@ on:
         required: true
 jobs:
   release-version:
-    name: Bump Package Version
+    name: Create git tag
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -29,7 +29,7 @@ jobs:
         run: |
           mvn versions:set -DnewVersion="${{ github.event.inputs.release-version }}"
           git add .
-          git commit -m "Release ${{ github.event.inputs.release-version }}"
+          git commit -m "Prepare release ${{ github.event.inputs.release-version }}"
           git push origin master
       - name: Create tag
         run: |
