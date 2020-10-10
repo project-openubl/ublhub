@@ -24,7 +24,7 @@
 
     <groupId>io.github.project-openubl</groupId>
     <artifactId>xsender-server</artifactId>
-    <version>1.1.0.Final</version>
+    <version>1.0.1.Final</version>
 
     <name>XSender Server :: Parent</name>
     <description>SUNAT Microservice for sending XMLs</description>
