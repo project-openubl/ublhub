@@ -3,8 +3,12 @@ on:
   workflow_dispatch:
     inputs:
       release-version:
-        description: Release version
+        description: Release version (with sufix)
         default: 1.0.0.Final
+        required: true
+      next-version:
+        description: Next version (without sufix)
+        default: 1.0.1
         required: true
 jobs:
   release-version:
@@ -21,9 +25,19 @@ jobs:
         run: |
           git config user.name "Carlos Feria"
           git config user.email "<carlosthe19916@gmail.com>"
-      - name: Build release
+      - name: Prepare release
         run: |
           mvn versions:set -DnewVersion="${{ github.event.inputs.release-version }}"
           git add .
           git commit -m "Release ${{ github.event.inputs.release-version }}"
+          git push origin master
+      - name: Create tag
+        run: |
+          git tag "${{ github.event.inputs.release-version }}"
+          git push origin --tags
+      - name: Prepare next version
+        run: |
+          mvn versions:set -DnewVersion="${{ github.event.inputs.next-version }}-SNAPSHOT"
+          git add .
+          git commit -m "Prepare next release ${{ github.event.inputs.next-version }}-SNAPSHOT"
           git push origin master
