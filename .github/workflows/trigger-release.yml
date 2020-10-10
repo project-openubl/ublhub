@@ -30,14 +30,14 @@ jobs:
           mvn versions:set -DnewVersion="${{ github.event.inputs.release-version }}"
           git add .
           git commit -m "Prepare release ${{ github.event.inputs.release-version }}"
-          git push origin master
+          git push https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/project-openubl/xsender-server.git
       - name: Create tag
         run: |
           git tag "${{ github.event.inputs.release-version }}"
-          git push origin --tags
+          git push https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/project-openubl/xsender-server.git --tags
       - name: Prepare next version
         run: |
           mvn versions:set -DnewVersion="${{ github.event.inputs.next-version }}-SNAPSHOT"
           git add .
           git commit -m "Prepare next release ${{ github.event.inputs.next-version }}-SNAPSHOT"
-          git push origin master
+          git push https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/project-openubl/xsender-server.git
