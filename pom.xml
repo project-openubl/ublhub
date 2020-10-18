@@ -40,8 +40,11 @@
         <quarkus.version>1.8.3.Final</quarkus.version>
         <surefire-plugin.version>2.22.1</surefire-plugin.version>
 
-        <sunat-web-services.version>3.0.0.Final</sunat-web-services.version>
+        <xsender-lib.version>3.0.1.Final</xsender-lib.version>
         <docker-plugin.version>0.33.0</docker-plugin.version>
+
+        <keycloak.version>11.0.2</keycloak.version>
+        <testcontainers.version>1.12.5</testcontainers.version>
 
         <license.dir>${basedir}</license.dir>
     </properties>
@@ -112,6 +115,7 @@
     <modules>
         <module>core</module>
         <module>api</module>
+        <module>api-authz</module>
         <module>extensions</module>
     </modules>
 

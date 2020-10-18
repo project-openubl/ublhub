@@ -23,7 +23,7 @@ read -p "Enter Next Release (SNAPSHOT): " nextVersion
 read -s -p "Enter Github Token: " token
 
 # Update to release
-mvn versions:set -DnewVersion="$releaseVersion"
+mvn versions:set -DwVersion="$releaseVersion"
 
 git add .
 git commit -m "Release $releaseVersion"
