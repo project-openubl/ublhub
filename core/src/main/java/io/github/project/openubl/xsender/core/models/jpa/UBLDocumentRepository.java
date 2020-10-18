@@ -14,23 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xmlsender.models.jpa;
+package io.github.project.openubl.xsender.core.models.jpa;
 
-import io.github.project.openubl.xmlsender.models.DeliveryStatusType;
-import io.github.project.openubl.xmlsender.models.jpa.entities.DocumentEntity;
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.github.project.openubl.xsender.core.models.DeliveryStatusType;
+import io.github.project.openubl.xsender.core.models.jpa.entities.UBLDocumentEntity;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.List;
 
 @ApplicationScoped
-public class DocumentRepository implements PanacheRepository<DocumentEntity> {
+public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentEntity, String> {
 
-    public List<DocumentEntity> findDocumentScheduled(){
+    public List<UBLDocumentEntity> findAllScheduledToDeliver() {
         return list("deliveryStatus", DeliveryStatusType.SCHEDULED_TO_DELIVER);
     }
 
-    public List<DocumentEntity> findTickedCheckScheduled(){
+    public List<UBLDocumentEntity> findAllSheduledToCheckTicket() {
         return list("deliveryStatus", DeliveryStatusType.SCHEDULED_CHECK_TICKET);
     }
 
