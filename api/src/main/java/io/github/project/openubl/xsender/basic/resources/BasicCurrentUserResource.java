@@ -14,33 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.basic.resources.admin;
+package io.github.project.openubl.xsender.basic.resources;
 
 import io.github.project.openubl.xsender.basic.Constants;
-import io.github.project.openubl.xsender.core.idm.OrganizationRepresentation;
+import io.github.project.openubl.xsender.core.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.core.idm.PageRepresentation;
+import io.github.project.openubl.xsender.core.managers.CompanyManager;
 import io.github.project.openubl.xsender.core.models.ContextBean;
-import io.github.project.openubl.xsender.core.resources.admin.OrganizationsResource;
-import io.github.project.openubl.xsender.core.resources.bl.OrganizationsResourceBL;
+import io.github.project.openubl.xsender.core.models.jpa.CompanyRepository;
+import io.github.project.openubl.xsender.core.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.core.models.utils.EntityToRepresentation;
+import io.github.project.openubl.xsender.core.resources.CurrentUserResource;
+import io.github.project.openubl.xsender.core.resources.bl.CompanyResourceBL;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
 
 @Transactional
 @ApplicationScoped
-public class BasicOrganizationsResource implements OrganizationsResource {
+public class BasicCurrentUserResource implements CurrentUserResource {
 
     @Context
     UriInfo uriInfo;
 
     @Inject
-    OrganizationsResourceBL organizationsResourceBL;
+    CompanyResourceBL companyResourceBL;
 
-    public PageRepresentation<OrganizationRepresentation> listOrganizations(
+    @Inject
+    CompanyRepository companyRepository;
+
+    @Inject
+    CompanyManager companyManager;
+
+    public PageRepresentation<CompanyRepresentation> getCompanies(
             String name,
             Integer offset,
             Integer limit,
@@ -51,7 +62,17 @@ public class BasicOrganizationsResource implements OrganizationsResource {
                 .withUriInfo(uriInfo)
                 .build();
 
-        return organizationsResourceBL.listAllOrganizations(contextBean, name, offset, limit, sortBy);
+        return companyResourceBL.listOrganizations(contextBean, name, offset, limit, sortBy);
+    }
+
+    @Override
+    public CompanyRepresentation createCompany(CompanyRepresentation rep) {
+        if (companyRepository.findByName(rep.getName()).isPresent()) {
+            throw new BadRequestException("Name already taken");
+        }
+
+        CompanyEntity company = companyManager.createCompany(Constants.DEFAULT_USERNAME, rep);
+        return EntityToRepresentation.toRepresentation(company);
     }
 
 }

@@ -20,18 +20,15 @@ import io.github.project.openubl.xsender.core.exceptions.InvalidXMLFileException
 import io.github.project.openubl.xsender.core.exceptions.StorageException;
 import io.github.project.openubl.xsender.core.exceptions.UnsupportedDocumentTypeException;
 import io.github.project.openubl.xsender.core.files.FilesManager;
-import io.github.project.openubl.xsender.core.idm.DocumentRepresentation;
-import io.github.project.openubl.xsender.core.idm.ErrorRepresentation;
-import io.github.project.openubl.xsender.core.idm.RepositoryRepresentation;
+import io.github.project.openubl.xsender.core.idm.*;
+import io.github.project.openubl.xsender.core.managers.CompanyManager;
 import io.github.project.openubl.xsender.core.managers.DocumentsManager;
-import io.github.project.openubl.xsender.core.models.jpa.OrganizationRepository;
-import io.github.project.openubl.xsender.core.models.jpa.RepoRepository;
+import io.github.project.openubl.xsender.core.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.core.models.jpa.UBLDocumentRepository;
-import io.github.project.openubl.xsender.core.models.jpa.entities.OrganizationEntity;
-import io.github.project.openubl.xsender.core.models.jpa.entities.RepositoryEntity;
+import io.github.project.openubl.xsender.core.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.core.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.xsender.core.models.utils.EntityToRepresentation;
-import io.github.project.openubl.xsender.core.resources.RepoResource;
+import io.github.project.openubl.xsender.core.resources.CompanyResource;
 import org.apache.commons.io.IOUtils;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -40,8 +37,8 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -52,15 +49,12 @@ import java.util.Map;
 
 @Transactional
 @ApplicationScoped
-public class BasicRepoResource implements RepoResource {
+public class BasicCompanyResource implements CompanyResource {
 
-    private static final Logger LOG = Logger.getLogger(BasicRepoResource.class);
-
-    @Inject
-    OrganizationRepository organizationRepository;
+    private static final Logger LOG = Logger.getLogger(BasicCompanyResource.class);
 
     @Inject
-    RepoRepository repoRepository;
+    CompanyRepository companyRepository;
 
     @Inject
     UBLDocumentRepository documentRepository;
@@ -71,21 +65,33 @@ public class BasicRepoResource implements RepoResource {
     @Inject
     FilesManager filesManager;
 
-    public RepositoryRepresentation getRepository(String owner, String repo) {
-        return new RepositoryRepresentation();
+    @Inject
+    CompanyManager companyManager;
+
+    public CompanyRepresentation getCompany(String org) {
+        CompanyEntity organizationEntity = companyRepository.findByName(org).orElseThrow(NotFoundException::new);
+        return EntityToRepresentation.toRepresentation(organizationEntity);
     }
 
-    public RepositoryRepresentation updateRepository(String owner, String repo, RepositoryRepresentation rep) {
-        return new RepositoryRepresentation();
+    public CompanyRepresentation updateCompany(String org, CompanyRepresentation rep) {
+        CompanyEntity organizationEntity = companyRepository.findByName(org).orElseThrow(NoClassDefFoundError::new);
+        organizationEntity = companyManager.updateCompany(rep, organizationEntity);
+        return EntityToRepresentation.toRepresentation(organizationEntity);
     }
 
-    public void deleteRepository(String owner, String repo) {
-
+    public void updateCompanySUNATCredentials(String org, SunatCredentialsRepresentation rep) {
+        CompanyEntity organizationEntity = companyRepository.findByName(org).orElseThrow(NoClassDefFoundError::new);
+        companyManager.updateCorporateCredentials(rep, organizationEntity);
     }
 
-    public Response createDocument(String owner, String repo, MultipartFormDataInput input) {
-        OrganizationEntity organizationEntity = organizationRepository.findByName(owner).orElseThrow(NotFoundException::new);
-        RepositoryEntity repositoryEntity = repoRepository.findByName(organizationEntity, repo).orElseThrow(NotFoundException::new);
+    @Override
+    public PageRepresentation<DocumentRepresentation> listDocuments(@NotNull String company, String filterText, Integer offset, Integer limit, List<String> sortBy) {
+        return null;
+    }
+
+    @Override
+    public Response createDocument(@NotNull String company, MultipartFormDataInput input) {
+        CompanyEntity companyEntity = companyRepository.findByName(company).orElseThrow(NotFoundException::new);
 
         //
 
@@ -116,7 +122,7 @@ public class BasicRepoResource implements RepoResource {
 
         UBLDocumentEntity documentEntity;
         try {
-            documentEntity = documentsManager.createDocumentAndScheduleDelivery(repositoryEntity, xmlFile);
+            documentEntity = documentsManager.createDocumentAndScheduleDelivery(companyEntity, xmlFile);
         } catch (InvalidXMLFileException e) {
             LOG.error(e);
             ErrorRepresentation error = new ErrorRepresentation("Form[file] is not a valid XML file or is corrupted");
@@ -135,16 +141,14 @@ public class BasicRepoResource implements RepoResource {
                 .build();
     }
 
-    public List<DocumentRepresentation> listDocuments(String owner, String repo) {
-        return new ArrayList<>();
+    @Override
+    public DocumentRepresentation getDocument(@NotNull String company, @NotNull String documentId) {
+        return null;
     }
 
-    public DocumentRepresentation getDocument(String owner, String repo) {
-        return new DocumentRepresentation();
-    }
-
-    public Response getDocumentFile(String owner, String repo, String docId) {
-        UBLDocumentEntity documentEntity = documentRepository.findById(docId);
+    @Override
+    public Response getDocumentFile(@NotNull String company, @NotNull String documentId) {
+        UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
         if (documentEntity == null) {
             throw new NotFoundException();
         }
@@ -158,8 +162,9 @@ public class BasicRepoResource implements RepoResource {
                 .build();
     }
 
-    public String getDocumentFileLink(String owner, String repo, String docId) {
-        UBLDocumentEntity documentEntity = documentRepository.findById(docId);
+    @Override
+    public String getDocumentFileLink(@NotNull String company, @NotNull String documentId) {
+        UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
         if (documentEntity == null) {
             throw new NotFoundException();
         }
@@ -167,8 +172,9 @@ public class BasicRepoResource implements RepoResource {
         return filesManager.getFileLink(documentEntity.getStorageFile());
     }
 
-    public Response getDocumentCDR(String owner, String repo, String docId) {
-        UBLDocumentEntity documentEntity = documentRepository.findById(docId);
+    @Override
+    public Response getDocumentCDR(@NotNull String company, @NotNull String documentId) {
+        UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
         if (documentEntity == null) {
             throw new NotFoundException();
         }
@@ -185,8 +191,9 @@ public class BasicRepoResource implements RepoResource {
                 .build();
     }
 
-    public String getDocumentCDRLink(String owner, String repo, String docId) {
-        UBLDocumentEntity documentEntity = documentRepository.findById(docId);
+    @Override
+    public String getDocumentCDRLink(@NotNull String company, @NotNull String documentId) {
+        UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
         if (documentEntity == null) {
             throw new NotFoundException();
         }
@@ -196,5 +203,6 @@ public class BasicRepoResource implements RepoResource {
 
         return filesManager.getFileLink(documentEntity.getStorageCdr());
     }
+
 }
 

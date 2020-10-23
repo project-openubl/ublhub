@@ -16,11 +16,11 @@
  */
 package io.github.project.openubl.xsender.core.managers;
 
-import io.github.project.openubl.xsender.core.idm.OrganizationRepresentation;
+import io.github.project.openubl.xsender.core.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.core.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.core.idm.SunatUrlsRepresentation;
-import io.github.project.openubl.xsender.core.models.jpa.OrganizationRepository;
-import io.github.project.openubl.xsender.core.models.jpa.entities.OrganizationEntity;
+import io.github.project.openubl.xsender.core.models.jpa.CompanyRepository;
+import io.github.project.openubl.xsender.core.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.core.models.jpa.entities.SunatCredentialsEntity;
 import io.github.project.openubl.xsender.core.models.jpa.entities.SunatUrlsEntity;
 import org.jboss.logging.Logger;
@@ -32,43 +32,44 @@ import java.util.UUID;
 
 @Transactional
 @ApplicationScoped
-public class OrganizationManager {
+public class CompanyManager {
 
-    private static final Logger LOG = Logger.getLogger(OrganizationManager.class);
+    private static final Logger LOG = Logger.getLogger(CompanyManager.class);
 
     @Inject
-    OrganizationRepository organizationRepository;
+    CompanyRepository companyRepository;
 
-    public OrganizationEntity createCorporate(OrganizationRepresentation rep) {
-        OrganizationEntity organizationEntity = new OrganizationEntity();
-        organizationEntity.setId(UUID.randomUUID().toString());
+    public CompanyEntity createCompany(String owner, CompanyRepresentation rep) {
+        CompanyEntity companyEntity = new CompanyEntity();
+        companyEntity.setId(UUID.randomUUID().toString());
 
-        organizationEntity.setName(rep.getName());
+        companyEntity.setOwner(owner);
+        companyEntity.setName(rep.getName());
 
         if (rep.getSunatUrls() != null) {
             SunatUrlsEntity sunatUrlsEntity = new SunatUrlsEntity();
-            organizationEntity.setSunatUrls(sunatUrlsEntity);
+            companyEntity.setSunatUrls(sunatUrlsEntity);
 
             updateSunatUrls(rep.getSunatUrls(), sunatUrlsEntity);
         }
 
-        organizationRepository.persist(organizationEntity);
-        return organizationEntity;
+        companyRepository.persist(companyEntity);
+        return companyEntity;
     }
 
     /**
      * Shouldn't update 'name'
      */
-    public OrganizationEntity updateCorporate(OrganizationRepresentation rep, OrganizationEntity organizationEntity) {
+    public CompanyEntity updateCompany(CompanyRepresentation rep, CompanyEntity CompanyEntity) {
         if (rep.getSunatUrls() != null) {
-            if (organizationEntity.getSunatUrls() == null) {
-                organizationEntity.setSunatUrls(new SunatUrlsEntity());
+            if (CompanyEntity.getSunatUrls() == null) {
+                CompanyEntity.setSunatUrls(new SunatUrlsEntity());
             }
-            updateSunatUrls(rep.getSunatUrls(), organizationEntity.getSunatUrls());
+            updateSunatUrls(rep.getSunatUrls(), CompanyEntity.getSunatUrls());
         }
 
-        organizationRepository.persist(organizationEntity);
-        return organizationEntity;
+        companyRepository.persist(CompanyEntity);
+        return CompanyEntity;
     }
 
     private void updateSunatUrls(SunatUrlsRepresentation rep, SunatUrlsEntity entity) {
@@ -83,12 +84,12 @@ public class OrganizationManager {
         }
     }
 
-    public void updateCorporateCredentials(SunatCredentialsRepresentation rep, OrganizationEntity organizationEntity) {
-        if (organizationEntity.getSunatCredentials() == null) {
-            organizationEntity.setSunatCredentials(new SunatCredentialsEntity());
+    public void updateCorporateCredentials(SunatCredentialsRepresentation rep, CompanyEntity CompanyEntity) {
+        if (CompanyEntity.getSunatCredentials() == null) {
+            CompanyEntity.setSunatCredentials(new SunatCredentialsEntity());
         }
 
-        organizationEntity.getSunatCredentials().setSunatUsername(rep.getSunatUsername());
-        organizationEntity.getSunatCredentials().setSunatPassword(rep.getSunatPassword());
+        CompanyEntity.getSunatCredentials().setSunatUsername(rep.getSunatUsername());
+        CompanyEntity.getSunatCredentials().setSunatPassword(rep.getSunatPassword());
     }
 }

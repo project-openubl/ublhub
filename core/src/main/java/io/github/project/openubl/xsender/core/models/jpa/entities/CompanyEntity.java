@@ -16,22 +16,17 @@
  */
 package io.github.project.openubl.xsender.core.models.jpa.entities;
 
-import io.github.project.openubl.xsender.core.models.OrganizationType;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Entity
-@Table(name = "ORGANIZATION", uniqueConstraints = {
+@Table(name = "COMPANY", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"NAME"})
 })
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "ORG_TYPE", discriminatorType = DiscriminatorType.STRING)
-public class OrganizationEntity extends PanacheEntityBase {
+public class CompanyEntity extends PanacheEntityBase {
 
     @Id
     @Column(name = "ID")
@@ -46,19 +41,11 @@ public class OrganizationEntity extends PanacheEntityBase {
     @Column(name = "NAME")
     private String name;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "TYPE")
-    private OrganizationType type;
-
     @Embedded
     private SunatCredentialsEntity sunatCredentials;
 
     @Embedded
     private SunatUrlsEntity sunatUrls;
-
-    @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.REMOVE}, orphanRemoval = true, mappedBy = "corporate")
-    private Set<RepositoryEntity> companies = new HashSet<>();
 
     @Version
     @Column(name = "VERSION")
@@ -88,14 +75,6 @@ public class OrganizationEntity extends PanacheEntityBase {
         this.name = name;
     }
 
-    public OrganizationType getType() {
-        return type;
-    }
-
-    public void setType(OrganizationType type) {
-        this.type = type;
-    }
-
     public SunatCredentialsEntity getSunatCredentials() {
         return sunatCredentials;
     }
@@ -112,14 +91,6 @@ public class OrganizationEntity extends PanacheEntityBase {
         this.sunatUrls = sunatUrls;
     }
 
-    public Set<RepositoryEntity> getCompanies() {
-        return companies;
-    }
-
-    public void setCompanies(Set<RepositoryEntity> companies) {
-        this.companies = companies;
-    }
-
     public int getVersion() {
         return version;
     }
@@ -128,20 +99,31 @@ public class OrganizationEntity extends PanacheEntityBase {
         this.version = version;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CompanyEntity that = (CompanyEntity) o;
+        return name.equals(that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
+    }
+
     public static final class Builder {
         private String id;
         private String owner;
         private String name;
-        private OrganizationType type;
         private SunatCredentialsEntity sunatCredentials;
         private SunatUrlsEntity sunatUrls;
-        private Set<RepositoryEntity> companies = new HashSet<>();
         private int version;
 
         private Builder() {
         }
 
-        public static Builder anOrganizationEntity() {
+        public static Builder aCompanyEntity() {
             return new Builder();
         }
 
@@ -160,11 +142,6 @@ public class OrganizationEntity extends PanacheEntityBase {
             return this;
         }
 
-        public Builder withType(OrganizationType type) {
-            this.type = type;
-            return this;
-        }
-
         public Builder withSunatCredentials(SunatCredentialsEntity sunatCredentials) {
             this.sunatCredentials = sunatCredentials;
             return this;
@@ -175,27 +152,20 @@ public class OrganizationEntity extends PanacheEntityBase {
             return this;
         }
 
-        public Builder withCompanies(Set<RepositoryEntity> companies) {
-            this.companies = companies;
-            return this;
-        }
-
         public Builder withVersion(int version) {
             this.version = version;
             return this;
         }
 
-        public OrganizationEntity build() {
-            OrganizationEntity organizationEntity = new OrganizationEntity();
-            organizationEntity.setId(id);
-            organizationEntity.setOwner(owner);
-            organizationEntity.setName(name);
-            organizationEntity.setType(type);
-            organizationEntity.setSunatCredentials(sunatCredentials);
-            organizationEntity.setSunatUrls(sunatUrls);
-            organizationEntity.setCompanies(companies);
-            organizationEntity.setVersion(version);
-            return organizationEntity;
+        public CompanyEntity build() {
+            CompanyEntity companyEntity = new CompanyEntity();
+            companyEntity.setId(id);
+            companyEntity.setOwner(owner);
+            companyEntity.setName(name);
+            companyEntity.setSunatCredentials(sunatCredentials);
+            companyEntity.setSunatUrls(sunatUrls);
+            companyEntity.setVersion(version);
+            return companyEntity;
         }
     }
 }

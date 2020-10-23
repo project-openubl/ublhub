@@ -37,7 +37,7 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     @NotNull
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = @ForeignKey, name = "COMPANY_ID")
-    private RepositoryEntity company;
+    private CompanyEntity company;
 
     @NotNull
     @Column(name = "RUC")
@@ -93,11 +93,11 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.id = id;
     }
 
-    public RepositoryEntity getCompany() {
+    public CompanyEntity getCompany() {
         return company;
     }
 
-    public void setCompany(RepositoryEntity company) {
+    public void setCompany(CompanyEntity company) {
         this.company = company;
     }
 
@@ -214,7 +214,7 @@ public class UBLDocumentEntity extends PanacheEntityBase {
 
     public static final class Builder {
         private String id;
-        private RepositoryEntity company;
+        private CompanyEntity company;
         private String ruc;
         private String documentID;
         private DocumentType documentType;
@@ -240,7 +240,7 @@ public class UBLDocumentEntity extends PanacheEntityBase {
             return this;
         }
 
-        public Builder withCompany(RepositoryEntity company) {
+        public Builder withCompany(CompanyEntity company) {
             this.company = company;
             return this;
         }

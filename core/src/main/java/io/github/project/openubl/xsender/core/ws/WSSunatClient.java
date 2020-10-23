@@ -23,7 +23,7 @@ import io.github.project.openubl.xsender.core.models.DeliveryStatusType;
 import io.github.project.openubl.xsender.core.models.DocumentEvent;
 import io.github.project.openubl.xsender.core.models.FileType;
 import io.github.project.openubl.xsender.core.models.jpa.UBLDocumentRepository;
-import io.github.project.openubl.xsender.core.models.jpa.entities.RepositoryEntity;
+import io.github.project.openubl.xsender.core.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.core.models.jpa.entities.SunatCredentialsEntity;
 import io.github.project.openubl.xsender.core.models.jpa.entities.SunatUrlsEntity;
 import io.github.project.openubl.xsender.core.models.jpa.entities.UBLDocumentEntity;
@@ -63,14 +63,9 @@ public class WSSunatClient {
     Event<DocumentEvent.RequireCheckTicket> documentRequireCheckTicketEvent;
 
     private String getDeliveryUrl(UBLDocumentEntity document) {
-        RepositoryEntity company = document.getCompany();
+        CompanyEntity company = document.getCompany();
 
-        SunatUrlsEntity sunatUrls;
-        if (!company.isUsingCorporateCredentials()) {
-            sunatUrls = company.getSunatUrls();
-        } else {
-            sunatUrls = company.getCorporate().getSunatUrls();
-        }
+        SunatUrlsEntity sunatUrls = company.getSunatUrls();
 
         switch (document.getDeliveryType()) {
             case BASIC_DOCUMENTS_URL:
@@ -85,12 +80,8 @@ public class WSSunatClient {
     }
 
     private SunatCredentialsEntity getCredentials(UBLDocumentEntity document) {
-        RepositoryEntity company = document.getCompany();
-        if (!company.isUsingCorporateCredentials()) {
-            return company.getSunatCredentials();
-        } else {
-            return company.getCorporate().getSunatCredentials();
-        }
+        CompanyEntity company = document.getCompany();
+        return company.getSunatCredentials();
     }
 
     /**

@@ -16,14 +16,14 @@
  */
 package io.github.project.openubl.xsender.core.resources.bl;
 
-import io.github.project.openubl.xsender.core.idm.OrganizationRepresentation;
+import io.github.project.openubl.xsender.core.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.core.idm.PageRepresentation;
 import io.github.project.openubl.xsender.core.models.ContextBean;
 import io.github.project.openubl.xsender.core.models.PageBean;
 import io.github.project.openubl.xsender.core.models.PageModel;
 import io.github.project.openubl.xsender.core.models.SortBean;
-import io.github.project.openubl.xsender.core.models.jpa.OrganizationRepository;
-import io.github.project.openubl.xsender.core.models.jpa.entities.OrganizationEntity;
+import io.github.project.openubl.xsender.core.models.jpa.CompanyRepository;
+import io.github.project.openubl.xsender.core.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.core.models.utils.EntityToRepresentation;
 import io.github.project.openubl.xsender.core.resources.utils.ResourceUtils;
 import org.apache.http.NameValuePair;
@@ -35,9 +35,9 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 @ApplicationScoped
-public class OrganizationsResourceBL {
+public class CompanyResourceBL {
 
-    public PageRepresentation<OrganizationRepresentation> listAllOrganizations(
+    public PageRepresentation<CompanyRepresentation> listOrganizations(
             ContextBean contextBean,
             String name,
             Integer offset,
@@ -45,47 +45,13 @@ public class OrganizationsResourceBL {
             List<String> sortBy
     ) {
         PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
-        List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, OrganizationRepository.SORT_BY_FIELDS);
+        List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, CompanyRepository.SORT_BY_FIELDS);
 
-        PageModel<OrganizationEntity> pageModel;
+        PageModel<CompanyEntity> pageModel;
         if (name != null && !name.trim().isEmpty()) {
-            pageModel = OrganizationRepository.listAll(name, pageBean, sortBeans);
+            pageModel = CompanyRepository.list(contextBean.getUsername(), name, pageBean, sortBeans);
         } else {
-            pageModel = OrganizationRepository.listAll(pageBean, sortBeans);
-        }
-
-        List<NameValuePair> queryParameters = ResourceUtils.buildNameValuePairs(offset, limit, sortBeans);
-        if (name != null) {
-            queryParameters.add(new BasicNameValuePair("name", name));
-        }
-
-        try {
-            return EntityToRepresentation.toRepresentation(
-                    pageModel,
-                    EntityToRepresentation::toRepresentation,
-                    contextBean.getUriInfo(),
-                    queryParameters
-            );
-        } catch (URISyntaxException e) {
-            throw new InternalServerErrorException();
-        }
-    }
-
-    public PageRepresentation<OrganizationRepresentation> listOrganizations(
-            ContextBean contextBean,
-            String name,
-            Integer offset,
-            Integer limit,
-            List<String> sortBy
-    ) {
-        PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
-        List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, OrganizationRepository.SORT_BY_FIELDS);
-
-        PageModel<OrganizationEntity> pageModel;
-        if (name != null && !name.trim().isEmpty()) {
-            pageModel = OrganizationRepository.list(contextBean.getUsername(), name, pageBean, sortBeans);
-        } else {
-            pageModel = OrganizationRepository.list(contextBean.getUsername(), pageBean, sortBeans);
+            pageModel = CompanyRepository.list(contextBean.getUsername(), pageBean, sortBeans);
         }
 
         List<NameValuePair> queryParameters = ResourceUtils.buildNameValuePairs(offset, limit, sortBeans);

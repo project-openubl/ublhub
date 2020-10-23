@@ -430,52 +430,65 @@
   "webAuthnPolicyPasswordlessAcceptableAaguids": [],
   "users": [
     {
-      "id" : "af134cab-f41c-4675-b141-205f975db679",
-      "username" : "admin",
-      "enabled" : true,
-      "totp" : false,
-      "emailVerified" : false,
-      "credentials" : [ {
-        "type" : "password",
-        "hashedSaltedValue" : "NICTtwsvSxJ5hL8hLAuleDUv9jwZcuXgxviMXvR++cciyPtiIEStEaJUyfA9DOir59awjPrHOumsclPVjNBplA==",
-        "salt" : "T/2P5o5oxFJUEk68BRURRg==",
-        "hashIterations" : 27500,
-        "counter" : 0,
-        "algorithm" : "pbkdf2-sha256",
-        "digits" : 0,
-        "period" : 0,
-        "createdDate" : 1554245879354,
-        "config" : { }
-      } ],
-      "disableableCredentialTypes" : [ "password" ],
-      "requiredActions" : [ ],
-      "realmRoles" : [ "admin", "user" ],
-      "notBefore" : 0,
-      "groups" : [ ]
+      "id": "af134cab-f41c-4675-b141-205f975db679",
+      "username": "admin",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": false,
+      "credentials": [
+        {
+          "type": "password",
+          "hashedSaltedValue": "NICTtwsvSxJ5hL8hLAuleDUv9jwZcuXgxviMXvR++cciyPtiIEStEaJUyfA9DOir59awjPrHOumsclPVjNBplA==",
+          "salt": "T/2P5o5oxFJUEk68BRURRg==",
+          "hashIterations": 27500,
+          "counter": 0,
+          "algorithm": "pbkdf2-sha256",
+          "digits": 0,
+          "period": 0,
+          "createdDate": 1554245879354,
+          "config": {}
+        }
+      ],
+      "disableableCredentialTypes": [
+        "password"
+      ],
+      "requiredActions": [],
+      "realmRoles": [
+        "admin",
+        "user"
+      ],
+      "notBefore": 0,
+      "groups": []
     },
     {
-      "id" : "eb4123a3-b722-4798-9af5-8957f823657a",
-      "username" : "alice",
-      "enabled" : true,
-      "totp" : false,
-      "emailVerified" : false,
-      "credentials" : [ {
-        "type" : "password",
-        "hashedSaltedValue" : "A3okqV2T/ybXTVEgKfosoSjP8Yc9IZbFP/SY4cEd6hag7TABQrQ6nUSuwagGt96l8cw1DTijO75PqX6uiTXMzw==",
-        "salt" : "sl4mXx6T9FypPH/s9TngfQ==",
-        "hashIterations" : 27500,
-        "counter" : 0,
-        "algorithm" : "pbkdf2-sha256",
-        "digits" : 0,
-        "period" : 0,
-        "createdDate" : 1554245879116,
-        "config" : { }
-      } ],
-      "disableableCredentialTypes" : [ "password" ],
-      "requiredActions" : [ ],
-      "realmRoles" : [ "user" ],
-      "notBefore" : 0,
-      "groups" : [ ]
+      "id": "eb4123a3-b722-4798-9af5-8957f823657a",
+      "username": "alice",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": false,
+      "credentials": [
+        {
+          "type": "password",
+          "hashedSaltedValue": "A3okqV2T/ybXTVEgKfosoSjP8Yc9IZbFP/SY4cEd6hag7TABQrQ6nUSuwagGt96l8cw1DTijO75PqX6uiTXMzw==",
+          "salt": "sl4mXx6T9FypPH/s9TngfQ==",
+          "hashIterations": 27500,
+          "counter": 0,
+          "algorithm": "pbkdf2-sha256",
+          "digits": 0,
+          "period": 0,
+          "createdDate": 1554245879116,
+          "config": {}
+        }
+      ],
+      "disableableCredentialTypes": [
+        "password"
+      ],
+      "requiredActions": [],
+      "realmRoles": [
+        "user"
+      ],
+      "notBefore": 0,
+      "groups": []
     },
     {
       "id": "f2f78ee5-b6f9-4e7b-a837-8301a30a6d73",
@@ -916,6 +929,15 @@
             "uris": [
               "/organizations/*"
             ]
+          },
+          {
+            "name": "User resources",
+            "ownerManagedAccess": false,
+            "attributes": {},
+            "_id": "15afecd7-f0cb-4cc9-9fc0-5526e5679110",
+            "uris": [
+              "/user/*"
+            ]
           }
         ],
         "policies": [
@@ -931,6 +953,17 @@
             }
           },
           {
+            "id": "79b7be85-68b2-4d23-8247-629e18910305",
+            "name": "Only users",
+            "description": "Only users can access",
+            "type": "role",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "roles": "[{\"id\":\"user\",\"required\":false}]"
+            }
+          },
+          {
             "id": "230ede88-dfd6-4ab3-8332-83460a89f8ba",
             "name": "Administration Resource Permission",
             "type": "resource",
@@ -939,6 +972,17 @@
             "config": {
               "resources": "[\"Administration resource\"]",
               "applyPolicies": "[\"Only administrators\"]"
+            }
+          },
+          {
+            "id": "334d8378-498c-4895-b8d2-ec27957a4bcd",
+            "name": "User Resource Permission",
+            "type": "resource",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "resources": "[\"User resources\"]",
+              "applyPolicies": "[\"Only users\"]"
             }
           }
         ],

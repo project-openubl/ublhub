@@ -16,8 +16,7 @@
  */
 package io.github.project.openubl.xsender.basic.resources.health;
 
-import io.github.project.openubl.xsender.basic.Constants;
-import io.github.project.openubl.xsender.core.models.jpa.OrganizationRepository;
+import io.github.project.openubl.xsender.core.models.jpa.CompanyRepository;
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.Readiness;
@@ -30,12 +29,11 @@ import javax.inject.Inject;
 public class BasicReadinessHealthCheck implements HealthCheck {
 
     @Inject
-    OrganizationRepository organizationRepository;
+    CompanyRepository companyRepository;
 
     @Override
     public HealthCheckResponse call() {
         // Not doing anything with entity since it just checks DB readiness
-        organizationRepository.findByName(Constants.DEFAULT_USERNAME);
         return HealthCheckResponse.up("Server readiness running");
     }
 

@@ -16,12 +16,12 @@
  */
 package io.github.project.openubl.xsender.core.models.utils;
 
-import io.github.project.openubl.xsender.core.idm.OrganizationRepresentation;
+import io.github.project.openubl.xsender.core.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.core.idm.DocumentRepresentation;
 import io.github.project.openubl.xsender.core.idm.PageRepresentation;
 import io.github.project.openubl.xsender.core.idm.SunatUrlsRepresentation;
 import io.github.project.openubl.xsender.core.models.PageModel;
-import io.github.project.openubl.xsender.core.models.jpa.entities.OrganizationEntity;
+import io.github.project.openubl.xsender.core.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.core.models.jpa.entities.UBLDocumentEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
@@ -38,60 +38,55 @@ public class EntityToRepresentation {
         // Just static methods
     }
 
-    public static OrganizationRepresentation toRepresentation(OrganizationEntity organizationEntity) {
-        OrganizationRepresentation rep = new OrganizationRepresentation();
+    public static CompanyRepresentation toRepresentation(CompanyEntity entity) {
+        CompanyRepresentation rep = new CompanyRepresentation();
 
-        rep.setName(organizationEntity.getName());
+        rep.setName(entity.getName());
 
-        if (organizationEntity.getSunatUrls() != null) {
+        if (entity.getSunatUrls() != null) {
             SunatUrlsRepresentation sunatUrlsRep = new SunatUrlsRepresentation();
             rep.setSunatUrls(sunatUrlsRep);
 
-            sunatUrlsRep.setFactura(organizationEntity.getSunatUrls().getSunatUrlFactura());
-            sunatUrlsRep.setGuiaRemision(organizationEntity.getSunatUrls().getSunatUrlGuiaRemision());
-            sunatUrlsRep.setPercepcionRetencion(organizationEntity.getSunatUrls().getSunatUrlPercepcionRetencion());
+            sunatUrlsRep.setFactura(entity.getSunatUrls().getSunatUrlFactura());
+            sunatUrlsRep.setGuiaRemision(entity.getSunatUrls().getSunatUrlGuiaRemision());
+            sunatUrlsRep.setPercepcionRetencion(entity.getSunatUrls().getSunatUrlPercepcionRetencion());
         }
 
         return rep;
     }
 
-    public static DocumentRepresentation toRepresentation(UBLDocumentEntity documentEntity) {
+    public static DocumentRepresentation toRepresentation(UBLDocumentEntity entity) {
         DocumentRepresentation rep = new DocumentRepresentation();
 
-        rep.setId(documentEntity.getId());
-        rep.setCdrID(documentEntity.getStorageCdr());
-        rep.setFileID(documentEntity.getStorageFile());
-        rep.setDeliveryStatus(documentEntity.getDeliveryStatus().toString());
-//        rep.setCustomId(documentEntity.customId);
+        rep.setId(entity.getId());
+        rep.setCdrID(entity.getStorageCdr());
+        rep.setFileID(entity.getStorageFile());
+        rep.setDeliveryStatus(entity.getDeliveryStatus().toString());
 
         //
 
         DocumentRepresentation.FileInfoRepresentation fileInfoRep = new DocumentRepresentation.FileInfoRepresentation();
         rep.setFileInfo(fileInfoRep);
 
-        fileInfoRep.setRuc(documentEntity.getRuc());
-//        fileInfoRep.setDeliveryURL(documentEntity.deliveryURL);
-        fileInfoRep.setDocumentID(documentEntity.getDocumentID());
-        fileInfoRep.setDocumentType(documentEntity.getDocumentType().getType());
-        fileInfoRep.setFilename(documentEntity.getFilename());
+        fileInfoRep.setRuc(entity.getRuc());
+        fileInfoRep.setDocumentID(entity.getDocumentID());
+        fileInfoRep.setDocumentType(entity.getDocumentType().getType());
+        fileInfoRep.setFilename(entity.getFilename());
 
         //
 
         DocumentRepresentation.SunatSecurityCredentialsRepresentation sunatCredentialsRep = new DocumentRepresentation.SunatSecurityCredentialsRepresentation();
         rep.setSunatCredentials(sunatCredentialsRep);
 
-//        sunatCredentialsRep.setUsername(documentEntity.sunatUsername);
-//        sunatCredentialsRep.setPassword(documentEntity.sunatPassword != null ? "******" : null);
-
         //
 
         DocumentRepresentation.SunatStatusRepresentation sunatStatus = new DocumentRepresentation.SunatStatusRepresentation();
         rep.setSunatStatus(sunatStatus);
 
-        sunatStatus.setCode(documentEntity.getSunatCode());
-        sunatStatus.setTicket(documentEntity.getSunatTicket());
-        sunatStatus.setStatus(documentEntity.getSunatStatus());
-        sunatStatus.setDescription(documentEntity.getSunatDescription());
+        sunatStatus.setCode(entity.getSunatCode());
+        sunatStatus.setTicket(entity.getSunatTicket());
+        sunatStatus.setStatus(entity.getSunatStatus());
+        sunatStatus.setDescription(entity.getSunatDescription());
 
         return rep;
     }

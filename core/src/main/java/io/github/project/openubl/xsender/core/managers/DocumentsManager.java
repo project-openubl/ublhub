@@ -19,7 +19,7 @@ package io.github.project.openubl.xsender.core.managers;
 import io.github.project.openubl.xsender.core.events.EventProvider;
 import io.github.project.openubl.xsender.core.events.EventProviderLiteral;
 import io.github.project.openubl.xsender.core.files.FilesManager;
-import io.github.project.openubl.xsender.core.models.jpa.entities.RepositoryEntity;
+import io.github.project.openubl.xsender.core.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xmlsenderws.webservices.models.DeliveryURLType;
 import io.github.project.openubl.xmlsenderws.webservices.utils.UBLUtils;
 import io.github.project.openubl.xmlsenderws.webservices.xml.DocumentType;
@@ -65,7 +65,7 @@ public class DocumentsManager {
     Event<DocumentEvent.Created> documentCreatedEvent;
 
     public UBLDocumentEntity createDocumentAndScheduleDelivery(
-            RepositoryEntity repositoryEntity, byte[] xmlFile
+            CompanyEntity companyEntity, byte[] xmlFile
     ) throws InvalidXMLFileException, UnsupportedDocumentTypeException, StorageException {
         // Read file
         XmlContentModel xmlContentModel;
@@ -103,7 +103,7 @@ public class DocumentsManager {
                 .withDocumentType(documentType)
                 .withDeliveryType(deliveryURLType)
                 .withDeliveryStatus(DeliveryStatusType.SCHEDULED_TO_DELIVER)
-                .withCompany(repositoryEntity)
+                .withCompany(companyEntity)
                 .build();
 
         documentRepository.persist(documentEntity);

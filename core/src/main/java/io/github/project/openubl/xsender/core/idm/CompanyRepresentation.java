@@ -21,11 +21,10 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import javax.validation.constraints.NotNull;
 
 @RegisterForReflection
-public class OrganizationRepresentation {
+public class CompanyRepresentation {
 
     @NotNull
     private String name;
-    private String description;
 
     private SunatUrlsRepresentation sunatUrls;
 
@@ -35,14 +34,6 @@ public class OrganizationRepresentation {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public SunatUrlsRepresentation getSunatUrls() {
@@ -55,7 +46,6 @@ public class OrganizationRepresentation {
 
     public static final class Builder {
         private String name;
-        private String description;
         private SunatUrlsRepresentation sunatUrls;
 
         private Builder() {
@@ -70,20 +60,14 @@ public class OrganizationRepresentation {
             return this;
         }
 
-        public Builder withDescription(String description) {
-            this.description = description;
-            return this;
-        }
-
         public Builder withSunatUrls(SunatUrlsRepresentation sunatUrls) {
             this.sunatUrls = sunatUrls;
             return this;
         }
 
-        public OrganizationRepresentation build() {
-            OrganizationRepresentation corporateRepresentation = new OrganizationRepresentation();
+        public CompanyRepresentation build() {
+            CompanyRepresentation corporateRepresentation = new CompanyRepresentation();
             corporateRepresentation.setName(name);
-            corporateRepresentation.setDescription(description);
             corporateRepresentation.setSunatUrls(sunatUrls);
             return corporateRepresentation;
         }

@@ -17,7 +17,6 @@
 package io.github.project.openubl.xsender.core.resources;
 
 public interface Paths {
-    String ORGANIZATIONS = "organizations";
-    String ORGS = "orgs";
+    String COMPANIES = "companies";
     String USER = "user";
 }
