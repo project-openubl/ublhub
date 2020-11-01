@@ -17,13 +17,19 @@
 package io.github.project.openubl.xsender.core.idm;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import org.hibernate.validator.constraints.URL;
 
 @RegisterForReflection
 public class SunatUrlsRepresentation {
 
+    @URL
     private String factura;
-    private String guiaRemision;
-    private String percepcionRetencion;
+
+    @URL
+    private String guia;
+
+    @URL
+    private String retencion;
 
     public String getFactura() {
         return factura;
@@ -33,20 +39,20 @@ public class SunatUrlsRepresentation {
         this.factura = factura;
     }
 
-    public String getGuiaRemision() {
-        return guiaRemision;
+    public String getGuia() {
+        return guia;
     }
 
-    public void setGuiaRemision(String guiaRemision) {
-        this.guiaRemision = guiaRemision;
+    public void setGuia(String guia) {
+        this.guia = guia;
     }
 
-    public String getPercepcionRetencion() {
-        return percepcionRetencion;
+    public String getRetencion() {
+        return retencion;
     }
 
-    public void setPercepcionRetencion(String percepcionRetencion) {
-        this.percepcionRetencion = percepcionRetencion;
+    public void setRetencion(String retencion) {
+        this.retencion = retencion;
     }
 
 
@@ -80,8 +86,8 @@ public class SunatUrlsRepresentation {
         public SunatUrlsRepresentation build() {
             SunatUrlsRepresentation sunatUrlsRepresentation = new SunatUrlsRepresentation();
             sunatUrlsRepresentation.setFactura(factura);
-            sunatUrlsRepresentation.setGuiaRemision(guiaRemision);
-            sunatUrlsRepresentation.setPercepcionRetencion(percepcionRetencion);
+            sunatUrlsRepresentation.setGuia(guiaRemision);
+            sunatUrlsRepresentation.setRetencion(percepcionRetencion);
             return sunatUrlsRepresentation;
         }
     }

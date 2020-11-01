@@ -46,11 +46,11 @@ public class CompanyManager {
         companyEntity.setOwner(owner);
         companyEntity.setName(rep.getName());
 
-        if (rep.getSunatUrls() != null) {
+        if (rep.getSunatWsUrls() != null) {
             SunatUrlsEntity sunatUrlsEntity = new SunatUrlsEntity();
             companyEntity.setSunatUrls(sunatUrlsEntity);
 
-            updateSunatUrls(rep.getSunatUrls(), sunatUrlsEntity);
+            updateSunatUrls(rep.getSunatWsUrls(), sunatUrlsEntity);
         }
 
         companyRepository.persist(companyEntity);
@@ -61,11 +61,11 @@ public class CompanyManager {
      * Shouldn't update 'name'
      */
     public CompanyEntity updateCompany(CompanyRepresentation rep, CompanyEntity CompanyEntity) {
-        if (rep.getSunatUrls() != null) {
+        if (rep.getSunatWsUrls() != null) {
             if (CompanyEntity.getSunatUrls() == null) {
                 CompanyEntity.setSunatUrls(new SunatUrlsEntity());
             }
-            updateSunatUrls(rep.getSunatUrls(), CompanyEntity.getSunatUrls());
+            updateSunatUrls(rep.getSunatWsUrls(), CompanyEntity.getSunatUrls());
         }
 
         companyRepository.persist(CompanyEntity);
@@ -76,11 +76,11 @@ public class CompanyManager {
         if (rep.getFactura() != null) {
             entity.setSunatUrlFactura(rep.getFactura());
         }
-        if (rep.getGuiaRemision() != null) {
-            entity.setSunatUrlGuiaRemision(rep.getGuiaRemision());
+        if (rep.getGuia() != null) {
+            entity.setSunatUrlGuiaRemision(rep.getGuia());
         }
-        if (rep.getPercepcionRetencion() != null) {
-            entity.setSunatUrlPercepcionRetencion(rep.getPercepcionRetencion());
+        if (rep.getRetencion() != null) {
+            entity.setSunatUrlPercepcionRetencion(rep.getRetencion());
         }
     }
 
@@ -89,7 +89,7 @@ public class CompanyManager {
             CompanyEntity.setSunatCredentials(new SunatCredentialsEntity());
         }
 
-        CompanyEntity.getSunatCredentials().setSunatUsername(rep.getSunatUsername());
-        CompanyEntity.getSunatCredentials().setSunatPassword(rep.getSunatPassword());
+        CompanyEntity.getSunatCredentials().setSunatUsername(rep.getUsername());
+        CompanyEntity.getSunatCredentials().setSunatPassword(rep.getPassword());
     }
 }

@@ -45,11 +45,11 @@ public class EntityToRepresentation {
 
         if (entity.getSunatUrls() != null) {
             SunatUrlsRepresentation sunatUrlsRep = new SunatUrlsRepresentation();
-            rep.setSunatUrls(sunatUrlsRep);
+            rep.setSunatWsUrls(sunatUrlsRep);
 
             sunatUrlsRep.setFactura(entity.getSunatUrls().getSunatUrlFactura());
-            sunatUrlsRep.setGuiaRemision(entity.getSunatUrls().getSunatUrlGuiaRemision());
-            sunatUrlsRep.setPercepcionRetencion(entity.getSunatUrls().getSunatUrlPercepcionRetencion());
+            sunatUrlsRep.setGuia(entity.getSunatUrls().getSunatUrlGuiaRemision());
+            sunatUrlsRep.setRetencion(entity.getSunatUrls().getSunatUrlPercepcionRetencion());
         }
 
         return rep;

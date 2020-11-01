@@ -1,13 +1,13 @@
 /**
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
- *
+ * <p>
  * Licensed under the Eclipse Public License - v 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * https://www.eclipse.org/legal/epl-2.0/
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@ package io.github.project.openubl.xsender.core.idm;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @RegisterForReflection
@@ -26,7 +27,13 @@ public class CompanyRepresentation {
     @NotNull
     private String name;
 
-    private SunatUrlsRepresentation sunatUrls;
+    @NotNull
+    @Valid
+    private SunatUrlsRepresentation sunatWsUrls;
+
+    @NotNull
+    @Valid
+    private SunatCredentialsRepresentation sunatCredentials;
 
     public String getName() {
         return name;
@@ -36,22 +43,31 @@ public class CompanyRepresentation {
         this.name = name;
     }
 
-    public SunatUrlsRepresentation getSunatUrls() {
-        return sunatUrls;
+    public SunatUrlsRepresentation getSunatWsUrls() {
+        return sunatWsUrls;
     }
 
-    public void setSunatUrls(SunatUrlsRepresentation sunatUrls) {
-        this.sunatUrls = sunatUrls;
+    public void setSunatWsUrls(SunatUrlsRepresentation sunatWsUrls) {
+        this.sunatWsUrls = sunatWsUrls;
+    }
+
+    public SunatCredentialsRepresentation getSunatCredentials() {
+        return sunatCredentials;
+    }
+
+    public void setSunatCredentials(SunatCredentialsRepresentation sunatCredentials) {
+        this.sunatCredentials = sunatCredentials;
     }
 
     public static final class Builder {
         private String name;
-        private SunatUrlsRepresentation sunatUrls;
+        private SunatUrlsRepresentation sunatWsUrls;
+        private SunatCredentialsRepresentation sunatCredentials;
 
         private Builder() {
         }
 
-        public static Builder aCorporateRepresentation() {
+        public static Builder aCompanyRepresentation() {
             return new Builder();
         }
 
@@ -60,16 +76,22 @@ public class CompanyRepresentation {
             return this;
         }
 
-        public Builder withSunatUrls(SunatUrlsRepresentation sunatUrls) {
-            this.sunatUrls = sunatUrls;
+        public Builder withSunatWsUrls(SunatUrlsRepresentation sunatWsUrls) {
+            this.sunatWsUrls = sunatWsUrls;
+            return this;
+        }
+
+        public Builder withSunatCredentials(SunatCredentialsRepresentation sunatCredentials) {
+            this.sunatCredentials = sunatCredentials;
             return this;
         }
 
         public CompanyRepresentation build() {
-            CompanyRepresentation corporateRepresentation = new CompanyRepresentation();
-            corporateRepresentation.setName(name);
-            corporateRepresentation.setSunatUrls(sunatUrls);
-            return corporateRepresentation;
+            CompanyRepresentation companyRepresentation = new CompanyRepresentation();
+            companyRepresentation.setName(name);
+            companyRepresentation.setSunatWsUrls(sunatWsUrls);
+            companyRepresentation.setSunatCredentials(sunatCredentials);
+            return companyRepresentation;
         }
     }
 }

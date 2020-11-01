@@ -26,31 +26,31 @@ public class SunatCredentialsRepresentation {
 
     @NotNull
     @Size(min = 3, max = 250)
-    private String sunatUsername;
+    private String username;
 
     @NotNull
     @Size(min = 3, max = 250)
-    private String sunatPassword;
+    private String password;
 
-    public String getSunatUsername() {
-        return sunatUsername;
+    public String getUsername() {
+        return username;
     }
 
-    public void setSunatUsername(String sunatUsername) {
-        this.sunatUsername = sunatUsername;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public String getSunatPassword() {
-        return sunatPassword;
+    public String getPassword() {
+        return password;
     }
 
-    public void setSunatPassword(String sunatPassword) {
-        this.sunatPassword = sunatPassword;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public static final class Builder {
-        private String sunatUsername;
-        private String sunatPassword;
+        private String username;
+        private String password;
 
         private Builder() {
         }
@@ -59,20 +59,20 @@ public class SunatCredentialsRepresentation {
             return new Builder();
         }
 
-        public Builder withSunatUsername(String sunatUsername) {
-            this.sunatUsername = sunatUsername;
+        public Builder withUsername(String username) {
+            this.username = username;
             return this;
         }
 
-        public Builder withSunatPassword(String sunatPassword) {
-            this.sunatPassword = sunatPassword;
+        public Builder withPassword(String password) {
+            this.password = password;
             return this;
         }
 
         public SunatCredentialsRepresentation build() {
             SunatCredentialsRepresentation sunatCredentialsRepresentation = new SunatCredentialsRepresentation();
-            sunatCredentialsRepresentation.setSunatUsername(sunatUsername);
-            sunatCredentialsRepresentation.setSunatPassword(sunatPassword);
+            sunatCredentialsRepresentation.setUsername(username);
+            sunatCredentialsRepresentation.setPassword(password);
             return sunatCredentialsRepresentation;
         }
     }
