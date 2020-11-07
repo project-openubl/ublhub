@@ -87,50 +87,50 @@ jobs:
         shell: bash
         run: tar -xzvf maven-repo.tgz -C ~
       - name: Build with Maven
-        run: mvn test -P '!services'
+        run: mvn test
       - name: Prepare failure archive (if maven failed)
         if: failure()
         shell: bash
         run: find . -name '*-reports' -type d | tar -czvf test-reports.tgz -T -
-      - name: Upload failure Archive (if maven failed)
+      - name: Upload failure archive (if maven failed)
         uses: actions/upload-artifact@v1
         if: failure()
         with:
           name: test-reports-linux-jvm11
           path: 'test-reports.tgz'
 
-  linux-jvm-tests-ee:
-    name: JDK 11 JVM Tests EE
-    timeout-minutes: 120
-    needs: build-jdk11
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK ${{ matrix.java-version }}
-        # Uses sha for added security since tags can be updated
-        uses: joschi/setup-jdk@b9cc6eabf7e7e3889766b5cee486f874c9e1bd2d
-        with:
-          java-version: 11
-      - name: Download Maven Repo
-        uses: actions/download-artifact@v1
-        with:
-          name: maven-repo
-          path: .
-      - name: Extract Maven Repo
-        shell: bash
-        run: tar -xzvf maven-repo.tgz -C ~
-      - name: Build with Maven
-        run: mvn test -P services -Dopenubl.storage.type=s3 -Dopenubl.event-manager=jms
-      - name: Prepare failure archive (if maven failed)
-        if: failure()
-        shell: bash
-        run: find . -name '*-reports' -type d | tar -czvf test-reports.tgz -T -
-      - name: Upload failure Archive (if maven failed)
-        uses: actions/upload-artifact@v1
-        if: failure()
-        with:
-          name: test-reports-linux-jvm11
-          path: 'test-reports.tgz'
+#  linux-jvm-tests-ee:
+#    name: JDK 11 JVM Tests EE
+#    timeout-minutes: 120
+#    needs: build-jdk11
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Set up JDK ${{ matrix.java-version }}
+#        # Uses sha for added security since tags can be updated
+#        uses: joschi/setup-jdk@b9cc6eabf7e7e3889766b5cee486f874c9e1bd2d
+#        with:
+#          java-version: 11
+#      - name: Download Maven Repo
+#        uses: actions/download-artifact@v1
+#        with:
+#          name: maven-repo
+#          path: .
+#      - name: Extract Maven Repo
+#        shell: bash
+#        run: tar -xzvf maven-repo.tgz -C ~
+#      - name: Build with Maven
+#        run: mvn test -P services -Dopenubl.storage.type=s3 -Dopenubl.event-manager=jms
+#      - name: Prepare failure archive (if maven failed)
+#        if: failure()
+#        shell: bash
+#        run: find . -name '*-reports' -type d | tar -czvf test-reports.tgz -T -
+#      - name: Upload failure archive (if maven failed)
+#        uses: actions/upload-artifact@v1
+#        if: failure()
+#        with:
+#          name: test-reports-linux-jvm11
+#          path: 'test-reports.tgz'
 
   java-artifacts:
     name: Java Artifacts
@@ -154,15 +154,15 @@ jobs:
       - name: Build with Maven
         run: |
           mvn -DskipTests package
-      - name: Prepare XML Sender archive
+      - name: Prepare artifacts
         shell: bash
         run: |
-          find api/target -name 'lib' -o -name 'xsender-server-api-*-runner.jar' | tar -czvf xsender-server-java-artifacts.tgz -T -
-      - name: Upload Archive XML Sender
+          find api/target -name 'lib' -o -name 'xsender-server-api-*-runner.jar' | tar -czvf jdk-artifacts.tgz -T -
+      - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
-          name: xsender-server-java-artifacts
-          path: 'xsender-server-java-artifacts.tgz'
+          name: jdk-artifacts
+          path: 'jdk-artifacts.tgz'
 
   container-images:
     name: Container Images
@@ -171,15 +171,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Download Java XML Sender Artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v1
         with:
-          name: xsender-server-java-artifacts
+          name: jdk-artifacts
           path: .
-      - name: Extract Java Artifacs
+      - name: Extract artifacs
         shell: bash
-        run: tar -xzvf xsender-server-java-artifacts.tgz
-      - name: Publish to Registry XML Builder
+        run: tar -xzvf jdk-artifacts.tgz
+      - name: Publish container
         # Uses sha for added security since tags can be updated
         uses: elgohr/Publish-Docker-Github-Action@b2f63259b466ca5a4be395c392546de447450334
         with:
