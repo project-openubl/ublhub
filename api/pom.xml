@@ -181,7 +181,7 @@
                                             <port>61616:61616</port>
                                         </ports>
                                         <log>
-                                            <prefix>ArtemisMQ: </prefix>
+                                            <prefix>ArtemisMQ:</prefix>
                                             <date>default</date>
                                             <color>cyan</color>
                                         </log>
@@ -202,13 +202,14 @@
                                     <run>
                                         <env>
                                             <MINIO_ACCESS_KEY>BQA2GEXO711FVBVXDWKM</MINIO_ACCESS_KEY>
-                                            <MINIO_SECRET_KEY>uvgz3LCwWM3e400cDkQIH/y1Y4xgU4iV91CwFSPC</MINIO_SECRET_KEY>
+                                            <MINIO_SECRET_KEY>uvgz3LCwWM3e400cDkQIH/y1Y4xgU4iV91CwFSPC
+                                            </MINIO_SECRET_KEY>
                                         </env>
                                         <ports>
                                             <port>9000:9000</port>
                                         </ports>
                                         <log>
-                                            <prefix>S3: </prefix>
+                                            <prefix>S3:</prefix>
                                             <date>default</date>
                                             <color>magenta</color>
                                         </log>
