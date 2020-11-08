@@ -31,21 +31,26 @@
     <packaging>pom</packaging>
 
     <properties>
-        <compiler-plugin.version>3.8.1</compiler-plugin.version>
-        <maven.compiler.parameters>true</maven.compiler.parameters>
-        <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!--Quarkus-->
+        <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
+        <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
+        <quarkus.platform.version>1.9.2.Final</quarkus.platform.version>
+        <quarkus-plugin.version>1.9.2.Final</quarkus-plugin.version>
+
+        <!--plugings-->
+        <compiler-plugin.version>3.8.1</compiler-plugin.version>
         <surefire-plugin.version>2.22.1</surefire-plugin.version>
 
-        <quarkus.version>1.9.2.Final</quarkus.version>
-
+        <!--libs-->
         <xsender-lib.version>3.0.1.Final</xsender-lib.version>
-        <docker-plugin.version>0.33.0</docker-plugin.version>
-
-        <keycloak.version>11.0.2</keycloak.version>
         <testcontainers.version>1.12.5</testcontainers.version>
+        <awaitility.version>3.0.0</awaitility.version>
 
         <license.dir>${basedir}</license.dir>
     </properties>
@@ -93,9 +98,9 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-universe-bom</artifactId>
-                <version>${quarkus.version}</version>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                <version>${quarkus.platform.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -122,21 +127,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${compiler-plugin.version}</version>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${surefire-plugin.version}</version>
-                <configuration>
-                    <systemPropertyVariables>
-                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                        <maven.home>${maven.home}</maven.home>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-
             <!-- License information -->
             <!--mvn license:format-->
             <plugin>
