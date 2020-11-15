@@ -21,7 +21,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.*;
+import java.util.Objects;
 
 @Entity
 @Table(name = "COMPANY", uniqueConstraints = {

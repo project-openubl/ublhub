@@ -44,7 +44,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-//@Disabled
+@Disabled
 @QuarkusTest
 @TestProfile(KeycloakTestProfile.class)
 @QuarkusTestResource(KeycloakServer.class)

@@ -28,7 +28,6 @@ import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
 import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
 import io.github.project.openubl.xsender.security.UserIdentity;
-import io.quarkus.security.identity.SecurityIdentity;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 

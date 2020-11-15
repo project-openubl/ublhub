@@ -16,8 +16,8 @@
  */
 package io.github.project.openubl.xsender.resources;
 
-import io.github.project.openubl.xsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
+import io.github.project.openubl.xsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
 import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;

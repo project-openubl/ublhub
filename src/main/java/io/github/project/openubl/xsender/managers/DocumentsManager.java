@@ -16,22 +16,22 @@
  */
 package io.github.project.openubl.xsender.managers;
 
-import io.github.project.openubl.xsender.events.EventProvider;
-import io.github.project.openubl.xsender.events.EventProviderLiteral;
-import io.github.project.openubl.xsender.files.FilesManager;
-import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xmlsenderws.webservices.models.DeliveryURLType;
 import io.github.project.openubl.xmlsenderws.webservices.utils.UBLUtils;
 import io.github.project.openubl.xmlsenderws.webservices.xml.DocumentType;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentProvider;
+import io.github.project.openubl.xsender.events.EventProvider;
+import io.github.project.openubl.xsender.events.EventProviderLiteral;
 import io.github.project.openubl.xsender.exceptions.InvalidXMLFileException;
 import io.github.project.openubl.xsender.exceptions.StorageException;
 import io.github.project.openubl.xsender.exceptions.UnsupportedDocumentTypeException;
+import io.github.project.openubl.xsender.files.FilesManager;
 import io.github.project.openubl.xsender.models.DeliveryStatusType;
 import io.github.project.openubl.xsender.models.DocumentEvent;
 import io.github.project.openubl.xsender.models.FileType;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
+import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;

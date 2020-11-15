@@ -16,9 +16,9 @@
  */
 package io.github.project.openubl.xsender.models.jpa.entities;
 
-import io.github.project.openubl.xsender.models.DeliveryStatusType;
 import io.github.project.openubl.xmlsenderws.webservices.models.DeliveryURLType;
 import io.github.project.openubl.xmlsenderws.webservices.xml.DocumentType;
+import io.github.project.openubl.xsender.models.DeliveryStatusType;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 import javax.persistence.*;
