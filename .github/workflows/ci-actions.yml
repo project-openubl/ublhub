@@ -54,22 +54,22 @@ jobs:
           dockerfile: src/main/docker/Dockerfile.fast-jar
           snapshot: false
           tags: "master"
-      - name: Push to Docker Hub
-        uses: elgohr/Publish-Docker-Github-Action@master
-        with:
-          name: project-openubl/xsender-server/xsender-server
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          registry: docker.pkg.github.com
-          dockerfile: src/main/docker/Dockerfile.fast-jar
-          snapshot: false
-          tags: "master"
       - name: Push to GitHub Packages
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
           name: project-openubl/xsender-server/xsender-server
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          registry: docker.pkg.github.com
+          dockerfile: src/main/docker/Dockerfile.fast-jar
+          snapshot: false
+          tags: "master"
+      - name: Push to Docker Hub
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: project-openubl/xsender-server/xsender-server
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
           registry: docker.pkg.github.com
           dockerfile: src/main/docker/Dockerfile.fast-jar
           snapshot: false
