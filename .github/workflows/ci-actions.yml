@@ -62,3 +62,12 @@ jobs:
           dockerfile: src/main/docker/Dockerfile.fast-jar
           snapshot: false
           tags: "master"
+      - name: Push to Quay.io
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: projectopenubl/xsender-server
+          username: ${{ secrets.QUAYIO_USERNAME }}
+          password: ${{ secrets.QUAYIO_PASSWORD }}
+          dockerfile: src/main/docker/Dockerfile.fast-jar
+          snapshot: false
+          tags: "master"
