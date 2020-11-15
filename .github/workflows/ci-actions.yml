@@ -10,9 +10,6 @@ on:
   schedule:
     - cron:  '0 0 * * *'
 
-env:
-  NATIVE_TEST_MAVEN_OPTS: "-e -B -Dquarkus.native.container-build=true -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-native-image:20.1.0-java11"
-
 jobs:
   linux-jvm-tests:
     name: Tests
@@ -35,35 +32,6 @@ jobs:
           name: test-reports
           path: 'test-reports.tgz'
 
-  native-tests:
-    name: Native Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v1
-        with:
-          java-version: 11
-      - name: Build with Maven
-        run: mvn verify -Pnative -Dquarkus.native.container-build=true
-      - name: Prepare failure archive (if maven failed)
-        if: failure()
-        shell: bash
-        run: find . -name '*-reports' -type d | tar -czvf test-reports.tgz -T -
-      - name: Upload failure Archive (if maven failed)
-        uses: actions/upload-artifact@v1
-        if: failure()
-        with:
-          name: native-test-reports
-          path: 'test-reports.tgz'
-      - name: Prepare native files archive
-        shell: bash
-        run: find . -name 'xsender-server-*-runner' -type f | tar -czvf native-artifacts.tgz -T -
-      - name: Upload Archive
-        uses: actions/upload-artifact@v1
-        with:
-          name: native-artifacts
-          path: 'native-artifacts.tgz'
-
   container-images:
     name: Container Images
     if: github.event_name != 'pull_request'
@@ -74,14 +42,35 @@ jobs:
         with:
           java-version: 11
       - name: Build with Maven
-        run: mvn package -Pnative -Dquarkus.native.container-build=true
-      - name: Publish container
-        # Uses sha for added security since tags can be updated
-        uses: elgohr/Publish-Docker-Github-Action@b2f63259b466ca5a4be395c392546de447450334
+#        run: mvn package -DskipTests -Dquarkus.container-image.build=true -Dquarkus.package.type=fast-jar
+        run: mvn package -DskipTests -Dquarkus.package.type=fast-jar
+      - name: Push to Docker Hub
+        uses: elgohr/Publish-Docker-Github-Action@master
         with:
           name: projectopenubl/xsender-server
-          dockerfile: api/src/main/docker/Dockerfile.jvm
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: docker.pkg.github.com
+          dockerfile: src/main/docker/Dockerfile.fast-jar
+          snapshot: false
+          tags: "master"
+      - name: Push to Docker Hub
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: project-openubl/xsender-server/xsender-server
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: docker.pkg.github.com
+          dockerfile: src/main/docker/Dockerfile.fast-jar
+          snapshot: false
+          tags: "master"
+      - name: Push to GitHub Packages
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: project-openubl/xsender-server/xsender-server
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: docker.pkg.github.com
+          dockerfile: src/main/docker/Dockerfile.fast-jar
           snapshot: false
           tags: "master"
