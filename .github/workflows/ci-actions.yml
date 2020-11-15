@@ -55,7 +55,6 @@ jobs:
         with:
           name: native-test-reports
           path: 'test-reports.tgz'
-
       - name: Prepare native files archive
         shell: bash
         run: find . -name 'xsender-server-*-runner' -type f | tar -czvf native-artifacts.tgz -T -
