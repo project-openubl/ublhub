@@ -1,0 +1,50 @@
+quarkus:
+  datasource:
+    db-kind: h2
+    jdbc:
+      url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    password: sa
+    username: sa
+  hibernate-orm:
+    database:
+      generation: drop-and-create
+  quartz:
+    clustered: false
+  artemis:
+    password: quarkus
+    url: tcp://localhost:61616
+    username: quarkus
+  oidc:
+    enabled: false
+    auth-server-url: http://localhost:8180/auth/realms/openubl
+    client-id: xsender
+    credentials:
+      secret: secret
+"%keycloak":
+   quarkus:
+     oidc:
+       enabled: true
+       auth-server-url: http://localhost:8180/auth/realms/openubl
+       client-id: xsender
+       credentials:
+        secret: secret
+openubl:
+  event-manager:
+    type: basic
+    basic:
+      retry-delay: 43200000
+    jms:
+      delay: 500
+      callbackQueue: callbackQueue
+      sendFileQueue: sendFileQueue
+      ticketQueue: ticketQueue
+  storage:
+    type: filesystem
+    filesystem:
+      folder: target/xsender-server-storage
+    s3:
+      host: http://localhost:9000
+      region: us-east-1
+      bucket: project-openubl
+      access_key_id: BQA2GEXO711FVBVXDWKM
+      secret_access_key: uvgz3LCwWM3e400cDkQIH/y1Y4xgU4iV91CwFSPC
