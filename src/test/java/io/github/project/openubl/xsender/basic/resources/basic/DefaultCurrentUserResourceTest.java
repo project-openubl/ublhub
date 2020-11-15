@@ -77,7 +77,7 @@ public class DefaultCurrentUserResourceTest {
                 .body(body)
                 .header("Content-Type", "application/json")
                 .when()
-                .post("/user/companies")
+                .post("/api/user/companies")
                 .then()
                 .statusCode(200)
                 .body("name", is(company.getName()));
@@ -137,7 +137,7 @@ public class DefaultCurrentUserResourceTest {
         given()
                 .header("Content-Type", "application/json")
                 .when()
-                .get("/user/companies")
+                .get("/api/user/companies")
                 .then()
                 .statusCode(200)
                 .body("meta.offset", is(0),
