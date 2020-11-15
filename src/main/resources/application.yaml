@@ -1,4 +1,6 @@
 quarkus:
+  resteasy:
+    path: /api
   datasource:
     db-kind: h2
     jdbc:
