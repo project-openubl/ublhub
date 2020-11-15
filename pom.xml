@@ -26,22 +26,31 @@
     <artifactId>xsender-server</artifactId>
     <version>1.0.2-SNAPSHOT</version>
 
-    <name>XSender Server :: Parent</name>
-    <description>SUNAT Microservice for sending XMLs</description>
-    <packaging>pom</packaging>
+    <name>XSender :: Microservice</name>
+    <description>Microservice for sending XMLs to SUNAT</description>
 
     <properties>
-        <compiler-plugin.version>3.8.1</compiler-plugin.version>
-        <maven.compiler.parameters>true</maven.compiler.parameters>
-        <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <quarkus.version>1.8.3.Final</quarkus.version>
+
+        <!--Quarkus-->
+        <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
+        <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
+        <quarkus.platform.version>1.7.5.Final</quarkus.platform.version>
+        <quarkus-plugin.version>1.9.2.Final</quarkus-plugin.version>
+
+        <!--plugings-->
+        <compiler-plugin.version>3.8.1</compiler-plugin.version>
         <surefire-plugin.version>2.22.1</surefire-plugin.version>
 
-        <sunat-web-services.version>3.0.0.Final</sunat-web-services.version>
-        <docker-plugin.version>0.33.0</docker-plugin.version>
+        <!--libs-->
+        <xsender-lib.version>3.0.1.Final</xsender-lib.version>
+        <testcontainers.version>1.12.5</testcontainers.version>
+        <awaitility.version>3.0.0</awaitility.version>
+        <keycloak.version>11.0.1</keycloak.version>
 
         <license.dir>${basedir}</license.dir>
     </properties>
@@ -89,9 +98,9 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-universe-bom</artifactId>
-                <version>${quarkus.version}</version>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                <version>${quarkus.platform.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -109,28 +118,137 @@
         </dependencies>
     </dependencyManagement>
 
-    <modules>
-        <module>core</module>
-        <module>api</module>
-        <module>extensions</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>io.github.project-openubl</groupId>
+            <artifactId>xsender</artifactId>
+            <version>${xsender-lib.version}</version>
+        </dependency>
+
+        <!--Quarkus-->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-arc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-config-yaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-container-image-docker</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-jsonb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-multipart-provider</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-validator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-orm-panache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-agroal</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-artemis-jms</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-quartz</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-health</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-oidc</artifactId>
+        </dependency>
+
+        <!--Camel-->
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-direct</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-log</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-file</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-zipfile</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-aws-s3</artifactId>
+        </dependency>
+
+        <!--Jdbc-->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-h2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-test-h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!--Test-->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>${awaitility.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${compiler-plugin.version}</version>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${surefire-plugin.version}</version>
-                <configuration>
-                    <systemProperties>
-                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                    </systemProperties>
-                </configuration>
-            </plugin>
-
             <!-- License information -->
             <!--mvn license:format-->
             <plugin>
@@ -170,6 +288,36 @@
                     <serverId>ossrh</serverId>
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-maven-plugin</artifactId>
+                <version>${quarkus-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build</goal>
+                            <goal>generate-code</goal>
+                            <goal>generate-code-tests</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire-plugin.version}</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <maven.home>${maven.home}</maven.home>
+                        <keycloak.version>${keycloak.version}</keycloak.version>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>
@@ -234,6 +382,44 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+
+        <profile>
+            <id>native</id>
+            <activation>
+                <property>
+                    <name>native</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>${surefire-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                                <configuration>
+                                    <systemPropertyVariables>
+                                        <native.image.path>
+                                            ${project.build.directory}/${project.build.finalName}-runner
+                                        </native.image.path>
+                                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                        <maven.home>${maven.home}</maven.home>
+                                        <keycloak.version>${keycloak.version}</keycloak.version>
+                                    </systemPropertyVariables>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <properties>
+                <quarkus.package.type>native</quarkus.package.type>
+            </properties>
         </profile>
     </profiles>
 </project>
