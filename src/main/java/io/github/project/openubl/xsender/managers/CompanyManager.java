@@ -86,8 +86,8 @@ public class CompanyManager {
         if (rep.getGuia() != null) {
             entity.setSunatUrlGuiaRemision(rep.getGuia());
         }
-        if (rep.getRetencion() != null) {
-            entity.setSunatUrlPercepcionRetencion(rep.getRetencion());
+        if (rep.getRetenciones() != null) {
+            entity.setSunatUrlPercepcionRetencion(rep.getRetenciones());
         }
     }
 

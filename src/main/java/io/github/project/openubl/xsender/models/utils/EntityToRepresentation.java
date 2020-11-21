@@ -49,7 +49,7 @@ public class EntityToRepresentation {
 
             sunatUrlsRep.setFactura(entity.getSunatUrls().getSunatUrlFactura());
             sunatUrlsRep.setGuia(entity.getSunatUrls().getSunatUrlGuiaRemision());
-            sunatUrlsRep.setRetencion(entity.getSunatUrls().getSunatUrlPercepcionRetencion());
+            sunatUrlsRep.setRetenciones(entity.getSunatUrls().getSunatUrlPercepcionRetencion());
         }
 
         return rep;

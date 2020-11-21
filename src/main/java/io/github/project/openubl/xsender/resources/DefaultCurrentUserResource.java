@@ -37,6 +37,7 @@ import javax.transaction.Transactional;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -58,13 +59,17 @@ public class DefaultCurrentUserResource implements CurrentUserResource {
     CompanyManager companyManager;
 
     @Override
-    public CompanyRepresentation createCompany(CompanyRepresentation rep) {
+    public Response createCompany(CompanyRepresentation rep) {
         if (companyRepository.findByName(rep.getName()).isPresent()) {
-            throw new BadRequestException("Name already taken");
+            return Response.status(Response.Status.CONFLICT)
+                    .entity("Name already taken")
+                    .build();
         }
 
         CompanyEntity company = companyManager.createCompany(userIdentity.getUsername(), rep);
-        return EntityToRepresentation.toRepresentation(company);
+        return Response.ok()
+                .entity(EntityToRepresentation.toRepresentation(company))
+                .build();
     }
 
     public PageRepresentation<CompanyRepresentation> getCompanies(

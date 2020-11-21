@@ -47,12 +47,12 @@ public class SunatUrlsRepresentation {
         this.guia = guia;
     }
 
-    public String getRetencion() {
+    public String getRetenciones() {
         return retenciones;
     }
 
-    public void setRetencion(String retencion) {
-        this.retenciones = retencion;
+    public void setRetenciones(String retenciones) {
+        this.retenciones = retenciones;
     }
 
     public static final class Builder {

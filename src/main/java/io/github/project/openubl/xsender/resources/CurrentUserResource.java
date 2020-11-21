@@ -20,6 +20,7 @@ import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/user")
@@ -32,7 +33,7 @@ public interface CurrentUserResource {
      */
     @POST
     @Path("/companies")
-    CompanyRepresentation createCompany(CompanyRepresentation rep);
+    Response createCompany(CompanyRepresentation rep);
 
     /**
      * List companies for the authenticated user
