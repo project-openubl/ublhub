@@ -24,6 +24,8 @@ import javax.validation.constraints.NotNull;
 @RegisterForReflection
 public class CompanyRepresentation {
 
+    private String id;
+
     @NotNull
     private String name;
 
@@ -34,6 +36,14 @@ public class CompanyRepresentation {
     @NotNull
     @Valid
     private SunatCredentialsRepresentation credentials;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;
