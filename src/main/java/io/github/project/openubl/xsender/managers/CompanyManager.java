@@ -44,7 +44,7 @@ public class CompanyManager {
         companyEntity.setId(UUID.randomUUID().toString());
 
         companyEntity.setOwner(owner);
-        companyEntity.setName(rep.getName());
+        companyEntity.setName(rep.getName().toLowerCase());
 
         if (rep.getWebServices() != null) {
             SunatUrlsEntity sunatUrlsEntity = new SunatUrlsEntity();

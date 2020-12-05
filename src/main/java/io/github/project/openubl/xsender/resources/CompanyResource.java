@@ -50,6 +50,9 @@ public interface CompanyResource {
             @NotNull @Valid CompanyRepresentation rep
     );
 
+    @DELETE
+    @Path("/{company}")
+    void deleteCompany(@PathParam("company") @NotNull String company);
 
     /**
      * Change SUNAT credentials of a company

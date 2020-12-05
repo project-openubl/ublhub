@@ -36,11 +36,10 @@ import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
-public class DefaultCurrentUserResourceTest {
+public class DefaultCompanyResourceTest {
 
     @Inject
     CompanyRepository companyRepository;
@@ -51,7 +50,7 @@ public class DefaultCurrentUserResourceTest {
     }
 
     @Test
-    public void createCompanyLowerCasingName() throws JsonProcessingException {
+    public void deleteCompany() throws JsonProcessingException {
         // Given
         final String COMPANY_NAME = "myCompany";
 
@@ -96,60 +95,4 @@ public class DefaultCurrentUserResourceTest {
         assertEquals(companyDB.getSunatCredentials().getSunatPassword(), "myPassword");
     }
 
-    @Test
-    public void getCompanies() {
-        // Given
-        SunatCredentialsEntity credentials = SunatCredentialsEntity.Builder.aSunatCredentialsEntity()
-                .withSunatUsername("anyUsername")
-                .withSunatPassword("anyPassword")
-                .build();
-        SunatUrlsEntity urls = SunatUrlsEntity.Builder.aSunatUrlsEntity()
-                .withSunatUrlFactura("https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl")
-                .withSunatUrlGuiaRemision("https://e-guiaremision.sunat.gob.pe/ol-ti-itemision-guia-gem/billService?wsdl")
-                .withSunatUrlPercepcionRetencion("https://e-factura.sunat.gob.pe/ol-ti-itemision-otroscpe-gem/billService?wsdl")
-                .build();
-
-        CompanyEntity company1 = CompanyEntity.Builder.aCompanyEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("myCompany1")
-                .withOwner(UserIdentity.DEFAULT_USERNAME)
-                .withSunatCredentials(credentials)
-                .withSunatUrls(urls)
-                .build();
-        CompanyEntity company2 = CompanyEntity.Builder.aCompanyEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("myCompany2")
-                .withOwner(UserIdentity.DEFAULT_USERNAME)
-                .withSunatCredentials(credentials)
-                .withSunatUrls(urls)
-                .build();
-        CompanyEntity company3 = CompanyEntity.Builder.aCompanyEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("myCompany3")
-                .withOwner("anotherUser")
-                .withSunatCredentials(credentials)
-                .withSunatUrls(urls)
-                .build();
-
-        companyRepository.persist(company1, company2, company3);
-
-        // When
-        given()
-                .header("Content-Type", "application/json")
-                .when()
-                .get("/api/user/companies")
-                .then()
-                .statusCode(200)
-                .body("meta.offset", is(0),
-                        "meta.limit", is(10),
-                        "meta.count", is(2),
-                        "links.first", is(notNullValue()),
-                        "links.last", is(notNullValue()),
-                        "links.next", is(nullValue()),
-                        "links.previous", is(nullValue()),
-                        "data.size()", is(2),
-                        "data[0].name", is("myCompany1"),
-                        "data[1].name", is("myCompany2")
-                );
-    }
 }

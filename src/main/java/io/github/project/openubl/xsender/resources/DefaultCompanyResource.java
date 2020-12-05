@@ -67,15 +67,21 @@ public class DefaultCompanyResource implements CompanyResource {
     @Inject
     CompanyManager companyManager;
 
-    public CompanyRepresentation getCompany(String org) {
-        CompanyEntity organizationEntity = companyRepository.findByName(org).orElseThrow(NotFoundException::new);
+    public CompanyRepresentation getCompany(String company) {
+        CompanyEntity organizationEntity = companyRepository.findByName(company).orElseThrow(NotFoundException::new);
         return EntityToRepresentation.toRepresentation(organizationEntity);
     }
 
-    public CompanyRepresentation updateCompany(String org, CompanyRepresentation rep) {
-        CompanyEntity organizationEntity = companyRepository.findByName(org).orElseThrow(NoClassDefFoundError::new);
+    public CompanyRepresentation updateCompany(String company, CompanyRepresentation rep) {
+        CompanyEntity organizationEntity = companyRepository.findByName(company).orElseThrow(NotFoundException::new);
         organizationEntity = companyManager.updateCompany(rep, organizationEntity);
         return EntityToRepresentation.toRepresentation(organizationEntity);
+    }
+
+    @Override
+    public void deleteCompany(@NotNull String company) {
+        CompanyEntity organizationEntity = companyRepository.findByName(company).orElseThrow(NotFoundException::new);
+        companyRepository.deleteById(organizationEntity.getId());
     }
 
     public void updateCompanySUNATCredentials(String org, SunatCredentialsRepresentation rep) {

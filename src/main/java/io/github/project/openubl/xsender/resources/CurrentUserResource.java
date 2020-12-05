@@ -41,10 +41,10 @@ public interface CurrentUserResource {
     @GET
     @Path("/companies")
     PageRepresentation<CompanyRepresentation> getCompanies(
-            @QueryParam("name") String name,
+            @QueryParam("filterText") String filterText,
             @QueryParam("offset") @DefaultValue("0") Integer offset,
             @QueryParam("limit") @DefaultValue("10") Integer limit,
-            @QueryParam("sort_by") @DefaultValue("name") List<String> sortBy
+            @QueryParam("sort_by") List<String> sortBy
     );
 }
 

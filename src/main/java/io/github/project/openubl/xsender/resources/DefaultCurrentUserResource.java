@@ -73,7 +73,7 @@ public class DefaultCurrentUserResource implements CurrentUserResource {
     }
 
     public PageRepresentation<CompanyRepresentation> getCompanies(
-            String name,
+            String filterText,
             Integer offset,
             Integer limit,
             List<String> sortBy
@@ -87,15 +87,15 @@ public class DefaultCurrentUserResource implements CurrentUserResource {
         List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, CompanyRepository.SORT_BY_FIELDS);
 
         PageModel<CompanyEntity> pageModel;
-        if (name != null && !name.trim().isEmpty()) {
-            pageModel = CompanyRepository.list(contextBean.getUsername(), name, pageBean, sortBeans);
+        if (filterText != null && !filterText.trim().isEmpty()) {
+            pageModel = CompanyRepository.list(contextBean.getUsername(), filterText, pageBean, sortBeans);
         } else {
             pageModel = CompanyRepository.list(contextBean.getUsername(), pageBean, sortBeans);
         }
 
         List<NameValuePair> queryParameters = ResourceUtils.buildNameValuePairs(offset, limit, sortBeans);
-        if (name != null) {
-            queryParameters.add(new BasicNameValuePair("name", name));
+        if (filterText != null) {
+            queryParameters.add(new BasicNameValuePair("name", filterText));
         }
 
         try {

@@ -41,6 +41,7 @@ public class EntityToRepresentation {
     public static CompanyRepresentation toRepresentation(CompanyEntity entity) {
         CompanyRepresentation rep = new CompanyRepresentation();
 
+        rep.setId(entity.getId());
         rep.setName(entity.getName());
 
         if (entity.getSunatUrls() != null) {

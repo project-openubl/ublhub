@@ -20,10 +20,14 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 @RegisterForReflection
 public class CompanyRepresentation {
 
+    private String id;
+
+    @Pattern(regexp = "[a-z0-9]([-a-z0-9]*[a-z0-9])?", message = "label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name', or '123-abc')")
     @NotNull
     private String name;
 
@@ -34,6 +38,14 @@ public class CompanyRepresentation {
     @NotNull
     @Valid
     private SunatCredentialsRepresentation credentials;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;
