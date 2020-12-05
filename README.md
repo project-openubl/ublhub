@@ -49,5 +49,3 @@ If you want to learn more about building native executables, please consult http
 ## License
 
 - [Eclipse Public License - v 2.0](./LICENSE)
-
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fproject-openubl%2Fxsender-server.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fproject-openubl%2Fxsender-server?ref=badge_large)
