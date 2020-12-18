@@ -23,13 +23,23 @@ quarkus:
     credentials:
       secret: secret
 "%keycloak":
-   quarkus:
-     oidc:
-       enabled: true
-       auth-server-url: http://localhost:8180/auth/realms/openubl
-       client-id: xsender
-       credentials:
+  quarkus:
+    oidc:
+      enabled: true
+      auth-server-url: http://localhost:8180/auth/realms/openubl
+      client-id: xsender
+      credentials:
         secret: secret
+    http:
+      auth:
+        permission:
+          hmtl:
+            paths: /*
+            policy: permit
+          api:
+            paths: /api/*
+            policy: authenticated
+
 openubl:
   event-manager:
     type: basic
