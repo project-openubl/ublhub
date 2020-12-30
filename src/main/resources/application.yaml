@@ -13,9 +13,11 @@ quarkus:
   quartz:
     clustered: false
   artemis:
-    password: quarkus
     url: tcp://localhost:61616
     username: quarkus
+    password: quarkus
+    health:
+      enabled: false
   oidc:
     enabled: false
     auth-server-url: http://localhost:8180/auth/realms/openubl
