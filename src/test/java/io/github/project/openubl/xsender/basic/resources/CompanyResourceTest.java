@@ -14,32 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.basic.resources.basic;
+package io.github.project.openubl.xsender.basic.resources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.project.openubl.xsender.basic.resources.config.BaseKeycloakTest;
+import io.github.project.openubl.xsender.basic.resources.config.KeycloakServer;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
-import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
-import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
-import io.github.project.openubl.xsender.security.UserIdentity;
+import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.util.Optional;
-import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
-public class DefaultCompanyResourceTest {
+@QuarkusTestResource(KeycloakServer.class)
+public class CompanyResourceTest extends BaseKeycloakTest {
 
     @Inject
     CompanyRepository companyRepository;
@@ -72,7 +73,7 @@ public class DefaultCompanyResourceTest {
         String body = new ObjectMapper().writeValueAsString(company);
 
         // When
-        given()
+        given().auth().oauth2(getAccessToken("alice"))
                 .body(body)
                 .header("Content-Type", "application/json")
                 .when()
@@ -87,7 +88,7 @@ public class DefaultCompanyResourceTest {
 
         CompanyEntity companyDB = companyOptional.get();
         assertEquals(companyDB.getName(), COMPANY_NAME.toLowerCase());
-        assertEquals(companyDB.getOwner(), UserIdentity.DEFAULT_USERNAME);
+        assertEquals(companyDB.getOwner(), "alice");
         assertEquals(companyDB.getSunatUrls().getSunatUrlFactura(), "http://url1.com");
         assertEquals(companyDB.getSunatUrls().getSunatUrlGuiaRemision(), "http://url2.com");
         assertEquals(companyDB.getSunatUrls().getSunatUrlPercepcionRetencion(), "http://url3.com");

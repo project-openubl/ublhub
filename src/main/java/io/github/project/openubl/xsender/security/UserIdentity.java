@@ -17,7 +17,6 @@
 package io.github.project.openubl.xsender.security;
 
 import io.quarkus.security.identity.SecurityIdentity;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
@@ -25,20 +24,11 @@ import javax.inject.Inject;
 @Dependent
 public class UserIdentity {
 
-    public static final String DEFAULT_USERNAME = "admin";
-
     @Inject
     SecurityIdentity identity;
 
-    @ConfigProperty(name = "quarkus.oidc.enabled")
-    boolean oidcEnabled;
-
     public String getUsername() {
-        if (oidcEnabled) {
-            return identity.getPrincipal().getName();
-        }
-
-        return DEFAULT_USERNAME;
+        return identity.getPrincipal().getName();
     }
 
 }

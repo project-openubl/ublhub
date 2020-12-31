@@ -14,13 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.basic.resources.keycloak;
+package io.github.project.openubl.xsender.basic.resources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.project.openubl.xsender.basic.resources.keycloak.config.BaseKeycloakTest;
-import io.github.project.openubl.xsender.basic.resources.keycloak.config.KeycloakServer;
-import io.github.project.openubl.xsender.basic.resources.keycloak.config.KeycloakTestProfile;
+import io.github.project.openubl.xsender.basic.resources.config.BaseKeycloakTest;
+import io.github.project.openubl.xsender.basic.resources.config.KeycloakServer;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
@@ -30,9 +29,7 @@ import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEnt
 import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.TestProfile;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
@@ -44,11 +41,9 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Disabled
 @QuarkusTest
-@TestProfile(KeycloakTestProfile.class)
 @QuarkusTestResource(KeycloakServer.class)
-public class KeycloakCurrentUserResourceTest extends BaseKeycloakTest {
+public class CurrentUserResourceTest extends BaseKeycloakTest {
 
     @Inject
     CompanyRepository companyRepository;
@@ -88,14 +83,14 @@ public class KeycloakCurrentUserResourceTest extends BaseKeycloakTest {
                 .post("/api/user/companies")
                 .then()
                 .statusCode(200)
-                .body("name", is(company.getName()));
+                .body("name", is(company.getName().toLowerCase()));
 
         // Then
-        Optional<CompanyEntity> companyOptional = companyRepository.findByName(COMPANY_NAME);
+        Optional<CompanyEntity> companyOptional = companyRepository.findByName(COMPANY_NAME.toLowerCase());
         assertTrue(companyOptional.isPresent());
 
         CompanyEntity companyDB = companyOptional.get();
-        assertEquals(companyDB.getName(), COMPANY_NAME);
+        assertEquals(companyDB.getName(), COMPANY_NAME.toLowerCase());
         assertEquals(companyDB.getOwner(), "alice");
         assertEquals(companyDB.getSunatUrls().getSunatUrlFactura(), "http://url1.com");
         assertEquals(companyDB.getSunatUrls().getSunatUrlGuiaRemision(), "http://url2.com");
