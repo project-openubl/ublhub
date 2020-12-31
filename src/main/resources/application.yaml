@@ -19,28 +19,38 @@ quarkus:
     health:
       enabled: false
   oidc:
-    enabled: false
+    enabled: true
     auth-server-url: http://localhost:8180/auth/realms/openubl
     client-id: xsender
     credentials:
       secret: secret
-"%keycloak":
+  http:
+    auth:
+      permission:
+        hmtl:
+          paths: /*
+          policy: permit
+        api:
+          paths: /api/*
+          policy: authenticated
+
+"%prod%":
   quarkus:
+    datasource:
+      db-kind: postgresql
+      jdbc:
+        url: jdbc:postgresql://localhost:5432/xsender
+      password: xsender
+      username: xsender
+    hibernate-orm:
+      database:
+        generation: update
     oidc:
       enabled: true
       auth-server-url: http://localhost:8180/auth/realms/openubl
       client-id: xsender
       credentials:
         secret: secret
-    http:
-      auth:
-        permission:
-          hmtl:
-            paths: /*
-            policy: permit
-          api:
-            paths: /api/*
-            policy: authenticated
 
 openubl:
   event-manager:
