@@ -50,7 +50,8 @@
         <xsender-lib.version>3.0.1.Final</xsender-lib.version>
         <testcontainers.version>1.12.5</testcontainers.version>
         <awaitility.version>3.0.0</awaitility.version>
-        <keycloak.version>11.0.1</keycloak.version>
+        <keycloak.version>12.0.1</keycloak.version>
+        <postgresql.version>13.1</postgresql.version>
 
         <license.dir>${basedir}</license.dir>
     </properties>

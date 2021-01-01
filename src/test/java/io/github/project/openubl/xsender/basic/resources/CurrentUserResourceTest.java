@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.project.openubl.xsender.basic.resources.config.BaseKeycloakTest;
 import io.github.project.openubl.xsender.basic.resources.config.KeycloakServer;
+import io.github.project.openubl.xsender.basic.resources.config.PostgreSQLServer;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
@@ -43,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 @QuarkusTestResource(KeycloakServer.class)
+@QuarkusTestResource(PostgreSQLServer.class)
 public class CurrentUserResourceTest extends BaseKeycloakTest {
 
     @Inject

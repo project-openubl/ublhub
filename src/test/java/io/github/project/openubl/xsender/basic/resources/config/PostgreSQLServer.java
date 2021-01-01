@@ -25,26 +25,23 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import java.util.Collections;
 import java.util.Map;
 
-public class KeycloakServer implements QuarkusTestResourceLifecycleManager {
+public class PostgreSQLServer implements QuarkusTestResourceLifecycleManager {
 
-    private GenericContainer keycloak;
+    private GenericContainer postgreSQL;
 
     @Override
     public Map<String, String> start() {
-        keycloak = new FixedHostPortGenericContainer("quay.io/keycloak/keycloak:" + System.getProperty("keycloak.version", "12.0.1"))
-                .withFixedExposedPort(8180, 8080)
-                .withEnv("DB_VENDOR", "H2")
-                .withEnv("KEYCLOAK_USER", "admin")
-                .withEnv("KEYCLOAK_PASSWORD", "admin")
-                .withEnv("KEYCLOAK_IMPORT", "/tmp/realm.json")
-                .withClasspathResourceMapping("openubl-realm.json", "/tmp/realm.json", BindMode.READ_ONLY)
-                .waitingFor(Wait.forHttp("/auth"));
-        keycloak.start();
+        postgreSQL = new FixedHostPortGenericContainer("postgres:" + System.getProperty("postgresql.version", "13.1"))
+                .withFixedExposedPort(5432, 5432)
+                .withEnv("POSTGRES_USER", "xsender_username")
+                .withEnv("POSTGRES_PASSWORD", "xsender_password")
+                .withEnv("POSTGRES_DB", "xsender_db");
+        postgreSQL.start();
         return Collections.emptyMap();
     }
 
     @Override
     public void stop() {
-        keycloak.stop();
+        postgreSQL.stop();
     }
 }

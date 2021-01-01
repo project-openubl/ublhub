@@ -2,14 +2,14 @@ quarkus:
   resteasy:
     path: /api
   datasource:
-    db-kind: h2
+    db-kind: postgresql
     jdbc:
-      url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    password: sa
-    username: sa
+      url: jdbc:postgresql://localhost:5432/xsender_db
+    username: xsender_username
+    password: xsender_password
   hibernate-orm:
     database:
-      generation: drop-and-create
+      generation: update
   quartz:
     clustered: false
   artemis:
@@ -33,25 +33,6 @@ quarkus:
         api:
           paths: /api/*
           policy: authenticated
-
-"%prod%":
-  quarkus:
-    datasource:
-      db-kind: postgresql
-      jdbc:
-        url: jdbc:postgresql://localhost:5432/xsender
-      password: xsender
-      username: xsender
-    hibernate-orm:
-      database:
-        generation: update
-    oidc:
-      enabled: true
-      auth-server-url: http://localhost:8180/auth/realms/openubl
-      client-id: xsender
-      credentials:
-        secret: secret
-
 openubl:
   event-manager:
     type: basic
