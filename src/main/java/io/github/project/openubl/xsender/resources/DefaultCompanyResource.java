@@ -28,6 +28,7 @@ import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
+import io.github.project.openubl.xsender.security.UserIdentity;
 import org.apache.commons.io.IOUtils;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -67,6 +68,9 @@ public class DefaultCompanyResource implements CompanyResource {
     @Inject
     CompanyManager companyManager;
 
+    @Inject
+    UserIdentity userIdentity;
+
     public CompanyRepresentation getCompany(String company) {
         CompanyEntity organizationEntity = companyRepository.findByName(company).orElseThrow(NotFoundException::new);
         return EntityToRepresentation.toRepresentation(organizationEntity);
@@ -80,7 +84,7 @@ public class DefaultCompanyResource implements CompanyResource {
 
     @Override
     public void deleteCompany(@NotNull String company) {
-        CompanyEntity organizationEntity = companyRepository.findByName(company).orElseThrow(NotFoundException::new);
+        CompanyEntity organizationEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         companyRepository.deleteById(organizationEntity.getId());
     }
 

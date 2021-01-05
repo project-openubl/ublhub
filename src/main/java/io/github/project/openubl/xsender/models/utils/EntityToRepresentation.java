@@ -16,10 +16,7 @@
  */
 package io.github.project.openubl.xsender.models.utils;
 
-import io.github.project.openubl.xsender.idm.CompanyRepresentation;
-import io.github.project.openubl.xsender.idm.DocumentRepresentation;
-import io.github.project.openubl.xsender.idm.PageRepresentation;
-import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
+import io.github.project.openubl.xsender.idm.*;
 import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
@@ -51,6 +48,13 @@ public class EntityToRepresentation {
             sunatUrlsRep.setFactura(entity.getSunatUrls().getSunatUrlFactura());
             sunatUrlsRep.setGuia(entity.getSunatUrls().getSunatUrlGuiaRemision());
             sunatUrlsRep.setRetenciones(entity.getSunatUrls().getSunatUrlPercepcionRetencion());
+        }
+
+        if (entity.getSunatCredentials() != null) {
+            SunatCredentialsRepresentation credentialsRep = new SunatCredentialsRepresentation();
+            rep.setCredentials(credentialsRep);
+
+            credentialsRep.setUsername(entity.getSunatCredentials().getSunatUsername());
         }
 
         return rep;

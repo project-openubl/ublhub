@@ -40,6 +40,10 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
         return find("name", name).firstResultOptional();
     }
 
+    public Optional<CompanyEntity> findByNameAndOwner(String name, String owner) {
+        return find("name = ?1 and owner = ?2", name, owner).firstResultOptional();
+    }
+
     public static PageModel<CompanyEntity> list(String owner, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));

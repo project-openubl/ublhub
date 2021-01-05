@@ -21,6 +21,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.util.Objects;
 
 @Entity
@@ -38,6 +39,7 @@ public class CompanyEntity extends PanacheEntityBase {
     @Column(name = "OWNER")
     private String owner;
 
+    @Pattern(regexp = "[a-z0-9]([-a-z0-9]*[a-z0-9])?", message = "label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name', or '123-abc')")
     @NotNull
     @Column(name = "NAME")
     private String name;
