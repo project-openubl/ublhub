@@ -16,16 +16,13 @@
  */
 package io.github.project.openubl.xsender.basic.resources;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.project.openubl.xsender.basic.resources.config.BaseKeycloakTest;
 import io.github.project.openubl.xsender.basic.resources.config.KeycloakServer;
 import io.github.project.openubl.xsender.basic.resources.config.PostgreSQLServer;
-import io.github.project.openubl.xsender.idm.CompanyRepresentation;
-import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
-import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.AfterEach;
@@ -33,10 +30,10 @@ import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.util.Optional;
+import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
@@ -53,49 +50,95 @@ public class CompanyResourceTest extends BaseKeycloakTest {
     }
 
     @Test
-    public void deleteCompany() throws JsonProcessingException {
+    public void deleteCompany() {
         // Given
-        final String COMPANY_NAME = "myCompany";
+        final String COMPANY_NAME = "mycompany";
 
-        CompanyRepresentation company = CompanyRepresentation.Builder.aCompanyRepresentation()
-                .withName(COMPANY_NAME)
-                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
-                        .withFactura("http://url1.com")
-                        .withGuia("http://url2.com")
-                        .withRetenciones("http://url3.com")
-                        .build()
-                )
-                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
-                        .withUsername("myUsername")
-                        .withPassword("myPassword")
-                        .build()
-                )
+        SunatCredentialsEntity credentials = SunatCredentialsEntity.Builder.aSunatCredentialsEntity()
+                .withSunatUsername("anyUsername")
+                .withSunatPassword("anyPassword")
+                .build();
+        SunatUrlsEntity urls = SunatUrlsEntity.Builder.aSunatUrlsEntity()
+                .withSunatUrlFactura("https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl")
+                .withSunatUrlGuiaRemision("https://e-guiaremision.sunat.gob.pe/ol-ti-itemision-guia-gem/billService?wsdl")
+                .withSunatUrlPercepcionRetencion("https://e-factura.sunat.gob.pe/ol-ti-itemision-otroscpe-gem/billService?wsdl")
                 .build();
 
-        String body = new ObjectMapper().writeValueAsString(company);
+        CompanyEntity company1 = CompanyEntity.Builder.aCompanyEntity()
+                .withId(UUID.randomUUID().toString())
+                .withName(COMPANY_NAME)
+                .withOwner("alice")
+                .withSunatCredentials(credentials)
+                .withSunatUrls(urls)
+                .build();
+
+        companyRepository.persist(company1);
+
+        Optional<CompanyEntity> companyOptional = companyRepository.findByName(COMPANY_NAME);
+        assertTrue(companyOptional.isPresent());
+
+        // When
+
+        given().auth().oauth2(getAccessToken("alice"))
+                .header("Content-Type", "application/json")
+                .when()
+                .delete("/api/companies/" + COMPANY_NAME)
+                .then()
+                .statusCode(204);
+
+        // Then
+        companyOptional = companyRepository.findByName(COMPANY_NAME);
+        assertFalse(companyOptional.isPresent());
+    }
+
+    @Test
+    public void deleteCompany_usingNonExistsCompany() {
+        // Given
+        // When
+        given().auth().oauth2(getAccessToken("alice"))
+                .header("Content-Type", "application/json")
+                .when()
+                .delete("/api/companies/" + "any")
+                .then()
+                .statusCode(404);
+        // Then
+    }
+
+    @Test
+    public void deleteCompany_byNotOwner() {
+        // Given
+        final String COMPANY_NAME = "mycompany";
+
+        SunatCredentialsEntity credentials = SunatCredentialsEntity.Builder.aSunatCredentialsEntity()
+                .withSunatUsername("anyUsername")
+                .withSunatPassword("anyPassword")
+                .build();
+        SunatUrlsEntity urls = SunatUrlsEntity.Builder.aSunatUrlsEntity()
+                .withSunatUrlFactura("https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl")
+                .withSunatUrlGuiaRemision("https://e-guiaremision.sunat.gob.pe/ol-ti-itemision-guia-gem/billService?wsdl")
+                .withSunatUrlPercepcionRetencion("https://e-factura.sunat.gob.pe/ol-ti-itemision-otroscpe-gem/billService?wsdl")
+                .build();
+
+        CompanyEntity company1 = CompanyEntity.Builder.aCompanyEntity()
+                .withId(UUID.randomUUID().toString())
+                .withName(COMPANY_NAME)
+                .withOwner("someUser")
+                .withSunatCredentials(credentials)
+                .withSunatUrls(urls)
+                .build();
+
+        companyRepository.persist(company1);
+
+        Optional<CompanyEntity> companyOptional = companyRepository.findByName(COMPANY_NAME);
+        assertTrue(companyOptional.isPresent());
 
         // When
         given().auth().oauth2(getAccessToken("alice"))
-                .body(body)
                 .header("Content-Type", "application/json")
                 .when()
-                .post("/api/user/companies")
+                .delete("/api/companies/" + COMPANY_NAME)
                 .then()
-                .statusCode(200)
-                .body("name", is(company.getName().toLowerCase()));
-
+                .statusCode(404);
         // Then
-        Optional<CompanyEntity> companyOptional = companyRepository.findByName(COMPANY_NAME.toLowerCase());
-        assertTrue(companyOptional.isPresent());
-
-        CompanyEntity companyDB = companyOptional.get();
-        assertEquals(companyDB.getName(), COMPANY_NAME.toLowerCase());
-        assertEquals(companyDB.getOwner(), "alice");
-        assertEquals(companyDB.getSunatUrls().getSunatUrlFactura(), "http://url1.com");
-        assertEquals(companyDB.getSunatUrls().getSunatUrlGuiaRemision(), "http://url2.com");
-        assertEquals(companyDB.getSunatUrls().getSunatUrlPercepcionRetencion(), "http://url3.com");
-        assertEquals(companyDB.getSunatCredentials().getSunatUsername(), "myUsername");
-        assertEquals(companyDB.getSunatCredentials().getSunatPassword(), "myPassword");
     }
-
 }
