@@ -72,7 +72,7 @@ public class DefaultCompanyResource implements CompanyResource {
     UserIdentity userIdentity;
 
     public CompanyRepresentation getCompany(String company) {
-        CompanyEntity organizationEntity = companyRepository.findByName(company).orElseThrow(NotFoundException::new);
+        CompanyEntity organizationEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         return EntityToRepresentation.toRepresentation(organizationEntity);
     }
 
