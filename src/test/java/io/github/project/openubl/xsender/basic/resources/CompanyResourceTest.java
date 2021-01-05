@@ -33,6 +33,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -137,6 +139,102 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .header("Content-Type", "application/json")
                 .when()
                 .delete("/api/companies/" + COMPANY_NAME)
+                .then()
+                .statusCode(404);
+        // Then
+    }
+
+    @Test
+    public void getCompany() {
+        // Given
+        final String COMPANY_NAME = "mycompany";
+
+        SunatCredentialsEntity credentials = SunatCredentialsEntity.Builder.aSunatCredentialsEntity()
+                .withSunatUsername("anyUsername")
+                .withSunatPassword("anyPassword")
+                .build();
+        SunatUrlsEntity urls = SunatUrlsEntity.Builder.aSunatUrlsEntity()
+                .withSunatUrlFactura("https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl")
+                .withSunatUrlGuiaRemision("https://e-guiaremision.sunat.gob.pe/ol-ti-itemision-guia-gem/billService?wsdl")
+                .withSunatUrlPercepcionRetencion("https://e-factura.sunat.gob.pe/ol-ti-itemision-otroscpe-gem/billService?wsdl")
+                .build();
+
+        CompanyEntity company1 = CompanyEntity.Builder.aCompanyEntity()
+                .withId(UUID.randomUUID().toString())
+                .withName(COMPANY_NAME)
+                .withOwner("alice")
+                .withSunatCredentials(credentials)
+                .withSunatUrls(urls)
+                .build();
+
+        companyRepository.persist(company1);
+
+        Optional<CompanyEntity> companyOptional = companyRepository.findByName(COMPANY_NAME);
+        assertTrue(companyOptional.isPresent());
+
+        // When
+        given().auth().oauth2(getAccessToken("alice"))
+                .header("Content-Type", "application/json")
+                .when()
+                .get("/api/companies/" + COMPANY_NAME)
+                .then()
+                .statusCode(200)
+                .body("name", is(COMPANY_NAME),
+                        "webServices.factura", is(urls.getSunatUrlFactura()),
+                        "webServices.guia", is(urls.getSunatUrlGuiaRemision()),
+                        "webServices.retenciones", is(urls.getSunatUrlPercepcionRetencion()),
+                        "credentials.username", is(credentials.getSunatUsername()),
+                        "credentials.password", is(nullValue())
+                );
+        // Then
+    }
+
+    @Test
+    public void getCompany_usingNonExistsCompany() {
+        // Given
+        // When
+        given().auth().oauth2(getAccessToken("alice"))
+                .header("Content-Type", "application/json")
+                .when()
+                .get("/api/companies/" + "any")
+                .then()
+                .statusCode(404);
+        // Then
+    }
+
+    @Test
+    public void getCompany_usingNotOwner() {
+        // Given
+        final String COMPANY_NAME = "mycompany";
+
+        SunatCredentialsEntity credentials = SunatCredentialsEntity.Builder.aSunatCredentialsEntity()
+                .withSunatUsername("anyUsername")
+                .withSunatPassword("anyPassword")
+                .build();
+        SunatUrlsEntity urls = SunatUrlsEntity.Builder.aSunatUrlsEntity()
+                .withSunatUrlFactura("https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl")
+                .withSunatUrlGuiaRemision("https://e-guiaremision.sunat.gob.pe/ol-ti-itemision-guia-gem/billService?wsdl")
+                .withSunatUrlPercepcionRetencion("https://e-factura.sunat.gob.pe/ol-ti-itemision-otroscpe-gem/billService?wsdl")
+                .build();
+
+        CompanyEntity company1 = CompanyEntity.Builder.aCompanyEntity()
+                .withId(UUID.randomUUID().toString())
+                .withName(COMPANY_NAME)
+                .withOwner("someUser")
+                .withSunatCredentials(credentials)
+                .withSunatUrls(urls)
+                .build();
+
+        companyRepository.persist(company1);
+
+        Optional<CompanyEntity> companyOptional = companyRepository.findByName(COMPANY_NAME);
+        assertTrue(companyOptional.isPresent());
+
+        // When
+        given().auth().oauth2(getAccessToken("alice"))
+                .header("Content-Type", "application/json")
+                .when()
+                .get("/api/companies/" + COMPANY_NAME)
                 .then()
                 .statusCode(404);
         // Then
