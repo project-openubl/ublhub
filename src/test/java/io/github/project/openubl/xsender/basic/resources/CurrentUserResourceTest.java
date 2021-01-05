@@ -116,21 +116,21 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
 
         CompanyEntity company1 = CompanyEntity.Builder.aCompanyEntity()
                 .withId(UUID.randomUUID().toString())
-                .withName("myCompany1")
+                .withName("my-company1")
                 .withOwner("alice")
                 .withSunatCredentials(credentials)
                 .withSunatUrls(urls)
                 .build();
         CompanyEntity company2 = CompanyEntity.Builder.aCompanyEntity()
                 .withId(UUID.randomUUID().toString())
-                .withName("myCompany2")
+                .withName("my-company2")
                 .withOwner("alice")
                 .withSunatCredentials(credentials)
                 .withSunatUrls(urls)
                 .build();
         CompanyEntity company3 = CompanyEntity.Builder.aCompanyEntity()
                 .withId(UUID.randomUUID().toString())
-                .withName("myCompany3")
+                .withName("my-company3")
                 .withOwner("anotherUser")
                 .withSunatCredentials(credentials)
                 .withSunatUrls(urls)
@@ -153,8 +153,8 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
                         "links.next", is(nullValue()),
                         "links.previous", is(nullValue()),
                         "data.size()", is(2),
-                        "data[0].name", is("myCompany1"),
-                        "data[1].name", is("myCompany2")
+                        "data[0].name", is("my-company1"),
+                        "data[1].name", is("my-company2")
                 );
     }
 }
