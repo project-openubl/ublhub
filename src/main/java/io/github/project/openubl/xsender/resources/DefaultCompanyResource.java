@@ -1,13 +1,13 @@
 /**
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
- *
+ * <p>
  * Licensed under the Eclipse Public License - v 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * https://www.eclipse.org/legal/epl-2.0/
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,13 +23,20 @@ import io.github.project.openubl.xsender.files.FilesManager;
 import io.github.project.openubl.xsender.idm.*;
 import io.github.project.openubl.xsender.managers.CompanyManager;
 import io.github.project.openubl.xsender.managers.DocumentsManager;
+import io.github.project.openubl.xsender.models.ContextBean;
+import io.github.project.openubl.xsender.models.PageBean;
+import io.github.project.openubl.xsender.models.PageModel;
+import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
+import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
 import io.github.project.openubl.xsender.security.UserIdentity;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -39,11 +46,15 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
@@ -52,6 +63,9 @@ import java.util.Map;
 public class DefaultCompanyResource implements CompanyResource {
 
     private static final Logger LOG = Logger.getLogger(DefaultCompanyResource.class);
+
+    @Context
+    UriInfo uriInfo;
 
     @Inject
     CompanyRepository companyRepository;
@@ -84,8 +98,8 @@ public class DefaultCompanyResource implements CompanyResource {
 
     @Override
     public void deleteCompany(@NotNull String company) {
-        CompanyEntity organizationEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-        companyRepository.deleteById(organizationEntity.getId());
+        CompanyEntity companyEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        companyRepository.deleteById(companyEntity.getId());
     }
 
     public void updateCompanySUNATCredentials(String org, SunatCredentialsRepresentation rep) {
@@ -95,7 +109,38 @@ public class DefaultCompanyResource implements CompanyResource {
 
     @Override
     public PageRepresentation<DocumentRepresentation> listDocuments(@NotNull String company, String filterText, Integer offset, Integer limit, List<String> sortBy) {
-        return null;
+        CompanyEntity companyEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+
+        ContextBean contextBean = ContextBean.Builder.aContextBean()
+                .withUsername(userIdentity.getUsername())
+                .withUriInfo(uriInfo)
+                .build();
+
+        PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
+        List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, UBLDocumentRepository.SORT_BY_FIELDS);
+
+        PageModel<UBLDocumentEntity> pageModel;
+        if (filterText != null && !filterText.trim().isEmpty()) {
+            pageModel = documentRepository.list(companyEntity, filterText, pageBean, sortBeans);
+        } else {
+            pageModel = documentRepository.list(companyEntity, pageBean, sortBeans);
+        }
+
+        List<NameValuePair> queryParameters = ResourceUtils.buildNameValuePairs(offset, limit, sortBeans);
+        if (filterText != null) {
+            queryParameters.add(new BasicNameValuePair("name", filterText));
+        }
+
+        try {
+            return EntityToRepresentation.toRepresentation(
+                    pageModel,
+                    EntityToRepresentation::toRepresentation,
+                    contextBean.getUriInfo(),
+                    queryParameters
+            );
+        } catch (URISyntaxException e) {
+            throw new InternalServerErrorException();
+        }
     }
 
     @Override

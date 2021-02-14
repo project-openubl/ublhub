@@ -31,6 +31,8 @@ public class CompanyRepresentation {
     @NotNull
     private String name;
 
+    private String description;
+
     @NotNull
     @Valid
     private SunatUrlsRepresentation webServices;
@@ -55,6 +57,14 @@ public class CompanyRepresentation {
         this.name = name;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public SunatUrlsRepresentation getWebServices() {
         return webServices;
     }
@@ -73,6 +83,7 @@ public class CompanyRepresentation {
 
     public static final class Builder {
         private String name;
+        private String description;
         private SunatUrlsRepresentation webServices;
         private SunatCredentialsRepresentation credentials;
 
@@ -85,6 +96,11 @@ public class CompanyRepresentation {
 
         public Builder withName(String name) {
             this.name = name;
+            return this;
+        }
+
+        public Builder withDescription(String description) {
+            this.description = description;
             return this;
         }
 
@@ -101,6 +117,7 @@ public class CompanyRepresentation {
         public CompanyRepresentation build() {
             CompanyRepresentation companyRepresentation = new CompanyRepresentation();
             companyRepresentation.setName(name);
+            companyRepresentation.setDescription(description);
             companyRepresentation.setWebServices(webServices);
             companyRepresentation.setCredentials(credentials);
             return companyRepresentation;

@@ -45,6 +45,7 @@ public class CompanyManager {
 
         companyEntity.setOwner(owner);
         companyEntity.setName(rep.getName().toLowerCase());
+        companyEntity.setDescription(rep.getDescription());
 
         if (rep.getWebServices() != null) {
             SunatUrlsEntity sunatUrlsEntity = new SunatUrlsEntity();
@@ -67,16 +68,20 @@ public class CompanyManager {
     /**
      * Shouldn't update 'name'
      */
-    public CompanyEntity updateCompany(CompanyRepresentation rep, CompanyEntity CompanyEntity) {
-        if (rep.getWebServices() != null) {
-            if (CompanyEntity.getSunatUrls() == null) {
-                CompanyEntity.setSunatUrls(new SunatUrlsEntity());
-            }
-            updateSunatUrls(rep.getWebServices(), CompanyEntity.getSunatUrls());
+    public CompanyEntity updateCompany(CompanyRepresentation rep, CompanyEntity entity) {
+        if (rep.getDescription() != null) {
+            entity.setDescription(rep.getDescription());
         }
 
-        companyRepository.persist(CompanyEntity);
-        return CompanyEntity;
+        if (rep.getWebServices() != null) {
+            if (entity.getSunatUrls() == null) {
+                entity.setSunatUrls(new SunatUrlsEntity());
+            }
+            updateSunatUrls(rep.getWebServices(), entity.getSunatUrls());
+        }
+
+        companyRepository.persist(entity);
+        return entity;
     }
 
     private void updateSunatUrls(SunatUrlsRepresentation rep, SunatUrlsEntity entity) {
