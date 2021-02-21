@@ -39,8 +39,8 @@
         <!--Quarkus-->
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
-        <quarkus.platform.version>1.10.5.Final</quarkus.platform.version>
-        <quarkus-plugin.version>1.10.5.Final</quarkus-plugin.version>
+        <quarkus.platform.version>1.11.2.Final</quarkus.platform.version>
+        <quarkus-plugin.version>1.11.2.Final</quarkus-plugin.version>
 
         <!--plugings-->
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
@@ -48,8 +48,8 @@
 
         <!--libs-->
         <xsender-lib.version>3.0.1.Final</xsender-lib.version>
-        <testcontainers.version>1.12.5</testcontainers.version>
-        <awaitility.version>3.0.0</awaitility.version>
+        <testcontainers.version>1.15.2</testcontainers.version>
+        <awaitility.version>4.0.3</awaitility.version>
         <keycloak.version>12.0.1</keycloak.version>
         <postgresql.version>13.1</postgresql.version>
 

@@ -40,6 +40,7 @@ public class EntityToRepresentation {
 
         rep.setId(entity.getId());
         rep.setName(entity.getName());
+        rep.setDescription(entity.getDescription());
 
         if (entity.getSunatUrls() != null) {
             SunatUrlsRepresentation sunatUrlsRep = new SunatUrlsRepresentation();

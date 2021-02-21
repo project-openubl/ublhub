@@ -43,11 +43,11 @@ public interface CompanyResource {
     /**
      * Update an org
      */
-    @PATCH
+    @PUT
     @Path("/{company}")
     CompanyRepresentation updateCompany(
             @PathParam("company") @NotNull String company,
-            @NotNull @Valid CompanyRepresentation rep
+            @NotNull CompanyRepresentation rep
     );
 
     @DELETE
@@ -57,7 +57,7 @@ public interface CompanyResource {
     /**
      * Change SUNAT credentials of a company
      */
-    @PATCH
+    @PUT
     @Path("/{company}/sunat-credentials")
     void updateCompanySUNATCredentials(
             @PathParam("company") @NotNull String company,

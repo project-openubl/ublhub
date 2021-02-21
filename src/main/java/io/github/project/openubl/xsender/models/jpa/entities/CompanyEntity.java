@@ -44,6 +44,8 @@ public class CompanyEntity extends PanacheEntityBase {
     @Column(name = "NAME")
     private String name;
 
+    private String description;
+
     @NotNull
     @Valid
     @Embedded
@@ -80,6 +82,14 @@ public class CompanyEntity extends PanacheEntityBase {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public SunatCredentialsEntity getSunatCredentials() {
@@ -123,6 +133,7 @@ public class CompanyEntity extends PanacheEntityBase {
         private String id;
         private String owner;
         private String name;
+        private String description;
         private SunatCredentialsEntity sunatCredentials;
         private SunatUrlsEntity sunatUrls;
         private int version;
@@ -149,6 +160,11 @@ public class CompanyEntity extends PanacheEntityBase {
             return this;
         }
 
+        public Builder withDescription(String description) {
+            this.description = description;
+            return this;
+        }
+
         public Builder withSunatCredentials(SunatCredentialsEntity sunatCredentials) {
             this.sunatCredentials = sunatCredentials;
             return this;
@@ -169,6 +185,7 @@ public class CompanyEntity extends PanacheEntityBase {
             companyEntity.setId(id);
             companyEntity.setOwner(owner);
             companyEntity.setName(name);
+            companyEntity.setDescription(description);
             companyEntity.setSunatCredentials(sunatCredentials);
             companyEntity.setSunatUrls(sunatUrls);
             companyEntity.setVersion(version);

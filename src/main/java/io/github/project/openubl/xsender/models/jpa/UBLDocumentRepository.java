@@ -17,14 +17,23 @@
 package io.github.project.openubl.xsender.models.jpa;
 
 import io.github.project.openubl.xsender.models.DeliveryStatusType;
+import io.github.project.openubl.xsender.models.PageBean;
+import io.github.project.openubl.xsender.models.PageModel;
+import io.github.project.openubl.xsender.models.SortBean;
+import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import io.quarkus.panache.common.Parameters;
+import io.quarkus.panache.common.Sort;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.List;
 
 @ApplicationScoped
 public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentEntity, String> {
+
+    public static final String[] SORT_BY_FIELDS = {"documentID"};
 
     public List<UBLDocumentEntity> findAllScheduledToDeliver() {
         return list("deliveryStatus", DeliveryStatusType.SCHEDULED_TO_DELIVER);
@@ -34,4 +43,38 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
         return list("deliveryStatus", DeliveryStatusType.SCHEDULED_CHECK_TICKET);
     }
 
+    public PageModel<UBLDocumentEntity> list(CompanyEntity company, PageBean pageBean, List<SortBean> sortBy) {
+        Sort sort = Sort.by();
+        sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
+
+        PanacheQuery<UBLDocumentEntity> query = CompanyEntity
+                .find(
+                        "From UBLDocumentEntity as d where d.company =:company",
+                        sort,
+                        Parameters.with("company", company)
+                )
+                .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
+
+        long count = query.count();
+        List<UBLDocumentEntity> list = query.list();
+        return new PageModel<>(pageBean, count, list);
+    }
+
+    public PageModel<UBLDocumentEntity> list(CompanyEntity company, String filterText, PageBean pageBean, List<SortBean> sortBy) {
+        Sort sort = Sort.by();
+        sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
+
+        PanacheQuery<UBLDocumentEntity> query = CompanyEntity
+                .find(
+                        "From UBLDocumentEntity as d where d.company =:company and lower(d.documentID) like :filterText",
+                        sort,
+                        Parameters.with("company", company)
+                                .and("filterText", "%" + filterText.toLowerCase() + "%")
+                )
+                .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
+
+        long count = query.count();
+        List<UBLDocumentEntity> list = query.list();
+        return new PageModel<>(pageBean, count, list);
+    }
 }

@@ -45,6 +45,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.UUID;
 
 @Transactional
 @ApplicationScoped
@@ -96,6 +97,7 @@ public class DocumentsManager {
 
         // Create Entity in DB
         UBLDocumentEntity documentEntity = UBLDocumentEntity.Builder.anUBLDocumentEntity()
+                .withId(UUID.randomUUID().toString())
                 .withStorageFile(fileID)
                 .withFilename(fileNameWithoutExtension)
                 .withRuc(xmlContentModel.getRuc())
