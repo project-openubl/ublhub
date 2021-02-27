@@ -44,7 +44,7 @@ public interface CurrentUserResource {
             @QueryParam("filterText") String filterText,
             @QueryParam("offset") @DefaultValue("0") Integer offset,
             @QueryParam("limit") @DefaultValue("10") Integer limit,
-            @QueryParam("sort_by") List<String> sortBy
+            @QueryParam("sort_by") @DefaultValue("createdOn:desc") List<String> sortBy
     );
 }
 

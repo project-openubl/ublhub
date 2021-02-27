@@ -1,13 +1,13 @@
 /**
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
- *
+ * <p>
  * Licensed under the Eclipse Public License - v 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * https://www.eclipse.org/legal/epl-2.0/
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,10 +23,7 @@ import io.github.project.openubl.xsender.files.FilesManager;
 import io.github.project.openubl.xsender.idm.*;
 import io.github.project.openubl.xsender.managers.CompanyManager;
 import io.github.project.openubl.xsender.managers.DocumentsManager;
-import io.github.project.openubl.xsender.models.ContextBean;
-import io.github.project.openubl.xsender.models.PageBean;
-import io.github.project.openubl.xsender.models.PageModel;
-import io.github.project.openubl.xsender.models.SortBean;
+import io.github.project.openubl.xsender.models.*;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
@@ -42,6 +39,7 @@ import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
@@ -85,21 +83,52 @@ public class DefaultCompanyResource implements CompanyResource {
     @Inject
     UserIdentity userIdentity;
 
+    @Inject
+    Event<CompanyEvent.Deleted> companyDeletedEvent;
+
+    @Inject
+    Event<CompanyEvent.Updated> companyUpdatedEvent;
+
     public CompanyRepresentation getCompany(String company) {
         CompanyEntity organizationEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         return EntityToRepresentation.toRepresentation(organizationEntity);
     }
 
     public CompanyRepresentation updateCompany(String company, CompanyRepresentation rep) {
-        CompanyEntity organizationEntity = companyRepository.findByName(company).orElseThrow(NotFoundException::new);
-        organizationEntity = companyManager.updateCompany(rep, organizationEntity);
-        return EntityToRepresentation.toRepresentation(organizationEntity);
+        CompanyEntity companyEntity = companyRepository.findByName(company).orElseThrow(NotFoundException::new);
+        CompanyEntity updatedCompanyEntity = companyManager.updateCompany(rep, companyEntity);
+
+        companyUpdatedEvent.fire(new CompanyEvent.Updated() {
+            @Override
+            public String getId() {
+                return updatedCompanyEntity.getId();
+            }
+
+            @Override
+            public String getOwner() {
+                return updatedCompanyEntity.getOwner();
+            }
+        });
+
+        return EntityToRepresentation.toRepresentation(updatedCompanyEntity);
     }
 
     @Override
     public void deleteCompany(@NotNull String company) {
         CompanyEntity companyEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         companyRepository.deleteById(companyEntity.getId());
+
+        companyDeletedEvent.fire(new CompanyEvent.Deleted() {
+            @Override
+            public String getId() {
+                return companyEntity.getId();
+            }
+
+            @Override
+            public String getOwner() {
+                return companyEntity.getOwner();
+            }
+        });
     }
 
     public void updateCompanySUNATCredentials(String org, SunatCredentialsRepresentation rep) {

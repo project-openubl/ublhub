@@ -28,6 +28,7 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.util.Date;
 import java.util.UUID;
 
 @Transactional
@@ -46,6 +47,7 @@ public class CompanyManager {
         companyEntity.setOwner(owner);
         companyEntity.setName(rep.getName().toLowerCase());
         companyEntity.setDescription(rep.getDescription());
+        companyEntity.setCreatedOn(new Date());
 
         if (rep.getWebServices() != null) {
             SunatUrlsEntity sunatUrlsEntity = new SunatUrlsEntity();

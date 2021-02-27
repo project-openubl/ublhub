@@ -33,6 +33,46 @@ quarkus:
         api:
           paths: /api/*
           policy: authenticated
+
+kafka:
+  bootstrap:
+    servers: localhost:9092
+
+
+mp:
+  messaging:
+    connector:
+      smallrye-kafka:
+        apicurio:
+          registry:
+            url: http://localhost:8081/api
+    outgoing:
+      entity-event:
+        connector: smallrye-kafka
+        topic: entity-event
+        value:
+          serializer: io.apicurio.registry.utils.serde.AvroKafkaSerializer
+        apicurio:
+          registry:
+            artifact-id: io.apicurio.registry.utils.serde.strategy.SimpleTopicIdStrategy
+            global-id: io.apicurio.registry.utils.serde.strategy.GetOrCreateIdStrategy
+            avro-datum-provider: io.apicurio.registry.utils.serde.avro.ReflectAvroDatumProvider
+    incoming:
+      entity-event-from-kafka:
+        connector: smallrye-kafka
+        topic: entity-event
+        value:
+          deserializer: io.apicurio.registry.utils.serde.AvroKafkaDeserializer
+        auto:
+          offset:
+            reset: earliest
+        enable:
+          auto:
+            commit: false
+        apicurio:
+          registry:
+            avro-datum-provider: io.apicurio.registry.utils.serde.avro.ReflectAvroDatumProvider
+
 openubl:
   event-manager:
     type: basic

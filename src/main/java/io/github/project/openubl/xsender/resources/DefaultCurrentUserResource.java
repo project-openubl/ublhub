@@ -1,13 +1,13 @@
 /**
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
- *
+ * <p>
  * Licensed under the Eclipse Public License - v 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * https://www.eclipse.org/legal/epl-2.0/
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,10 +19,7 @@ package io.github.project.openubl.xsender.resources;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
 import io.github.project.openubl.xsender.managers.CompanyManager;
-import io.github.project.openubl.xsender.models.ContextBean;
-import io.github.project.openubl.xsender.models.PageBean;
-import io.github.project.openubl.xsender.models.PageModel;
-import io.github.project.openubl.xsender.models.SortBean;
+import io.github.project.openubl.xsender.models.*;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
@@ -32,6 +29,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.InternalServerErrorException;
@@ -57,6 +55,9 @@ public class DefaultCurrentUserResource implements CurrentUserResource {
     @Inject
     CompanyManager companyManager;
 
+    @Inject
+    Event<CompanyEvent.Created> companyCreatedEvent;
+
     @Override
     public Response createCompany(CompanyRepresentation rep) {
         if (companyRepository.findByName(rep.getName()).isPresent()) {
@@ -65,9 +66,22 @@ public class DefaultCurrentUserResource implements CurrentUserResource {
                     .build();
         }
 
-        CompanyEntity company = companyManager.createCompany(userIdentity.getUsername(), rep);
+        CompanyEntity companyEntity = companyManager.createCompany(userIdentity.getUsername(), rep);
+
+        companyCreatedEvent.fire(new CompanyEvent.Created() {
+            @Override
+            public String getId() {
+                return companyEntity.getId();
+            }
+
+            @Override
+            public String getOwner() {
+                return companyEntity.getOwner();
+            }
+        });
+
         return Response.ok()
-                .entity(EntityToRepresentation.toRepresentation(company))
+                .entity(EntityToRepresentation.toRepresentation(companyEntity))
                 .build();
     }
 
