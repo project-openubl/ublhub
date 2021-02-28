@@ -17,7 +17,6 @@
 package io.github.project.openubl.xsender.basic.resources.config;
 
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
-import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -25,33 +24,29 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import java.util.Collections;
 import java.util.Map;
 
-public class KeycloakServer implements QuarkusTestResourceLifecycleManager {
+public class ApicurioRegistryServer implements QuarkusTestResourceLifecycleManager {
 
-    private GenericContainer keycloak;
+    private GenericContainer apicurio;
 
     @Override
     public Map<String, String> start() {
-        keycloak = new GenericContainer("quay.io/keycloak/keycloak:" + System.getProperty("keycloak.version", "12.0.3"))
+        apicurio = new GenericContainer("quay.io/apicurio/apicurio-registry-mem:" + System.getProperty("apicurio.version", "1.3.2.Final"))
                 .withExposedPorts(8080)
-                .withEnv("DB_VENDOR", "H2")
-                .withEnv("KEYCLOAK_USER", "admin")
-                .withEnv("KEYCLOAK_PASSWORD", "admin")
-                .withEnv("KEYCLOAK_IMPORT", "/tmp/realm.json")
-                .withClasspathResourceMapping("openubl-realm.json", "/tmp/realm.json", BindMode.READ_ONLY)
-                .waitingFor(Wait.forHttp("/auth"));
-        keycloak.start();
+                .withEnv("QUARKUS_PROFILE", "prod")
+                .waitingFor(Wait.forHttp("/ui"));
+        apicurio.start();
 
-        String host = keycloak.getHost();
-        Integer port = keycloak.getMappedPort(8080);
+        String host = apicurio.getHost();
+        Integer port = apicurio.getMappedPort(8080);
 
         return Collections.singletonMap(
-                "quarkus.oidc.auth-server-url",
-                "http://" + host + ":" + port + "/auth/realms/openubl"
+                "mp.messaging.connector.smallrye-kafka.apicurio.registry.url",
+                "http://" + host + ":" + port
         );
     }
 
     @Override
     public void stop() {
-        keycloak.stop();
+        apicurio.stop();
     }
 }

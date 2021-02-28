@@ -1,16 +1,10 @@
 package io.github.project.openubl.xsender.websockets;
 
 import io.vertx.core.impl.ConcurrentHashSet;
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.json.bind.JsonbException;
-import javax.websocket.CloseReason;
 import javax.websocket.Session;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;

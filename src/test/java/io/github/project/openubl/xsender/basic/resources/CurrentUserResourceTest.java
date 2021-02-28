@@ -1,13 +1,13 @@
 /**
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
- *
+ * <p>
  * Licensed under the Eclipse Public License - v 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * https://www.eclipse.org/legal/epl-2.0/
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,9 +18,7 @@ package io.github.project.openubl.xsender.basic.resources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.project.openubl.xsender.basic.resources.config.BaseKeycloakTest;
-import io.github.project.openubl.xsender.basic.resources.config.KeycloakServer;
-import io.github.project.openubl.xsender.basic.resources.config.PostgreSQLServer;
+import io.github.project.openubl.xsender.basic.resources.config.*;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
@@ -34,6 +32,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -45,6 +44,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @QuarkusTest
 @QuarkusTestResource(KeycloakServer.class)
 @QuarkusTestResource(PostgreSQLServer.class)
+@QuarkusTestResource(KafkaServer.class)
+@QuarkusTestResource(ApicurioRegistryServer.class)
 public class CurrentUserResourceTest extends BaseKeycloakTest {
 
     @Inject
@@ -114,10 +115,13 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
                 .withSunatUrlPercepcionRetencion("https://e-factura.sunat.gob.pe/ol-ti-itemision-otroscpe-gem/billService?wsdl")
                 .build();
 
+        long currentTime = new Date().getTime();
+
         CompanyEntity company1 = CompanyEntity.Builder.aCompanyEntity()
                 .withId(UUID.randomUUID().toString())
                 .withName("my-company1")
                 .withOwner("alice")
+                .withCreatedOn(new Date(currentTime))
                 .withSunatCredentials(credentials)
                 .withSunatUrls(urls)
                 .build();
@@ -125,6 +129,7 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
                 .withId(UUID.randomUUID().toString())
                 .withName("my-company2")
                 .withOwner("alice")
+                .withCreatedOn(new Date(currentTime + 9_000L))
                 .withSunatCredentials(credentials)
                 .withSunatUrls(urls)
                 .build();
@@ -132,6 +137,7 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
                 .withId(UUID.randomUUID().toString())
                 .withName("my-company3")
                 .withOwner("anotherUser")
+                .withCreatedOn(new Date(currentTime + 18_000L))
                 .withSunatCredentials(credentials)
                 .withSunatUrls(urls)
                 .build();
@@ -153,8 +159,8 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
                         "links.next", is(nullValue()),
                         "links.previous", is(nullValue()),
                         "data.size()", is(2),
-                        "data[0].name", is("my-company1"),
-                        "data[1].name", is("my-company2")
+                        "data[0].name", is("my-company2"),
+                        "data[1].name", is("my-company1")
                 );
     }
 }

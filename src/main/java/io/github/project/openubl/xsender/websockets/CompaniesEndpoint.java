@@ -1,17 +1,12 @@
 package io.github.project.openubl.xsender.websockets;
 
-import io.github.project.openubl.xsender.models.EntityEvent;
 import io.github.project.openubl.xsender.events.EntityEventProvider;
+import io.github.project.openubl.xsender.models.EntityEvent;
 import io.github.project.openubl.xsender.models.EntityType;
-import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
-import javax.enterprise.event.TransactionPhase;
-import javax.inject.Inject;
-import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.websocket.OnClose;

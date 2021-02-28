@@ -33,11 +33,13 @@ quarkus:
         api:
           paths: /api/*
           policy: authenticated
+  kafka:
+    health:
+      enabled: true
 
 kafka:
   bootstrap:
     servers: localhost:9092
-
 
 mp:
   messaging:
@@ -45,7 +47,7 @@ mp:
       smallrye-kafka:
         apicurio:
           registry:
-            url: http://localhost:8081/api
+            url: http://localhost:8280/api
     outgoing:
       entity-event:
         connector: smallrye-kafka
@@ -68,7 +70,7 @@ mp:
             reset: earliest
         enable:
           auto:
-            commit: false
+            commit: true
         apicurio:
           registry:
             avro-datum-provider: io.apicurio.registry.utils.serde.avro.ReflectAvroDatumProvider

@@ -7,7 +7,6 @@ import io.github.project.openubl.xsender.models.EventType;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.vertx.core.impl.ConcurrentHashSet;
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;

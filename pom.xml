@@ -39,8 +39,8 @@
         <!--Quarkus-->
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
-        <quarkus.platform.version>1.11.2.Final</quarkus.platform.version>
-        <quarkus-plugin.version>1.11.2.Final</quarkus-plugin.version>
+        <quarkus.platform.version>1.11.5.Final</quarkus.platform.version>
+        <quarkus-plugin.version>1.11.5.Final</quarkus-plugin.version>
 
         <!--plugings-->
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
@@ -50,8 +50,11 @@
         <xsender-lib.version>3.0.1.Final</xsender-lib.version>
         <testcontainers.version>1.15.2</testcontainers.version>
         <awaitility.version>4.0.3</awaitility.version>
-        <keycloak.version>12.0.1</keycloak.version>
+        <keycloak.version>12.0.3</keycloak.version>
         <postgresql.version>13.1</postgresql.version>
+
+        <apicurio.version>1.3.2.Final</apicurio.version>
+        <quarkiverse.apicurio.version>0.0.1</quarkiverse.apicurio.version>
 
         <license.dir>${basedir}</license.dir>
     </properties>
@@ -195,9 +198,15 @@
         </dependency>
 
         <dependency>
+            <groupId>io.quarkiverse.apicurio</groupId>
+            <artifactId>quarkiverse-apicurio-registry-client</artifactId>
+            <version>${quarkiverse.apicurio.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>io.apicurio</groupId>
             <artifactId>apicurio-registry-utils-serde</artifactId>
-            <version>1.3.2.Final</version>
+            <version>${apicurio.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.jboss.spec.javax.interceptor</groupId>
@@ -262,6 +271,12 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>kafka</artifactId>
             <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>

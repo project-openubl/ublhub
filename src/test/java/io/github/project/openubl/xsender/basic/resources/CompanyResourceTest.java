@@ -1,13 +1,13 @@
 /**
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
- *
+ * <p>
  * Licensed under the Eclipse Public License - v 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * https://www.eclipse.org/legal/epl-2.0/
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,9 +16,7 @@
  */
 package io.github.project.openubl.xsender.basic.resources;
 
-import io.github.project.openubl.xsender.basic.resources.config.BaseKeycloakTest;
-import io.github.project.openubl.xsender.basic.resources.config.KeycloakServer;
-import io.github.project.openubl.xsender.basic.resources.config.PostgreSQLServer;
+import io.github.project.openubl.xsender.basic.resources.config.*;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
@@ -29,6 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,6 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @QuarkusTest
 @QuarkusTestResource(KeycloakServer.class)
 @QuarkusTestResource(PostgreSQLServer.class)
+@QuarkusTestResource(KafkaServer.class)
+@QuarkusTestResource(ApicurioRegistryServer.class)
 public class CompanyResourceTest extends BaseKeycloakTest {
 
     @Inject
@@ -70,6 +71,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .withId(UUID.randomUUID().toString())
                 .withName(COMPANY_NAME)
                 .withOwner("alice")
+                .withCreatedOn(new Date())
                 .withSunatCredentials(credentials)
                 .withSunatUrls(urls)
                 .build();
@@ -125,6 +127,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .withId(UUID.randomUUID().toString())
                 .withName(COMPANY_NAME)
                 .withOwner("someUser")
+                .withCreatedOn(new Date())
                 .withSunatCredentials(credentials)
                 .withSunatUrls(urls)
                 .build();
@@ -163,6 +166,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .withId(UUID.randomUUID().toString())
                 .withName(COMPANY_NAME)
                 .withOwner("alice")
+                .withCreatedOn(new Date())
                 .withSunatCredentials(credentials)
                 .withSunatUrls(urls)
                 .build();
@@ -221,6 +225,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .withId(UUID.randomUUID().toString())
                 .withName(COMPANY_NAME)
                 .withOwner("someUser")
+                .withCreatedOn(new Date())
                 .withSunatCredentials(credentials)
                 .withSunatUrls(urls)
                 .build();
