@@ -66,6 +66,9 @@ public class DefaultCompanyResource implements CompanyResource {
     UriInfo uriInfo;
 
     @Inject
+    UserIdentity userIdentity;
+
+    @Inject
     CompanyRepository companyRepository;
 
     @Inject
@@ -81,21 +84,23 @@ public class DefaultCompanyResource implements CompanyResource {
     CompanyManager companyManager;
 
     @Inject
-    UserIdentity userIdentity;
-
-    @Inject
     Event<CompanyEvent.Deleted> companyDeletedEvent;
 
     @Inject
     Event<CompanyEvent.Updated> companyUpdatedEvent;
 
+    @Inject
+    Event<DocumentEntityEvent.Created> documentCreatedEvent;
+
+    @Override
     public CompanyRepresentation getCompany(String company) {
         CompanyEntity organizationEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         return EntityToRepresentation.toRepresentation(organizationEntity);
     }
 
+    @Override
     public CompanyRepresentation updateCompany(String company, CompanyRepresentation rep) {
-        CompanyEntity companyEntity = companyRepository.findByName(company).orElseThrow(NotFoundException::new);
+        CompanyEntity companyEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         CompanyEntity updatedCompanyEntity = companyManager.updateCompany(rep, companyEntity);
 
         companyUpdatedEvent.fire(new CompanyEvent.Updated() {
@@ -114,7 +119,7 @@ public class DefaultCompanyResource implements CompanyResource {
     }
 
     @Override
-    public void deleteCompany(@NotNull String company) {
+    public void deleteCompany(String company) {
         CompanyEntity companyEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         companyRepository.deleteById(companyEntity.getId());
 
@@ -131,9 +136,22 @@ public class DefaultCompanyResource implements CompanyResource {
         });
     }
 
-    public void updateCompanySUNATCredentials(String org, SunatCredentialsRepresentation rep) {
-        CompanyEntity organizationEntity = companyRepository.findByName(org).orElseThrow(NoClassDefFoundError::new);
-        companyManager.updateCorporateCredentials(rep, organizationEntity);
+    @Override
+    public void updateCompanySUNATCredentials(String company, SunatCredentialsRepresentation rep) {
+        CompanyEntity companyEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NoClassDefFoundError::new);
+        companyManager.updateCorporateCredentials(rep, companyEntity);
+
+        companyUpdatedEvent.fire(new CompanyEvent.Updated() {
+            @Override
+            public String getId() {
+                return companyEntity.getId();
+            }
+
+            @Override
+            public String getOwner() {
+                return companyEntity.getOwner();
+            }
+        });
     }
 
     @Override
@@ -174,7 +192,7 @@ public class DefaultCompanyResource implements CompanyResource {
 
     @Override
     public Response createDocument(@NotNull String company, MultipartFormDataInput input) {
-        CompanyEntity companyEntity = companyRepository.findByName(company).orElseThrow(NotFoundException::new);
+        CompanyEntity companyEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
 
         //
 
@@ -206,6 +224,18 @@ public class DefaultCompanyResource implements CompanyResource {
         UBLDocumentEntity documentEntity;
         try {
             documentEntity = documentsManager.createDocumentAndScheduleDelivery(companyEntity, xmlFile);
+
+            documentCreatedEvent.fire(new DocumentEntityEvent.Created() {
+                @Override
+                public String getId() {
+                    return documentEntity.getId();
+                }
+
+                @Override
+                public String getOwner() {
+                    return userIdentity.getUsername();
+                }
+            });
         } catch (InvalidXMLFileException e) {
             LOG.error(e);
             ErrorRepresentation error = new ErrorRepresentation("Form[file] is not a valid XML file or is corrupted");

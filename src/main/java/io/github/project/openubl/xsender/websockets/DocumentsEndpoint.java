@@ -15,11 +15,11 @@ import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import java.util.Collections;
 
-@ServerEndpoint("/companies")
+@ServerEndpoint("/documents")
 @ApplicationScoped
-public class CompaniesEndpoint extends AbstractEndpoint {
+public class DocumentsEndpoint extends AbstractEndpoint {
 
-    private static final Logger LOG = Logger.getLogger(CompaniesEndpoint.class);
+    private static final Logger LOG = Logger.getLogger(DocumentsEndpoint.class);
 
     @OnMessage
     public void onMessage(String message, Session session) {
@@ -31,13 +31,13 @@ public class CompaniesEndpoint extends AbstractEndpoint {
         handleOnClose(session);
     }
 
-    public void onCompanyEvent(@Observes @EntityEventProvider(EntityType.COMPANY) EntityEvent event) {
-        String companyOwner = event.getOwner();
+    public void onDocumentEvent(@Observes @EntityEventProvider(EntityType.DOCUMENT) EntityEvent event) {
+        String owner = event.getOwner();
 
         Jsonb jsonb = JsonbBuilder.create();
         String message = jsonb.toJson(event);
 
-        userSessions.getOrDefault(companyOwner, Collections.emptySet()).forEach(session -> {
+        userSessions.getOrDefault(owner, Collections.emptySet()).forEach(session -> {
             session.getAsyncRemote().sendObject(message, result -> {
                 if (result.getException() != null) {
                     LOG.error("Unable to send message ", result.getException());

@@ -18,6 +18,10 @@ public class EntityEventKafkaConsumer {
     @EntityEventProvider(EntityType.COMPANY)
     Event<EntityEvent> companyEvent;
 
+    @Inject
+    @EntityEventProvider(EntityType.DOCUMENT)
+    Event<EntityEvent> documentEvent;
+
     @Incoming("entity-event-from-kafka")
     public void receive(EntityEventKafka eventKafka) {
         EntityType entityType = EntityType.valueOf(eventKafka.getType());
@@ -36,7 +40,8 @@ public class EntityEventKafkaConsumer {
                 companyEvent.fire(event);
                 break;
             case DOCUMENT:
-                throw new IllegalStateException("Not supported yet");
+                documentEvent.fire(event);
+                break;
             default:
                 System.out.println(eventKafka);
         }

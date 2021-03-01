@@ -302,7 +302,8 @@
                         </goals>
                         <configuration>
                             <sourceDirectory>src/main/avro</sourceDirectory>
-                            <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>
+<!--                            <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>-->
+                            <outputDirectory>${project.basedir}/src/main/java</outputDirectory>
                             <stringType>String</stringType>
                         </configuration>
                     </execution>

@@ -1,9 +1,7 @@
 package io.github.project.openubl.xsender.events;
 
 import io.github.project.openubl.xsender.kafka.EntityEventKafkaProducer;
-import io.github.project.openubl.xsender.models.CompanyEvent;
-import io.github.project.openubl.xsender.models.EntityType;
-import io.github.project.openubl.xsender.models.EventType;
+import io.github.project.openubl.xsender.models.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
@@ -16,16 +14,29 @@ public class EntityEventManager {
     @Inject
     EntityEventKafkaProducer kafkaProducer;
 
-    public void onDocumentCreate(@Observes(during = TransactionPhase.AFTER_SUCCESS) CompanyEvent.Created event) {
+    public void onCompanyCreate(@Observes(during = TransactionPhase.AFTER_SUCCESS) CompanyEvent.Created event) {
         kafkaProducer.broadcast(EntityType.COMPANY, event.getId(), EventType.CREATED, event.getOwner());
     }
 
-    public void onDocumentUpdate(@Observes(during = TransactionPhase.AFTER_SUCCESS) CompanyEvent.Updated event) {
+    public void onCompanyUpdate(@Observes(during = TransactionPhase.AFTER_SUCCESS) CompanyEvent.Updated event) {
         kafkaProducer.broadcast(EntityType.COMPANY, event.getId(), EventType.UPDATED, event.getOwner());
     }
 
-    public void onDocumentDelete(@Observes(during = TransactionPhase.AFTER_SUCCESS) CompanyEvent.Deleted event) {
+    public void onCompanyDelete(@Observes(during = TransactionPhase.AFTER_SUCCESS) CompanyEvent.Deleted event) {
         kafkaProducer.broadcast(EntityType.COMPANY, event.getId(), EventType.DELETED, event.getOwner());
+    }
+
+
+    public void onDocumentCreate(@Observes(during = TransactionPhase.AFTER_SUCCESS) DocumentEntityEvent.Created event) {
+        kafkaProducer.broadcast(EntityType.DOCUMENT, event.getId(), EventType.CREATED, event.getOwner());
+    }
+
+    public void onDocumentUpdate(@Observes(during = TransactionPhase.AFTER_SUCCESS) DocumentEntityEvent.Updated event) {
+        kafkaProducer.broadcast(EntityType.DOCUMENT, event.getId(), EventType.UPDATED, event.getOwner());
+    }
+
+    public void onDocumentDelete(@Observes(during = TransactionPhase.AFTER_SUCCESS) DocumentEntityEvent.Deleted event) {
+        kafkaProducer.broadcast(EntityType.DOCUMENT, event.getId(), EventType.DELETED, event.getOwner());
     }
 
 }

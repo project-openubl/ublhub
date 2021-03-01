@@ -70,7 +70,7 @@ mp:
             reset: earliest
         enable:
           auto:
-            commit: true
+            commit: false
         apicurio:
           registry:
             avro-datum-provider: io.apicurio.registry.utils.serde.avro.ReflectAvroDatumProvider

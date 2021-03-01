@@ -21,7 +21,7 @@ public abstract class AbstractEndpoint {
     @Inject
     KeycloakAuthenticator keycloakAuthenticator;
 
-    public Optional<UserInfo> handleOnMessage(String message, Session session) {
+    public void handleOnMessage(String message, Session session) {
         Optional<UserInfo> userInfoOptional = keycloakAuthenticator.authenticate(message, session);
         userInfoOptional.ifPresent(userInfo -> {
             sessions.put(session, userInfo.getPreferred_username());
@@ -31,8 +31,6 @@ public abstract class AbstractEndpoint {
             }
             userSessions.get(userInfo.getPreferred_username()).add(session);
         });
-
-        return userInfoOptional;
     }
 
     public void handleOnClose(Session session) {
