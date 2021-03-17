@@ -271,7 +271,7 @@ mp:
 
 openubl:
   storage:
-    type: filesystem
+    type: s3
     filesystem:
       folder: target/xsender-server-storage
     s3:
