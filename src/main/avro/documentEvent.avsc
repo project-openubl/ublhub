@@ -1,0 +1,19 @@
+{
+  "namespace": "io.github.project.openubl.xsender.avro",
+  "type": "record",
+  "name": "DocumentEventKafka",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "event",
+      "type": "string"
+    },
+    {
+      "name": "company",
+      "type": "string"
+    }
+  ]
+}

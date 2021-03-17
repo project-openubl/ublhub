@@ -16,9 +16,7 @@
  */
 package io.github.project.openubl.xsender.resources;
 
-import io.github.project.openubl.xsender.exceptions.InvalidXMLFileException;
 import io.github.project.openubl.xsender.exceptions.StorageException;
-import io.github.project.openubl.xsender.exceptions.UnsupportedDocumentTypeException;
 import io.github.project.openubl.xsender.files.FilesManager;
 import io.github.project.openubl.xsender.idm.*;
 import io.github.project.openubl.xsender.managers.CompanyManager;
@@ -90,7 +88,7 @@ public class DefaultCompanyResource implements CompanyResource {
     Event<CompanyEvent.Updated> companyUpdatedEvent;
 
     @Inject
-    Event<DocumentEntityEvent.Created> documentCreatedEvent;
+    Event<DocumentEvent.Created> documentCreatedEvent;
 
     @Override
     public CompanyRepresentation getCompany(String company) {
@@ -225,24 +223,17 @@ public class DefaultCompanyResource implements CompanyResource {
         try {
             documentEntity = documentsManager.createDocumentAndScheduleDelivery(companyEntity, xmlFile);
 
-            documentCreatedEvent.fire(new DocumentEntityEvent.Created() {
+            documentCreatedEvent.fire(new DocumentEvent.Created() {
                 @Override
                 public String getId() {
                     return documentEntity.getId();
                 }
 
                 @Override
-                public String getOwner() {
-                    return userIdentity.getUsername();
+                public String getCompanyId() {
+                    return documentEntity.getCompany().getId();
                 }
             });
-        } catch (InvalidXMLFileException e) {
-            LOG.error(e);
-            ErrorRepresentation error = new ErrorRepresentation("Form[file] is not a valid XML file or is corrupted");
-            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
-        } catch (UnsupportedDocumentTypeException e) {
-            ErrorRepresentation error = new ErrorRepresentation(e.getMessage());
-            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
         } catch (StorageException e) {
             LOG.error(e);
             ErrorRepresentation error = new ErrorRepresentation(e.getMessage());
@@ -270,7 +261,7 @@ public class DefaultCompanyResource implements CompanyResource {
         return Response.ok(file)
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + documentEntity.getFilename() + ".xml" + "\""
+                        "attachment; filename=\"" + documentEntity.getDocumentID() + ".xml" + "\""
                 )
                 .build();
     }
@@ -299,7 +290,7 @@ public class DefaultCompanyResource implements CompanyResource {
         return Response.ok(file)
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + documentEntity.getFilename() + ".zip" + "\""
+                        "attachment; filename=\"" + documentEntity.getDocumentType() + ".zip" + "\""
                 )
                 .build();
     }

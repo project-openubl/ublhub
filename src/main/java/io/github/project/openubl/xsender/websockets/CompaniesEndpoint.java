@@ -1,12 +1,15 @@
 package io.github.project.openubl.xsender.websockets;
 
-import io.github.project.openubl.xsender.events.EntityEventProvider;
-import io.github.project.openubl.xsender.models.EntityEvent;
+import io.github.project.openubl.xsender.avro.CompanyEventKafka;
 import io.github.project.openubl.xsender.models.EntityType;
+import io.github.project.openubl.xsender.models.EventType;
+import io.github.project.openubl.xsender.websockets.idm.EventMessage;
+import io.github.project.openubl.xsender.websockets.idm.EventSpec;
+import io.github.project.openubl.xsender.websockets.idm.TypeMessage;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.websocket.OnClose;
@@ -31,14 +34,24 @@ public class CompaniesEndpoint extends AbstractEndpoint {
         handleOnClose(session);
     }
 
-    public void onCompanyEvent(@Observes @EntityEventProvider(EntityType.COMPANY) EntityEvent event) {
+    @Incoming("incoming-company-event")
+    public void companyEvents(CompanyEventKafka event) {
         String companyOwner = event.getOwner();
 
-        Jsonb jsonb = JsonbBuilder.create();
-        String message = jsonb.toJson(event);
+        EventMessage message = EventMessage.Builder.anEventMessage()
+                .withType(TypeMessage.EVENT)
+                .withSpec(EventSpec.Builder.anEventSpec()
+                        .withEntity(EntityType.COMPANY)
+                        .withId(event.getId())
+                        .withEvent(EventType.valueOf(event.getEvent()))
+                        .build()
+                )
+                .build();
+
+        String jsonMessage = JsonbBuilder.create().toJson(message);
 
         userSessions.getOrDefault(companyOwner, Collections.emptySet()).forEach(session -> {
-            session.getAsyncRemote().sendObject(message, result -> {
+            session.getAsyncRemote().sendObject(jsonMessage, result -> {
                 if (result.getException() != null) {
                     LOG.error("Unable to send message ", result.getException());
                 }

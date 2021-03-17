@@ -1,6 +1,6 @@
 package io.github.project.openubl.xsender.websockets;
 
-import io.github.project.openubl.xsender.events.EntityEventProvider;
+import io.github.project.openubl.xsender.models.EntityEventProvider;
 import io.github.project.openubl.xsender.models.EntityEvent;
 import io.github.project.openubl.xsender.models.EntityType;
 import io.github.project.openubl.xsender.models.EventType;

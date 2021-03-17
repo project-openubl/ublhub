@@ -39,15 +39,15 @@
         <!--Quarkus-->
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
-        <quarkus.platform.version>1.11.5.Final</quarkus.platform.version>
-        <quarkus-plugin.version>1.11.5.Final</quarkus-plugin.version>
+        <quarkus.platform.version>1.12.2.Final</quarkus.platform.version>
+        <quarkus-plugin.version>1.12.2.Final</quarkus-plugin.version>
 
         <!--plugings-->
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
         <surefire-plugin.version>2.22.1</surefire-plugin.version>
 
         <!--libs-->
-        <xsender-lib.version>3.0.1.Final</xsender-lib.version>
+        <xsender-lib.version>3.0.3.Final</xsender-lib.version>
         <testcontainers.version>1.15.2</testcontainers.version>
         <awaitility.version>4.0.3</awaitility.version>
         <keycloak.version>12.0.3</keycloak.version>
@@ -128,6 +128,11 @@
             <artifactId>xsender</artifactId>
             <version>${xsender-lib.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
 
         <!--Quarkus-->
         <dependency>
@@ -143,10 +148,6 @@
             <artifactId>quarkus-container-image-docker</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-resteasy</artifactId>
-        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-jsonb</artifactId>
@@ -167,18 +168,12 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-agroal</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-artemis-jms</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-quartz</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-health</artifactId>
         </dependency>
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-oidc</artifactId>
@@ -186,6 +181,10 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-undertow-websockets</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-flyway</artifactId>
         </dependency>
 
         <dependency>
@@ -244,16 +243,7 @@
         <!--Jdbc-->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-h2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-postgresql</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-test-h2</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <!--Test-->

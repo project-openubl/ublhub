@@ -27,17 +27,17 @@ public class SunatUrlsEntity {
 
     @NotNull
     @URL
-    @Column(name = "SUNAT_URL_FACTURA")
+    @Column(name = "sunat_url_factura")
     private String sunatUrlFactura;
 
     @NotNull
     @URL
-    @Column(name = "SUNAT_URL_GUIA_REMISION")
+    @Column(name = "sunat_url_guia_remision")
     private String sunatUrlGuiaRemision;
 
     @NotNull
     @URL
-    @Column(name = "SUNAT_URL_PERCEPCION_RETENCION")
+    @Column(name = "sunat_url_percepcion_retencion")
     private String sunatUrlPercepcionRetencion;
 
     public String getSunatUrlFactura() {

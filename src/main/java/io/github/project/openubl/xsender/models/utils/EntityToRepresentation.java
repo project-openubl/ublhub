@@ -20,12 +20,14 @@ import io.github.project.openubl.xsender.idm.*;
 import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEventEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
 
 import javax.ws.rs.core.UriInfo;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -65,34 +67,42 @@ public class EntityToRepresentation {
         DocumentRepresentation rep = new DocumentRepresentation();
 
         rep.setId(entity.getId());
-        rep.setCdrID(entity.getStorageCdr());
-        rep.setFileID(entity.getStorageFile());
-        rep.setDeliveryStatus(entity.getDeliveryStatus().toString());
 
-        //
+        rep.setCreatedOn(entity.getCreatedOn().getTime());
+        rep.setRetries(entity.getRetries());
+        rep.setWillRetryOn(entity.getWillRetryOn());
 
-        DocumentRepresentation.FileInfoRepresentation fileInfoRep = new DocumentRepresentation.FileInfoRepresentation();
-        rep.setFileInfo(fileInfoRep);
+        // File
 
-        fileInfoRep.setRuc(entity.getRuc());
-        fileInfoRep.setDocumentID(entity.getDocumentID());
-        fileInfoRep.setDocumentType(entity.getDocumentType().getType());
-        fileInfoRep.setFilename(entity.getFilename());
+        rep.setFileContentValid(entity.getValid());
+        rep.setFileContentValidationError(entity.getValidationError());
 
-        //
+        rep.setFileContent(new DocumentContentRepresentation());
+        rep.getFileContent().setRuc(entity.getRuc());
+        rep.getFileContent().setDocumentID(entity.getDocumentID());
+        rep.getFileContent().setDocumentType(entity.getDocumentType());
 
-        DocumentRepresentation.SunatSecurityCredentialsRepresentation sunatCredentialsRep = new DocumentRepresentation.SunatSecurityCredentialsRepresentation();
-        rep.setSunatCredentials(sunatCredentialsRep);
+        // Sunat
 
-        //
+        rep.setSunatDeliveryStatus(entity.getDeliveryStatus().toString());
+        rep.setSunat(new DocumentSunatStatusRepresentation());
 
-        DocumentRepresentation.SunatStatusRepresentation sunatStatus = new DocumentRepresentation.SunatStatusRepresentation();
-        rep.setSunatStatus(sunatStatus);
+        rep.getSunat().setCode(entity.getSunatCode());
+        rep.getSunat().setTicket(entity.getSunatTicket());
+        rep.getSunat().setStatus(entity.getSunatStatus());
+        rep.getSunat().setDescription(entity.getSunatDescription());
 
-        sunatStatus.setCode(entity.getSunatCode());
-        sunatStatus.setTicket(entity.getSunatTicket());
-        sunatStatus.setStatus(entity.getSunatStatus());
-        sunatStatus.setDescription(entity.getSunatDescription());
+        // Events
+
+        List<DocumentSunatEventRepresentation> eventsRepresentation = entity.getSunatEvents().stream().map(f -> {
+            DocumentSunatEventRepresentation e = new DocumentSunatEventRepresentation();
+            e.setDescription(f.getDescription());
+            e.setStatus(f.getStatus().toString());
+            e.setCreatedOn(f.getCreatedOn().getTime());
+            return e;
+        }).collect(Collectors.toList());
+
+        rep.setSunatEvents(eventsRepresentation);
 
         return rep;
     }

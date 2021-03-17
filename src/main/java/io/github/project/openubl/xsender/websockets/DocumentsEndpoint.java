@@ -1,44 +1,131 @@
 package io.github.project.openubl.xsender.websockets;
 
-import io.github.project.openubl.xsender.events.EntityEventProvider;
-import io.github.project.openubl.xsender.models.EntityEvent;
+import io.github.project.openubl.xsender.avro.DocumentEventKafka;
 import io.github.project.openubl.xsender.models.EntityType;
+import io.github.project.openubl.xsender.models.EventType;
+import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
+import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.websockets.idm.EventMessage;
+import io.github.project.openubl.xsender.websockets.idm.EventSpec;
+import io.github.project.openubl.xsender.websockets.idm.TypeMessage;
+import io.smallrye.common.annotation.Blocking;
+import io.vertx.core.impl.ConcurrentHashSet;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.context.ManagedExecutor;
+import org.eclipse.microprofile.context.ThreadContext;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.json.bind.Jsonb;
+import javax.inject.Inject;
 import javax.json.bind.JsonbBuilder;
+import javax.transaction.Transactional;
+import javax.websocket.CloseReason;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.Session;
+import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import java.io.IOException;
 import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-@ServerEndpoint("/documents")
+@ServerEndpoint("/companies/{companyName}/documents")
 @ApplicationScoped
-public class DocumentsEndpoint extends AbstractEndpoint {
+public class DocumentsEndpoint {
 
     private static final Logger LOG = Logger.getLogger(DocumentsEndpoint.class);
 
+    protected static final Map<Session, String> sessions = new ConcurrentHashMap<>();
+    protected static final Map<String, Set<Session>> companySessions = new ConcurrentHashMap<>();
+
+    @Inject
+    CompanyRepository companyRepository;
+
+    @Inject
+    KeycloakAuthenticator keycloakAuthenticator;
+
+
+    @Transactional
+    @Blocking
     @OnMessage
-    public void onMessage(String message, Session session) {
-        handleOnMessage(message, session);
+    public void onMessage(String message, Session session, @PathParam("companyName") String companyName) {
+        Optional<UserInfo> userInfoOptional = keycloakAuthenticator.authenticate(message, session);
+
+
+        if (userInfoOptional.isPresent()) {
+            UserInfo userInfo = userInfoOptional.get();
+
+            //TODO: move to CDI producer
+            ManagedExecutor executor = ManagedExecutor.builder()
+                    .maxAsync(5)
+                    .propagated(ThreadContext.CDI, ThreadContext.TRANSACTION)
+                    .build();
+
+            //TODO: move to CDI producer
+            ThreadContext threadContext = ThreadContext.builder()
+                    .propagated(ThreadContext.CDI, ThreadContext.TRANSACTION)
+                    .build();
+
+            executor.runAsync(threadContext.contextualRunnable(() -> {
+                Optional<CompanyEntity> companyOptional = companyRepository.findByNameAndOwner(companyName, userInfo.getPreferred_username());
+                if (companyOptional.isPresent()) {
+                    CompanyEntity companyEntity = companyOptional.get();
+                    sessions.put(session, companyEntity.getId());
+
+                    if (!companySessions.containsKey(companyEntity.getId())) {
+                        companySessions.put(companyEntity.getId(), new ConcurrentHashSet<>());
+                    }
+                    companySessions.get(companyEntity.getId()).add(session);
+                } else {
+                    try {
+                        String errorMessage = "Unauthorized websocket";
+
+                        // Shorten the message to meet the standards for "CloseReason" (only allows 122 chars)
+                        if (StringUtils.isNotBlank(errorMessage) && errorMessage.length() >= 122) {
+                            errorMessage = errorMessage.substring(0, 122);
+                        }
+
+                        session.close(new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, errorMessage));
+                    } catch (IOException e1) {
+                        LOG.warn(e1.getMessage());
+                    }
+                }
+            }));
+        }
+
     }
 
     @OnClose
     public void onClose(Session session) {
-        handleOnClose(session);
+        String companyId = sessions.get(session);
+        if (companyId != null) {
+            sessions.remove(session);
+            companySessions.getOrDefault(companyId, Collections.emptySet()).remove(session);
+        }
     }
 
-    public void onDocumentEvent(@Observes @EntityEventProvider(EntityType.DOCUMENT) EntityEvent event) {
-        String owner = event.getOwner();
+    @Incoming("incoming-document-event")
+    public void companyEvents(DocumentEventKafka event) {
+        String companyId = event.getCompany();
 
-        Jsonb jsonb = JsonbBuilder.create();
-        String message = jsonb.toJson(event);
+        EventMessage message = EventMessage.Builder.anEventMessage()
+                .withType(TypeMessage.EVENT)
+                .withSpec(EventSpec.Builder.anEventSpec()
+                        .withEntity(EntityType.DOCUMENT)
+                        .withId(event.getId())
+                        .withEvent(EventType.valueOf(event.getEvent()))
+                        .build()
+                )
+                .build();
 
-        userSessions.getOrDefault(owner, Collections.emptySet()).forEach(session -> {
-            session.getAsyncRemote().sendObject(message, result -> {
+        String jsonMessage = JsonbBuilder.create().toJson(message);
+
+        companySessions.getOrDefault(companyId, Collections.emptySet()).forEach(session -> {
+            session.getAsyncRemote().sendObject(jsonMessage, result -> {
                 if (result.getException() != null) {
                     LOG.error("Unable to send message ", result.getException());
                 }

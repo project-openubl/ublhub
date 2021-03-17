@@ -32,23 +32,24 @@ import java.util.Objects;
 public class CompanyEntity extends PanacheEntityBase {
 
     @Id
-    @Column(name = "ID")
+    @Column(name = "id")
     @Access(AccessType.PROPERTY)
     private String id;
 
     @NotNull
-    @Column(name = "OWNER")
+    @Column(name = "owner")
     private String owner;
 
     @Pattern(regexp = "[a-z0-9]([-a-z0-9]*[a-z0-9])?", message = "label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name', or '123-abc')")
     @NotNull
-    @Column(name = "NAME")
+    @Column(name = "name")
     private String name;
 
     private String description;
 
     @NotNull
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "created_on")
     private Date createdOn;
 
     @NotNull
@@ -62,7 +63,7 @@ public class CompanyEntity extends PanacheEntityBase {
     private SunatUrlsEntity sunatUrls;
 
     @Version
-    @Column(name = "VERSION")
+    @Column(name = "version")
     private int version;
 
     public String getId() {

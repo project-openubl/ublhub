@@ -19,12 +19,12 @@ package io.github.project.openubl.xsender.files.camel;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jgroups.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
 
 @ApplicationScoped
 public class FilesystemRoute extends RouteBuilder {

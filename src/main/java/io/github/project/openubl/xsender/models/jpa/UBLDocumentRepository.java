@@ -33,14 +33,10 @@ import java.util.List;
 @ApplicationScoped
 public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentEntity, String> {
 
-    public static final String[] SORT_BY_FIELDS = {"documentID"};
+    public static final String[] SORT_BY_FIELDS = {"createdOn"};
 
-    public List<UBLDocumentEntity> findAllScheduledToDeliver() {
-        return list("deliveryStatus", DeliveryStatusType.SCHEDULED_TO_DELIVER);
-    }
-
-    public List<UBLDocumentEntity> findAllSheduledToCheckTicket() {
-        return list("deliveryStatus", DeliveryStatusType.SCHEDULED_CHECK_TICKET);
+    public List<UBLDocumentEntity> findAllThatCouldNotBeDelivered() {
+        return list("deliveryStatus", DeliveryStatusType.COULD_NOT_BE_DELIVERED);
     }
 
     public PageModel<UBLDocumentEntity> list(CompanyEntity company, PageBean pageBean, List<SortBean> sortBy) {
