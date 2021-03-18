@@ -107,14 +107,7 @@ public class EntityToRepresentation {
         return rep;
     }
 
-    public static <T, R> PageRepresentation<R> toRepresentation(
-            PageModel<T> model,
-            Function<T, R> mapper,
-            UriInfo serverUriInfo,
-            List<NameValuePair> queryParameters
-    ) throws URISyntaxException {
-        queryParameters.removeIf(f -> f.getName().equals("offset")); // The offset will be set in the current method
-
+    public static <T, R> PageRepresentation<R> toRepresentation(PageModel<T> model, Function<T, R> mapper) {
         PageRepresentation<R> rep = new PageRepresentation<>();
 
         // Meta
@@ -122,62 +115,12 @@ public class EntityToRepresentation {
         rep.setMeta(repMeta);
 
         repMeta.setCount(model.getTotalElements());
-        repMeta.setOffset(model.getOffset());
-        repMeta.setLimit(model.getLimit());
 
         // Data
         rep.setData(model.getPageElements().stream()
                 .map(mapper)
                 .collect(Collectors.toList())
         );
-
-        // Links
-        queryParameters.add(new BasicNameValuePair("limit", String.valueOf(model.getLimit()))); // all links have same 'limit'
-
-        PageRepresentation.Links repLinks = new PageRepresentation.Links();
-        rep.setLinks(repLinks);
-
-        // Links first
-        URIBuilder uriBuilder = getURIBuilder(serverUriInfo);
-        uriBuilder.addParameter("offset", String.valueOf(0));
-        uriBuilder.addParameters(queryParameters);
-        repLinks.setFirst(uriBuilder.build().toString());
-
-        // Links last
-        long offsetLast;
-        long numberOfPages = model.getTotalElements() / model.getLimit();
-        offsetLast = numberOfPages * model.getLimit();
-        if (offsetLast == model.getTotalElements()) {
-            offsetLast = offsetLast - model.getLimit();
-        }
-
-        uriBuilder = getURIBuilder(serverUriInfo);
-        uriBuilder.addParameter("offset", String.valueOf(offsetLast));
-        uriBuilder.addParameters(queryParameters);
-        repLinks.setLast(uriBuilder.build().toString());
-
-        // Links previous
-        if (model.getOffset() != 0) {
-            long offsetPrevious = model.getOffset() - model.getLimit();
-            if (offsetPrevious < 0) {
-                offsetPrevious = 0;
-            }
-
-            uriBuilder = getURIBuilder(serverUriInfo);
-            uriBuilder.addParameter("offset", String.valueOf(offsetPrevious));
-            uriBuilder.addParameters(queryParameters);
-            repLinks.setPrevious(uriBuilder.build().toString());
-        }
-
-        // Links next
-        if (model.getOffset() / model.getLimit() < model.getTotalElements() / model.getLimit()) {
-            long offsetNext = model.getOffset() + model.getLimit();
-
-            uriBuilder = getURIBuilder(serverUriInfo);
-            uriBuilder.addParameter("offset", String.valueOf(offsetNext));
-            uriBuilder.addParameters(queryParameters);
-            repLinks.setNext(uriBuilder.build().toString());
-        }
 
         return rep;
     }

@@ -24,8 +24,8 @@ import io.github.project.openubl.xsender.models.FileType;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
+import io.smallrye.reactive.messaging.MutinyEmitter;
 import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -45,7 +45,7 @@ public class DocumentsManager {
 
     @Inject
     @Channel("read-documents")
-    Emitter<DocumentKafka> documentsProducer;
+    MutinyEmitter<DocumentKafka> documentEmitter;
 
     public UBLDocumentEntity createDocumentAndScheduleDelivery(CompanyEntity companyEntity, byte[] xmlFile) throws StorageException {
         // Save file in Storage
@@ -74,7 +74,7 @@ public class DocumentsManager {
                 .setRetry(0)
                 .build();
 
-        documentsProducer.send(xmlFileKafka);
+        documentEmitter.send(xmlFileKafka);
 
         // Result
         return documentEntity;

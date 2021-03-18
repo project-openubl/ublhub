@@ -30,8 +30,6 @@ import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
 import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
 import io.github.project.openubl.xsender.security.UserIdentity;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -42,15 +40,11 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BadRequestException;
-import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
@@ -59,9 +53,6 @@ import java.util.Map;
 public class DefaultCompanyResource implements CompanyResource {
 
     private static final Logger LOG = Logger.getLogger(DefaultCompanyResource.class);
-
-    @Context
-    UriInfo uriInfo;
 
     @Inject
     UserIdentity userIdentity;
@@ -72,23 +63,27 @@ public class DefaultCompanyResource implements CompanyResource {
     @Inject
     UBLDocumentRepository documentRepository;
 
+    // Managers
+
+    @Inject
+    CompanyManager companyManager;
+
     @Inject
     DocumentsManager documentsManager;
 
     @Inject
     FilesManager filesManager;
 
-    @Inject
-    CompanyManager companyManager;
+    // Events
 
     @Inject
-    Event<CompanyEvent.Deleted> companyDeletedEvent;
+    Event<DocumentEvent.Created> documentCreatedEvent;
 
     @Inject
     Event<CompanyEvent.Updated> companyUpdatedEvent;
 
     @Inject
-    Event<DocumentEvent.Created> documentCreatedEvent;
+    Event<CompanyEvent.Deleted> companyDeletedEvent;
 
     @Override
     public CompanyRepresentation getCompany(String company) {
@@ -156,11 +151,6 @@ public class DefaultCompanyResource implements CompanyResource {
     public PageRepresentation<DocumentRepresentation> listDocuments(@NotNull String company, String filterText, Integer offset, Integer limit, List<String> sortBy) {
         CompanyEntity companyEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
 
-        ContextBean contextBean = ContextBean.Builder.aContextBean()
-                .withUsername(userIdentity.getUsername())
-                .withUriInfo(uriInfo)
-                .build();
-
         PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
         List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, UBLDocumentRepository.SORT_BY_FIELDS);
 
@@ -171,21 +161,7 @@ public class DefaultCompanyResource implements CompanyResource {
             pageModel = documentRepository.list(companyEntity, pageBean, sortBeans);
         }
 
-        List<NameValuePair> queryParameters = ResourceUtils.buildNameValuePairs(offset, limit, sortBeans);
-        if (filterText != null) {
-            queryParameters.add(new BasicNameValuePair("name", filterText));
-        }
-
-        try {
-            return EntityToRepresentation.toRepresentation(
-                    pageModel,
-                    EntityToRepresentation::toRepresentation,
-                    contextBean.getUriInfo(),
-                    queryParameters
-            );
-        } catch (URISyntaxException e) {
-            throw new InternalServerErrorException();
-        }
+        return EntityToRepresentation.toRepresentation(pageModel, EntityToRepresentation::toRepresentation);
     }
 
     @Override

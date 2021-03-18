@@ -19,32 +19,26 @@ package io.github.project.openubl.xsender.resources;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
 import io.github.project.openubl.xsender.managers.CompanyManager;
-import io.github.project.openubl.xsender.models.*;
+import io.github.project.openubl.xsender.models.CompanyEvent;
+import io.github.project.openubl.xsender.models.PageBean;
+import io.github.project.openubl.xsender.models.PageModel;
+import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
 import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
 import io.github.project.openubl.xsender.security.UserIdentity;
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.net.URISyntaxException;
 import java.util.List;
 
 @Transactional
 @ApplicationScoped
 public class DefaultCurrentUserResource implements CurrentUserResource {
-
-    @Context
-    UriInfo uriInfo;
 
     @Inject
     UserIdentity userIdentity;
@@ -91,36 +85,17 @@ public class DefaultCurrentUserResource implements CurrentUserResource {
             Integer limit,
             List<String> sortBy
     ) {
-        ContextBean contextBean = ContextBean.Builder.aContextBean()
-                .withUsername(userIdentity.getUsername())
-                .withUriInfo(uriInfo)
-                .build();
-
         PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
         List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, CompanyRepository.SORT_BY_FIELDS);
 
         PageModel<CompanyEntity> pageModel;
         if (filterText != null && !filterText.trim().isEmpty()) {
-            pageModel = CompanyRepository.list(contextBean.getUsername(), filterText, pageBean, sortBeans);
+            pageModel = CompanyRepository.list(userIdentity.getUsername(), filterText, pageBean, sortBeans);
         } else {
-            pageModel = CompanyRepository.list(contextBean.getUsername(), pageBean, sortBeans);
+            pageModel = CompanyRepository.list(userIdentity.getUsername(), pageBean, sortBeans);
         }
 
-        List<NameValuePair> queryParameters = ResourceUtils.buildNameValuePairs(offset, limit, sortBeans);
-        if (filterText != null) {
-            queryParameters.add(new BasicNameValuePair("name", filterText));
-        }
-
-        try {
-            return EntityToRepresentation.toRepresentation(
-                    pageModel,
-                    EntityToRepresentation::toRepresentation,
-                    contextBean.getUriInfo(),
-                    queryParameters
-            );
-        } catch (URISyntaxException e) {
-            throw new InternalServerErrorException();
-        }
+        return EntityToRepresentation.toRepresentation(pageModel, EntityToRepresentation::toRepresentation);
     }
 
 }
