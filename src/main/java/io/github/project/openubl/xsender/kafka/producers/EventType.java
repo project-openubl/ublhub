@@ -1,4 +1,4 @@
-package io.github.project.openubl.xsender.models;
+package io.github.project.openubl.xsender.kafka.producers;
 
 public enum EventType {
     CREATED,

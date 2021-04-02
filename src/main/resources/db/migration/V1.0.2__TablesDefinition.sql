@@ -14,10 +14,10 @@ create table COMPANY
     primary key (id)
 );
 
-
 create table UBL_DOCUMENT
 (
     id                             varchar(255) not null,
+    created_on                     timestamp,
     delivery_status                varchar(255),
     document_id                    varchar(255),
     document_type                  varchar(255),
@@ -37,10 +37,16 @@ create table UBL_DOCUMENT
     primary key (id)
 );
 
+create table UBL_DOCUMENT_SUNAT_NOTES
+(
+    ubl_document_id varchar(255) not null,
+    value           varchar(255)
+);
 
 create table UBL_DOCUMENT_EVENT
 (
     id          varchar(255) not null,
+    created_on  timestamp,
     description varchar(255),
     status      varchar(255),
     document_id varchar(255),
@@ -48,15 +54,21 @@ create table UBL_DOCUMENT_EVENT
 );
 
 
+alter table if exists COMPANY drop
+    constraint if exists UKrf676d3s4bqqyh8dud0uv1gof;
+
 alter table if exists COMPANY
     add constraint UKrf676d3s4bqqyh8dud0uv1gof unique (name);
-
 
 alter table if exists UBL_DOCUMENT
     add constraint FKci8icuh34c4vjwkyj81tihv5r
     foreign key (company_id)
     references COMPANY;
 
+alter table if exists UBL_DOCUMENT_SUNAT_NOTES
+    add constraint FK6x9142wv16xao4un5xxgu60by
+    foreign key (ubl_document_id)
+    references UBL_DOCUMENT;
 
 alter table if exists UBL_DOCUMENT_EVENT
     add constraint FKhkjjk98wgev9l7vlccl8kg7yq

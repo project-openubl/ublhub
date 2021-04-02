@@ -1,24 +1,16 @@
 package io.github.project.openubl.xsender.websockets;
 
-import io.github.project.openubl.xsender.avro.DocumentEventKafka;
-import io.github.project.openubl.xsender.models.EntityType;
-import io.github.project.openubl.xsender.models.EventType;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
-import io.github.project.openubl.xsender.websockets.idm.EventMessage;
-import io.github.project.openubl.xsender.websockets.idm.EventSpec;
-import io.github.project.openubl.xsender.websockets.idm.TypeMessage;
 import io.smallrye.common.annotation.Blocking;
 import io.vertx.core.impl.ConcurrentHashSet;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.eclipse.microprofile.context.ThreadContext;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.bind.JsonbBuilder;
 import javax.transaction.Transactional;
 import javax.websocket.CloseReason;
 import javax.websocket.OnClose;
@@ -53,11 +45,11 @@ public class DocumentsEndpoint {
     @Blocking
     @OnMessage
     public void onMessage(String message, Session session, @PathParam("companyName") String companyName) {
-        Optional<UserInfo> userInfoOptional = keycloakAuthenticator.authenticate(message, session);
+        Optional<String> usernameOptional = keycloakAuthenticator.authenticate(message, session);
 
 
-        if (userInfoOptional.isPresent()) {
-            UserInfo userInfo = userInfoOptional.get();
+        if (usernameOptional.isPresent()) {
+            String username = usernameOptional.get();
 
             //TODO: move to CDI producer
             ManagedExecutor executor = ManagedExecutor.builder()
@@ -71,7 +63,7 @@ public class DocumentsEndpoint {
                     .build();
 
             executor.runAsync(threadContext.contextualRunnable(() -> {
-                Optional<CompanyEntity> companyOptional = companyRepository.findByNameAndOwner(companyName, userInfo.getPreferred_username());
+                Optional<CompanyEntity> companyOptional = companyRepository.findByNameAndOwner(companyName, username);
                 if (companyOptional.isPresent()) {
                     CompanyEntity companyEntity = companyOptional.get();
                     sessions.put(session, companyEntity.getId());
@@ -108,29 +100,29 @@ public class DocumentsEndpoint {
         }
     }
 
-    @Incoming("incoming-document-event")
-    public void companyEvents(DocumentEventKafka event) {
-        String companyId = event.getCompany();
-
-        EventMessage message = EventMessage.Builder.anEventMessage()
-                .withType(TypeMessage.EVENT)
-                .withSpec(EventSpec.Builder.anEventSpec()
-                        .withEntity(EntityType.DOCUMENT)
-                        .withId(event.getId())
-                        .withEvent(EventType.valueOf(event.getEvent()))
-                        .build()
-                )
-                .build();
-
-        String jsonMessage = JsonbBuilder.create().toJson(message);
-
-        companySessions.getOrDefault(companyId, Collections.emptySet()).forEach(session -> {
-            session.getAsyncRemote().sendObject(jsonMessage, result -> {
-                if (result.getException() != null) {
-                    LOG.error("Unable to send message ", result.getException());
-                }
-            });
-        });
-    }
+//    @Incoming("incoming-document-event")
+//    public void companyEvents(DocumentEventKafka event) {
+//        String companyId = event.getCompany();
+//
+//        EventMessage message = EventMessage.Builder.anEventMessage()
+//                .withType(TypeMessage.EVENT)
+//                .withSpec(EventSpec.Builder.anEventSpec()
+//                        .withEntity(EntityType.DOCUMENT)
+//                        .withId(event.getId())
+//                        .withEvent(EventType.valueOf(event.getEvent()))
+//                        .build()
+//                )
+//                .build();
+//
+//        String jsonMessage = JsonbBuilder.create().toJson(message);
+//
+//        companySessions.getOrDefault(companyId, Collections.emptySet()).forEach(session -> {
+//            session.getAsyncRemote().sendObject(jsonMessage, result -> {
+//                if (result.getException() != null) {
+//                    LOG.error("Unable to send message ", result.getException());
+//                }
+//            });
+//        });
+//    }
 
 }

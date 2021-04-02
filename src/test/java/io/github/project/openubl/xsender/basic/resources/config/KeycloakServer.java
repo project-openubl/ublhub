@@ -31,7 +31,7 @@ public class KeycloakServer implements QuarkusTestResourceLifecycleManager {
 
     @Override
     public Map<String, String> start() {
-        keycloak = new GenericContainer("quay.io/keycloak/keycloak:" + System.getProperty("keycloak.version", "12.0.3"))
+        keycloak = new GenericContainer("quay.io/keycloak/keycloak:" + System.getProperty("keycloak.version", "12.0.4"))
                 .withExposedPorts(8080)
                 .withEnv("DB_VENDOR", "H2")
                 .withEnv("KEYCLOAK_USER", "admin")

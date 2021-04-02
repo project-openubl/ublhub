@@ -1,13 +1,14 @@
 package io.github.project.openubl.xsender.websockets;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.json.bind.JsonbException;
+import javax.inject.Inject;
 import javax.net.ssl.*;
 import javax.websocket.CloseReason;
 import javax.websocket.Session;
@@ -32,21 +33,33 @@ public class KeycloakAuthenticator {
     @ConfigProperty(name = "quarkus.oidc.auth-server-url")
     String authServerUrl;
 
-    public Optional<UserInfo> authenticate(String message, Session session) {
+    @Inject
+    ObjectMapper objectMapper;
+
+    public Optional<String> authenticate(String message, Session session) {
         try {
-            String token;
+            String tokenValue;
             try {
-                Jsonb jsonb = JsonbBuilder.create();
-                Authentication auth = jsonb.fromJson(message, Authentication.class);
-                token = auth.getAuthentication().getToken();
+                JsonNode jsonNode = objectMapper.readTree(message);
+
+                JsonNode authentication = jsonNode.get("authentication");
+                if (authentication == null) {
+                    throw new KeycloakAuthenticationException("Authentication message did not contain a token");
+                }
+
+                JsonNode token = authentication.get("token");
                 if (token == null) {
                     throw new KeycloakAuthenticationException("Authentication message did not contain a token");
                 }
-            } catch (JsonbException e) {
+
+                tokenValue = token.asText();
+            } catch (JsonProcessingException e) {
                 throw new KeycloakAuthenticationException("Unable to parse message due to: " + e.getMessage());
             }
 
-            return Optional.of(validateToken(token));
+            JsonNode jsonNode = validateToken(tokenValue);
+            String username = jsonNode.get("preferred_username").asText();
+            return Optional.of(username);
         } catch (KeycloakAuthenticationException e) {
             LOG.warn("Received a request with an invalid token", e);
             try {
@@ -66,7 +79,7 @@ public class KeycloakAuthenticator {
         }
     }
 
-    public UserInfo validateToken(String token) throws KeycloakAuthenticationException {
+    public JsonNode validateToken(String token) throws KeycloakAuthenticationException {
         StringBuilder keycloakUrl = new StringBuilder(authServerUrl);
 
         if (!authServerUrl.endsWith("/")) {
@@ -90,8 +103,7 @@ public class KeycloakAuthenticator {
                 }
 
                 // Just consume it... the main thing is that it must be a 200 code
-                Jsonb jsonb = JsonbBuilder.create();
-                return jsonb.fromJson(inputStream, UserInfo.class);
+                return objectMapper.readTree(inputStream);
             }
         } catch (Exception e) {
             throw new KeycloakAuthenticationException("Could not authenticate due to: " + e.getMessage(), e);

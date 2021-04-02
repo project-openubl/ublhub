@@ -1,19 +1,12 @@
 package io.github.project.openubl.xsender.websockets;
 
-import io.github.project.openubl.xsender.models.EntityEventProvider;
-import io.github.project.openubl.xsender.models.EntityEvent;
-import io.github.project.openubl.xsender.models.EntityType;
-import io.github.project.openubl.xsender.models.EventType;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.vertx.core.impl.ConcurrentHashSet;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 import javax.websocket.CloseReason;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
@@ -43,10 +36,10 @@ public class CompanyEndpoint {
 
     @OnMessage
     public void onMessage(String message, Session session, @PathParam("companyId") String companyId) {
-        Optional<UserInfo> authenticatedUserInfo = keycloakAuthenticator.authenticate(message, session);
-        authenticatedUserInfo.ifPresent(userInfo -> {
+        Optional<String> usernameOptional = keycloakAuthenticator.authenticate(message, session);
+        usernameOptional.ifPresent(username -> {
             CompanyEntity companyEntity = companyRepository.findById(companyId);
-            if (companyEntity.getOwner().equals(userInfo.getPreferred_username())) {
+            if (companyEntity.getOwner().equals(username)) {
                 if (!companySessions.containsKey(companyId)) {
                     companySessions.put(companyId, new ConcurrentHashSet<>());
                 }
@@ -66,19 +59,19 @@ public class CompanyEndpoint {
         companySessions.getOrDefault(companyId, Collections.emptySet()).remove(session);
     }
 
-    public void onDocumentEvent(@Observes @EntityEventProvider(EntityType.COMPANY) EntityEvent event) {
-        if (event.getType().equals(EventType.UPDATED)) {
-            Jsonb jsonb = JsonbBuilder.create();
-            String message = jsonb.toJson(event);
-
-            companySessions.getOrDefault(event.getId(), Collections.emptySet()).forEach(session -> {
-                session.getAsyncRemote().sendObject(message, result -> {
-                    if (result.getException() != null) {
-                        LOG.error("Unable to send message ", result.getException());
-                    }
-                });
-            });
-        }
-    }
+//    public void onDocumentEvent(@Observes @EntityEventProvider(EntityType.COMPANY) EntityEvent event) {
+//        if (event.getType().equals(EventType.UPDATED)) {
+//            Jsonb jsonb = JsonbBuilder.create();
+//            String message = jsonb.toJson(event);
+//
+//            companySessions.getOrDefault(event.getId(), Collections.emptySet()).forEach(session -> {
+//                session.getAsyncRemote().sendObject(message, result -> {
+//                    if (result.getException() != null) {
+//                        LOG.error("Unable to send message ", result.getException());
+//                    }
+//                });
+//            });
+//        }
+//    }
 
 }

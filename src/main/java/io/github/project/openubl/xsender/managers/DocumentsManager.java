@@ -16,18 +16,23 @@
  */
 package io.github.project.openubl.xsender.managers;
 
-import io.github.project.openubl.xsender.avro.DocumentKafka;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.exceptions.StorageException;
 import io.github.project.openubl.xsender.files.FilesManager;
+import io.github.project.openubl.xsender.kafka.idm.UBLDocumentSunatEventRepresentation;
+import io.github.project.openubl.xsender.kafka.producers.UBLDocumentCreatedEventProducer;
 import io.github.project.openubl.xsender.models.DeliveryStatusType;
 import io.github.project.openubl.xsender.models.FileType;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
-import io.smallrye.reactive.messaging.MutinyEmitter;
-import org.eclipse.microprofile.reactive.messaging.Channel;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.util.Date;
@@ -44,8 +49,10 @@ public class DocumentsManager {
     UBLDocumentRepository documentRepository;
 
     @Inject
-    @Channel("read-documents")
-    MutinyEmitter<DocumentKafka> documentEmitter;
+    Event<ExportedEvent<?, ?>> event;
+
+    @Inject
+    ObjectMapper objectMapper;
 
     public UBLDocumentEntity createDocumentAndScheduleDelivery(CompanyEntity companyEntity, byte[] xmlFile) throws StorageException {
         // Save file in Storage
@@ -60,23 +67,35 @@ public class DocumentsManager {
         UBLDocumentEntity documentEntity = UBLDocumentEntity.Builder.anUBLDocumentEntity()
                 .withId(UUID.randomUUID().toString())
                 .withStorageFile(fileID)
-                .withDeliveryStatus(DeliveryStatusType.SCHEDULED_TO_DELIVER)
+                .withDeliveryStatus(DeliveryStatusType.IN_PROGRESS)
                 .withCompany(companyEntity)
                 .withCreatedOn(new Date())
                 .build();
 
         documentRepository.persist(documentEntity);
 
-        // Broadcast to kafka
+        try {
+            SunatCredentialsEntity credentials = documentEntity.getCompany().getSunatCredentials();
+            SunatUrlsEntity sunatUrls = documentEntity.getCompany().getSunatUrls();
 
-        DocumentKafka xmlFileKafka = DocumentKafka.newBuilder()
-                .setId(documentEntity.getId())
-                .setRetry(0)
-                .build();
+            UBLDocumentSunatEventRepresentation eventRep = new UBLDocumentSunatEventRepresentation();
+            eventRep.setId(documentEntity.getId());
+            eventRep.setStorageFile(documentEntity.getStorageFile());
 
-        documentEmitter.send(xmlFileKafka);
+            eventRep.setSunatUsername(credentials.getSunatUsername());
+            eventRep.setSunatPassword(credentials.getSunatPassword());
+            eventRep.setSunatUrlFactura(sunatUrls.getSunatUrlFactura());
+            eventRep.setSunatUrlGuiaRemision(sunatUrls.getSunatUrlGuiaRemision());
+            eventRep.setSunatUrlPercepcionRetencion(sunatUrls.getSunatUrlPercepcionRetencion());
+
+            String eventPayload = objectMapper.writeValueAsString(eventRep);
+            event.fire(new UBLDocumentCreatedEventProducer(companyEntity.getId(), eventPayload));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
 
         // Result
+
         return documentEntity;
     }
 

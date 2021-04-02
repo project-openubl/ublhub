@@ -16,10 +16,17 @@
  */
 package io.github.project.openubl.xsender.resources;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
+import io.github.project.openubl.xsender.kafka.idm.CompanyCUDEventRepresentation;
+import io.github.project.openubl.xsender.kafka.producers.EntityEventProducer;
+import io.github.project.openubl.xsender.kafka.producers.EntityType;
+import io.github.project.openubl.xsender.kafka.producers.EventType;
+import io.github.project.openubl.xsender.kafka.utils.EventEntityToRepresentation;
 import io.github.project.openubl.xsender.managers.CompanyManager;
-import io.github.project.openubl.xsender.models.CompanyEvent;
 import io.github.project.openubl.xsender.models.PageBean;
 import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.SortBean;
@@ -28,6 +35,7 @@ import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
 import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
 import io.github.project.openubl.xsender.security.UserIdentity;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
@@ -40,6 +48,8 @@ import java.util.List;
 @ApplicationScoped
 public class DefaultCurrentUserResource implements CurrentUserResource {
 
+    private static final Logger LOG = Logger.getLogger(CompanyManager.class);
+
     @Inject
     UserIdentity userIdentity;
 
@@ -50,7 +60,10 @@ public class DefaultCurrentUserResource implements CurrentUserResource {
     CompanyManager companyManager;
 
     @Inject
-    Event<CompanyEvent.Created> companyCreatedEvent;
+    Event<ExportedEvent<?, ?>> event;
+
+    @Inject
+    ObjectMapper objectMapper;
 
     @Override
     public Response createCompany(CompanyRepresentation rep) {
@@ -62,17 +75,13 @@ public class DefaultCurrentUserResource implements CurrentUserResource {
 
         CompanyEntity companyEntity = companyManager.createCompany(userIdentity.getUsername(), rep);
 
-        companyCreatedEvent.fire(new CompanyEvent.Created() {
-            @Override
-            public String getId() {
-                return companyEntity.getId();
-            }
-
-            @Override
-            public String getOwner() {
-                return companyEntity.getOwner();
-            }
-        });
+        try {
+            CompanyCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(companyEntity);
+            String eventPayload = objectMapper.writeValueAsString(eventRep);
+            event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.company, EventType.CREATED, eventPayload));
+        } catch (JsonProcessingException e) {
+            LOG.error(e);
+        }
 
         return Response.ok()
                 .entity(EntityToRepresentation.toRepresentation(companyEntity))

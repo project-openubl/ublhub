@@ -1,7 +1,7 @@
 package io.github.project.openubl.xsender.websockets.idm;
 
-import io.github.project.openubl.xsender.models.EntityType;
-import io.github.project.openubl.xsender.models.EventType;
+import io.github.project.openubl.xsender.kafka.producers.EntityType;
+import io.github.project.openubl.xsender.kafka.producers.EventType;
 
 public class EventSpec {
 

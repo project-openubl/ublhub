@@ -35,9 +35,9 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
 
     public static final String[] SORT_BY_FIELDS = {"createdOn"};
 
-    public List<UBLDocumentEntity> findAllThatCouldNotBeDelivered() {
-        return list("deliveryStatus", DeliveryStatusType.COULD_NOT_BE_DELIVERED);
-    }
+//    public List<UBLDocumentEntity> findAllThatCouldNotBeDelivered() {
+//        return list("deliveryStatus", DeliveryStatusType.COULD_NOT_BE_DELIVERED);
+//    }
 
     public PageModel<UBLDocumentEntity> list(CompanyEntity company, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();

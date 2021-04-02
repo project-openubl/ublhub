@@ -102,66 +102,66 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
         assertEquals(companyDB.getSunatCredentials().getSunatPassword(), "myPassword");
     }
 
-    @Test
-    public void getCompanies() {
-        // Given
-        SunatCredentialsEntity credentials = SunatCredentialsEntity.Builder.aSunatCredentialsEntity()
-                .withSunatUsername("anyUsername")
-                .withSunatPassword("anyPassword")
-                .build();
-        SunatUrlsEntity urls = SunatUrlsEntity.Builder.aSunatUrlsEntity()
-                .withSunatUrlFactura("https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl")
-                .withSunatUrlGuiaRemision("https://e-guiaremision.sunat.gob.pe/ol-ti-itemision-guia-gem/billService?wsdl")
-                .withSunatUrlPercepcionRetencion("https://e-factura.sunat.gob.pe/ol-ti-itemision-otroscpe-gem/billService?wsdl")
-                .build();
-
-        long currentTime = new Date().getTime();
-
-        CompanyEntity company1 = CompanyEntity.Builder.aCompanyEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my-company1")
-                .withOwner("alice")
-                .withCreatedOn(new Date(currentTime))
-                .withSunatCredentials(credentials)
-                .withSunatUrls(urls)
-                .build();
-        CompanyEntity company2 = CompanyEntity.Builder.aCompanyEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my-company2")
-                .withOwner("alice")
-                .withCreatedOn(new Date(currentTime + 9_000L))
-                .withSunatCredentials(credentials)
-                .withSunatUrls(urls)
-                .build();
-        CompanyEntity company3 = CompanyEntity.Builder.aCompanyEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my-company3")
-                .withOwner("anotherUser")
-                .withCreatedOn(new Date(currentTime + 18_000L))
-                .withSunatCredentials(credentials)
-                .withSunatUrls(urls)
-                .build();
-
-        companyRepository.persist(company1, company2, company3);
-
-        // When
-        given().auth().oauth2(getAccessToken("alice"))
-                .header("Content-Type", "application/json")
-                .when()
-                .get("/api/user/companies")
-                .then()
-                .statusCode(200)
-                .body("meta.offset", is(0),
-                        "meta.limit", is(10),
-                        "meta.count", is(2),
-                        "links.first", is(notNullValue()),
-                        "links.last", is(notNullValue()),
-                        "links.next", is(nullValue()),
-                        "links.previous", is(nullValue()),
-                        "data.size()", is(2),
-                        "data[0].name", is("my-company2"),
-                        "data[1].name", is("my-company1")
-                );
-    }
+//    @Test
+//    public void getCompanies() {
+//        // Given
+//        SunatCredentialsEntity credentials = SunatCredentialsEntity.Builder.aSunatCredentialsEntity()
+//                .withSunatUsername("anyUsername")
+//                .withSunatPassword("anyPassword")
+//                .build();
+//        SunatUrlsEntity urls = SunatUrlsEntity.Builder.aSunatUrlsEntity()
+//                .withSunatUrlFactura("https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl")
+//                .withSunatUrlGuiaRemision("https://e-guiaremision.sunat.gob.pe/ol-ti-itemision-guia-gem/billService?wsdl")
+//                .withSunatUrlPercepcionRetencion("https://e-factura.sunat.gob.pe/ol-ti-itemision-otroscpe-gem/billService?wsdl")
+//                .build();
+//
+//        long currentTime = new Date().getTime();
+//
+//        CompanyEntity company1 = CompanyEntity.Builder.aCompanyEntity()
+//                .withId(UUID.randomUUID().toString())
+//                .withName("my-company1")
+//                .withOwner("alice")
+//                .withCreatedOn(new Date(currentTime))
+//                .withSunatCredentials(credentials)
+//                .withSunatUrls(urls)
+//                .build();
+//        CompanyEntity company2 = CompanyEntity.Builder.aCompanyEntity()
+//                .withId(UUID.randomUUID().toString())
+//                .withName("my-company2")
+//                .withOwner("alice")
+//                .withCreatedOn(new Date(currentTime + 9_000L))
+//                .withSunatCredentials(credentials)
+//                .withSunatUrls(urls)
+//                .build();
+//        CompanyEntity company3 = CompanyEntity.Builder.aCompanyEntity()
+//                .withId(UUID.randomUUID().toString())
+//                .withName("my-company3")
+//                .withOwner("anotherUser")
+//                .withCreatedOn(new Date(currentTime + 18_000L))
+//                .withSunatCredentials(credentials)
+//                .withSunatUrls(urls)
+//                .build();
+//
+//        companyRepository.persist(company1, company2, company3);
+//
+//        // When
+//        given().auth().oauth2(getAccessToken("alice"))
+//                .header("Content-Type", "application/json")
+//                .when()
+//                .get("/api/user/companies")
+//                .then()
+//                .statusCode(200)
+//                .body("meta.offset", is(0),
+//                        "meta.limit", is(10),
+//                        "meta.count", is(2),
+//                        "links.first", is(notNullValue()),
+//                        "links.last", is(notNullValue()),
+//                        "links.next", is(nullValue()),
+//                        "links.previous", is(nullValue()),
+//                        "data.size()", is(2),
+//                        "data[0].name", is("my-company2"),
+//                        "data[1].name", is("my-company1")
+//                );
+//    }
 }
 

@@ -17,10 +17,6 @@
 package io.github.project.openubl.xsender.models;
 
 public enum DeliveryStatusType {
-    SCHEDULED_TO_DELIVER,
-    CANCELLED_BY_USER,
-    CANCELLED_BY_SYSTEM,
-    NEED_TO_CHECK_TICKET,
-    COULD_NOT_BE_DELIVERED,
+    IN_PROGRESS,
     DELIVERED,
 }

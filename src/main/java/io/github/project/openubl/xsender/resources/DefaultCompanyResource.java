@@ -16,12 +16,23 @@
  */
 package io.github.project.openubl.xsender.resources;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.exceptions.StorageException;
 import io.github.project.openubl.xsender.files.FilesManager;
 import io.github.project.openubl.xsender.idm.*;
+import io.github.project.openubl.xsender.kafka.idm.CompanyCUDEventRepresentation;
+import io.github.project.openubl.xsender.kafka.idm.UBLDocumentCUDEventRepresentation;
+import io.github.project.openubl.xsender.kafka.producers.EntityEventProducer;
+import io.github.project.openubl.xsender.kafka.producers.EntityType;
+import io.github.project.openubl.xsender.kafka.producers.EventType;
+import io.github.project.openubl.xsender.kafka.utils.EventEntityToRepresentation;
 import io.github.project.openubl.xsender.managers.CompanyManager;
 import io.github.project.openubl.xsender.managers.DocumentsManager;
-import io.github.project.openubl.xsender.models.*;
+import io.github.project.openubl.xsender.models.PageBean;
+import io.github.project.openubl.xsender.models.PageModel;
+import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
@@ -77,13 +88,10 @@ public class DefaultCompanyResource implements CompanyResource {
     // Events
 
     @Inject
-    Event<DocumentEvent.Created> documentCreatedEvent;
+    Event<ExportedEvent<?, ?>> event;
 
     @Inject
-    Event<CompanyEvent.Updated> companyUpdatedEvent;
-
-    @Inject
-    Event<CompanyEvent.Deleted> companyDeletedEvent;
+    ObjectMapper objectMapper;
 
     @Override
     public CompanyRepresentation getCompany(String company) {
@@ -96,17 +104,13 @@ public class DefaultCompanyResource implements CompanyResource {
         CompanyEntity companyEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         CompanyEntity updatedCompanyEntity = companyManager.updateCompany(rep, companyEntity);
 
-        companyUpdatedEvent.fire(new CompanyEvent.Updated() {
-            @Override
-            public String getId() {
-                return updatedCompanyEntity.getId();
-            }
-
-            @Override
-            public String getOwner() {
-                return updatedCompanyEntity.getOwner();
-            }
-        });
+        try {
+            CompanyCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(companyEntity);
+            String eventPayload = objectMapper.writeValueAsString(eventRep);
+            event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.company, EventType.UPDATED, eventPayload));
+        } catch (JsonProcessingException e) {
+            LOG.error(e);
+        }
 
         return EntityToRepresentation.toRepresentation(updatedCompanyEntity);
     }
@@ -116,17 +120,13 @@ public class DefaultCompanyResource implements CompanyResource {
         CompanyEntity companyEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         companyRepository.deleteById(companyEntity.getId());
 
-        companyDeletedEvent.fire(new CompanyEvent.Deleted() {
-            @Override
-            public String getId() {
-                return companyEntity.getId();
-            }
-
-            @Override
-            public String getOwner() {
-                return companyEntity.getOwner();
-            }
-        });
+        try {
+            CompanyCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(companyEntity);
+            String eventPayload = objectMapper.writeValueAsString(eventRep);
+            event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.company, EventType.DELETED, eventPayload));
+        } catch (JsonProcessingException e) {
+            LOG.error(e);
+        }
     }
 
     @Override
@@ -134,17 +134,13 @@ public class DefaultCompanyResource implements CompanyResource {
         CompanyEntity companyEntity = companyRepository.findByNameAndOwner(company, userIdentity.getUsername()).orElseThrow(NoClassDefFoundError::new);
         companyManager.updateCorporateCredentials(rep, companyEntity);
 
-        companyUpdatedEvent.fire(new CompanyEvent.Updated() {
-            @Override
-            public String getId() {
-                return companyEntity.getId();
-            }
-
-            @Override
-            public String getOwner() {
-                return companyEntity.getOwner();
-            }
-        });
+        try {
+            CompanyCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(companyEntity);
+            String eventPayload = objectMapper.writeValueAsString(eventRep);
+            event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.company, EventType.UPDATED, eventPayload));
+        } catch (JsonProcessingException e) {
+            LOG.error(e);
+        }
     }
 
     @Override
@@ -199,17 +195,13 @@ public class DefaultCompanyResource implements CompanyResource {
         try {
             documentEntity = documentsManager.createDocumentAndScheduleDelivery(companyEntity, xmlFile);
 
-            documentCreatedEvent.fire(new DocumentEvent.Created() {
-                @Override
-                public String getId() {
-                    return documentEntity.getId();
-                }
-
-                @Override
-                public String getCompanyId() {
-                    return documentEntity.getCompany().getId();
-                }
-            });
+            try {
+                UBLDocumentCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(documentEntity);
+                String eventPayload = objectMapper.writeValueAsString(eventRep);
+                event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.document, EventType.CREATED, eventPayload));
+            } catch (JsonProcessingException e) {
+                LOG.error(e);
+            }
         } catch (StorageException e) {
             LOG.error(e);
             ErrorRepresentation error = new ErrorRepresentation(e.getMessage());

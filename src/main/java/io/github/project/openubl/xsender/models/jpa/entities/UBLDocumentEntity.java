@@ -22,10 +22,7 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 @Table(name = "UBL_DOCUMENT")
@@ -84,6 +81,8 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     @Column(name = "storage_cdr")
     private String storageCdr;
 
+    //
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "delivery_status")
@@ -100,6 +99,13 @@ public class UBLDocumentEntity extends PanacheEntityBase {
 
     @Column(name = "sunat_description")
     private String sunatDescription;
+
+    @ElementCollection
+    @Column(name="value")
+    @CollectionTable(name = "ubl_document_sunat_notes", joinColumns={ @JoinColumn(name="ubl_document_id") })
+    private Set<String> sunatNotes;
+
+    //
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "ublDocument")
     private List<UBLDocumentEventEntity> sunatEvents = new ArrayList<>();
@@ -248,6 +254,22 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.sunatDescription = sunatDescription;
     }
 
+    public List<UBLDocumentEventEntity> getSunatEvents() {
+        return sunatEvents;
+    }
+
+    public void setSunatEvents(List<UBLDocumentEventEntity> sunatEvents) {
+        this.sunatEvents = sunatEvents;
+    }
+
+    public Set<String> getSunatNotes() {
+        return sunatNotes;
+    }
+
+    public void setSunatNotes(Set<String> sunatNotes) {
+        this.sunatNotes = sunatNotes;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -261,14 +283,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     @Override
     public int hashCode() {
         return Objects.hash(company, documentID, documentType);
-    }
-
-    public List<UBLDocumentEventEntity> getSunatEvents() {
-        return sunatEvents;
-    }
-
-    public void setSunatEvents(List<UBLDocumentEventEntity> sunatEvents) {
-        this.sunatEvents = sunatEvents;
     }
 
     public static final class Builder {

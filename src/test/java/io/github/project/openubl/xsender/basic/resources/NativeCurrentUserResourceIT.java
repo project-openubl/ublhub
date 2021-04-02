@@ -14,17 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.models;
+package io.github.project.openubl.xsender.basic.resources;
 
-import javax.inject.Qualifier;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import io.quarkus.test.junit.NativeImageTest;
 
-@Qualifier
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE})
-public @interface EntityEventProvider {
-    EntityType value();
+@NativeImageTest
+public class NativeCurrentUserResourceIT extends CurrentUserResourceTest {
 }
+
