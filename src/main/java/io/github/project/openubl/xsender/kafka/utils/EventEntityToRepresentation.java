@@ -18,7 +18,6 @@ package io.github.project.openubl.xsender.kafka.utils;
 
 import io.github.project.openubl.xsender.kafka.idm.CompanyCUDEventRepresentation;
 import io.github.project.openubl.xsender.kafka.idm.UBLDocumentCUDEventRepresentation;
-import io.github.project.openubl.xsender.kafka.idm.UBLDocumentSunatEventRepresentation;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 
