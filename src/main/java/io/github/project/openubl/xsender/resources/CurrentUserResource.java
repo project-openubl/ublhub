@@ -19,6 +19,8 @@ package io.github.project.openubl.xsender.resources;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -33,7 +35,7 @@ public interface CurrentUserResource {
      */
     @POST
     @Path("/companies")
-    Response createCompany(CompanyRepresentation rep);
+    Response createCompany(@NotNull @Valid CompanyRepresentation rep);
 
     /**
      * List companies for the authenticated user
