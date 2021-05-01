@@ -260,20 +260,24 @@
             <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>3.0</version>
+                <version>4.0</version>
                 <configuration>
-                    <header>tools/copyright.txt</header>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>tools/copyright.txt</header>
+                            <excludes>
+                                <exclude>**/README</exclude>
+                                <exclude>**/src/test/resources/**</exclude>
+                                <exclude>**/src/main/resources/**</exclude>
+                                <exclude>.github/**</exclude>
+                                <exclude>.mvn/**</exclude>
+                            </excludes>
+                        </licenseSet>
+                    </licenseSets>
                     <properties>
                         <owner>Project OpenUBL</owner>
                         <email>projectopenubl+subscribe@googlegroups.com</email>
                     </properties>
-                    <excludes>
-                        <exclude>**/README</exclude>
-                        <exclude>**/src/test/resources/**</exclude>
-                        <exclude>**/src/main/resources/**</exclude>
-                        <exclude>.github/**</exclude>
-                        <exclude>.mvn/**</exclude>
-                    </excludes>
                 </configuration>
                 <executions>
                     <execution>
