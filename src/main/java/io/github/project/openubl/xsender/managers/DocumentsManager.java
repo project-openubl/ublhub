@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.exceptions.StorageException;
 import io.github.project.openubl.xsender.files.FilesManager;
-import io.github.project.openubl.xsender.kafka.idm.UBLDocumentSunatEventRepresentation;
 import io.github.project.openubl.xsender.kafka.producers.UBLDocumentCreatedEventProducer;
 import io.github.project.openubl.xsender.models.DeliveryStatusType;
 import io.github.project.openubl.xsender.models.FileType;
@@ -74,25 +73,25 @@ public class DocumentsManager {
 
         documentRepository.persist(documentEntity);
 
-        try {
-            SunatCredentialsEntity credentials = documentEntity.getCompany().getSunatCredentials();
-            SunatUrlsEntity sunatUrls = documentEntity.getCompany().getSunatUrls();
-
-            UBLDocumentSunatEventRepresentation eventRep = new UBLDocumentSunatEventRepresentation();
-            eventRep.setId(documentEntity.getId());
-            eventRep.setStorageFile(documentEntity.getStorageFile());
-
-            eventRep.setSunatUsername(credentials.getSunatUsername());
-            eventRep.setSunatPassword(credentials.getSunatPassword());
-            eventRep.setSunatUrlFactura(sunatUrls.getSunatUrlFactura());
-            eventRep.setSunatUrlGuiaRemision(sunatUrls.getSunatUrlGuiaRemision());
-            eventRep.setSunatUrlPercepcionRetencion(sunatUrls.getSunatUrlPercepcionRetencion());
-
-            String eventPayload = objectMapper.writeValueAsString(eventRep);
-            event.fire(new UBLDocumentCreatedEventProducer(companyEntity.getId(), eventPayload));
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException(e);
-        }
+//        try {
+//            SunatCredentialsEntity credentials = documentEntity.getCompany().getSunatCredentials();
+//            SunatUrlsEntity sunatUrls = documentEntity.getCompany().getSunatUrls();
+//
+//            UBLDocumentSunatEventRepresentation eventRep = new UBLDocumentSunatEventRepresentation();
+//            eventRep.setId(documentEntity.getId());
+//            eventRep.setStorageFile(documentEntity.getStorageFile());
+//
+//            eventRep.setSunatUsername(credentials.getSunatUsername());
+//            eventRep.setSunatPassword(credentials.getSunatPassword());
+//            eventRep.setSunatUrlFactura(sunatUrls.getSunatUrlFactura());
+//            eventRep.setSunatUrlGuiaRemision(sunatUrls.getSunatUrlGuiaRemision());
+//            eventRep.setSunatUrlPercepcionRetencion(sunatUrls.getSunatUrlPercepcionRetencion());
+//
+//            String eventPayload = objectMapper.writeValueAsString(eventRep);
+//            event.fire(new UBLDocumentCreatedEventProducer(companyEntity.getId(), eventPayload));
+//        } catch (JsonProcessingException e) {
+//            throw new IllegalStateException(e);
+//        }
 
         // Result
 
