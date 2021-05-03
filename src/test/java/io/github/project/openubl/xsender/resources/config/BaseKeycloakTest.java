@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.basic.resources.config;
+package io.github.project.openubl.xsender.resources.config;
 
 import io.restassured.RestAssured;
 import org.eclipse.microprofile.config.inject.ConfigProperty;

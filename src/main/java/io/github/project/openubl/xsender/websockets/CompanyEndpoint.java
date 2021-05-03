@@ -17,22 +17,17 @@
 package io.github.project.openubl.xsender.websockets;
 
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
-import io.vertx.core.impl.ConcurrentHashSet;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.websocket.CloseReason;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -52,22 +47,22 @@ public class CompanyEndpoint {
 
     @OnMessage
     public void onMessage(String message, Session session, @PathParam("companyId") String companyId) {
-        Optional<String> usernameOptional = keycloakAuthenticator.authenticate(message, session);
-        usernameOptional.ifPresent(username -> {
-            CompanyEntity companyEntity = companyRepository.findById(companyId);
-            if (companyEntity.getOwner().equals(username)) {
-                if (!companySessions.containsKey(companyId)) {
-                    companySessions.put(companyId, new ConcurrentHashSet<>());
-                }
-                companySessions.get(companyId).add(session);
-            } else {
-                try {
-                    session.close(new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, "Unauthorized"));
-                } catch (IOException e) {
-                    LOG.warn(e.getMessage());
-                }
-            }
-        });
+//        Optional<String> usernameOptional = keycloakAuthenticator.authenticate(message, session);
+//        usernameOptional.ifPresent(username -> {
+//            CompanyEntity companyEntity = companyRepository.findById(companyId);
+//            if (companyEntity.getOwner().equals(username)) {
+//                if (!companySessions.containsKey(companyId)) {
+//                    companySessions.put(companyId, new ConcurrentHashSet<>());
+//                }
+//                companySessions.get(companyId).add(session);
+//            } else {
+//                try {
+//                    session.close(new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, "Unauthorized"));
+//                } catch (IOException e) {
+//                    LOG.warn(e.getMessage());
+//                }
+//            }
+//        });
     }
 
     @OnClose

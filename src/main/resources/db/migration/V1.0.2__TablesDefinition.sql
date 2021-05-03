@@ -1,16 +1,28 @@
-create table COMPANY
+create table namespace
 (
     id                             varchar(255) not null,
     created_on                     timestamp,
     description                    varchar(255),
     name                           varchar(255),
     owner                          varchar(255),
+    version                        int4,
+    primary key (id)
+);
+
+create table company
+(
+    id                             varchar(255) not null,
+    created_on                     timestamp,
+    description                    varchar(255),
+    name                           varchar(255),
+    ruc                            varchar(11),
     sunat_password                 varchar(255),
     sunat_username                 varchar(255),
     sunat_url_factura              varchar(255),
     sunat_url_guia_remision        varchar(255),
     sunat_url_percepcion_retencion varchar(255),
     version                        int4,
+    namespace_id                   varchar(255) not null,
     primary key (id)
 );
 

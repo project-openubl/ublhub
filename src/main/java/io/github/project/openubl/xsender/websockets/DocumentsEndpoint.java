@@ -17,27 +17,19 @@
 package io.github.project.openubl.xsender.websockets;
 
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.smallrye.common.annotation.Blocking;
-import io.vertx.core.impl.ConcurrentHashSet;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.context.ManagedExecutor;
-import org.eclipse.microprofile.context.ThreadContext;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import javax.websocket.CloseReason;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -61,49 +53,49 @@ public class DocumentsEndpoint {
     @Blocking
     @OnMessage
     public void onMessage(String message, Session session, @PathParam("companyName") String companyName) {
-        Optional<String> usernameOptional = keycloakAuthenticator.authenticate(message, session);
-
-
-        if (usernameOptional.isPresent()) {
-            String username = usernameOptional.get();
-
-            //TODO: move to CDI producer
-            ManagedExecutor executor = ManagedExecutor.builder()
-                    .maxAsync(5)
-                    .propagated(ThreadContext.CDI, ThreadContext.TRANSACTION)
-                    .build();
-
-            //TODO: move to CDI producer
-            ThreadContext threadContext = ThreadContext.builder()
-                    .propagated(ThreadContext.CDI, ThreadContext.TRANSACTION)
-                    .build();
-
-            executor.runAsync(threadContext.contextualRunnable(() -> {
-                Optional<CompanyEntity> companyOptional = companyRepository.findByNameAndOwner(companyName, username);
-                if (companyOptional.isPresent()) {
-                    CompanyEntity companyEntity = companyOptional.get();
-                    sessions.put(session, companyEntity.getId());
-
-                    if (!companySessions.containsKey(companyEntity.getId())) {
-                        companySessions.put(companyEntity.getId(), new ConcurrentHashSet<>());
-                    }
-                    companySessions.get(companyEntity.getId()).add(session);
-                } else {
-                    try {
-                        String errorMessage = "Unauthorized websocket";
-
-                        // Shorten the message to meet the standards for "CloseReason" (only allows 122 chars)
-                        if (StringUtils.isNotBlank(errorMessage) && errorMessage.length() >= 122) {
-                            errorMessage = errorMessage.substring(0, 122);
-                        }
-
-                        session.close(new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, errorMessage));
-                    } catch (IOException e1) {
-                        LOG.warn(e1.getMessage());
-                    }
-                }
-            }));
-        }
+//        Optional<String> usernameOptional = keycloakAuthenticator.authenticate(message, session);
+//
+//
+//        if (usernameOptional.isPresent()) {
+//            String username = usernameOptional.get();
+//
+//            //TODO: move to CDI producer
+//            ManagedExecutor executor = ManagedExecutor.builder()
+//                    .maxAsync(5)
+//                    .propagated(ThreadContext.CDI, ThreadContext.TRANSACTION)
+//                    .build();
+//
+//            //TODO: move to CDI producer
+//            ThreadContext threadContext = ThreadContext.builder()
+//                    .propagated(ThreadContext.CDI, ThreadContext.TRANSACTION)
+//                    .build();
+//
+//            executor.runAsync(threadContext.contextualRunnable(() -> {
+//                Optional<CompanyEntity> companyOptional = companyRepository.findByNameAndOwner(companyName, username);
+//                if (companyOptional.isPresent()) {
+//                    CompanyEntity companyEntity = companyOptional.get();
+//                    sessions.put(session, companyEntity.getId());
+//
+//                    if (!companySessions.containsKey(companyEntity.getId())) {
+//                        companySessions.put(companyEntity.getId(), new ConcurrentHashSet<>());
+//                    }
+//                    companySessions.get(companyEntity.getId()).add(session);
+//                } else {
+//                    try {
+//                        String errorMessage = "Unauthorized websocket";
+//
+//                        // Shorten the message to meet the standards for "CloseReason" (only allows 122 chars)
+//                        if (StringUtils.isNotBlank(errorMessage) && errorMessage.length() >= 122) {
+//                            errorMessage = errorMessage.substring(0, 122);
+//                        }
+//
+//                        session.close(new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, errorMessage));
+//                    } catch (IOException e1) {
+//                        LOG.warn(e1.getMessage());
+//                    }
+//                }
+//            }));
+//        }
 
     }
 

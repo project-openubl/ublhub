@@ -21,13 +21,11 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import java.util.Date;
-import java.util.Objects;
 
 @Entity
-@Table(name = "COMPANY", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"NAME"})
+@Table(name = "company", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"namespace_id", "ruc"})
 })
 public class CompanyEntity extends PanacheEntityBase {
 
@@ -37,10 +35,9 @@ public class CompanyEntity extends PanacheEntityBase {
     private String id;
 
     @NotNull
-    @Column(name = "owner")
-    private String owner;
+    @Column(name = "ruc")
+    private String ruc;
 
-    @Pattern(regexp = "[a-z0-9]([-a-z0-9]*[a-z0-9])?", message = "label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name', or '123-abc')")
     @NotNull
     @Column(name = "name")
     private String name;
@@ -62,6 +59,11 @@ public class CompanyEntity extends PanacheEntityBase {
     @Embedded
     private SunatUrlsEntity sunatUrls;
 
+    @NotNull
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
+    private NamespaceEntity namespace;
+
     @Version
     @Column(name = "version")
     private int version;
@@ -74,12 +76,12 @@ public class CompanyEntity extends PanacheEntityBase {
         this.id = id;
     }
 
-    public String getOwner() {
-        return owner;
+    public String getRuc() {
+        return ruc;
     }
 
-    public void setOwner(String owner) {
-        this.owner = owner;
+    public void setRuc(String ruc) {
+        this.ruc = ruc;
     }
 
     public String getName() {
@@ -122,6 +124,14 @@ public class CompanyEntity extends PanacheEntityBase {
         this.sunatUrls = sunatUrls;
     }
 
+    public NamespaceEntity getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(NamespaceEntity namespace) {
+        this.namespace = namespace;
+    }
+
     public int getVersion() {
         return version;
     }
@@ -130,72 +140,65 @@ public class CompanyEntity extends PanacheEntityBase {
         this.version = version;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CompanyEntity that = (CompanyEntity) o;
-        return name.equals(that.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name);
-    }
-
-    public static final class Builder {
+    public static final class CompanyEntityBuilder {
         private String id;
-        private String owner;
+        private String ruc;
         private String name;
         private String description;
         private Date createdOn;
         private SunatCredentialsEntity sunatCredentials;
         private SunatUrlsEntity sunatUrls;
+        private NamespaceEntity namespace;
         private int version;
 
-        private Builder() {
+        private CompanyEntityBuilder() {
         }
 
-        public static Builder aCompanyEntity() {
-            return new Builder();
+        public static CompanyEntityBuilder aCompanyEntity() {
+            return new CompanyEntityBuilder();
         }
 
-        public Builder withId(String id) {
+        public CompanyEntityBuilder withId(String id) {
             this.id = id;
             return this;
         }
 
-        public Builder withOwner(String owner) {
-            this.owner = owner;
+        public CompanyEntityBuilder withRuc(String ruc) {
+            this.ruc = ruc;
             return this;
         }
 
-        public Builder withName(String name) {
+        public CompanyEntityBuilder withName(String name) {
             this.name = name;
             return this;
         }
 
-        public Builder withDescription(String description) {
+        public CompanyEntityBuilder withDescription(String description) {
             this.description = description;
             return this;
         }
 
-        public Builder withCreatedOn(Date createdOn) {
+        public CompanyEntityBuilder withCreatedOn(Date createdOn) {
             this.createdOn = createdOn;
             return this;
         }
 
-        public Builder withSunatCredentials(SunatCredentialsEntity sunatCredentials) {
+        public CompanyEntityBuilder withSunatCredentials(SunatCredentialsEntity sunatCredentials) {
             this.sunatCredentials = sunatCredentials;
             return this;
         }
 
-        public Builder withSunatUrls(SunatUrlsEntity sunatUrls) {
+        public CompanyEntityBuilder withSunatUrls(SunatUrlsEntity sunatUrls) {
             this.sunatUrls = sunatUrls;
             return this;
         }
 
-        public Builder withVersion(int version) {
+        public CompanyEntityBuilder withNamespace(NamespaceEntity namespace) {
+            this.namespace = namespace;
+            return this;
+        }
+
+        public CompanyEntityBuilder withVersion(int version) {
             this.version = version;
             return this;
         }
@@ -203,12 +206,13 @@ public class CompanyEntity extends PanacheEntityBase {
         public CompanyEntity build() {
             CompanyEntity companyEntity = new CompanyEntity();
             companyEntity.setId(id);
-            companyEntity.setOwner(owner);
+            companyEntity.setRuc(ruc);
             companyEntity.setName(name);
             companyEntity.setDescription(description);
             companyEntity.setCreatedOn(createdOn);
             companyEntity.setSunatCredentials(sunatCredentials);
             companyEntity.setSunatUrls(sunatUrls);
+            companyEntity.setNamespace(namespace);
             companyEntity.setVersion(version);
             return companyEntity;
         }

@@ -19,7 +19,7 @@ package io.github.project.openubl.xsender.kafka.idm;
 public class CompanyCUDEventRepresentation {
 
     private String id;
-    private String owner;
+    private String namespace;
 
     public String getId() {
         return id;
@@ -29,11 +29,11 @@ public class CompanyCUDEventRepresentation {
         this.id = id;
     }
 
-    public String getOwner() {
-        return owner;
+    public String getNamespace() {
+        return namespace;
     }
 
-    public void setOwner(String owner) {
-        this.owner = owner;
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
     }
 }

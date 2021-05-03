@@ -19,57 +19,63 @@ package io.github.project.openubl.xsender.models.jpa;
 import io.github.project.openubl.xsender.models.PageBean;
 import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.SortBean;
-import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
-import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 
+@Transactional
 @ApplicationScoped
-public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentEntity, String> {
+public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntity, String> {
 
-    public static final String[] SORT_BY_FIELDS = {"createdOn"};
+    public static final String[] SORT_BY_FIELDS = {"name", "createdOn"};
 
-//    public List<UBLDocumentEntity> findAllThatCouldNotBeDelivered() {
-//        return list("deliveryStatus", DeliveryStatusType.COULD_NOT_BE_DELIVERED);
-//    }
+    public Optional<NamespaceEntity> findByName(String name) {
+        return find("name", name).firstResultOptional();
+    }
 
-    public PageModel<UBLDocumentEntity> list(CompanyEntity company, PageBean pageBean, List<SortBean> sortBy) {
+    public Optional<NamespaceEntity> findByNameAndOwner(String name, String owner) {
+        return find("name = ?1 and owner = ?2", name, owner).firstResultOptional();
+    }
+
+    public PageModel<NamespaceEntity> list(String owner, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
-        PanacheQuery<UBLDocumentEntity> query = CompanyEntity
+        PanacheQuery<NamespaceEntity> query = NamespaceEntity
                 .find(
-                        "From UBLDocumentEntity as d where d.company =:company",
+                        "From NamespaceEntity as o where o.owner =:owner",
                         sort,
-                        Parameters.with("company", company)
+                        Parameters.with("owner", owner)
                 )
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
         long count = query.count();
-        List<UBLDocumentEntity> list = query.list();
+        List<NamespaceEntity> list = query.list();
         return new PageModel<>(pageBean, count, list);
     }
 
-    public PageModel<UBLDocumentEntity> list(CompanyEntity company, String filterText, PageBean pageBean, List<SortBean> sortBy) {
+    public PageModel<NamespaceEntity> list(String owner, String filterText, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
-        PanacheQuery<UBLDocumentEntity> query = CompanyEntity
+        PanacheQuery<NamespaceEntity> query = NamespaceEntity
                 .find(
-                        "From UBLDocumentEntity as d where d.company =:company and lower(d.documentID) like :filterText",
+                        "From NamespaceEntity as o where o.owner =:owner and lower(o.name) like :filterText",
                         sort,
-                        Parameters.with("company", company)
-                                .and("filterText", "%" + filterText.toLowerCase() + "%")
+                        Parameters.with("owner", owner).and("filterText", "%" + filterText.toLowerCase() + "%")
                 )
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
         long count = query.count();
-        List<UBLDocumentEntity> list = query.list();
+        List<NamespaceEntity> list = query.list();
         return new PageModel<>(pageBean, count, list);
     }
+
 }

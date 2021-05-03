@@ -19,15 +19,12 @@ package io.github.project.openubl.xsender.models.utils;
 import io.github.project.openubl.xsender.idm.*;
 import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
-import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEventEntity;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.message.BasicNameValuePair;
 
 import javax.ws.rs.core.UriInfo;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -37,10 +34,21 @@ public class EntityToRepresentation {
         // Just static methods
     }
 
+    public static NamespaceRepresentation toRepresentation(NamespaceEntity entity) {
+        NamespaceRepresentation rep = new NamespaceRepresentation();
+
+        rep.setId(entity.getId());
+        rep.setName(entity.getName());
+        rep.setDescription(entity.getDescription());
+
+        return rep;
+    }
+
     public static CompanyRepresentation toRepresentation(CompanyEntity entity) {
         CompanyRepresentation rep = new CompanyRepresentation();
 
         rep.setId(entity.getId());
+        rep.setRuc(entity.getRuc());
         rep.setName(entity.getName());
         rep.setDescription(entity.getDescription());
 

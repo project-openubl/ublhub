@@ -17,8 +17,10 @@
 package io.github.project.openubl.xsender.kafka.utils;
 
 import io.github.project.openubl.xsender.kafka.idm.CompanyCUDEventRepresentation;
+import io.github.project.openubl.xsender.kafka.idm.NamespaceCrudEventRepresentation;
 import io.github.project.openubl.xsender.kafka.idm.UBLDocumentCUDEventRepresentation;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 
 public class EventEntityToRepresentation {
@@ -26,11 +28,20 @@ public class EventEntityToRepresentation {
         // Just static methods
     }
 
+    public static NamespaceCrudEventRepresentation toRepresentation(NamespaceEntity entity) {
+        NamespaceCrudEventRepresentation rep = new NamespaceCrudEventRepresentation();
+
+        rep.setId(entity.getId());
+        rep.setOwner(entity.getOwner());
+
+        return rep;
+    }
+
     public static CompanyCUDEventRepresentation toRepresentation(CompanyEntity entity) {
         CompanyCUDEventRepresentation rep = new CompanyCUDEventRepresentation();
 
         rep.setId(entity.getId());
-        rep.setOwner(entity.getOwner());
+        rep.setNamespace(entity.getNamespace().getName());
 
         return rep;
     }

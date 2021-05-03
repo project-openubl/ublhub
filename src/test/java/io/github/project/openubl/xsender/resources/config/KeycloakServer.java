@@ -14,43 +14,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.basic.resources.config;
+package io.github.project.openubl.xsender.resources.config;
 
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import org.testcontainers.containers.BindMode;
-import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
-public class PostgreSQLServer implements QuarkusTestResourceLifecycleManager {
+public class KeycloakServer implements QuarkusTestResourceLifecycleManager {
 
-    private GenericContainer postgreSQL;
+    private GenericContainer keycloak;
 
     @Override
     public Map<String, String> start() {
-        postgreSQL = new GenericContainer("postgres:" + System.getProperty("postgresql.version", "13.1"))
-                .withExposedPorts(5432)
-                .withEnv("POSTGRES_USER", "xsender_username")
-                .withEnv("POSTGRES_PASSWORD", "xsender_password")
-                .withEnv("POSTGRES_DB", "xsender_db");
-        postgreSQL.start();
+        keycloak = new GenericContainer("quay.io/keycloak/keycloak:" + System.getProperty("keycloak.version", "12.0.4"))
+                .withExposedPorts(8080)
+                .withEnv("DB_VENDOR", "H2")
+                .withEnv("KEYCLOAK_USER", "admin")
+                .withEnv("KEYCLOAK_PASSWORD", "admin")
+                .withEnv("KEYCLOAK_IMPORT", "/tmp/realm.json")
+                .withClasspathResourceMapping("openubl-realm.json", "/tmp/realm.json", BindMode.READ_ONLY)
+                .waitingFor(Wait.forHttp("/auth"));
+        keycloak.start();
 
-        String host = postgreSQL.getHost();
-        Integer port = postgreSQL.getMappedPort(5432);
+        String host = keycloak.getHost();
+        Integer port = keycloak.getMappedPort(8080);
 
-        return new HashMap<>() {{
-            put("quarkus.datasource.jdbc.url", "jdbc:postgresql://" + host + ":" + port + "/xsender_db");
-            put("quarkus.datasource.username", "xsender_username");
-            put("quarkus.datasource.password", "xsender_password");
-        }};
+        return Collections.singletonMap(
+                "quarkus.oidc.auth-server-url",
+                "http://" + host + ":" + port + "/auth/realms/openubl"
+        );
     }
 
     @Override
     public void stop() {
-        postgreSQL.stop();
+        keycloak.stop();
     }
 }

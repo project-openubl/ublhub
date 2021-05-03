@@ -17,7 +17,6 @@
 package io.github.project.openubl.xsender.websockets;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.project.openubl.xsender.kafka.idm.CompanyCUDEventRepresentation;
 import io.github.project.openubl.xsender.kafka.producers.EntityType;
@@ -103,12 +102,12 @@ public class CompaniesEndpoint {
                         )
                         .build();
 
-                String wsMessageString = objectMapper.writeValueAsString(wsMessage);
-                userSessions.getOrDefault(eventRep.getOwner(), Collections.emptySet()).forEach(session -> session.getAsyncRemote().sendObject(wsMessageString, result -> {
-                    if (result.getException() != null) {
-                        LOG.error("Unable to send message ", result.getException());
-                    }
-                }));
+//                String wsMessageString = objectMapper.writeValueAsString(wsMessage);
+//                userSessions.getOrDefault(eventRep.getOwner(), Collections.emptySet()).forEach(session -> session.getAsyncRemote().sendObject(wsMessageString, result -> {
+//                    if (result.getException() != null) {
+//                        LOG.error("Unable to send message ", result.getException());
+//                    }
+//                }));
 
                 record.ack();
             } catch (JsonProcessingException e) {

@@ -16,18 +16,13 @@
  */
 package io.github.project.openubl.xsender.models.jpa;
 
-import io.github.project.openubl.xsender.models.PageBean;
-import io.github.project.openubl.xsender.models.PageModel;
-import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
-import io.quarkus.panache.common.Sort;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.transaction.Transactional;
-import java.util.List;
 import java.util.Optional;
 
 @Transactional
@@ -36,46 +31,54 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
 
     public static final String[] SORT_BY_FIELDS = {"name", "createdOn"};
 
-    public Optional<CompanyEntity> findByName(String name) {
-        return find("name", name).firstResultOptional();
+    public Optional<CompanyEntity> findByRuc(NamespaceEntity namespace, String ruc) {
+        return find("ruc = :ruc and namespace.id = :namespaceId",
+                Parameters.with("namespaceId", namespace.getId()).and("ruc", ruc).map()
+        ).firstResultOptional();
     }
 
-    public Optional<CompanyEntity> findByNameAndOwner(String name, String owner) {
-        return find("name = ?1 and owner = ?2", name, owner).firstResultOptional();
+    public Optional<CompanyEntity> findByIdAndOwner(String companyId, String owner) {
+        return find("select c from CompanyEntity c inner join c.namespace ns where c.id = :companyId and ns.owner = :owner",
+                Parameters.with("companyId", companyId).and("owner", owner).map()
+        ).firstResultOptional();
     }
 
-    public static PageModel<CompanyEntity> list(String owner, PageBean pageBean, List<SortBean> sortBy) {
-        Sort sort = Sort.by();
-        sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
-
-        PanacheQuery<CompanyEntity> query = CompanyEntity
-                .find(
-                        "From CompanyEntity as o where o.owner =:owner",
-                        sort,
-                        Parameters.with("owner", owner)
-                )
-                .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
-
-        long count = query.count();
-        List<CompanyEntity> list = query.list();
-        return new PageModel<>(pageBean, count, list);
-    }
-
-    public static PageModel<CompanyEntity> list(String owner, String filterText, PageBean pageBean, List<SortBean> sortBy) {
-        Sort sort = Sort.by();
-        sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
-
-        PanacheQuery<CompanyEntity> query = CompanyEntity
-                .find(
-                        "From CompanyEntity as o where o.owner =:owner and lower(o.name) like :filterText",
-                        sort,
-                        Parameters.with("owner", owner).and("filterText", "%" + filterText.toLowerCase() + "%")
-                )
-                .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
-
-        long count = query.count();
-        List<CompanyEntity> list = query.list();
-        return new PageModel<>(pageBean, count, list);
-    }
+//    public Optional<CompanyEntity> findByNameAndOwner(String name, String owner) {
+//        return find("name = ?1 and owner = ?2", name, owner).firstResultOptional();
+//    }
+//
+//    public static PageModel<CompanyEntity> list(String owner, PageBean pageBean, List<SortBean> sortBy) {
+//        Sort sort = Sort.by();
+//        sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
+//
+//        PanacheQuery<CompanyEntity> query = CompanyEntity
+//                .find(
+//                        "From CompanyEntity as o where o.owner =:owner",
+//                        sort,
+//                        Parameters.with("owner", owner)
+//                )
+//                .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
+//
+//        long count = query.count();
+//        List<CompanyEntity> list = query.list();
+//        return new PageModel<>(pageBean, count, list);
+//    }
+//
+//    public static PageModel<CompanyEntity> list(String owner, String filterText, PageBean pageBean, List<SortBean> sortBy) {
+//        Sort sort = Sort.by();
+//        sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
+//
+//        PanacheQuery<CompanyEntity> query = CompanyEntity
+//                .find(
+//                        "From CompanyEntity as o where o.owner =:owner and lower(o.name) like :filterText",
+//                        sort,
+//                        Parameters.with("owner", owner).and("filterText", "%" + filterText.toLowerCase() + "%")
+//                )
+//                .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
+//
+//        long count = query.count();
+//        List<CompanyEntity> list = query.list();
+//        return new PageModel<>(pageBean, count, list);
+//    }
 
 }

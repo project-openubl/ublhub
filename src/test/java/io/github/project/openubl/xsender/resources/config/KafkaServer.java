@@ -14,11 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.basic.resources;
+package io.github.project.openubl.xsender.resources.config;
 
-import io.quarkus.test.junit.NativeImageTest;
+import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
+import org.testcontainers.containers.KafkaContainer;
 
-@NativeImageTest
-public class NativeCurrentUserResourceIT extends CurrentUserResourceTest {
+import java.util.Collections;
+import java.util.Map;
+
+public class KafkaServer implements QuarkusTestResourceLifecycleManager {
+
+    private final KafkaContainer kafka = new KafkaContainer();
+
+    @Override
+    public Map<String, String> start() {
+        kafka.start();
+        return Collections.singletonMap("kafka.bootstrap.servers", kafka.getBootstrapServers());
+    }
+
+    @Override
+    public void stop() {
+        kafka.close();
+    }
 }
-

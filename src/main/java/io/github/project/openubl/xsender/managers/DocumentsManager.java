@@ -16,18 +16,14 @@
  */
 package io.github.project.openubl.xsender.managers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.exceptions.StorageException;
 import io.github.project.openubl.xsender.files.FilesManager;
-import io.github.project.openubl.xsender.kafka.producers.UBLDocumentCreatedEventProducer;
 import io.github.project.openubl.xsender.models.DeliveryStatusType;
 import io.github.project.openubl.xsender.models.FileType;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
-import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
-import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 
 import javax.enterprise.context.ApplicationScoped;

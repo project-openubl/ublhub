@@ -14,26 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.basic.resources.config;
+package io.github.project.openubl.xsender.kafka.idm;
 
-import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
-import org.testcontainers.containers.KafkaContainer;
+public class NamespaceCrudEventRepresentation {
 
-import java.util.Collections;
-import java.util.Map;
+    private String id;
+    private String owner;
 
-public class KafkaServer implements QuarkusTestResourceLifecycleManager {
-
-    private final KafkaContainer kafka = new KafkaContainer();
-
-    @Override
-    public Map<String, String> start() {
-        kafka.start();
-        return Collections.singletonMap("kafka.bootstrap.servers", kafka.getBootstrapServers());
+    public String getId() {
+        return id;
     }
 
-    @Override
-    public void stop() {
-        kafka.close();
+    public void setId(String id) {
+        this.id = id;
     }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
 }

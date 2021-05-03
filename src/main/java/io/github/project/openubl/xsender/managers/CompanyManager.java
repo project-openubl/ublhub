@@ -21,6 +21,7 @@ import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
 import org.jboss.logging.Logger;
@@ -40,12 +41,14 @@ public class CompanyManager {
     @Inject
     CompanyRepository companyRepository;
 
-    public CompanyEntity createCompany(String owner, CompanyRepresentation rep) {
+    public CompanyEntity createCompany(NamespaceEntity namespaceEntity, CompanyRepresentation rep) {
         CompanyEntity companyEntity = new CompanyEntity();
-        companyEntity.setId(UUID.randomUUID().toString());
 
-        companyEntity.setOwner(owner);
-        companyEntity.setName(rep.getName().toLowerCase());
+        companyEntity.setId(UUID.randomUUID().toString());
+        companyEntity.setNamespace(namespaceEntity);
+
+        companyEntity.setRuc(rep.getRuc());
+        companyEntity.setName(rep.getName());
         companyEntity.setDescription(rep.getDescription());
         companyEntity.setCreatedOn(new Date());
 
