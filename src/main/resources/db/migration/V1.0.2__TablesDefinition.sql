@@ -1,11 +1,11 @@
 create table namespace
 (
-    id                             varchar(255) not null,
-    created_on                     timestamp,
-    description                    varchar(255),
-    name                           varchar(255),
-    owner                          varchar(255),
-    version                        int4,
+    id          varchar(255) not null,
+    created_on  timestamp,
+    description varchar(255),
+    name        varchar(255),
+    owner       varchar(255),
+    version     int4,
     primary key (id)
 );
 
@@ -26,7 +26,7 @@ create table company
     primary key (id)
 );
 
-create table UBL_DOCUMENT
+create table ubl_document
 (
     id                             varchar(255) not null,
     created_on                     timestamp,
@@ -45,17 +45,17 @@ create table UBL_DOCUMENT
     validation_error               varchar(255),
     voided_line_document_type_code varchar(255),
     will_retry_on                  timestamp,
-    company_id                     varchar(255),
+    namespace_id                   varchar(255),
     primary key (id)
 );
 
-create table UBL_DOCUMENT_SUNAT_NOTES
+create table ubl_document_sunat_notes
 (
     ubl_document_id varchar(255) not null,
     value           varchar(255)
 );
 
-create table UBL_DOCUMENT_EVENT
+create table ubl_document_event
 (
     id          varchar(255) not null,
     created_on  timestamp,
@@ -66,23 +66,29 @@ create table UBL_DOCUMENT_EVENT
 );
 
 
-alter table if exists COMPANY drop
+alter table if exists namespace drop
     constraint if exists UKrf676d3s4bqqyh8dud0uv1gof;
 
-alter table if exists COMPANY
+alter table if exists namespace
     add constraint UKrf676d3s4bqqyh8dud0uv1gof unique (name);
 
-alter table if exists UBL_DOCUMENT
-    add constraint FKci8icuh34c4vjwkyj81tihv5r
-    foreign key (company_id)
-    references COMPANY;
+alter table if exists company drop
+    constraint if exists company_ns_fk;
 
-alter table if exists UBL_DOCUMENT_SUNAT_NOTES
+alter table if exists company
+    add constraint company_ns_fk unique (namespace_id, ruc);
+
+alter table if exists ubl_document
+    add constraint FKci8icuh34c4vjwkyj81tihv5r
+    foreign key (namespace_id)
+    references namespace;
+
+alter table if exists ubl_document_sunat_notes
     add constraint FK6x9142wv16xao4un5xxgu60by
     foreign key (ubl_document_id)
-    references UBL_DOCUMENT;
+    references ubl_document;
 
-alter table if exists UBL_DOCUMENT_EVENT
+alter table if exists ubl_document_event
     add constraint FKhkjjk98wgev9l7vlccl8kg7yq
     foreign key (document_id)
-    references UBL_DOCUMENT;
+    references ubl_document;

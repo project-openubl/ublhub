@@ -35,8 +35,8 @@ public class UBLDocumentEntity extends PanacheEntityBase {
 
     @NotNull
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(foreignKey = @ForeignKey, name = "company_id")
-    private CompanyEntity company;
+    @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
+    private NamespaceEntity namespace;
 
     @NotNull
     @Column(name = "created_on")
@@ -105,8 +105,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     @CollectionTable(name = "ubl_document_sunat_notes", joinColumns={ @JoinColumn(name="ubl_document_id") })
     private Set<String> sunatNotes;
 
-    //
-
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "ublDocument")
     private List<UBLDocumentEventEntity> sunatEvents = new ArrayList<>();
 
@@ -118,12 +116,12 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.id = id;
     }
 
-    public CompanyEntity getCompany() {
-        return company;
+    public NamespaceEntity getNamespace() {
+        return namespace;
     }
 
-    public void setCompany(CompanyEntity company) {
-        this.company = company;
+    public void setNamespace(NamespaceEntity namespace) {
+        this.namespace = namespace;
     }
 
     public Date getCreatedOn() {
@@ -254,14 +252,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.sunatDescription = sunatDescription;
     }
 
-    public List<UBLDocumentEventEntity> getSunatEvents() {
-        return sunatEvents;
-    }
-
-    public void setSunatEvents(List<UBLDocumentEventEntity> sunatEvents) {
-        this.sunatEvents = sunatEvents;
-    }
-
     public Set<String> getSunatNotes() {
         return sunatNotes;
     }
@@ -270,24 +260,17 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.sunatNotes = sunatNotes;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        UBLDocumentEntity that = (UBLDocumentEntity) o;
-        return company.equals(that.company) &&
-                documentID.equals(that.documentID) &&
-                documentType == that.documentType;
+    public List<UBLDocumentEventEntity> getSunatEvents() {
+        return sunatEvents;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(company, documentID, documentType);
+    public void setSunatEvents(List<UBLDocumentEventEntity> sunatEvents) {
+        this.sunatEvents = sunatEvents;
     }
 
-    public static final class Builder {
+    public static final class UBLDocumentEntityBuilder {
         private String id;
-        private CompanyEntity company;
+        private NamespaceEntity namespace;
         private Date createdOn;
         private Boolean valid;
         private String validationError;
@@ -304,108 +287,120 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         private String sunatStatus;
         private Integer sunatCode;
         private String sunatDescription;
+        private Set<String> sunatNotes;
+        private List<UBLDocumentEventEntity> sunatEvents = new ArrayList<>();
 
-        private Builder() {
+        private UBLDocumentEntityBuilder() {
         }
 
-        public static Builder anUBLDocumentEntity() {
-            return new Builder();
+        public static UBLDocumentEntityBuilder anUBLDocumentEntity() {
+            return new UBLDocumentEntityBuilder();
         }
 
-        public Builder withId(String id) {
+        public UBLDocumentEntityBuilder withId(String id) {
             this.id = id;
             return this;
         }
 
-        public Builder withCompany(CompanyEntity company) {
-            this.company = company;
+        public UBLDocumentEntityBuilder withNamespace(NamespaceEntity namespace) {
+            this.namespace = namespace;
             return this;
         }
 
-        public Builder withCreatedOn(Date createdOn) {
+        public UBLDocumentEntityBuilder withCreatedOn(Date createdOn) {
             this.createdOn = createdOn;
             return this;
         }
 
-        public Builder withValid(Boolean valid) {
+        public UBLDocumentEntityBuilder withValid(Boolean valid) {
             this.valid = valid;
             return this;
         }
 
-        public Builder withValidationError(String validationError) {
+        public UBLDocumentEntityBuilder withValidationError(String validationError) {
             this.validationError = validationError;
             return this;
         }
 
-        public Builder withRetries(int retries) {
+        public UBLDocumentEntityBuilder withRetries(int retries) {
             this.retries = retries;
             return this;
         }
 
-        public Builder withWillRetryOn(Date willRetryOn) {
+        public UBLDocumentEntityBuilder withWillRetryOn(Date willRetryOn) {
             this.willRetryOn = willRetryOn;
             return this;
         }
 
-        public Builder withRuc(String ruc) {
+        public UBLDocumentEntityBuilder withRuc(String ruc) {
             this.ruc = ruc;
             return this;
         }
 
-        public Builder withDocumentID(String documentID) {
+        public UBLDocumentEntityBuilder withDocumentID(String documentID) {
             this.documentID = documentID;
             return this;
         }
 
-        public Builder withDocumentType(String documentType) {
+        public UBLDocumentEntityBuilder withDocumentType(String documentType) {
             this.documentType = documentType;
             return this;
         }
 
-        public Builder withVoidedLineDocumentTypeCode(String voidedLineDocumentTypeCode) {
+        public UBLDocumentEntityBuilder withVoidedLineDocumentTypeCode(String voidedLineDocumentTypeCode) {
             this.voidedLineDocumentTypeCode = voidedLineDocumentTypeCode;
             return this;
         }
 
-        public Builder withStorageFile(String storageFile) {
+        public UBLDocumentEntityBuilder withStorageFile(String storageFile) {
             this.storageFile = storageFile;
             return this;
         }
 
-        public Builder withStorageCdr(String storageCdr) {
+        public UBLDocumentEntityBuilder withStorageCdr(String storageCdr) {
             this.storageCdr = storageCdr;
             return this;
         }
 
-        public Builder withDeliveryStatus(DeliveryStatusType deliveryStatus) {
+        public UBLDocumentEntityBuilder withDeliveryStatus(DeliveryStatusType deliveryStatus) {
             this.deliveryStatus = deliveryStatus;
             return this;
         }
 
-        public Builder withSunatTicket(String sunatTicket) {
+        public UBLDocumentEntityBuilder withSunatTicket(String sunatTicket) {
             this.sunatTicket = sunatTicket;
             return this;
         }
 
-        public Builder withSunatStatus(String sunatStatus) {
+        public UBLDocumentEntityBuilder withSunatStatus(String sunatStatus) {
             this.sunatStatus = sunatStatus;
             return this;
         }
 
-        public Builder withSunatCode(Integer sunatCode) {
+        public UBLDocumentEntityBuilder withSunatCode(Integer sunatCode) {
             this.sunatCode = sunatCode;
             return this;
         }
 
-        public Builder withSunatDescription(String sunatDescription) {
+        public UBLDocumentEntityBuilder withSunatDescription(String sunatDescription) {
             this.sunatDescription = sunatDescription;
+            return this;
+        }
+
+        public UBLDocumentEntityBuilder withSunatNotes(Set<String> sunatNotes) {
+            this.sunatNotes = sunatNotes;
+            return this;
+        }
+
+        public UBLDocumentEntityBuilder withSunatEvents(List<UBLDocumentEventEntity> sunatEvents) {
+            this.sunatEvents = sunatEvents;
             return this;
         }
 
         public UBLDocumentEntity build() {
             UBLDocumentEntity uBLDocumentEntity = new UBLDocumentEntity();
             uBLDocumentEntity.setId(id);
-            uBLDocumentEntity.setCompany(company);
+            uBLDocumentEntity.setNamespace(namespace);
             uBLDocumentEntity.setCreatedOn(createdOn);
             uBLDocumentEntity.setValid(valid);
             uBLDocumentEntity.setValidationError(validationError);
@@ -422,6 +417,8 @@ public class UBLDocumentEntity extends PanacheEntityBase {
             uBLDocumentEntity.setSunatStatus(sunatStatus);
             uBLDocumentEntity.setSunatCode(sunatCode);
             uBLDocumentEntity.setSunatDescription(sunatDescription);
+            uBLDocumentEntity.setSunatNotes(sunatNotes);
+            uBLDocumentEntity.setSunatEvents(sunatEvents);
             return uBLDocumentEntity;
         }
     }

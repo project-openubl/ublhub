@@ -50,7 +50,7 @@ public class EventEntityToRepresentation {
         UBLDocumentCUDEventRepresentation rep = new UBLDocumentCUDEventRepresentation();
 
         rep.setId(entity.getId());
-        rep.setCompanyId(entity.getCompany().getId());
+        rep.setNamespace(entity.getNamespace().getName());
 
         return rep;
     }

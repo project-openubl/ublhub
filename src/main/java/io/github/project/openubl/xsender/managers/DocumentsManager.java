@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.xsender.managers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.exceptions.StorageException;
@@ -24,6 +25,7 @@ import io.github.project.openubl.xsender.models.DeliveryStatusType;
 import io.github.project.openubl.xsender.models.FileType;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -49,7 +51,7 @@ public class DocumentsManager {
     @Inject
     ObjectMapper objectMapper;
 
-    public UBLDocumentEntity createDocumentAndScheduleDelivery(CompanyEntity companyEntity, byte[] xmlFile) throws StorageException {
+    public UBLDocumentEntity createDocumentAndScheduleDelivery(NamespaceEntity namespaceEntity, byte[] xmlFile) throws StorageException {
         // Save file in Storage
 
         String fileID = filesManager.createFile(xmlFile, FileType.getFilename(UUID.randomUUID().toString(), FileType.XML), FileType.XML);
@@ -59,11 +61,11 @@ public class DocumentsManager {
 
         // Create Entity
 
-        UBLDocumentEntity documentEntity = UBLDocumentEntity.Builder.anUBLDocumentEntity()
+        UBLDocumentEntity documentEntity = UBLDocumentEntity.UBLDocumentEntityBuilder.anUBLDocumentEntity()
                 .withId(UUID.randomUUID().toString())
                 .withStorageFile(fileID)
                 .withDeliveryStatus(DeliveryStatusType.IN_PROGRESS)
-                .withCompany(companyEntity)
+                .withNamespace(namespaceEntity)
                 .withCreatedOn(new Date())
                 .build();
 
@@ -72,7 +74,7 @@ public class DocumentsManager {
 //        try {
 //            SunatCredentialsEntity credentials = documentEntity.getCompany().getSunatCredentials();
 //            SunatUrlsEntity sunatUrls = documentEntity.getCompany().getSunatUrls();
-//
+
 //            UBLDocumentSunatEventRepresentation eventRep = new UBLDocumentSunatEventRepresentation();
 //            eventRep.setId(documentEntity.getId());
 //            eventRep.setStorageFile(documentEntity.getStorageFile());

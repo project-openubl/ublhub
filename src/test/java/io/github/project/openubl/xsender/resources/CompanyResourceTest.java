@@ -86,13 +86,6 @@ public class CompanyResourceTest extends BaseKeycloakTest {
     @Test
     public void createCompany() {
         // Given
-        NamespaceEntity namespace = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my-namespace")
-                .withOwner("alice")
-                .withCreatedOn(new Date())
-                .build();
-        namespaceRepository.persist(namespace);
 
         // When
         CompanyRepresentation company = CompanyRepresentation.CompanyRepresentationBuilder.aCompanyRepresentation()
