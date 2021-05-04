@@ -60,7 +60,7 @@ public class CompanyEntity extends PanacheEntityBase {
     private SunatUrlsEntity sunatUrls;
 
     @NotNull
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
     private NamespaceEntity namespace;
 

@@ -17,12 +17,16 @@
 package io.github.project.openubl.xsender.models.jpa.entities;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "namespace", uniqueConstraints = {
@@ -55,6 +59,14 @@ public class NamespaceEntity extends PanacheEntityBase {
     @Version
     @Column(name = "version")
     private int version;
+
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "namespace", orphanRemoval = true)
+    private List<CompanyEntity> companies = new ArrayList<>();
+
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "namespace", orphanRemoval = true)
+    private List<UBLDocumentEntity> documents = new ArrayList<>();
 
     public String getId() {
         return id;
@@ -102,6 +114,22 @@ public class NamespaceEntity extends PanacheEntityBase {
 
     public void setVersion(int version) {
         this.version = version;
+    }
+
+    public List<CompanyEntity> getCompanies() {
+        return companies;
+    }
+
+    public void setCompanies(List<CompanyEntity> companies) {
+        this.companies = companies;
+    }
+
+    public List<UBLDocumentEntity> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(List<UBLDocumentEntity> documents) {
+        this.documents = documents;
     }
 
     public static final class NamespaceEntityBuilder {

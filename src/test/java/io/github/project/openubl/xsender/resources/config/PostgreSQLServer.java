@@ -28,7 +28,7 @@ public class PostgreSQLServer implements QuarkusTestResourceLifecycleManager {
 
     @Override
     public Map<String, String> start() {
-        postgreSQL = new GenericContainer("postgres:" + System.getProperty("postgresql.version", "13.1"))
+        postgreSQL = new GenericContainer("debezium/postgres:12")
                 .withExposedPorts(5432)
                 .withEnv("POSTGRES_USER", "xsender_username")
                 .withEnv("POSTGRES_PASSWORD", "xsender_password")

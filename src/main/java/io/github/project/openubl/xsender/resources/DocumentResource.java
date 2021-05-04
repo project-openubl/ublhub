@@ -49,6 +49,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,6 +82,7 @@ public class DocumentResource {
 
     @POST
     @Path("/upload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response uploadXML(
             @PathParam("namespace") @NotNull String namespace,
             MultipartFormDataInput input

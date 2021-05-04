@@ -22,9 +22,6 @@ import java.time.Instant;
 
 public class UBLDocumentCreatedEventProducer implements ExportedEvent<String, String> {
 
-    private final static String AGGREGATE = "ubldocument";
-    private final static String TYPE = "sunat";
-
     private final Instant timestamp;
 
     private final String ublDocumentId;
@@ -38,18 +35,18 @@ public class UBLDocumentCreatedEventProducer implements ExportedEvent<String, St
     }
 
     @Override
+    public String getAggregateType() {
+        return EntityType.sunat_document.toString();
+    }
+
+    @Override
     public String getAggregateId() {
         return ublDocumentId;
     }
 
     @Override
-    public String getAggregateType() {
-        return AGGREGATE;
-    }
-
-    @Override
     public String getType() {
-        return TYPE;
+        return EventType.SCHEDULED.toString();
     }
 
     @Override
@@ -61,4 +58,5 @@ public class UBLDocumentCreatedEventProducer implements ExportedEvent<String, St
     public Instant getTimestamp() {
         return timestamp;
     }
+
 }

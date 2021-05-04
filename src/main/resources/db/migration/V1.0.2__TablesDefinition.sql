@@ -72,23 +72,40 @@ alter table if exists namespace drop
 alter table if exists namespace
     add constraint UKrf676d3s4bqqyh8dud0uv1gof unique (name);
 
+
 alter table if exists company drop
-    constraint if exists company_ns_fk;
+    constraint if exists company_ns_unique;
 
 alter table if exists company
-    add constraint company_ns_fk unique (namespace_id, ruc);
+    add constraint company_ns_unique unique (namespace_id, ruc);
+
+alter table if exists company
+    add constraint company_ns_fk
+    foreign key (namespace_id)
+    references namespace on
+delete
+cascade;
+
 
 alter table if exists ubl_document
     add constraint FKci8icuh34c4vjwkyj81tihv5r
     foreign key (namespace_id)
-    references namespace;
+    references namespace on
+delete
+cascade;
+
 
 alter table if exists ubl_document_sunat_notes
     add constraint FK6x9142wv16xao4un5xxgu60by
     foreign key (ubl_document_id)
-    references ubl_document;
+    references ubl_document on
+delete
+cascade;
+
 
 alter table if exists ubl_document_event
     add constraint FKhkjjk98wgev9l7vlccl8kg7yq
     foreign key (document_id)
-    references ubl_document;
+    references ubl_document on
+delete
+cascade;

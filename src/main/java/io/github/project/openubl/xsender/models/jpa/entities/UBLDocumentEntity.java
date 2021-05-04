@@ -34,7 +34,7 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     private String id;
 
     @NotNull
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
     private NamespaceEntity namespace;
 
