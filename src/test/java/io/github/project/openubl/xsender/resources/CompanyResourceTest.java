@@ -25,8 +25,7 @@ import java.util.UUID;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
 @QuarkusTestResource(KeycloakServer.class)
@@ -69,6 +68,55 @@ public class CompanyResourceTest extends BaseKeycloakTest {
     }
 
     @Test
+    public void createCompany() {
+        // Given
+        NamespaceEntity namespace = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
+                .withId(UUID.randomUUID().toString())
+                .withName("my-namespace")
+                .withOwner("alice")
+                .withCreatedOn(new Date())
+                .build();
+        namespaceRepository.persist(namespace);
+
+        // When
+        CompanyRepresentation company = CompanyRepresentation.CompanyRepresentationBuilder.aCompanyRepresentation()
+                .withName("My company")
+                .withRuc("12345678910")
+                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
+                        .withFactura("http://url1.com")
+                        .withGuia("http://url2.com")
+                        .withRetenciones("http://url3.com")
+                        .build()
+                )
+                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
+                        .withUsername("myUsername")
+                        .withPassword("myPassword")
+                        .build()
+                )
+                .build();
+
+        CompanyRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(company)
+                .when()
+                .post("/api/namespaces/" + namespace.getName() + "/companies")
+                .then()
+                .statusCode(200)
+                .body("name", is(company.getName()),
+                        "webServices.factura", is(company.getWebServices().getFactura()),
+                        "webServices.guia", is(company.getWebServices().getGuia()),
+                        "webServices.retenciones", is(company.getWebServices().getRetenciones()),
+                        "credentials.username", is(company.getCredentials().getUsername()),
+                        "credentials.password", nullValue()
+                ).extract().body().as(CompanyRepresentation.class);
+
+        // Then
+        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.company.toString(), response.getId(), EventType.CREATED.toString());
+        assertNotNull(kafkaMsg);
+    }
+
+    @Test
     public void getCompany() {
         // Given
         CompanyEntity company = CompanyEntity.CompanyEntityBuilder.aCompanyEntity()
@@ -83,12 +131,14 @@ public class CompanyResourceTest extends BaseKeycloakTest {
 
         companyRepository.persist(company);
 
+        String a = "/api/namespaces/" + namespace.getName() + "/companies/" + company.getId();
+
         // When
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get("/api/companies/" + company.getId())
+                .get("/api/namespaces/" + namespace.getName() + "/companies/" + company.getRuc())
                 .then()
                 .statusCode(200)
                 .body("name", is(company.getName()),
@@ -118,7 +168,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get("/api/companies/" + company.getId())
+                .get("/api/namespaces/" + namespace.getName() + "/companies/" + company.getRuc())
                 .then()
                 .statusCode(404);
 
@@ -126,7 +176,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get("/api/companies/" + company.getId())
+                .get("/api/namespaces/" + namespace.getName() + "/companies/" + company.getRuc())
                 .then()
                 .statusCode(200);
         // Then
@@ -170,7 +220,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .accept(ContentType.JSON)
                 .body(companyRepresentation)
                 .when()
-                .put("/api/companies/" + company.getId())
+                .put("/api/namespaces/" + namespace.getName() + "/companies/" + company.getRuc())
                 .then()
                 .statusCode(200)
                 .body("ruc", is(companyRepresentation.getRuc()),
@@ -223,7 +273,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .accept(ContentType.JSON)
                 .body(companyRepresentation)
                 .when()
-                .put("/api/companies/" + company.getId())
+                .put("/api/namespaces/" + namespace.getName() + "/companies/" + company.getRuc())
                 .then()
                 .statusCode(404);
 
@@ -251,12 +301,12 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .delete("/api/companies/" + company.getId())
+                .delete("/api/namespaces/" + namespace.getName() + "/companies/" + company.getRuc())
                 .then()
                 .statusCode(204);
 
         // Then
-        assertNotNull(companyRepository.findById(company.getId()));
+        assertNull(companyRepository.findById(company.getId()));
     }
 
     @Test
@@ -279,7 +329,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .delete("/api/companies/" + company.getId())
+                .delete("/api/namespaces/" + namespace.getName() + "/companies/" + company.getRuc())
                 .then()
                 .statusCode(404);
 
@@ -287,7 +337,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .delete("/api/companies/" + company.getId())
+                .delete("/api/namespaces/" + namespace.getName() + "/companies/" + company.getRuc())
                 .then()
                 .statusCode(204);
 

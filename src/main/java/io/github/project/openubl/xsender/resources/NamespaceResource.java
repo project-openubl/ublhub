@@ -20,18 +20,13 @@ package io.github.project.openubl.xsender.resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.debezium.outbox.quarkus.ExportedEvent;
-import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
-import io.github.project.openubl.xsender.kafka.idm.CompanyCUDEventRepresentation;
 import io.github.project.openubl.xsender.kafka.idm.NamespaceCrudEventRepresentation;
 import io.github.project.openubl.xsender.kafka.producers.EntityEventProducer;
 import io.github.project.openubl.xsender.kafka.producers.EntityType;
 import io.github.project.openubl.xsender.kafka.producers.EventType;
 import io.github.project.openubl.xsender.kafka.utils.EventEntityToRepresentation;
-import io.github.project.openubl.xsender.managers.CompanyManager;
-import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
 import io.github.project.openubl.xsender.security.UserIdentity;
@@ -41,10 +36,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Response;
 
 @Path("/namespaces")
 @Produces("application/json")
@@ -60,12 +53,6 @@ public class NamespaceResource {
 
     @Inject
     NamespaceRepository namespaceRepository;
-
-    @Inject
-    CompanyRepository companyRepository;
-
-    @Inject
-    CompanyManager companyManager;
 
     @Inject
     Event<ExportedEvent<?, ?>> event;
@@ -118,34 +105,6 @@ public class NamespaceResource {
         }
     }
 
-    @POST
-    @Path("/{namespace}/companies")
-    public Response createCompany(
-            @PathParam("namespace") @NotNull String namespace,
-            @NotNull @Valid CompanyRepresentation rep
-    ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-
-        if (companyRepository.findByRuc(namespaceEntity, rep.getRuc()).isPresent()) {
-            return Response.status(Response.Status.CONFLICT)
-                    .entity("RUC already taken")
-                    .build();
-        }
-
-        CompanyEntity companyEntity = companyManager.createCompany(namespaceEntity, rep);
-
-        try {
-            CompanyCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(companyEntity);
-            String eventPayload = objectMapper.writeValueAsString(eventRep);
-            this.event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.company, EventType.CREATED, eventPayload));
-        } catch (JsonProcessingException e) {
-            LOG.error(e);
-        }
-
-        return Response.ok()
-                .entity(EntityToRepresentation.toRepresentation(companyEntity))
-                .build();
-    }
 }
 
 

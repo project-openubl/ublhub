@@ -28,7 +28,9 @@ import io.github.project.openubl.xsender.kafka.producers.EventType;
 import io.github.project.openubl.xsender.kafka.utils.EventEntityToRepresentation;
 import io.github.project.openubl.xsender.managers.CompanyManager;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
+import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
 import io.github.project.openubl.xsender.security.UserIdentity;
 import org.jboss.logging.Logger;
@@ -37,10 +39,12 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
 
-@Path("/companies")
+@Path("/namespaces/{namespace}/companies")
 @Produces("application/json")
 @Consumes("application/json")
 @Transactional
@@ -51,6 +55,9 @@ public class CompanyResource {
 
     @Inject
     UserIdentity userIdentity;
+
+    @Inject
+    NamespaceRepository namespaceRepository;
 
     @Inject
     CompanyRepository companyRepository;
@@ -64,20 +71,56 @@ public class CompanyResource {
     @Inject
     ObjectMapper objectMapper;
 
+    @POST
+    @Path("/")
+    public Response createCompany(
+            @PathParam("namespace") @NotNull String namespace,
+            @NotNull @Valid CompanyRepresentation rep
+    ) {
+        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+
+        if (companyRepository.findByRuc(namespaceEntity, rep.getRuc()).isPresent()) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity("RUC already taken")
+                    .build();
+        }
+
+        CompanyEntity companyEntity = companyManager.createCompany(namespaceEntity, rep);
+
+        try {
+            CompanyCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(companyEntity);
+            String eventPayload = objectMapper.writeValueAsString(eventRep);
+            this.event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.company, EventType.CREATED, eventPayload));
+        } catch (JsonProcessingException e) {
+            LOG.error(e);
+        }
+
+        return Response.ok()
+                .entity(EntityToRepresentation.toRepresentation(companyEntity))
+                .build();
+    }
+
     @GET
-    @Path("/{companyId}")
-    public CompanyRepresentation getCompany(@PathParam("companyId") @NotNull String companyId) {
-        CompanyEntity companyEntity = companyRepository.findByIdAndOwner(companyId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+    @Path("/{ruc}")
+    public CompanyRepresentation getCompany(
+            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("ruc") @NotNull String ruc
+    ) {
+        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        CompanyEntity companyEntity = companyRepository.findByRuc(namespaceEntity, ruc).orElseThrow(NotFoundException::new);
         return EntityToRepresentation.toRepresentation(companyEntity);
     }
 
     @PUT
-    @Path("/{companyId}")
+    @Path("/{ruc}")
     public CompanyRepresentation updateCompany(
-            @PathParam("companyId") @NotNull String companyId,
+            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("ruc") @NotNull String ruc,
             @NotNull CompanyRepresentation rep
     ) {
-        CompanyEntity companyEntity = companyRepository.findByIdAndOwner(companyId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        CompanyEntity companyEntity = companyRepository.findByRuc(namespaceEntity, ruc).orElseThrow(NotFoundException::new);
+
         companyEntity = companyManager.updateCompany(rep, companyEntity);
 
         try {
@@ -92,9 +135,14 @@ public class CompanyResource {
     }
 
     @DELETE
-    @Path("/{companyId}")
-    public void deleteNamespace(@PathParam("companyId") @NotNull String companyId) {
-        CompanyEntity companyEntity = companyRepository.findByIdAndOwner(companyId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+    @Path("/{ruc}")
+    public void deleteNamespace(
+            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("ruc") @NotNull String ruc
+    ) {
+        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        CompanyEntity companyEntity = companyRepository.findByRuc(namespaceEntity, ruc).orElseThrow(NotFoundException::new);
+
         companyRepository.delete(companyEntity);
 
         try {

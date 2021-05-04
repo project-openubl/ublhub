@@ -37,12 +37,6 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
         ).firstResultOptional();
     }
 
-    public Optional<CompanyEntity> findByIdAndOwner(String companyId, String owner) {
-        return find("select c from CompanyEntity c inner join c.namespace ns where c.id = :companyId and ns.owner = :owner",
-                Parameters.with("companyId", companyId).and("owner", owner).map()
-        ).firstResultOptional();
-    }
-
 //    public Optional<CompanyEntity> findByNameAndOwner(String name, String owner) {
 //        return find("name = ?1 and owner = ?2", name, owner).firstResultOptional();
 //    }

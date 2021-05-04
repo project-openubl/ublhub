@@ -62,7 +62,7 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
         // Given
         final String NAME = "mynamespace";
 
-        NamespaceRepresentation company = NamespaceRepresentation.NamespaceRepresentationBuilder.aNamespaceRepresentation()
+        NamespaceRepresentation namespace = NamespaceRepresentation.NamespaceRepresentationBuilder.aNamespaceRepresentation()
                 .withName(NAME)
                 .withDescription("my description")
                 .build();
@@ -71,12 +71,12 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body(company)
+                .body(namespace)
                 .when()
                 .post("/api/user/namespaces")
                 .then()
                 .statusCode(200)
-                .body("name", is(company.getName()));
+                .body("name", is(namespace.getName()));
 
         // Then
         Optional<NamespaceEntity> namespaceOptional = namespaceRepository.findByName(NAME);
@@ -94,28 +94,28 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
     @Test
     public void createDuplicateNamespace() {
         // Given
-        final String COMPANY_NAME = "mynamespace";
+        final String NAME = "mynamespace";
 
-        NamespaceRepresentation company = NamespaceRepresentation.NamespaceRepresentationBuilder.aNamespaceRepresentation()
-                .withName(COMPANY_NAME)
+        NamespaceRepresentation namespace = NamespaceRepresentation.NamespaceRepresentationBuilder.aNamespaceRepresentation()
+                .withName(NAME)
                 .build();
 
         // When
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body(company)
+                .body(namespace)
                 .when()
                 .post("/api/user/namespaces")
                 .then()
                 .statusCode(200)
-                .body("name", is(company.getName()));
+                .body("name", is(namespace.getName()));
 
         // Then
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body(company)
+                .body(namespace)
                 .when()
                 .post("/api/user/namespaces")
                 .then()

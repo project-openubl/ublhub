@@ -1,8 +1,5 @@
 package io.github.project.openubl.xsender.resources;
 
-import io.github.project.openubl.xsender.idm.CompanyRepresentation;
-import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
-import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
 import io.github.project.openubl.xsender.kafka.producers.EntityType;
 import io.github.project.openubl.xsender.kafka.producers.EventType;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
@@ -24,7 +21,6 @@ import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
@@ -229,55 +225,6 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
 
         // Then
 
-    }
-
-    @Test
-    public void createCompany() {
-        // Given
-        NamespaceEntity namespace = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my-namespace")
-                .withOwner("alice")
-                .withCreatedOn(new Date())
-                .build();
-        namespaceRepository.persist(namespace);
-
-        // When
-        CompanyRepresentation company = CompanyRepresentation.CompanyRepresentationBuilder.aCompanyRepresentation()
-                .withName("My company")
-                .withRuc("12345678910")
-                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
-                        .withFactura("http://url1.com")
-                        .withGuia("http://url2.com")
-                        .withRetenciones("http://url3.com")
-                        .build()
-                )
-                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
-                        .withUsername("myUsername")
-                        .withPassword("myPassword")
-                        .build()
-                )
-                .build();
-
-        CompanyRepresentation response = given().auth().oauth2(getAccessToken("alice"))
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(company)
-                .when()
-                .post("/api/namespaces/" + namespace.getName() + "/companies")
-                .then()
-                .statusCode(200)
-                .body("name", is(company.getName()),
-                        "webServices.factura", is(company.getWebServices().getFactura()),
-                        "webServices.guia", is(company.getWebServices().getGuia()),
-                        "webServices.retenciones", is(company.getWebServices().getRetenciones()),
-                        "credentials.username", is(company.getCredentials().getUsername()),
-                        "credentials.password", nullValue()
-                ).extract().body().as(CompanyRepresentation.class);
-
-        // Then
-        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.company.toString(), response.getId(), EventType.CREATED.toString());
-        assertNotNull(kafkaMsg);
     }
 
 }
