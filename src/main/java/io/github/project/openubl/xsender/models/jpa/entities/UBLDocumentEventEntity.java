@@ -33,7 +33,7 @@ public class UBLDocumentEventEntity extends PanacheEntityBase {
     private String id;
 
     @NotNull
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = @ForeignKey, name = "document_id")
     private UBLDocumentEntity ublDocument;
 

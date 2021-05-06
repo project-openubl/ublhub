@@ -16,13 +16,15 @@
  */
 package io.github.project.openubl.xsender.models.jpa.entities;
 
-import io.github.project.openubl.xsender.models.DeliveryStatusType;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "UBL_DOCUMENT")
@@ -38,17 +40,24 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
     private NamespaceEntity namespace;
 
+    @Type(type = "org.hibernate.type.YesNoType")
+    @Column(name = "in_progress")
+    private boolean inProgress;
+
     @NotNull
     @Column(name = "created_on")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdOn;
 
     @Type(type = "org.hibernate.type.YesNoType")
-    @Column(name = "valid")
-    private Boolean valid;
+    @Column(name = "file_valid")
+    private Boolean fileValid;
 
-    @Column(name = "validation_error")
-    private String validationError;
+    @Column(name = "file_validation_error")
+    private String fileValidationError;
+
+    @Column(name = "error")
+    private String error;
 
     @NotNull
     @Column(name = "retries")
@@ -82,11 +91,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     private String storageCdr;
 
     //
-
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "delivery_status")
-    private DeliveryStatusType deliveryStatus;
 
     @Column(name = "sunat_ticket")
     private String sunatTicket;
@@ -124,6 +128,14 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.namespace = namespace;
     }
 
+    public boolean isInProgress() {
+        return inProgress;
+    }
+
+    public void setInProgress(boolean inProgress) {
+        this.inProgress = inProgress;
+    }
+
     public Date getCreatedOn() {
         return createdOn;
     }
@@ -132,20 +144,28 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.createdOn = createdOn;
     }
 
-    public Boolean getValid() {
-        return valid;
+    public Boolean getFileValid() {
+        return fileValid;
     }
 
-    public void setValid(Boolean valid) {
-        this.valid = valid;
+    public void setFileValid(Boolean fileValid) {
+        this.fileValid = fileValid;
     }
 
-    public String getValidationError() {
-        return validationError;
+    public String getFileValidationError() {
+        return fileValidationError;
     }
 
-    public void setValidationError(String validationError) {
-        this.validationError = validationError;
+    public void setFileValidationError(String fileValidationError) {
+        this.fileValidationError = fileValidationError;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 
     public int getRetries() {
@@ -212,14 +232,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.storageCdr = storageCdr;
     }
 
-    public DeliveryStatusType getDeliveryStatus() {
-        return deliveryStatus;
-    }
-
-    public void setDeliveryStatus(DeliveryStatusType deliveryStatus) {
-        this.deliveryStatus = deliveryStatus;
-    }
-
     public String getSunatTicket() {
         return sunatTicket;
     }
@@ -268,12 +280,15 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.sunatEvents = sunatEvents;
     }
 
+
     public static final class UBLDocumentEntityBuilder {
         private String id;
         private NamespaceEntity namespace;
+        private boolean inProgress;
         private Date createdOn;
-        private Boolean valid;
-        private String validationError;
+        private Boolean fileValid;
+        private String fileValidationError;
+        private String error;
         private int retries;
         private Date willRetryOn;
         private String ruc;
@@ -282,7 +297,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         private String voidedLineDocumentTypeCode;
         private String storageFile;
         private String storageCdr;
-        private DeliveryStatusType deliveryStatus;
         private String sunatTicket;
         private String sunatStatus;
         private Integer sunatCode;
@@ -307,18 +321,28 @@ public class UBLDocumentEntity extends PanacheEntityBase {
             return this;
         }
 
+        public UBLDocumentEntityBuilder withInProgress(boolean inProgress) {
+            this.inProgress = inProgress;
+            return this;
+        }
+
         public UBLDocumentEntityBuilder withCreatedOn(Date createdOn) {
             this.createdOn = createdOn;
             return this;
         }
 
-        public UBLDocumentEntityBuilder withValid(Boolean valid) {
-            this.valid = valid;
+        public UBLDocumentEntityBuilder withFileValid(Boolean fileValid) {
+            this.fileValid = fileValid;
             return this;
         }
 
-        public UBLDocumentEntityBuilder withValidationError(String validationError) {
-            this.validationError = validationError;
+        public UBLDocumentEntityBuilder withFileValidationError(String fileValidationError) {
+            this.fileValidationError = fileValidationError;
+            return this;
+        }
+
+        public UBLDocumentEntityBuilder withError(String error) {
+            this.error = error;
             return this;
         }
 
@@ -362,11 +386,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
             return this;
         }
 
-        public UBLDocumentEntityBuilder withDeliveryStatus(DeliveryStatusType deliveryStatus) {
-            this.deliveryStatus = deliveryStatus;
-            return this;
-        }
-
         public UBLDocumentEntityBuilder withSunatTicket(String sunatTicket) {
             this.sunatTicket = sunatTicket;
             return this;
@@ -401,9 +420,11 @@ public class UBLDocumentEntity extends PanacheEntityBase {
             UBLDocumentEntity uBLDocumentEntity = new UBLDocumentEntity();
             uBLDocumentEntity.setId(id);
             uBLDocumentEntity.setNamespace(namespace);
+            uBLDocumentEntity.setInProgress(inProgress);
             uBLDocumentEntity.setCreatedOn(createdOn);
-            uBLDocumentEntity.setValid(valid);
-            uBLDocumentEntity.setValidationError(validationError);
+            uBLDocumentEntity.setFileValid(fileValid);
+            uBLDocumentEntity.setFileValidationError(fileValidationError);
+            uBLDocumentEntity.setError(error);
             uBLDocumentEntity.setRetries(retries);
             uBLDocumentEntity.setWillRetryOn(willRetryOn);
             uBLDocumentEntity.setRuc(ruc);
@@ -412,7 +433,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
             uBLDocumentEntity.setVoidedLineDocumentTypeCode(voidedLineDocumentTypeCode);
             uBLDocumentEntity.setStorageFile(storageFile);
             uBLDocumentEntity.setStorageCdr(storageCdr);
-            uBLDocumentEntity.setDeliveryStatus(deliveryStatus);
             uBLDocumentEntity.setSunatTicket(sunatTicket);
             uBLDocumentEntity.setSunatStatus(sunatStatus);
             uBLDocumentEntity.setSunatCode(sunatCode);

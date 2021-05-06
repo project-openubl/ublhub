@@ -24,29 +24,43 @@ import java.util.Map;
 
 public class PostgreSQLServer implements QuarkusTestResourceLifecycleManager {
 
-    private GenericContainer postgreSQL;
+    public static final String NETWORK_ALIAS = "postgresql";
+    public static final int CONTAINER_PORT = 5432;
+
+    public static final String DB_NAME = "xsender_db";
+    public static final String DB_USERNAME = "xsender_username";
+    public static final String DB_PASSWORD = "xsender_password";
+
+    private GenericContainer<?> postgreSQL;
 
     @Override
     public Map<String, String> start() {
-        postgreSQL = new GenericContainer("debezium/postgres:12")
-                .withExposedPorts(5432)
-                .withEnv("POSTGRES_USER", "xsender_username")
-                .withEnv("POSTGRES_PASSWORD", "xsender_password")
-                .withEnv("POSTGRES_DB", "xsender_db");
+        postgreSQL = new GenericContainer<>("debezium/postgres:12")
+                .withNetwork(KeycloakServer.network)
+                .withNetworkAliases(NETWORK_ALIAS)
+                .withExposedPorts(CONTAINER_PORT)
+                .withEnv("POSTGRES_DB", DB_NAME)
+                .withEnv("POSTGRES_USER", DB_USERNAME)
+                .withEnv("POSTGRES_PASSWORD", DB_PASSWORD);
         postgreSQL.start();
 
         String host = postgreSQL.getHost();
-        Integer port = postgreSQL.getMappedPort(5432);
+        Integer port = postgreSQL.getMappedPort(CONTAINER_PORT);
 
         return new HashMap<>() {{
-            put("quarkus.datasource.jdbc.url", "jdbc:postgresql://" + host + ":" + port + "/xsender_db");
-            put("quarkus.datasource.username", "xsender_username");
-            put("quarkus.datasource.password", "xsender_password");
+            put("quarkus.datasource.jdbc.url", "jdbc:postgresql://" + host + ":" + port + "/" + DB_NAME);
+            put("quarkus.datasource.username", DB_USERNAME);
+            put("quarkus.datasource.password", DB_PASSWORD);
         }};
     }
 
     @Override
     public void stop() {
         postgreSQL.stop();
+    }
+
+    @Override
+    public int order() {
+        return 10;
     }
 }

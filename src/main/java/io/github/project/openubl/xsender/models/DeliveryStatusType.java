@@ -19,4 +19,5 @@ package io.github.project.openubl.xsender.models;
 public enum DeliveryStatusType {
     IN_PROGRESS,
     DELIVERED,
+    ERROR,
 }

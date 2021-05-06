@@ -20,7 +20,6 @@ import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 

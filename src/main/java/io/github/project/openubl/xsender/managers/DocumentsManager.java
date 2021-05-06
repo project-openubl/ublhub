@@ -23,7 +23,6 @@ import io.github.project.openubl.xsender.exceptions.StorageException;
 import io.github.project.openubl.xsender.files.FilesManager;
 import io.github.project.openubl.xsender.kafka.idm.UBLDocumentSunatEventRepresentation;
 import io.github.project.openubl.xsender.kafka.producers.UBLDocumentCreatedEventProducer;
-import io.github.project.openubl.xsender.models.DeliveryStatusType;
 import io.github.project.openubl.xsender.models.FileType;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
@@ -65,9 +64,9 @@ public class DocumentsManager {
         UBLDocumentEntity documentEntity = UBLDocumentEntity.UBLDocumentEntityBuilder.anUBLDocumentEntity()
                 .withId(UUID.randomUUID().toString())
                 .withStorageFile(fileID)
-                .withDeliveryStatus(DeliveryStatusType.IN_PROGRESS)
-                .withNamespace(namespaceEntity)
+                .withInProgress(true)
                 .withCreatedOn(new Date())
+                .withNamespace(namespaceEntity)
                 .build();
 
         documentRepository.persist(documentEntity);
@@ -76,6 +75,7 @@ public class DocumentsManager {
             UBLDocumentSunatEventRepresentation eventRep = new UBLDocumentSunatEventRepresentation();
             eventRep.setId(documentEntity.getId());
             eventRep.setStorageFile(documentEntity.getStorageFile());
+            eventRep.setNamespace(namespaceEntity.getName());
 
             String eventPayload = objectMapper.writeValueAsString(eventRep);
             event.fire(new UBLDocumentCreatedEventProducer(documentEntity.getId(), eventPayload));

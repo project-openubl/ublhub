@@ -16,13 +16,10 @@
  */
 package io.github.project.openubl.xsender.resources;
 
-import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.DocumentRepresentation;
-import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
-import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
+import io.github.project.openubl.xsender.kafka.consumers.DocumentEvents;
 import io.github.project.openubl.xsender.kafka.producers.EntityType;
 import io.github.project.openubl.xsender.kafka.producers.EventType;
-import io.github.project.openubl.xsender.kafka.producers.UBLDocumentCreatedEventProducer;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
@@ -36,35 +33,37 @@ import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.*;
+import static org.awaitility.Awaitility.await;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
-@QuarkusTestResource(KeycloakServer.class)
-@QuarkusTestResource(PostgreSQLServer.class)
-@QuarkusTestResource(KafkaServer.class)
-@QuarkusTestResource(S3Server.class)
+@QuarkusTestResource(value = KeycloakServer.class)
+@QuarkusTestResource(value = PostgreSQLServer.class)
+@QuarkusTestResource(value = KafkaServer.class)
+@QuarkusTestResource(value = S3Server.class)
 public class DocumentResourceTest extends BaseKeycloakTest {
 
     final SunatCredentialsEntity credentials = SunatCredentialsEntity.Builder.aSunatCredentialsEntity()
-            .withSunatUsername("anyUsername")
-            .withSunatPassword("anyPassword")
+            .withSunatUsername("12345678912MODDATOS")
+            .withSunatPassword("MODDATOS")
             .build();
     final SunatUrlsEntity urls = SunatUrlsEntity.Builder.aSunatUrlsEntity()
-            .withSunatUrlFactura("https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl")
-            .withSunatUrlGuiaRemision("https://e-guiaremision.sunat.gob.pe/ol-ti-itemision-guia-gem/billService?wsdl")
-            .withSunatUrlPercepcionRetencion("https://e-factura.sunat.gob.pe/ol-ti-itemision-otroscpe-gem/billService?wsdl")
+            .withSunatUrlFactura("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
+            .withSunatUrlGuiaRemision("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
+            .withSunatUrlPercepcionRetencion("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")
             .build();
 
     NamespaceEntity namespace;
+    CompanyEntity company;
 
     @Inject
     NamespaceRepository namespaceRepository;
@@ -77,6 +76,11 @@ public class DocumentResourceTest extends BaseKeycloakTest {
 
     @BeforeEach
     public void beforeEach() {
+        this.documentRepository.deleteAll();
+        this.companyRepository.deleteAll();
+        this.namespaceRepository.deleteAll();
+
+        // Create namespace
         NamespaceEntity namespace = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
                 .withId(UUID.randomUUID().toString())
                 .withName("my-namespace")
@@ -84,21 +88,30 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 .withCreatedOn(new Date())
                 .build();
 
-        this.documentRepository.deleteAll();
-        this.companyRepository.deleteAll();
-        this.namespaceRepository.deleteAll();
-
         this.namespaceRepository.persist(namespace);
         this.namespace = namespace;
+
+        // Create company
+        CompanyEntity company = CompanyEntity.CompanyEntityBuilder.aCompanyEntity()
+                .withId(UUID.randomUUID().toString())
+                .withName("my company")
+                .withRuc("12345678912")
+                .withCreatedOn(new Date())
+                .withSunatCredentials(credentials)
+                .withSunatUrls(urls)
+                .withNamespace(namespace)
+                .build();
+        this.companyRepository.persist(company);
+        this.company = company;
     }
 
     @Test
-    public void uploadXML() throws URISyntaxException {
+    public void uploadInvalidXML_shouldFail() throws URISyntaxException {
         // Given
 
         // When
 
-        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xmls/invoice_signed.xml").toURI();
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/maven.xml").toURI();
         File file = new File(fileURI);
 
         DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
@@ -108,13 +121,160 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 .post("/api/namespaces/" + namespace.getName() + "/documents/upload")
                 .then()
                 .statusCode(200)
-                .body("id", is(notNullValue())
+                .body("id", is(notNullValue()),
+                        "inProgress", is(true),
+                        "createdOn", is(notNullValue())
                 ).extract().body().as(DocumentRepresentation.class);
 
         // Then
         OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.sunat_document.toString(), response.getId(), EventType.SCHEDULED.toString());
         assertNotNull(kafkaMsg);
+
+        await().atMost(20, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
+
+        //
+        UBLDocumentEntity document = documentRepository.findById(response.getId());
+
+        assertFalse(document.getFileValid());
+        assertEquals(DocumentEvents.INVALID_FILE_MSG, document.getFileValidationError());
+
+        assertNotNull(document.getStorageFile());
     }
 
+    @Test
+    public void uploadXMLAndRucSettingsNotAvailable_shouldFail() throws URISyntaxException {
+        // Given
+
+        // When
+
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_11111111111.xml").toURI();
+        File file = new File(fileURI);
+
+        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+                .accept(ContentType.JSON)
+                .multiPart("file", file, "application/xml")
+                .when()
+                .post("/api/namespaces/" + namespace.getName() + "/documents/upload")
+                .then()
+                .statusCode(200)
+                .body("id", is(notNullValue()),
+                        "inProgress", is(true),
+                        "createdOn", is(notNullValue())
+                ).extract().body().as(DocumentRepresentation.class);
+
+        // Then
+        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.sunat_document.toString(), response.getId(), EventType.SCHEDULED.toString());
+        assertNotNull(kafkaMsg);
+
+        await().atMost(20, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
+
+        //
+        UBLDocumentEntity document = documentRepository.findById(response.getId());
+
+        assertNotNull(document.getStorageFile());
+
+        assertFalse(document.isInProgress());
+        assertTrue(document.getFileValid());
+        assertNull(document.getFileValidationError());
+        assertEquals("11111111111", document.getRuc());
+        assertEquals("F001-1", document.getDocumentID());
+        assertEquals("Invoice", document.getDocumentType());
+        assertEquals(DocumentEvents.RUC_IN_COMPANY_NOT_FOUND, document.getError());
+    }
+
+    @Test
+    public void uploadInvalidInvoice_validRucSettings_shouldFailOnSendToSunat() throws URISyntaxException {
+        // Given
+
+        // When
+
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_12345678912.xml").toURI();
+        File file = new File(fileURI);
+
+        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+                .accept(ContentType.JSON)
+                .multiPart("file", file, "application/xml")
+                .when()
+                .post("/api/namespaces/" + namespace.getName() + "/documents/upload")
+                .then()
+                .statusCode(200)
+                .body("id", is(notNullValue()),
+                        "inProgress", is(true),
+                        "createdOn", is(notNullValue())
+                ).extract().body().as(DocumentRepresentation.class);
+
+        // Then
+        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.sunat_document.toString(), response.getId(), EventType.SCHEDULED.toString());
+        assertNotNull(kafkaMsg);
+
+        await().atMost(20, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
+
+        //
+
+        UBLDocumentEntity document = documentRepository.findById(response.getId());
+        assertNull(document.getError());
+        assertFalse(document.isInProgress());
+
+        assertTrue(document.getFileValid());
+        assertNull(document.getFileValidationError());
+
+        assertNotNull(document.getStorageFile());
+
+        assertEquals("12345678912", document.getRuc());
+        assertEquals("F001-1", document.getDocumentID());
+        assertEquals("Invoice", document.getDocumentType());
+        assertEquals("RECHAZADO", document.getSunatStatus());
+        assertEquals(2335, document.getSunatCode());
+        assertEquals("El documento electrónico ingresado ha sido alterado", document.getSunatDescription());
+        assertNull(document.getSunatTicket());
+    }
+
+    @Test
+    public void uploadVoidedDocument_validRucSettings_shouldVerifyTicket() throws URISyntaxException {
+        // Given
+
+        // When
+
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/voided-document_12345678912.xml").toURI();
+        File file = new File(fileURI);
+
+        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+                .accept(ContentType.JSON)
+                .multiPart("file", file, "application/xml")
+                .when()
+                .post("/api/namespaces/" + namespace.getName() + "/documents/upload")
+                .then()
+                .statusCode(200)
+                .body("id", is(notNullValue()),
+                        "inProgress", is(true),
+                        "createdOn", is(notNullValue())
+                ).extract().body().as(DocumentRepresentation.class);
+
+        // Then
+        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.sunat_document.toString(), response.getId(), EventType.SCHEDULED.toString());
+        assertNotNull(kafkaMsg);
+
+        await().atMost(20, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
+
+        //
+
+        UBLDocumentEntity document = documentRepository.findById(response.getId());
+        assertNull(document.getError());
+        assertFalse(document.isInProgress());
+
+        assertTrue(document.getFileValid());
+        assertNull(document.getFileValidationError());
+
+        assertNotNull(document.getStorageFile());
+        assertNotNull(document.getStorageCdr());
+
+        assertEquals("12345678912", document.getRuc());
+        assertEquals("RA-20200328-1", document.getDocumentID());
+        assertEquals("VoidedDocuments", document.getDocumentType());
+        assertEquals("ACEPTADO", document.getSunatStatus());
+        assertEquals(0, document.getSunatCode());
+        assertEquals("La Comunicacion de baja RA-20200328-1, ha sido aceptada", document.getSunatDescription());
+        assertNotNull(document.getSunatTicket());
+    }
 
 }

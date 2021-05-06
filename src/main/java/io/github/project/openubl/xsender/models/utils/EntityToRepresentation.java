@@ -75,6 +75,7 @@ public class EntityToRepresentation {
         DocumentRepresentation rep = new DocumentRepresentation();
 
         rep.setId(entity.getId());
+        rep.setInProgress(entity.isInProgress());
 
         rep.setCreatedOn(entity.getCreatedOn().getTime());
         rep.setRetries(entity.getRetries());
@@ -82,8 +83,8 @@ public class EntityToRepresentation {
 
         // File
 
-        rep.setFileContentValid(entity.getValid());
-        rep.setFileContentValidationError(entity.getValidationError());
+        rep.setFileContentValid(entity.getFileValid());
+        rep.setFileContentValidationError(entity.getFileValidationError());
 
         rep.setFileContent(new DocumentContentRepresentation());
         rep.getFileContent().setRuc(entity.getRuc());
@@ -92,7 +93,7 @@ public class EntityToRepresentation {
 
         // Sunat
 
-        rep.setSunatDeliveryStatus(entity.getDeliveryStatus().toString());
+        rep.setSunatDeliveryStatus(entity.getSunatStatus());
         rep.setSunat(new DocumentSunatStatusRepresentation());
 
         rep.getSunat().setCode(entity.getSunatCode());

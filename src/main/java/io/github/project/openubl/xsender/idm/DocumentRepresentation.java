@@ -26,6 +26,7 @@ public class DocumentRepresentation {
 
     private String id;
     private Long createdOn;
+    private boolean inProgress;
 
     private int retries;
     private Date willRetryOn;
@@ -52,6 +53,14 @@ public class DocumentRepresentation {
 
     public void setCreatedOn(Long createdOn) {
         this.createdOn = createdOn;
+    }
+
+    public boolean isInProgress() {
+        return inProgress;
+    }
+
+    public void setInProgress(boolean inProgress) {
+        this.inProgress = inProgress;
     }
 
     public int getRetries() {
