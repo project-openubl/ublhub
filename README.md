@@ -3,34 +3,42 @@
 
 # XSender server
 
-Send XMLs to SUNAT in a fashion way.
+Envía tus XMLs a la SUNAT de manera fácil.
 
-# Development
+## Iniciar el servidor en modo desarrollo
 
-To start this project in development mode follow the instructions below.
-
-## Clone repository
+Clona el repositorio:
 
 ```shell
 git clone https://github.com/project-openubl/xsender-server
 ```
 
-## Start dependencies
+### Inicia las dependencias
 
-Start the dependencies using `docker-compose.yml`:
+XSender server necesita:
+
+- [PostgreSQL](https://www.postgresql.org/)
+- [Keycloak](https://www.keycloak.org/)
+- [Amazon S3](https://aws.amazon.com/s3/) o [Minio](https://min.io/)
+- [Apache kafka](https://kafka.apache.org/)
+
+Puede iniciar los servicios requeridos utilizando `docker-compose.yml`:
 
 ```shell
 docker-compose up
 ```
 
-## Configure Kafka-connect
+### Configura Kafka-connect
 
-Open a terminal an execute 
+Una vez que todas las dependencias fueron iniciadas usando `docker-compose.yml` debes de configurar `Kafka connect`.
+
+Atre un terminal y ejecuta el siguiente comando:
+
 ```shell
 curl 'localhost:8083/connectors/' -i -X POST -H "Accept:application/json" \
 -H "Content-Type:application/json" \
 -d '{
-   "name":"xsender-connector",
+   "name":"postgresql-connector",
    "config":{
       "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
       "tasks.max": "1",
@@ -46,6 +54,8 @@ curl 'localhost:8083/connectors/' -i -X POST -H "Accept:application/json" \
       "transforms": "outbox",
       "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
       "transforms.outbox.table.fields.additional.placement": "type:header:eventType",
+      "transforms.outbox.route.topic.replacement": "outbox.event.${routedByValue}",
+      "transforms.outbox.table.field.event.timestamp": "timestamp",
       "key.converter": "org.apache.kafka.connect.json.JsonConverter",
       "key.converter.schemas.enable": "false",
       "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -54,13 +64,20 @@ curl 'localhost:8083/connectors/' -i -X POST -H "Accept:application/json" \
 }'
 ```
 
-## Init server
+### Inicia el servidor
 
-You can run your application in dev mode that enables live coding using:
+Puedes iniciar el servidor en modo desarrollo usando el comando:
 
 ```shell script
 ./mvnw quarkus:dev
 ```
+
+### Links
+
+Una vez iniciado el servidor de desarrollo puedes acceder a los siguientes links:
+
+- http://localhost:8080/
+- http://localhost:8080/q/swagger-ui/
 
 # License
 
