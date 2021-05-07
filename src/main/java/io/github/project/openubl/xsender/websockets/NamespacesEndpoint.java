@@ -18,34 +18,23 @@ package io.github.project.openubl.xsender.websockets;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.project.openubl.xsender.kafka.idm.CompanyCUDEventRepresentation;
 import io.github.project.openubl.xsender.kafka.idm.NamespaceCrudEventRepresentation;
 import io.github.project.openubl.xsender.kafka.producers.EntityType;
 import io.github.project.openubl.xsender.kafka.producers.EventType;
-import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.websockets.idm.EventMessage;
 import io.github.project.openubl.xsender.websockets.idm.EventSpec;
 import io.github.project.openubl.xsender.websockets.idm.TypeMessage;
-import io.smallrye.common.annotation.Blocking;
 import io.smallrye.reactive.messaging.kafka.KafkaRecord;
 import io.vertx.core.impl.ConcurrentHashSet;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.context.ManagedExecutor;
-import org.eclipse.microprofile.context.ThreadContext;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
-import javax.websocket.CloseReason;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.Session;
-import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -54,17 +43,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 
-@ServerEndpoint("/namespaces/{namespace}/companies")
+@ServerEndpoint("/namespaces")
 @ApplicationScoped
-public class CompaniesEndpoint {
+public class NamespacesEndpoint {
 
-    private static final Logger LOG = Logger.getLogger(CompaniesEndpoint.class);
+    private static final Logger LOG = Logger.getLogger(NamespacesEndpoint.class);
 
     protected static final Map<Session, String> sessions = new ConcurrentHashMap<>();
-    protected static final Map<String, Set<Session>> namespacesSessions = new ConcurrentHashMap<>();
-
-    @Inject
-    NamespaceRepository namespaceRepository;
+    protected static final Map<String, Set<Session>> userSessions = new ConcurrentHashMap<>();
 
     @Inject
     KeycloakAuthenticator keycloakAuthenticator;
@@ -72,61 +58,29 @@ public class CompaniesEndpoint {
     @Inject
     ObjectMapper objectMapper;
 
-    @Blocking
-    @Transactional
     @OnMessage
-    public void onMessage(String message, Session session, @PathParam("namespace") String namespace) {
+    public void onMessage(String message, Session session) {
         Optional<String> usernameOptional = keycloakAuthenticator.authenticate(message, session);
+        usernameOptional.ifPresent(username -> {
+            sessions.put(session, username);
 
-        if (usernameOptional.isPresent()) {
-            String username = usernameOptional.get();
-
-            //TODO: move to CDI producer
-            ManagedExecutor executor = ManagedExecutor.builder()
-                    .maxAsync(5)
-                    .propagated(ThreadContext.CDI, ThreadContext.TRANSACTION)
-                    .build();
-
-            //TODO: move to CDI producer
-            ThreadContext threadContext = ThreadContext.builder()
-                    .propagated(ThreadContext.CDI, ThreadContext.TRANSACTION)
-                    .build();
-
-            executor.runAsync(threadContext.contextualRunnable(() -> {
-
-                NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, username).orElse(null);
-                if (namespaceEntity != null) {
-                    sessions.put(session, namespaceEntity.getId());
-
-                    String key = namespaceEntity.getId();
-                    Set<Session> newValue = namespacesSessions.getOrDefault(namespaceEntity.getId(), new ConcurrentHashSet<>());
-                    newValue.add(session);
-
-                    namespacesSessions.put(key, newValue);
-                } else {
-                    try {
-                        String errorMessage = "Unauthorized websocket";
-                        session.close(new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, errorMessage));
-                    } catch (IOException e1) {
-                        LOG.warn(e1.getMessage());
-                    }
-                }
-
-            }));
-        }
-
+            if (!userSessions.containsKey(username)) {
+                userSessions.put(username, new ConcurrentHashSet<>());
+            }
+            userSessions.get(username).add(session);
+        });
     }
 
     @OnClose
     public void onClose(Session session) {
-        String companyId = sessions.get(session);
-        if (companyId != null) {
+        String username = sessions.get(session);
+        if (username != null) {
             sessions.remove(session);
-            namespacesSessions.getOrDefault(companyId, Collections.emptySet()).remove(session);
+            userSessions.getOrDefault(username, Collections.emptySet()).remove(session);
         }
     }
 
-    @Incoming("event-company")
+    @Incoming("event-namespace")
     public CompletionStage<Void> readEvent(KafkaRecord<String, String> record) {
         return CompletableFuture.runAsync(() -> {
             String eventType = WebsocketUtils.getHeaderAsString(record, "eventType");
@@ -134,21 +88,20 @@ public class CompaniesEndpoint {
 
             try {
                 String unescapedPayload = objectMapper.readValue(payload, String.class);
-                CompanyCUDEventRepresentation eventRep = objectMapper.readValue(unescapedPayload, CompanyCUDEventRepresentation.class);
+                NamespaceCrudEventRepresentation eventRep = objectMapper.readValue(unescapedPayload, NamespaceCrudEventRepresentation.class);
 
                 EventMessage wsMessage = EventMessage.Builder.anEventMessage()
                         .withType(TypeMessage.EVENT)
                         .withSpec(EventSpec.Builder.anEventSpec()
                                 .withId(eventRep.getId())
-                                .withEntity(EntityType.company)
+                                .withEntity(EntityType.namespace)
                                 .withEvent(EventType.valueOf(eventType))
                                 .build()
                         )
                         .build();
 
                 String wsMessageString = objectMapper.writeValueAsString(wsMessage);
-
-                namespacesSessions.getOrDefault(eventRep.getNamespace(), Collections.emptySet()).forEach(session -> session.getAsyncRemote().sendObject(wsMessageString, result -> {
+                userSessions.getOrDefault(eventRep.getOwner(), Collections.emptySet()).forEach(session -> session.getAsyncRemote().sendObject(wsMessageString, result -> {
                     if (result.getException() != null) {
                         LOG.error("Unable to send message ", result.getException());
                     }

@@ -84,6 +84,8 @@ public class KafkaServer implements QuarkusTestResourceLifecycleManager {
                 "    \"transforms\": \"outbox\",\n" +
                 "    \"transforms.outbox.type\": \"io.debezium.transforms.outbox.EventRouter\",\n" +
                 "    \"transforms.outbox.table.fields.additional.placement\": \"type:header:eventType\",\n" +
+                "    \"transforms.outbox.route.topic.replacement\": \"outbox.event.${routedByValue}\",\n" +
+                "    \"transforms.outbox.table.field.event.timestamp\": \"timestamp\",\n" +
                 "    \"key.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n" +
                 "    \"key.converter.schemas.enable\": \"false\",\n" +
                 "    \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n" +
