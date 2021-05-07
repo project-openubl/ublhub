@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
@@ -21,6 +21,7 @@ import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
 import org.jboss.logging.Logger;
@@ -28,6 +29,7 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.util.Date;
 import java.util.UUID;
 
 @Transactional
@@ -39,13 +41,16 @@ public class CompanyManager {
     @Inject
     CompanyRepository companyRepository;
 
-    public CompanyEntity createCompany(String owner, CompanyRepresentation rep) {
+    public CompanyEntity createCompany(NamespaceEntity namespaceEntity, CompanyRepresentation rep) {
         CompanyEntity companyEntity = new CompanyEntity();
-        companyEntity.setId(UUID.randomUUID().toString());
 
-        companyEntity.setOwner(owner);
-        companyEntity.setName(rep.getName().toLowerCase());
+        companyEntity.setId(UUID.randomUUID().toString());
+        companyEntity.setNamespace(namespaceEntity);
+
+        companyEntity.setRuc(rep.getRuc());
+        companyEntity.setName(rep.getName());
         companyEntity.setDescription(rep.getDescription());
+        companyEntity.setCreatedOn(new Date());
 
         if (rep.getWebServices() != null) {
             SunatUrlsEntity sunatUrlsEntity = new SunatUrlsEntity();
@@ -58,7 +63,7 @@ public class CompanyManager {
             SunatCredentialsEntity sunatCredentialsEntity = new SunatCredentialsEntity();
             companyEntity.setSunatCredentials(sunatCredentialsEntity);
 
-            updateCorporateCredentials(rep.getCredentials(), companyEntity);
+            updateCorporateCredentials(rep.getCredentials(), companyEntity.getSunatCredentials());
         }
 
         companyRepository.persist(companyEntity);
@@ -69,6 +74,12 @@ public class CompanyManager {
      * Shouldn't update 'name'
      */
     public CompanyEntity updateCompany(CompanyRepresentation rep, CompanyEntity entity) {
+        if (rep.getRuc() != null) {
+            entity.setRuc(rep.getRuc());
+        }
+        if (rep.getName() != null) {
+            entity.setName(rep.getName());
+        }
         if (rep.getDescription() != null) {
             entity.setDescription(rep.getDescription());
         }
@@ -78,6 +89,13 @@ public class CompanyManager {
                 entity.setSunatUrls(new SunatUrlsEntity());
             }
             updateSunatUrls(rep.getWebServices(), entity.getSunatUrls());
+        }
+
+        if (rep.getCredentials() != null) {
+            if (entity.getSunatCredentials() == null) {
+                entity.setSunatCredentials(new SunatCredentialsEntity());
+            }
+            updateCorporateCredentials(rep.getCredentials(), entity.getSunatCredentials());
         }
 
         companyRepository.persist(entity);
@@ -96,12 +114,12 @@ public class CompanyManager {
         }
     }
 
-    public void updateCorporateCredentials(SunatCredentialsRepresentation rep, CompanyEntity companyEntity) {
-        if (companyEntity.getSunatCredentials() == null) {
-            companyEntity.setSunatCredentials(new SunatCredentialsEntity());
+    public void updateCorporateCredentials(SunatCredentialsRepresentation rep, SunatCredentialsEntity entity) {
+        if (rep.getUsername() != null) {
+            entity.setSunatUsername(rep.getUsername());
         }
-
-        companyEntity.getSunatCredentials().setSunatUsername(rep.getUsername());
-        companyEntity.getSunatCredentials().setSunatPassword(rep.getPassword());
+        if (rep.getPassword() != null) {
+            entity.setSunatPassword(rep.getPassword());
+        }
     }
 }

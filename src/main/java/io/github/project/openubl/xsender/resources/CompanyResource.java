@@ -1,4 +1,6 @@
-/**
+package io.github.project.openubl.xsender.resources;
+
+/*
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
@@ -14,114 +16,144 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.resources;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
-import io.github.project.openubl.xsender.idm.DocumentRepresentation;
-import io.github.project.openubl.xsender.idm.PageRepresentation;
-import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
-import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
+import io.github.project.openubl.xsender.kafka.idm.CompanyCUDEventRepresentation;
+import io.github.project.openubl.xsender.kafka.producers.EntityEventProducer;
+import io.github.project.openubl.xsender.kafka.producers.EntityType;
+import io.github.project.openubl.xsender.kafka.producers.EventType;
+import io.github.project.openubl.xsender.kafka.utils.EventEntityToRepresentation;
+import io.github.project.openubl.xsender.managers.CompanyManager;
+import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
+import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
+import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
+import io.github.project.openubl.xsender.security.UserIdentity;
+import org.jboss.logging.Logger;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.util.List;
 
-@Path("/companies")
+@Path("/namespaces/{namespace}/companies")
 @Produces("application/json")
 @Consumes("application/json")
-public interface CompanyResource {
+@Transactional
+@ApplicationScoped
+public class CompanyResource {
 
-    /**
-     * Get an organization
-     */
+    private static final Logger LOG = Logger.getLogger(CompanyResource.class);
+
+    @Inject
+    UserIdentity userIdentity;
+
+    @Inject
+    NamespaceRepository namespaceRepository;
+
+    @Inject
+    CompanyRepository companyRepository;
+
+    @Inject
+    CompanyManager companyManager;
+
+    @Inject
+    Event<ExportedEvent<?, ?>> event;
+
+    @Inject
+    ObjectMapper objectMapper;
+
+    @POST
+    @Path("/")
+    public Response createCompany(
+            @PathParam("namespace") @NotNull String namespace,
+            @NotNull @Valid CompanyRepresentation rep
+    ) {
+        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+
+        if (companyRepository.findByRuc(namespaceEntity, rep.getRuc()).isPresent()) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity("RUC already taken")
+                    .build();
+        }
+
+        CompanyEntity companyEntity = companyManager.createCompany(namespaceEntity, rep);
+
+        try {
+            CompanyCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(companyEntity);
+            String eventPayload = objectMapper.writeValueAsString(eventRep);
+            this.event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.company, EventType.CREATED, eventPayload));
+        } catch (JsonProcessingException e) {
+            LOG.error(e);
+        }
+
+        return Response.ok()
+                .entity(EntityToRepresentation.toRepresentation(companyEntity))
+                .build();
+    }
+
     @GET
-    @Path("/{company}")
-    CompanyRepresentation getCompany(@PathParam("company") @NotNull String company);
+    @Path("/{ruc}")
+    public CompanyRepresentation getCompany(
+            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("ruc") @NotNull String ruc
+    ) {
+        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        CompanyEntity companyEntity = companyRepository.findByRuc(namespaceEntity, ruc).orElseThrow(NotFoundException::new);
+        return EntityToRepresentation.toRepresentation(companyEntity);
+    }
 
-    /**
-     * Update an org
-     */
     @PUT
-    @Path("/{company}")
-    CompanyRepresentation updateCompany(
-            @PathParam("company") @NotNull String company,
+    @Path("/{ruc}")
+    public CompanyRepresentation updateCompany(
+            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("ruc") @NotNull String ruc,
             @NotNull CompanyRepresentation rep
-    );
+    ) {
+        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        CompanyEntity companyEntity = companyRepository.findByRuc(namespaceEntity, ruc).orElseThrow(NotFoundException::new);
+
+        companyEntity = companyManager.updateCompany(rep, companyEntity);
+
+        try {
+            CompanyCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(companyEntity);
+            String eventPayload = objectMapper.writeValueAsString(eventRep);
+            event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.company, EventType.UPDATED, eventPayload));
+        } catch (JsonProcessingException e) {
+            LOG.error(e);
+        }
+
+        return EntityToRepresentation.toRepresentation(companyEntity);
+    }
 
     @DELETE
-    @Path("/{company}")
-    void deleteCompany(@PathParam("company") @NotNull String company);
+    @Path("/{ruc}")
+    public void deleteNamespace(
+            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("ruc") @NotNull String ruc
+    ) {
+        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        CompanyEntity companyEntity = companyRepository.findByRuc(namespaceEntity, ruc).orElseThrow(NotFoundException::new);
 
-    /**
-     * Change SUNAT credentials of a company
-     */
-    @PUT
-    @Path("/{company}/sunat-credentials")
-    void updateCompanySUNATCredentials(
-            @PathParam("company") @NotNull String company,
-            @NotNull @Valid SunatCredentialsRepresentation rep
-    );
+        companyRepository.delete(companyEntity);
 
-    /**
-     * List documents
-     */
-    @GET
-    @Path("/{company}/documents")
-    PageRepresentation<DocumentRepresentation> listDocuments(
-            @PathParam("company") @NotNull String company,
-            @QueryParam("filterText") String filterText,
-            @QueryParam("offset") @DefaultValue("0") Integer offset,
-            @QueryParam("limit") @DefaultValue("10") Integer limit,
-            @QueryParam("sort_by") @DefaultValue("name") List<String> sortBy
-    );
-
-    /**
-     * Create document
-     */
-    @POST
-    @Path("/{company}/documents")
-    @Consumes("multipart/form-data")
-    Response createDocument(
-            @PathParam("company") @NotNull String company,
-            MultipartFormDataInput input
-    );
-
-    @GET
-    @Path("/{company}/documents/{documentId}")
-    DocumentRepresentation getDocument(
-            @PathParam("company") @NotNull String company,
-            @PathParam("documentId") @NotNull String documentId
-    );
-
-    @GET
-    @Path("/{company}/documents/{documentId}/file")
-    Response getDocumentFile(
-            @PathParam("company") @NotNull String company,
-            @PathParam("documentId") @NotNull String documentId
-    );
-
-    @GET
-    @Path("/{company}/documents/{documentId}/file-link")
-    String getDocumentFileLink(
-            @PathParam("company") @NotNull String company,
-            @PathParam("documentId") @NotNull String documentId
-    );
-
-    @GET
-    @Path("/{company}/documents/{documentId}/cdr")
-    Response getDocumentCDR(
-            @PathParam("company") @NotNull String company,
-            @PathParam("documentId") @NotNull String documentId
-    );
-
-    @GET
-    @Path("/{company}/documents/{documentId}/cdr-link")
-    String getDocumentCDRLink(
-            @PathParam("company") @NotNull String company,
-            @PathParam("documentId") @NotNull String documentId
-    );
+        try {
+            CompanyCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(companyEntity);
+            String eventPayload = objectMapper.writeValueAsString(eventRep);
+            event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.company, EventType.DELETED, eventPayload));
+        } catch (JsonProcessingException e) {
+            LOG.error(e);
+        }
+    }
 
 }
+
 

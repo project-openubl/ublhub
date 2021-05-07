@@ -1,0 +1,15 @@
+{
+  "namespace": "io.github.project.openubl.xsender.avro",
+  "type": "record",
+  "name": "DocumentKafka",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "retry",
+      "type": "int"
+    }
+  ]
+}

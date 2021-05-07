@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
@@ -19,10 +19,9 @@ package io.github.project.openubl.xsender.models.utils;
 import io.github.project.openubl.xsender.idm.*;
 import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.message.BasicNameValuePair;
 
 import javax.ws.rs.core.UriInfo;
 import java.net.URISyntaxException;
@@ -35,10 +34,21 @@ public class EntityToRepresentation {
         // Just static methods
     }
 
+    public static NamespaceRepresentation toRepresentation(NamespaceEntity entity) {
+        NamespaceRepresentation rep = new NamespaceRepresentation();
+
+        rep.setId(entity.getId());
+        rep.setName(entity.getName());
+        rep.setDescription(entity.getDescription());
+
+        return rep;
+    }
+
     public static CompanyRepresentation toRepresentation(CompanyEntity entity) {
         CompanyRepresentation rep = new CompanyRepresentation();
 
         rep.setId(entity.getId());
+        rep.setRuc(entity.getRuc());
         rep.setName(entity.getName());
         rep.setDescription(entity.getDescription());
 
@@ -65,46 +75,48 @@ public class EntityToRepresentation {
         DocumentRepresentation rep = new DocumentRepresentation();
 
         rep.setId(entity.getId());
-        rep.setCdrID(entity.getStorageCdr());
-        rep.setFileID(entity.getStorageFile());
-        rep.setDeliveryStatus(entity.getDeliveryStatus().toString());
+        rep.setInProgress(entity.isInProgress());
 
-        //
+        rep.setCreatedOn(entity.getCreatedOn().getTime());
+        rep.setRetries(entity.getRetries());
+        rep.setWillRetryOn(entity.getWillRetryOn());
 
-        DocumentRepresentation.FileInfoRepresentation fileInfoRep = new DocumentRepresentation.FileInfoRepresentation();
-        rep.setFileInfo(fileInfoRep);
+        // File
 
-        fileInfoRep.setRuc(entity.getRuc());
-        fileInfoRep.setDocumentID(entity.getDocumentID());
-        fileInfoRep.setDocumentType(entity.getDocumentType().getType());
-        fileInfoRep.setFilename(entity.getFilename());
+        rep.setFileContentValid(entity.getFileValid());
+        rep.setFileContentValidationError(entity.getFileValidationError());
 
-        //
+        rep.setFileContent(new DocumentContentRepresentation());
+        rep.getFileContent().setRuc(entity.getRuc());
+        rep.getFileContent().setDocumentID(entity.getDocumentID());
+        rep.getFileContent().setDocumentType(entity.getDocumentType());
 
-        DocumentRepresentation.SunatSecurityCredentialsRepresentation sunatCredentialsRep = new DocumentRepresentation.SunatSecurityCredentialsRepresentation();
-        rep.setSunatCredentials(sunatCredentialsRep);
+        // Sunat
 
-        //
+        rep.setSunatDeliveryStatus(entity.getSunatStatus());
+        rep.setSunat(new DocumentSunatStatusRepresentation());
 
-        DocumentRepresentation.SunatStatusRepresentation sunatStatus = new DocumentRepresentation.SunatStatusRepresentation();
-        rep.setSunatStatus(sunatStatus);
+        rep.getSunat().setCode(entity.getSunatCode());
+        rep.getSunat().setTicket(entity.getSunatTicket());
+        rep.getSunat().setStatus(entity.getSunatStatus());
+        rep.getSunat().setDescription(entity.getSunatDescription());
 
-        sunatStatus.setCode(entity.getSunatCode());
-        sunatStatus.setTicket(entity.getSunatTicket());
-        sunatStatus.setStatus(entity.getSunatStatus());
-        sunatStatus.setDescription(entity.getSunatDescription());
+        // Events
+
+        List<DocumentSunatEventRepresentation> eventsRepresentation = entity.getSunatEvents().stream().map(f -> {
+            DocumentSunatEventRepresentation e = new DocumentSunatEventRepresentation();
+            e.setDescription(f.getDescription());
+            e.setStatus(f.getStatus().toString());
+            e.setCreatedOn(f.getCreatedOn().getTime());
+            return e;
+        }).collect(Collectors.toList());
+
+        rep.setSunatEvents(eventsRepresentation);
 
         return rep;
     }
 
-    public static <T, R> PageRepresentation<R> toRepresentation(
-            PageModel<T> model,
-            Function<T, R> mapper,
-            UriInfo serverUriInfo,
-            List<NameValuePair> queryParameters
-    ) throws URISyntaxException {
-        queryParameters.removeIf(f -> f.getName().equals("offset")); // The offset will be set in the current method
-
+    public static <T, R> PageRepresentation<R> toRepresentation(PageModel<T> model, Function<T, R> mapper) {
         PageRepresentation<R> rep = new PageRepresentation<>();
 
         // Meta
@@ -112,62 +124,12 @@ public class EntityToRepresentation {
         rep.setMeta(repMeta);
 
         repMeta.setCount(model.getTotalElements());
-        repMeta.setOffset(model.getOffset());
-        repMeta.setLimit(model.getLimit());
 
         // Data
         rep.setData(model.getPageElements().stream()
                 .map(mapper)
                 .collect(Collectors.toList())
         );
-
-        // Links
-        queryParameters.add(new BasicNameValuePair("limit", String.valueOf(model.getLimit()))); // all links have same 'limit'
-
-        PageRepresentation.Links repLinks = new PageRepresentation.Links();
-        rep.setLinks(repLinks);
-
-        // Links first
-        URIBuilder uriBuilder = getURIBuilder(serverUriInfo);
-        uriBuilder.addParameter("offset", String.valueOf(0));
-        uriBuilder.addParameters(queryParameters);
-        repLinks.setFirst(uriBuilder.build().toString());
-
-        // Links last
-        long offsetLast;
-        long numberOfPages = model.getTotalElements() / model.getLimit();
-        offsetLast = numberOfPages * model.getLimit();
-        if (offsetLast == model.getTotalElements()) {
-            offsetLast = offsetLast - model.getLimit();
-        }
-
-        uriBuilder = getURIBuilder(serverUriInfo);
-        uriBuilder.addParameter("offset", String.valueOf(offsetLast));
-        uriBuilder.addParameters(queryParameters);
-        repLinks.setLast(uriBuilder.build().toString());
-
-        // Links previous
-        if (model.getOffset() != 0) {
-            long offsetPrevious = model.getOffset() - model.getLimit();
-            if (offsetPrevious < 0) {
-                offsetPrevious = 0;
-            }
-
-            uriBuilder = getURIBuilder(serverUriInfo);
-            uriBuilder.addParameter("offset", String.valueOf(offsetPrevious));
-            uriBuilder.addParameters(queryParameters);
-            repLinks.setPrevious(uriBuilder.build().toString());
-        }
-
-        // Links next
-        if (model.getOffset() / model.getLimit() < model.getTotalElements() / model.getLimit()) {
-            long offsetNext = model.getOffset() + model.getLimit();
-
-            uriBuilder = getURIBuilder(serverUriInfo);
-            uriBuilder.addParameter("offset", String.valueOf(offsetNext));
-            uriBuilder.addParameters(queryParameters);
-            repLinks.setNext(uriBuilder.build().toString());
-        }
 
         return rep;
     }

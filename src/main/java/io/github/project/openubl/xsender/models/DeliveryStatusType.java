@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
@@ -17,7 +17,7 @@
 package io.github.project.openubl.xsender.models;
 
 public enum DeliveryStatusType {
-    SCHEDULED_TO_DELIVER,
-    SCHEDULED_CHECK_TICKET,
-    DELIVERED
+    IN_PROGRESS,
+    DELIVERED,
+    ERROR,
 }

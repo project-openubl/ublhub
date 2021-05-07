@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *

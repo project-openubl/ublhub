@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
@@ -16,45 +16,28 @@
  */
 package io.github.project.openubl.xsender.managers;
 
-import io.github.project.openubl.xmlsenderws.webservices.models.DeliveryURLType;
-import io.github.project.openubl.xmlsenderws.webservices.utils.UBLUtils;
-import io.github.project.openubl.xmlsenderws.webservices.xml.DocumentType;
-import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
-import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentProvider;
-import io.github.project.openubl.xsender.events.EventProvider;
-import io.github.project.openubl.xsender.events.EventProviderLiteral;
-import io.github.project.openubl.xsender.exceptions.InvalidXMLFileException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.exceptions.StorageException;
-import io.github.project.openubl.xsender.exceptions.UnsupportedDocumentTypeException;
 import io.github.project.openubl.xsender.files.FilesManager;
-import io.github.project.openubl.xsender.models.DeliveryStatusType;
-import io.github.project.openubl.xsender.models.DocumentEvent;
+import io.github.project.openubl.xsender.kafka.idm.UBLDocumentSunatEventRepresentation;
+import io.github.project.openubl.xsender.kafka.producers.UBLDocumentCreatedEventProducer;
 import io.github.project.openubl.xsender.models.FileType;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.Optional;
+import java.util.Date;
 import java.util.UUID;
 
 @Transactional
 @ApplicationScoped
 public class DocumentsManager {
-
-    private static final Logger LOG = Logger.getLogger(DocumentsManager.class);
-
-    @ConfigProperty(name = "openubl.event-manager.type")
-    EventProvider.Type eventManager;
 
     @Inject
     FilesManager filesManager;
@@ -63,59 +46,45 @@ public class DocumentsManager {
     UBLDocumentRepository documentRepository;
 
     @Inject
-    Event<DocumentEvent.Created> documentCreatedEvent;
+    Event<ExportedEvent<?, ?>> event;
 
-    public UBLDocumentEntity createDocumentAndScheduleDelivery(
-            CompanyEntity companyEntity, byte[] xmlFile
-    ) throws InvalidXMLFileException, UnsupportedDocumentTypeException, StorageException {
-        // Read file
-        XmlContentModel xmlContentModel;
-        try {
-            xmlContentModel = XmlContentProvider.getSunatDocument(new ByteArrayInputStream(xmlFile));
-        } catch (ParserConfigurationException | SAXException | IOException e) {
-            throw new InvalidXMLFileException(e);
-        }
+    @Inject
+    ObjectMapper objectMapper;
 
-        // Check document type is supported
-        Optional<DocumentType> documentTypeOptional = DocumentType.valueFromDocumentType(xmlContentModel.getDocumentType());
-        if (documentTypeOptional.isEmpty()) {
-            throw new UnsupportedDocumentTypeException(xmlContentModel.getDocumentType() + " is not supported yet");
-        }
+    public UBLDocumentEntity createDocumentAndScheduleDelivery(NamespaceEntity namespaceEntity, byte[] xmlFile) throws StorageException {
+        // Save file in Storage
 
-        DocumentType documentType = documentTypeOptional.get();
-
-        String fileNameWithoutExtension = UBLUtils.getFileNameWithoutExtension(documentType, xmlContentModel.getRuc(), xmlContentModel.getDocumentID())
-                .orElseThrow(() -> new IllegalStateException("Invalid type of UBL Document, can not extract fileName"));
-        DeliveryURLType deliveryURLType = UBLUtils.getDeliveryURLType(documentType, xmlContentModel)
-                .orElseThrow(() -> new IllegalStateException("Invalid type of UBL Document, can not extract deliveryType"));
-
-        // Save XML File
-        String fileID = filesManager.createFile(xmlFile, FileType.getFilename(fileNameWithoutExtension, FileType.XML), FileType.XML);
+        String fileID = filesManager.createFile(xmlFile, FileType.getFilename(UUID.randomUUID().toString(), FileType.XML), FileType.XML);
         if (fileID == null) {
             throw new StorageException("Could not save xml file in storage");
         }
 
-        // Create Entity in DB
-        UBLDocumentEntity documentEntity = UBLDocumentEntity.Builder.anUBLDocumentEntity()
+        // Create Entity
+
+        UBLDocumentEntity documentEntity = UBLDocumentEntity.UBLDocumentEntityBuilder.anUBLDocumentEntity()
                 .withId(UUID.randomUUID().toString())
                 .withStorageFile(fileID)
-                .withFilename(fileNameWithoutExtension)
-                .withRuc(xmlContentModel.getRuc())
-                .withDocumentID(xmlContentModel.getDocumentID())
-                .withDocumentType(documentType)
-                .withDeliveryType(deliveryURLType)
-                .withDeliveryStatus(DeliveryStatusType.SCHEDULED_TO_DELIVER)
-                .withCompany(companyEntity)
+                .withInProgress(true)
+                .withCreatedOn(new Date())
+                .withNamespace(namespaceEntity)
                 .build();
 
         documentRepository.persist(documentEntity);
 
-        // Fire Event
-        documentCreatedEvent
-                .select(new EventProviderLiteral(eventManager))
-                .fire(documentEntity::getId);
+        try {
+            UBLDocumentSunatEventRepresentation eventRep = new UBLDocumentSunatEventRepresentation();
+            eventRep.setId(documentEntity.getId());
+            eventRep.setStorageFile(documentEntity.getStorageFile());
+            eventRep.setNamespace(namespaceEntity.getName());
 
-        // return result
+            String eventPayload = objectMapper.writeValueAsString(eventRep);
+            event.fire(new UBLDocumentCreatedEventProducer(documentEntity.getId(), eventPayload));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
+
+        // Result
+
         return documentEntity;
     }
 

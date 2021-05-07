@@ -1,31 +1,60 @@
 ![CI](https://github.com/project-openubl/xsender-server/workflows/CI/badge.svg)
 [![Docker Repository on Quay](https://quay.io/repository/projectopenubl/xsender-server/status "Docker Repository on Quay")](https://quay.io/repository/projectopenubl/xsender-server)
 
-# xsender-server
+# XSender server
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Send XMLs to SUNAT in a fashion way.
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/
+# Development
 
-## Running the application in dev mode
+To start this project in development mode follow the instructions below.
 
-### Init Keycloak
+## Clone repository
 
-Keycloak is the Authentication system:
-
-```shell script
-docker run -p 8180:8080 -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin quay.io/projectopenubl/openubl-keycloak-theme
+```shell
+git clone https://github.com/project-openubl/xsender-server
 ```
 
-### Init PostgreSQL
+## Start dependencies
 
-PostgreSQL is used for the application:
+Start the dependencies using `docker-compose.yml`:
 
-```shell script
-docker run -p 5432:5432 -e POSTGRES_USER=xsender_username -e POSTGRES_PASSWORD=xsender_password -e POSTGRES_DB=xsender_db postgres:13.1
+```shell
+docker-compose up
 ```
 
-### Init server
+## Configure Kafka-connect
+
+Open a terminal an execute 
+```shell
+curl 'localhost:8083/connectors/' -i -X POST -H "Accept:application/json" \
+-H "Content-Type:application/json" \
+-d '{
+   "name":"xsender-connector",
+   "config":{
+      "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+      "tasks.max": "1",
+      "database.hostname": "xsender-db",
+      "database.port": "5432",
+      "database.user": "xsender_username",
+      "database.password": "xsender_password",
+      "database.dbname": "xsender_db",
+      "database.server.name": "dbserver1",
+      "schema.include.list": "public",
+      "table.include.list": "public.outboxevent",
+      "tombstones.on.delete": "false",
+      "transforms": "outbox",
+      "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
+      "transforms.outbox.table.fields.additional.placement": "type:header:eventType",
+      "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "key.converter.schemas.enable": "false",
+      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "value.converter.schemas.enable": "false"
+   }
+}'
+```
+
+## Init server
 
 You can run your application in dev mode that enables live coding using:
 
@@ -33,6 +62,6 @@ You can run your application in dev mode that enables live coding using:
 ./mvnw quarkus:dev
 ```
 
-## License
+# License
 
 - [Eclipse Public License - v 2.0](./LICENSE)

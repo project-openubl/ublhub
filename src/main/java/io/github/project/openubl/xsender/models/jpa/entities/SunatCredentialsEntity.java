@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
@@ -24,11 +24,11 @@ import javax.validation.constraints.NotNull;
 public class SunatCredentialsEntity {
 
     @NotNull
-    @Column(name = "SUNAT_USERNAME")
+    @Column(name = "sunat_username")
     private String sunatUsername;
 
     @NotNull
-    @Column(name = "SUNAT_PASSWORD")
+    @Column(name = "sunat_password")
     private String sunatPassword;
 
     public String getSunatUsername() {

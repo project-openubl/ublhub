@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
@@ -20,14 +20,17 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 @RegisterForReflection
 public class CompanyRepresentation {
 
     private String id;
 
-    @Pattern(regexp = "[a-z0-9]([-a-z0-9]*[a-z0-9])?", message = "label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name', or '123-abc')")
+    @NotNull
+    @Size(min = 11, max = 11)
+    private String ruc;
+
     @NotNull
     private String name;
 
@@ -47,6 +50,14 @@ public class CompanyRepresentation {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getRuc() {
+        return ruc;
+    }
+
+    public void setRuc(String ruc) {
+        this.ruc = ruc;
     }
 
     public String getName() {
@@ -81,41 +92,55 @@ public class CompanyRepresentation {
         this.credentials = credentials;
     }
 
-    public static final class Builder {
+    public static final class CompanyRepresentationBuilder {
+        private String id;
+        private String ruc;
         private String name;
         private String description;
         private SunatUrlsRepresentation webServices;
         private SunatCredentialsRepresentation credentials;
 
-        private Builder() {
+        private CompanyRepresentationBuilder() {
         }
 
-        public static Builder aCompanyRepresentation() {
-            return new Builder();
+        public static CompanyRepresentationBuilder aCompanyRepresentation() {
+            return new CompanyRepresentationBuilder();
         }
 
-        public Builder withName(String name) {
+        public CompanyRepresentationBuilder withId(String id) {
+            this.id = id;
+            return this;
+        }
+
+        public CompanyRepresentationBuilder withRuc(String ruc) {
+            this.ruc = ruc;
+            return this;
+        }
+
+        public CompanyRepresentationBuilder withName(String name) {
             this.name = name;
             return this;
         }
 
-        public Builder withDescription(String description) {
+        public CompanyRepresentationBuilder withDescription(String description) {
             this.description = description;
             return this;
         }
 
-        public Builder withWebServices(SunatUrlsRepresentation webServices) {
+        public CompanyRepresentationBuilder withWebServices(SunatUrlsRepresentation webServices) {
             this.webServices = webServices;
             return this;
         }
 
-        public Builder withCredentials(SunatCredentialsRepresentation credentials) {
+        public CompanyRepresentationBuilder withCredentials(SunatCredentialsRepresentation credentials) {
             this.credentials = credentials;
             return this;
         }
 
         public CompanyRepresentation build() {
             CompanyRepresentation companyRepresentation = new CompanyRepresentation();
+            companyRepresentation.setId(id);
+            companyRepresentation.setRuc(ruc);
             companyRepresentation.setName(name);
             companyRepresentation.setDescription(description);
             companyRepresentation.setWebServices(webServices);

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
@@ -16,7 +16,6 @@
  */
 package io.github.project.openubl.xsender.models.jpa;
 
-import io.github.project.openubl.xsender.models.DeliveryStatusType;
 import io.github.project.openubl.xsender.models.PageBean;
 import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.SortBean;
@@ -28,20 +27,18 @@ import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.transaction.Transactional;
 import java.util.List;
 
+@Transactional
 @ApplicationScoped
 public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentEntity, String> {
 
-    public static final String[] SORT_BY_FIELDS = {"documentID"};
+    public static final String[] SORT_BY_FIELDS = {"createdOn"};
 
-    public List<UBLDocumentEntity> findAllScheduledToDeliver() {
-        return list("deliveryStatus", DeliveryStatusType.SCHEDULED_TO_DELIVER);
-    }
-
-    public List<UBLDocumentEntity> findAllSheduledToCheckTicket() {
-        return list("deliveryStatus", DeliveryStatusType.SCHEDULED_CHECK_TICKET);
-    }
+//    public List<UBLDocumentEntity> findAllThatCouldNotBeDelivered() {
+//        return list("deliveryStatus", DeliveryStatusType.COULD_NOT_BE_DELIVERED);
+//    }
 
     public PageModel<UBLDocumentEntity> list(CompanyEntity company, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
