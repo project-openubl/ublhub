@@ -44,7 +44,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
-@Path("/namespaces/{namespace}/companies")
+@Path("/namespaces/{namespaceId}/companies")
 @Produces("application/json")
 @Consumes("application/json")
 @Transactional
@@ -74,10 +74,10 @@ public class CompanyResource {
     @POST
     @Path("/")
     public Response createCompany(
-            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("namespaceId") @NotNull String namespaceId,
             @NotNull @Valid CompanyRepresentation rep
     ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
 
         if (companyRepository.findByRuc(namespaceEntity, rep.getRuc()).isPresent()) {
             return Response.status(Response.Status.CONFLICT)
@@ -103,10 +103,10 @@ public class CompanyResource {
     @GET
     @Path("/{ruc}")
     public CompanyRepresentation getCompany(
-            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("ruc") @NotNull String ruc
     ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         CompanyEntity companyEntity = companyRepository.findByRuc(namespaceEntity, ruc).orElseThrow(NotFoundException::new);
         return EntityToRepresentation.toRepresentation(companyEntity);
     }
@@ -114,11 +114,11 @@ public class CompanyResource {
     @PUT
     @Path("/{ruc}")
     public CompanyRepresentation updateCompany(
-            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("ruc") @NotNull String ruc,
             @NotNull CompanyRepresentation rep
     ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         CompanyEntity companyEntity = companyRepository.findByRuc(namespaceEntity, ruc).orElseThrow(NotFoundException::new);
 
         companyEntity = companyManager.updateCompany(rep, companyEntity);
@@ -137,10 +137,10 @@ public class CompanyResource {
     @DELETE
     @Path("/{ruc}")
     public void deleteNamespace(
-            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("ruc") @NotNull String ruc
     ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         CompanyEntity companyEntity = companyRepository.findByRuc(namespaceEntity, ruc).orElseThrow(NotFoundException::new);
 
         companyRepository.delete(companyEntity);

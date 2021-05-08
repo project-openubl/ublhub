@@ -61,19 +61,22 @@ public class NamespaceResource {
     ObjectMapper objectMapper;
 
     @GET
-    @Path("/{namespace}")
-    public NamespaceRepresentation getNamespace(@PathParam("namespace") @NotNull String namespace) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+    @Path("/{namespaceId}")
+    public NamespaceRepresentation getNamespace(@PathParam("namespaceId") @NotNull String namespaceId) {
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         return EntityToRepresentation.toRepresentation(namespaceEntity);
     }
 
     @PUT
-    @Path("/{namespace}")
+    @Path("/{namespaceId}")
     public NamespaceRepresentation updateNamespace(
-            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("namespaceId") @NotNull String namespaceId,
             @NotNull NamespaceRepresentation rep
     ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        if (rep.getName() != null) {
+            namespaceEntity.setName(rep.getName());
+        }
         if (rep.getDescription() != null) {
             namespaceEntity.setDescription(rep.getDescription());
         }
@@ -91,9 +94,9 @@ public class NamespaceResource {
     }
 
     @DELETE
-    @Path("/{namespace}")
-    public void deleteNamespace(@PathParam("namespace") @NotNull String namespace) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+    @Path("/{namespaceId}")
+    public void deleteNamespace(@PathParam("namespaceId") @NotNull String namespaceId) {
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         namespaceRepository.deleteById(namespaceEntity.getId());
 
         try {

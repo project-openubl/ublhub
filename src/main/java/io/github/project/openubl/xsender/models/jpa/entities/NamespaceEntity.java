@@ -44,7 +44,6 @@ public class NamespaceEntity extends PanacheEntityBase {
     private String owner;
 
     @NotNull
-    @Pattern(regexp = "[a-z0-9]([-a-z0-9]*[a-z0-9])?", message = "label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name', or '123-abc')")
     @Column(name = "name")
     private String name;
 
