@@ -118,7 +118,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 .accept(ContentType.JSON)
                 .multiPart("file", file, "application/xml")
                 .when()
-                .post("/api/namespaces/" + namespace.getName() + "/documents/upload")
+                .post("/api/namespaces/" + namespace.getId() + "/documents/upload")
                 .then()
                 .statusCode(200)
                 .body("id", is(notNullValue()),
@@ -154,7 +154,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 .accept(ContentType.JSON)
                 .multiPart("file", file, "application/xml")
                 .when()
-                .post("/api/namespaces/" + namespace.getName() + "/documents/upload")
+                .post("/api/namespaces/" + namespace.getId() + "/documents/upload")
                 .then()
                 .statusCode(200)
                 .body("id", is(notNullValue()),
@@ -195,7 +195,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 .accept(ContentType.JSON)
                 .multiPart("file", file, "application/xml")
                 .when()
-                .post("/api/namespaces/" + namespace.getName() + "/documents/upload")
+                .post("/api/namespaces/" + namespace.getId() + "/documents/upload")
                 .then()
                 .statusCode(200)
                 .body("id", is(notNullValue()),
@@ -242,7 +242,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 .accept(ContentType.JSON)
                 .multiPart("file", file, "application/xml")
                 .when()
-                .post("/api/namespaces/" + namespace.getName() + "/documents/upload")
+                .post("/api/namespaces/" + namespace.getId() + "/documents/upload")
                 .then()
                 .statusCode(200)
                 .body("id", is(notNullValue()),

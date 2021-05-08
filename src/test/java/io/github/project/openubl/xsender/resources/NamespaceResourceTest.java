@@ -70,7 +70,7 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + namespace.getName())
+                .get("/api/namespaces/" + namespace.getId())
                 .then()
                 .statusCode(200)
                 .body("name", is(namespace.getName()),
@@ -85,27 +85,27 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
     public void getNamespaceByNotOwner_shouldReturnNotFound() {
         // Given
 
-        NamespaceEntity namespace1 = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
+        NamespaceEntity namespace = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
                 .withId(UUID.randomUUID().toString())
                 .withName("my-namespace1")
                 .withOwner("admin")
                 .withCreatedOn(new Date())
                 .build();
-        namespaceRepository.persist(namespace1);
+        namespaceRepository.persist(namespace);
 
         // When
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + namespace1.getName())
+                .get("/api/namespaces/" + namespace.getId())
                 .then()
                 .statusCode(404);
 
         given().auth().oauth2(getAccessToken("admin"))
                 .header("Content-Type", "application/json")
                 .when()
-                .get("/api/namespaces/" + namespace1.getName())
+                .get("/api/namespaces/" + namespace.getId())
                 .then()
                 .statusCode(200);
 
@@ -127,6 +127,7 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
 
         // When
         NamespaceEntity namespaceUpdate = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
+                .withName("new name")
                 .withDescription("my description")
                 .build();
 
@@ -135,10 +136,10 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
                 .accept(ContentType.JSON)
                 .body(namespaceUpdate)
                 .when()
-                .put("/api/namespaces/" + NAME)
+                .put("/api/namespaces/" + namespace.getId())
                 .then()
                 .statusCode(200)
-                .body("name", is(NAME),
+                .body("name", is(namespaceUpdate.getName()),
                         "description", is(namespaceUpdate.getDescription())
                 );
 
@@ -170,7 +171,7 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
                 .accept(ContentType.JSON)
                 .body(namespaceUpdate)
                 .when()
-                .put("/api/namespaces/" + NAME)
+                .put("/api/namespaces/" + namespace.getId())
                 .then()
                 .statusCode(404);
 
@@ -179,7 +180,7 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
                 .accept(ContentType.JSON)
                 .body(namespaceUpdate)
                 .when()
-                .put("/api/namespaces/" + NAME)
+                .put("/api/namespaces/" + namespace.getId())
                 .then()
                 .statusCode(200);
 
@@ -202,7 +203,7 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + namespace.getName())
+                .delete("/api/namespaces/" + namespace.getId())
                 .then()
                 .statusCode(204);
 
@@ -227,7 +228,7 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + namespace.getName())
+                .delete("/api/namespaces/" + namespace.getId())
                 .then()
                 .statusCode(404);
 
@@ -235,7 +236,7 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + namespace.getName())
+                .delete("/api/namespaces/" + namespace.getId())
                 .then()
                 .statusCode(204);
 

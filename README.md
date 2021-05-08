@@ -22,7 +22,7 @@ XSender server necesita:
 - [Amazon S3](https://aws.amazon.com/s3/) o [Minio](https://min.io/)
 - [Apache kafka](https://kafka.apache.org/)
 
-Puede iniciar los servicios requeridos utilizando `docker-compose.yml`:
+Puedes iniciar los servicios requeridos utilizando `docker-compose.yml`:
 
 ```shell
 docker-compose up

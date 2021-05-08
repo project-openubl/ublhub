@@ -40,8 +40,8 @@ public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntit
         return find("name", name).firstResultOptional();
     }
 
-    public Optional<NamespaceEntity> findByNameAndOwner(String name, String owner) {
-        return find("name = ?1 and owner = ?2", name, owner).firstResultOptional();
+    public Optional<NamespaceEntity> findByIdAndOwner(String id, String owner) {
+        return find("id = ?1 and owner = ?2", id, owner).firstResultOptional();
     }
 
     public PageModel<NamespaceEntity> list(String owner, PageBean pageBean, List<SortBean> sortBy) {

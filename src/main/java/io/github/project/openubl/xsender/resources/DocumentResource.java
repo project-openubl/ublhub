@@ -53,7 +53,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-@Path("/namespaces/{namespace}/documents")
+@Path("/namespaces/{namespaceId}/documents")
 @Produces("application/json")
 @Consumes("application/json")
 @Transactional
@@ -81,10 +81,10 @@ public class DocumentResource {
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response uploadXML(
-            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("namespaceId") @NotNull String namespaceId,
             MultipartFormDataInput input
     ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
 
         // Extract file
 
@@ -138,7 +138,7 @@ public class DocumentResource {
     @GET
     @Path("/")
     public PageRepresentation<DocumentRepresentation> getDocuments(
-            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("namespaceId") @NotNull String namespaceId,
             @QueryParam("filterText") String filterText,
             @QueryParam("offset") @DefaultValue("0") Integer offset,
             @QueryParam("limit") @DefaultValue("10") Integer limit,
@@ -151,7 +151,7 @@ public class DocumentResource {
     @GET
     @Path("/{documentId}")
     public DocumentRepresentation getDocument(
-            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("documentId") @NotNull String documentId
     ) {
         return null;
@@ -160,7 +160,7 @@ public class DocumentResource {
     @GET
     @Path("/{documentId}/file")
     public Response getDocumentFile(
-            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("documentId") @NotNull String documentId
     ) {
         return null;
@@ -169,7 +169,7 @@ public class DocumentResource {
     @GET
     @Path("/{documentId}/file-link")
     public String getDocumentFileLink(
-            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("documentId") @NotNull String documentId
     ) {
         return null;
@@ -178,7 +178,7 @@ public class DocumentResource {
     @GET
     @Path("/{documentId}/cdr")
     public Response getDocumentCdr(
-            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("documentId") @NotNull String documentId
     ) {
         return null;
@@ -187,7 +187,7 @@ public class DocumentResource {
     @GET
     @Path("/{documentId}/cdr-link")
     public String getDocumentCdrLink(
-            @PathParam("namespace") @NotNull String namespace,
+            @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("documentId") @NotNull String documentId
     ) {
         return null;

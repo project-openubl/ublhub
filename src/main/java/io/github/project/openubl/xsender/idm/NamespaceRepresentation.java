@@ -28,7 +28,6 @@ public class NamespaceRepresentation {
     private String id;
 
     @NotNull
-    @Pattern(regexp = "[a-z0-9]([-a-z0-9]*[a-z0-9])?", message = "label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name', or '123-abc')")
     private String name;
 
     @Size(max = 250)

@@ -19,7 +19,6 @@ package io.github.project.openubl.xsender.websockets;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.project.openubl.xsender.kafka.idm.CompanyCUDEventRepresentation;
-import io.github.project.openubl.xsender.kafka.idm.NamespaceCrudEventRepresentation;
 import io.github.project.openubl.xsender.kafka.producers.EntityType;
 import io.github.project.openubl.xsender.kafka.producers.EventType;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
@@ -30,7 +29,6 @@ import io.github.project.openubl.xsender.websockets.idm.TypeMessage;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.reactive.messaging.kafka.KafkaRecord;
 import io.vertx.core.impl.ConcurrentHashSet;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.eclipse.microprofile.context.ThreadContext;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -94,7 +92,7 @@ public class CompaniesEndpoint {
 
             executor.runAsync(threadContext.contextualRunnable(() -> {
 
-                NamespaceEntity namespaceEntity = namespaceRepository.findByNameAndOwner(namespace, username).orElse(null);
+                NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespace, username).orElse(null);
                 if (namespaceEntity != null) {
                     sessions.put(session, namespaceEntity.getId());
 
