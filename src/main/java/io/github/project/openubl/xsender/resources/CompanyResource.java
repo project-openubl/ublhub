@@ -21,17 +21,22 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
+import io.github.project.openubl.xsender.idm.PageRepresentation;
 import io.github.project.openubl.xsender.kafka.idm.CompanyCUDEventRepresentation;
 import io.github.project.openubl.xsender.kafka.producers.EntityEventProducer;
 import io.github.project.openubl.xsender.kafka.producers.EntityType;
 import io.github.project.openubl.xsender.kafka.producers.EventType;
 import io.github.project.openubl.xsender.kafka.utils.EventEntityToRepresentation;
 import io.github.project.openubl.xsender.managers.CompanyManager;
+import io.github.project.openubl.xsender.models.PageBean;
+import io.github.project.openubl.xsender.models.PageModel;
+import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
+import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
 import io.github.project.openubl.xsender.security.UserIdentity;
 import org.jboss.logging.Logger;
 
@@ -43,6 +48,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 @Path("/namespaces/{namespaceId}/companies")
 @Produces("application/json")
@@ -71,6 +77,30 @@ public class CompanyResource {
     @Inject
     ObjectMapper objectMapper;
 
+    @GET
+    @Path("/")
+    public PageRepresentation<CompanyRepresentation> getCompanies(
+            @PathParam("namespaceId") @NotNull String namespaceId,
+            @QueryParam("filterText") String filterText,
+            @QueryParam("offset") @DefaultValue("0") Integer offset,
+            @QueryParam("limit") @DefaultValue("10") Integer limit,
+            @QueryParam("sort_by") @DefaultValue("createdOn:desc") List<String> sortBy
+    ) {
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+
+        PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
+        List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, NamespaceRepository.SORT_BY_FIELDS);
+
+        PageModel<CompanyEntity> pageModel;
+        if (filterText != null && !filterText.trim().isEmpty()) {
+            pageModel = companyRepository.list(namespaceEntity, filterText, pageBean, sortBeans);
+        } else {
+            pageModel = companyRepository.list(namespaceEntity, pageBean, sortBeans);
+        }
+
+        return EntityToRepresentation.toRepresentation(pageModel, EntityToRepresentation::toRepresentation);
+    }
+
     @POST
     @Path("/")
     public Response createCompany(
@@ -79,7 +109,7 @@ public class CompanyResource {
     ) {
         NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
 
-        if (companyRepository.findByRuc(namespaceEntity, rep.getRuc()).isPresent()) {
+        if (companyRepository.findById(namespaceEntity, rep.getRuc()).isPresent()) {
             return Response.status(Response.Status.CONFLICT)
                     .entity("RUC already taken")
                     .build();
@@ -101,25 +131,25 @@ public class CompanyResource {
     }
 
     @GET
-    @Path("/{ruc}")
+    @Path("/{companyId}")
     public CompanyRepresentation getCompany(
             @PathParam("namespaceId") @NotNull String namespaceId,
-            @PathParam("ruc") @NotNull String ruc
+            @PathParam("companyId") @NotNull String companyId
     ) {
         NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-        CompanyEntity companyEntity = companyRepository.findByRuc(namespaceEntity, ruc).orElseThrow(NotFoundException::new);
+        CompanyEntity companyEntity = companyRepository.findById(namespaceEntity, companyId).orElseThrow(NotFoundException::new);
         return EntityToRepresentation.toRepresentation(companyEntity);
     }
 
     @PUT
-    @Path("/{ruc}")
+    @Path("/{companyId}")
     public CompanyRepresentation updateCompany(
             @PathParam("namespaceId") @NotNull String namespaceId,
-            @PathParam("ruc") @NotNull String ruc,
+            @PathParam("companyId") @NotNull String companyId,
             @NotNull CompanyRepresentation rep
     ) {
         NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-        CompanyEntity companyEntity = companyRepository.findByRuc(namespaceEntity, ruc).orElseThrow(NotFoundException::new);
+        CompanyEntity companyEntity = companyRepository.findById(namespaceEntity, companyId).orElseThrow(NotFoundException::new);
 
         companyEntity = companyManager.updateCompany(rep, companyEntity);
 
@@ -135,13 +165,13 @@ public class CompanyResource {
     }
 
     @DELETE
-    @Path("/{ruc}")
+    @Path("/{companyId}")
     public void deleteNamespace(
             @PathParam("namespaceId") @NotNull String namespaceId,
-            @PathParam("ruc") @NotNull String ruc
+            @PathParam("companyId") @NotNull String companyId
     ) {
         NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-        CompanyEntity companyEntity = companyRepository.findByRuc(namespaceEntity, ruc).orElseThrow(NotFoundException::new);
+        CompanyEntity companyEntity = companyRepository.findById(namespaceEntity, companyId).orElseThrow(NotFoundException::new);
 
         companyRepository.delete(companyEntity);
 
