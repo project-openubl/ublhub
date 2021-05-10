@@ -63,10 +63,10 @@ public class DocumentEvents {
 
     static final int MAX_STRING = 250;
 
-    public static final String INVALID_FILE_MSG = "Not supported document type";
+    public static final String INVALID_FILE_MSG = "Documento no soportado";
 
-    public static final String NS_NOT_FOUND = "Namespace not found";
-    public static final String RUC_IN_COMPANY_NOT_FOUND = "Could not find a company with RUC";
+    public static final String NS_NOT_FOUND = "Namespace no encontrado";
+    public static final String RUC_IN_COMPANY_NOT_FOUND = "No se pudo encontrar una empresa para el RUC especificado";
 
     @Inject
     FilesManager filesManager;

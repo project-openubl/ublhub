@@ -78,8 +78,7 @@ public class EntityToRepresentation {
         rep.setInProgress(entity.isInProgress());
 
         rep.setCreatedOn(entity.getCreatedOn().getTime());
-        rep.setRetries(entity.getRetries());
-        rep.setWillRetryOn(entity.getWillRetryOn());
+        rep.setError(entity.getError());
 
         // File
 
@@ -93,7 +92,6 @@ public class EntityToRepresentation {
 
         // Sunat
 
-        rep.setSunatDeliveryStatus(entity.getSunatStatus());
         rep.setSunat(new DocumentSunatStatusRepresentation());
 
         rep.getSunat().setCode(entity.getSunatCode());
@@ -103,15 +101,15 @@ public class EntityToRepresentation {
 
         // Events
 
-        List<DocumentSunatEventRepresentation> eventsRepresentation = entity.getSunatEvents().stream().map(f -> {
-            DocumentSunatEventRepresentation e = new DocumentSunatEventRepresentation();
-            e.setDescription(f.getDescription());
-            e.setStatus(f.getStatus().toString());
-            e.setCreatedOn(f.getCreatedOn().getTime());
-            return e;
-        }).collect(Collectors.toList());
-
-        rep.setSunatEvents(eventsRepresentation);
+//        List<DocumentSunatEventRepresentation> eventsRepresentation = entity.getSunatEvents().stream().map(f -> {
+//            DocumentSunatEventRepresentation e = new DocumentSunatEventRepresentation();
+//            e.setDescription(f.getDescription());
+//            e.setStatus(f.getStatus().toString());
+//            e.setCreatedOn(f.getCreatedOn().getTime());
+//            return e;
+//        }).collect(Collectors.toList());
+//
+//        rep.setSunatEvents(eventsRepresentation);
 
         return rep;
     }

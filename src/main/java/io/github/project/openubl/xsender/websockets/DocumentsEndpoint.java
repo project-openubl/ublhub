@@ -52,11 +52,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 
-@ServerEndpoint("/namespaces/{namespace}/companies")
+@ServerEndpoint("/namespaces/{namespace}/documents")
 @ApplicationScoped
-public class CompaniesEndpoint {
+public class DocumentsEndpoint {
 
-    private static final Logger LOG = Logger.getLogger(CompaniesEndpoint.class);
+    private static final Logger LOG = Logger.getLogger(DocumentsEndpoint.class);
 
     protected static final Map<Session, String> sessions = new ConcurrentHashMap<>();
     protected static final Map<String, Set<Session>> namespacesSessions = new ConcurrentHashMap<>();

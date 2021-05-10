@@ -27,17 +27,13 @@ public class DocumentRepresentation {
     private String id;
     private Long createdOn;
     private boolean inProgress;
-
-    private int retries;
-    private Date willRetryOn;
+    private String error;
 
     private Boolean fileContentValid;
     private String fileContentValidationError;
     private DocumentContentRepresentation fileContent;
 
-    private String sunatDeliveryStatus;
     private DocumentSunatStatusRepresentation sunat;
-    private List<DocumentSunatEventRepresentation> sunatEvents;
 
     public String getId() {
         return id;
@@ -63,20 +59,12 @@ public class DocumentRepresentation {
         this.inProgress = inProgress;
     }
 
-    public int getRetries() {
-        return retries;
+    public String getError() {
+        return error;
     }
 
-    public void setRetries(int retries) {
-        this.retries = retries;
-    }
-
-    public Date getWillRetryOn() {
-        return willRetryOn;
-    }
-
-    public void setWillRetryOn(Date willRetryOn) {
-        this.willRetryOn = willRetryOn;
+    public void setError(String error) {
+        this.error = error;
     }
 
     public Boolean getFileContentValid() {
@@ -103,27 +91,11 @@ public class DocumentRepresentation {
         this.fileContent = fileContent;
     }
 
-    public String getSunatDeliveryStatus() {
-        return sunatDeliveryStatus;
-    }
-
-    public void setSunatDeliveryStatus(String sunatDeliveryStatus) {
-        this.sunatDeliveryStatus = sunatDeliveryStatus;
-    }
-
     public DocumentSunatStatusRepresentation getSunat() {
         return sunat;
     }
 
     public void setSunat(DocumentSunatStatusRepresentation sunat) {
         this.sunat = sunat;
-    }
-
-    public List<DocumentSunatEventRepresentation> getSunatEvents() {
-        return sunatEvents;
-    }
-
-    public void setSunatEvents(List<DocumentSunatEventRepresentation> sunatEvents) {
-        this.sunatEvents = sunatEvents;
     }
 }
