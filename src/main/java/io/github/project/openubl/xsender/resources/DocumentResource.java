@@ -30,10 +30,17 @@ import io.github.project.openubl.xsender.kafka.producers.EntityType;
 import io.github.project.openubl.xsender.kafka.producers.EventType;
 import io.github.project.openubl.xsender.kafka.utils.EventEntityToRepresentation;
 import io.github.project.openubl.xsender.managers.DocumentsManager;
+import io.github.project.openubl.xsender.models.DocumentFilterModel;
+import io.github.project.openubl.xsender.models.PageBean;
+import io.github.project.openubl.xsender.models.PageModel;
+import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
+import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
+import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
+import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
 import io.github.project.openubl.xsender.security.UserIdentity;
 import org.apache.commons.io.IOUtils;
 import org.jboss.logging.Logger;
@@ -67,6 +74,9 @@ public class DocumentResource {
 
     @Inject
     NamespaceRepository namespaceRepository;
+
+    @Inject
+    UBLDocumentRepository documentRepository;
 
     @Inject
     DocumentsManager documentsManager;
@@ -139,12 +149,31 @@ public class DocumentResource {
     @Path("/")
     public PageRepresentation<DocumentRepresentation> getDocuments(
             @PathParam("namespaceId") @NotNull String namespaceId,
+            @QueryParam("ruc") String ruc,
+            @QueryParam("documentType") String documentType,
             @QueryParam("filterText") String filterText,
             @QueryParam("offset") @DefaultValue("0") Integer offset,
             @QueryParam("limit") @DefaultValue("10") Integer limit,
             @QueryParam("sort_by") @DefaultValue("createdOn:desc") List<String> sortBy
     ) {
-        return null;
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+
+        PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
+        List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, UBLDocumentRepository.SORT_BY_FIELDS);
+
+        DocumentFilterModel filters = DocumentFilterModel.DocumentFilterModelBuilder.aDocumentFilterModel()
+                .withRuc(ruc)
+                .withDocumentType(documentType)
+                .build();
+
+        PageModel<UBLDocumentEntity> pageModel;
+        if (filterText != null && !filterText.trim().isEmpty()) {
+            pageModel = documentRepository.list(namespaceEntity, filterText, filters, pageBean, sortBeans);
+        } else {
+            pageModel = documentRepository.list(namespaceEntity, filters, pageBean, sortBeans);
+        }
+
+        return EntityToRepresentation.toRepresentation(pageModel, EntityToRepresentation::toRepresentation);
     }
 
 
