@@ -14,27 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.resources.health;
+package io.github.project.openubl.xsender.resources.health.storage;
 
-import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
-import org.eclipse.microprofile.health.HealthCheck;
-import org.eclipse.microprofile.health.HealthCheckResponse;
-import org.eclipse.microprofile.health.Readiness;
+import javax.enterprise.util.AnnotationLiteral;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+public class StorageProviderLiteral extends AnnotationLiteral<StorageProvider> implements StorageProvider {
 
-@Readiness
-@ApplicationScoped
-public class BasicReadinessHealthCheck implements HealthCheck {
+    private final StorageProvider.Type providerType;
 
-    @Inject
-    CompanyRepository companyRepository;
-
-    @Override
-    public HealthCheckResponse call() {
-        // Not doing anything with entity since it just checks DB readiness
-        return HealthCheckResponse.up("Server readiness running");
+    public StorageProviderLiteral(Type providerType) {
+        this.providerType = providerType;
     }
 
+    @Override
+    public Type value() {
+        return providerType;
+    }
 }
