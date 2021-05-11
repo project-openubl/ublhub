@@ -16,16 +16,8 @@
  */
 package io.github.project.openubl.xsender.resources;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
-import io.github.project.openubl.xsender.kafka.idm.NamespaceCrudEventRepresentation;
-import io.github.project.openubl.xsender.kafka.producers.EntityEventProducer;
-import io.github.project.openubl.xsender.kafka.producers.EntityType;
-import io.github.project.openubl.xsender.kafka.producers.EventType;
-import io.github.project.openubl.xsender.kafka.utils.EventEntityToRepresentation;
 import io.github.project.openubl.xsender.models.PageBean;
 import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.SortBean;
@@ -37,7 +29,6 @@ import io.github.project.openubl.xsender.security.UserIdentity;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -63,12 +54,6 @@ public class CurrentUserResource {
     @Inject
     NamespaceRepository namespaceRepository;
 
-    @Inject
-    Event<ExportedEvent<?, ?>> event;
-
-    @Inject
-    ObjectMapper objectMapper;
-
     @POST
     @Path("/namespaces")
     public Response createNameSpace(@NotNull @Valid NamespaceRepresentation rep) {
@@ -87,14 +72,6 @@ public class CurrentUserResource {
                 .build();
 
         namespaceRepository.persist(namespaceEntity);
-
-        try {
-            NamespaceCrudEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(namespaceEntity);
-            String eventPayload = objectMapper.writeValueAsString(eventRep);
-            event.fire(new EntityEventProducer(namespaceEntity.getId(), EntityType.namespace, EventType.CREATED, eventPayload));
-        } catch (JsonProcessingException e) {
-            LOG.error(e);
-        }
 
         return Response.ok()
                 .entity(EntityToRepresentation.toRepresentation(namespaceEntity))

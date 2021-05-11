@@ -16,11 +16,8 @@
  */
 package io.github.project.openubl.xsender.resources;
 
-import io.github.project.openubl.xsender.kafka.producers.EntityType;
-import io.github.project.openubl.xsender.kafka.producers.EventType;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
-import io.github.project.openubl.xsender.models.jpa.entities.OutboxEventEntity;
 import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
 import io.github.project.openubl.xsender.resources.config.KafkaServer;
 import io.github.project.openubl.xsender.resources.config.KeycloakServer;
@@ -37,7 +34,6 @@ import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
 @QuarkusTestResource(KeycloakServer.class)
@@ -144,8 +140,6 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
                 );
 
         // Then
-        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.namespace.toString(), namespace.getId(), EventType.UPDATED.toString());
-        assertNotNull(kafkaMsg);
     }
 
     @Test
@@ -208,8 +202,6 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
                 .statusCode(204);
 
         // Then
-        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.namespace.toString(), namespace.getId(), EventType.DELETED.toString());
-        assertNotNull(kafkaMsg);
     }
 
     @Test
@@ -241,7 +233,6 @@ public class NamespaceResourceTest extends BaseKeycloakTest {
                 .statusCode(204);
 
         // Then
-
     }
 
 }

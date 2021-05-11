@@ -17,16 +17,8 @@ package io.github.project.openubl.xsender.resources;
  * limitations under the License.
  */
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
-import io.github.project.openubl.xsender.kafka.idm.CompanyCUDEventRepresentation;
-import io.github.project.openubl.xsender.kafka.producers.EntityEventProducer;
-import io.github.project.openubl.xsender.kafka.producers.EntityType;
-import io.github.project.openubl.xsender.kafka.producers.EventType;
-import io.github.project.openubl.xsender.kafka.utils.EventEntityToRepresentation;
 import io.github.project.openubl.xsender.managers.CompanyManager;
 import io.github.project.openubl.xsender.models.PageBean;
 import io.github.project.openubl.xsender.models.PageModel;
@@ -41,7 +33,6 @@ import io.github.project.openubl.xsender.security.UserIdentity;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -70,12 +61,6 @@ public class CompanyResource {
 
     @Inject
     CompanyManager companyManager;
-
-    @Inject
-    Event<ExportedEvent<?, ?>> event;
-
-    @Inject
-    ObjectMapper objectMapper;
 
     @GET
     @Path("/")
@@ -117,14 +102,6 @@ public class CompanyResource {
 
         CompanyEntity companyEntity = companyManager.createCompany(namespaceEntity, rep);
 
-        try {
-            CompanyCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(companyEntity);
-            String eventPayload = objectMapper.writeValueAsString(eventRep);
-            this.event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.company, EventType.CREATED, eventPayload));
-        } catch (JsonProcessingException e) {
-            LOG.error(e);
-        }
-
         return Response.ok()
                 .entity(EntityToRepresentation.toRepresentation(companyEntity))
                 .build();
@@ -153,14 +130,6 @@ public class CompanyResource {
 
         companyEntity = companyManager.updateCompany(rep, companyEntity);
 
-        try {
-            CompanyCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(companyEntity);
-            String eventPayload = objectMapper.writeValueAsString(eventRep);
-            event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.company, EventType.UPDATED, eventPayload));
-        } catch (JsonProcessingException e) {
-            LOG.error(e);
-        }
-
         return EntityToRepresentation.toRepresentation(companyEntity);
     }
 
@@ -174,14 +143,6 @@ public class CompanyResource {
         CompanyEntity companyEntity = companyRepository.findById(namespaceEntity, companyId).orElseThrow(NotFoundException::new);
 
         companyRepository.delete(companyEntity);
-
-        try {
-            CompanyCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(companyEntity);
-            String eventPayload = objectMapper.writeValueAsString(eventRep);
-            event.fire(new EntityEventProducer(companyEntity.getId(), EntityType.company, EventType.DELETED, eventPayload));
-        } catch (JsonProcessingException e) {
-            LOG.error(e);
-        }
     }
 
 }

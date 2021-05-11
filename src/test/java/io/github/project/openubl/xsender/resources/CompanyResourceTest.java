@@ -19,11 +19,12 @@ package io.github.project.openubl.xsender.resources;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
-import io.github.project.openubl.xsender.kafka.producers.EntityType;
-import io.github.project.openubl.xsender.kafka.producers.EventType;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.*;
+import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
 import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
 import io.github.project.openubl.xsender.resources.config.KafkaServer;
 import io.github.project.openubl.xsender.resources.config.KeycloakServer;
@@ -41,7 +42,8 @@ import java.util.UUID;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @QuarkusTest
 @QuarkusTestResource(KeycloakServer.class)
@@ -121,8 +123,6 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 ).extract().body().as(CompanyRepresentation.class);
 
         // Then
-        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.company.toString(), response.getId(), EventType.CREATED.toString());
-        assertNotNull(kafkaMsg);
     }
 
     @Test
@@ -242,9 +242,6 @@ public class CompanyResourceTest extends BaseKeycloakTest {
 
         // Then
         assertEquals(companyRepresentation.getCredentials().getPassword(), companyRepository.findById(company.getId()).getSunatCredentials().getSunatPassword());
-
-        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.company.toString(), company.getId(), EventType.UPDATED.toString());
-        assertNotNull(kafkaMsg);
     }
 
     @Test
@@ -285,7 +282,6 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .statusCode(404);
 
         // Then
-
     }
 
     @Test

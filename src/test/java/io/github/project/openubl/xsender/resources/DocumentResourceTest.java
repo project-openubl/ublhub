@@ -18,8 +18,6 @@ package io.github.project.openubl.xsender.resources;
 
 import io.github.project.openubl.xsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xsender.kafka.consumers.DocumentEvents;
-import io.github.project.openubl.xsender.kafka.producers.EntityType;
-import io.github.project.openubl.xsender.kafka.producers.EventType;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
@@ -127,9 +125,6 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 ).extract().body().as(DocumentRepresentation.class);
 
         // Then
-        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.sunat_document.toString(), response.getId(), EventType.SCHEDULED.toString());
-        assertNotNull(kafkaMsg);
-
         await().atMost(20, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
 
         //
@@ -163,9 +158,6 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 ).extract().body().as(DocumentRepresentation.class);
 
         // Then
-        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.sunat_document.toString(), response.getId(), EventType.SCHEDULED.toString());
-        assertNotNull(kafkaMsg);
-
         await().atMost(20, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
 
         //
@@ -204,9 +196,6 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 ).extract().body().as(DocumentRepresentation.class);
 
         // Then
-        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.sunat_document.toString(), response.getId(), EventType.SCHEDULED.toString());
-        assertNotNull(kafkaMsg);
-
         await().atMost(20, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
 
         //
@@ -251,9 +240,6 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 ).extract().body().as(DocumentRepresentation.class);
 
         // Then
-        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.sunat_document.toString(), response.getId(), EventType.SCHEDULED.toString());
-        assertNotNull(kafkaMsg);
-
         await().atMost(20, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
 
         //

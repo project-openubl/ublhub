@@ -16,22 +16,12 @@
  */
 package io.github.project.openubl.xsender.websockets;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.project.openubl.xsender.kafka.idm.CompanyCUDEventRepresentation;
-import io.github.project.openubl.xsender.kafka.producers.EntityType;
-import io.github.project.openubl.xsender.kafka.producers.EventType;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
-import io.github.project.openubl.xsender.websockets.idm.EventMessage;
-import io.github.project.openubl.xsender.websockets.idm.EventSpec;
-import io.github.project.openubl.xsender.websockets.idm.TypeMessage;
 import io.smallrye.common.annotation.Blocking;
-import io.smallrye.reactive.messaging.kafka.KafkaRecord;
 import io.vertx.core.impl.ConcurrentHashSet;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.eclipse.microprofile.context.ThreadContext;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -48,8 +38,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ServerEndpoint("/namespaces/{namespace}/documents")
@@ -66,9 +54,6 @@ public class DocumentsEndpoint {
 
     @Inject
     KeycloakAuthenticator keycloakAuthenticator;
-
-    @Inject
-    ObjectMapper objectMapper;
 
     @Blocking
     @Transactional
@@ -122,41 +107,6 @@ public class DocumentsEndpoint {
             sessions.remove(session);
             namespacesSessions.getOrDefault(companyId, Collections.emptySet()).remove(session);
         }
-    }
-
-    @Incoming("event-company")
-    public CompletionStage<Void> readEvent(KafkaRecord<String, String> record) {
-        return CompletableFuture.runAsync(() -> {
-            String eventType = WebsocketUtils.getHeaderAsString(record, "eventType");
-            String payload = record.getPayload();
-
-            try {
-                String unescapedPayload = objectMapper.readValue(payload, String.class);
-                CompanyCUDEventRepresentation eventRep = objectMapper.readValue(unescapedPayload, CompanyCUDEventRepresentation.class);
-
-                EventMessage wsMessage = EventMessage.Builder.anEventMessage()
-                        .withType(TypeMessage.EVENT)
-                        .withSpec(EventSpec.Builder.anEventSpec()
-                                .withId(eventRep.getId())
-                                .withEntity(EntityType.company)
-                                .withEvent(EventType.valueOf(eventType))
-                                .build()
-                        )
-                        .build();
-
-                String wsMessageString = objectMapper.writeValueAsString(wsMessage);
-
-                namespacesSessions.getOrDefault(eventRep.getNamespace(), Collections.emptySet()).forEach(session -> session.getAsyncRemote().sendObject(wsMessageString, result -> {
-                    if (result.getException() != null) {
-                        LOG.error("Unable to send message ", result.getException());
-                    }
-                }));
-
-                record.ack();
-            } catch (JsonProcessingException e) {
-                throw new IllegalStateException(e);
-            }
-        });
     }
 
 }

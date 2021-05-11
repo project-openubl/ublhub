@@ -17,11 +17,8 @@
 package io.github.project.openubl.xsender.resources;
 
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
-import io.github.project.openubl.xsender.kafka.producers.EntityType;
-import io.github.project.openubl.xsender.kafka.producers.EventType;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
-import io.github.project.openubl.xsender.models.jpa.entities.OutboxEventEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
 import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
@@ -41,7 +38,8 @@ import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 @QuarkusTestResource(KeycloakServer.class)
@@ -86,9 +84,6 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
         assertEquals(dbEntity.getName(), NAME);
         assertEquals(dbEntity.getDescription(), "my description");
         assertEquals(dbEntity.getOwner(), "alice");
-
-        OutboxEventEntity kafkaMsg = OutboxEventEntity.findByParams(EntityType.namespace.toString(), dbEntity.getId(), EventType.CREATED.toString());
-        assertNotNull(kafkaMsg);
     }
 
     @Test

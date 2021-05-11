@@ -17,18 +17,10 @@ package io.github.project.openubl.xsender.resources;
  * limitations under the License.
  */
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.exceptions.StorageException;
 import io.github.project.openubl.xsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xsender.idm.ErrorRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
-import io.github.project.openubl.xsender.kafka.idm.UBLDocumentCUDEventRepresentation;
-import io.github.project.openubl.xsender.kafka.producers.EntityEventProducer;
-import io.github.project.openubl.xsender.kafka.producers.EntityType;
-import io.github.project.openubl.xsender.kafka.producers.EventType;
-import io.github.project.openubl.xsender.kafka.utils.EventEntityToRepresentation;
 import io.github.project.openubl.xsender.managers.DocumentsManager;
 import io.github.project.openubl.xsender.models.DocumentFilterModel;
 import io.github.project.openubl.xsender.models.PageBean;
@@ -36,7 +28,6 @@ import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
@@ -48,7 +39,6 @@ import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
@@ -80,12 +70,6 @@ public class DocumentResource {
 
     @Inject
     DocumentsManager documentsManager;
-
-    @Inject
-    Event<ExportedEvent<?, ?>> event;
-
-    @Inject
-    ObjectMapper objectMapper;
 
     @POST
     @Path("/upload")
@@ -126,14 +110,6 @@ public class DocumentResource {
         UBLDocumentEntity documentEntity;
         try {
             documentEntity = documentsManager.createDocumentAndScheduleDelivery(namespaceEntity, xmlFile);
-
-            try {
-                UBLDocumentCUDEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(documentEntity);
-                String eventPayload = objectMapper.writeValueAsString(eventRep);
-                event.fire(new EntityEventProducer(documentEntity.getId(), EntityType.document, EventType.CREATED, eventPayload));
-            } catch (JsonProcessingException e) {
-                LOG.error(e);
-            }
         } catch (StorageException e) {
             LOG.error(e);
             ErrorRepresentation error = new ErrorRepresentation(e.getMessage());
