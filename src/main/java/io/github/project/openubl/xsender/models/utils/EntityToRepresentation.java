@@ -84,14 +84,14 @@ public class EntityToRepresentation {
         rep.setFileContentValid(entity.getFileValid());
         rep.setFileContentValidationError(entity.getFileValidationError());
 
-        rep.setFileContent(new DocumentContentRepresentation());
+        rep.setFileContent(new FileContentRepresentation());
         rep.getFileContent().setRuc(entity.getRuc());
         rep.getFileContent().setDocumentID(entity.getDocumentID());
         rep.getFileContent().setDocumentType(entity.getDocumentType());
 
         // Sunat
 
-        rep.setSunat(new DocumentSunatStatusRepresentation());
+        rep.setSunat(new SunatStatusRepresentation());
 
         rep.getSunat().setCode(entity.getSunatCode());
         rep.getSunat().setTicket(entity.getSunatTicket());

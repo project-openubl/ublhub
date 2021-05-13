@@ -16,11 +16,31 @@
  */
 package io.github.project.openubl.xsender.idm;
 
-public class DocumentSunatEventRepresentation {
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
+@RegisterForReflection
+public class SunatStatusRepresentation {
+
+    private Integer code;
+    private String ticket;
     private String status;
     private String description;
-    private Long createdOn;
+
+    public Integer getCode() {
+        return code;
+    }
+
+    public void setCode(Integer code) {
+        this.code = code;
+    }
+
+    public String getTicket() {
+        return ticket;
+    }
+
+    public void setTicket(String ticket) {
+        this.ticket = ticket;
+    }
 
     public String getStatus() {
         return status;
@@ -38,11 +58,4 @@ public class DocumentSunatEventRepresentation {
         this.description = description;
     }
 
-    public Long getCreatedOn() {
-        return createdOn;
-    }
-
-    public void setCreatedOn(Long createdOn) {
-        this.createdOn = createdOn;
-    }
 }
