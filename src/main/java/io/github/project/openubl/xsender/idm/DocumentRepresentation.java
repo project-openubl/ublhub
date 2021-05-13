@@ -28,9 +28,9 @@ public class DocumentRepresentation {
 
     private Boolean fileContentValid;
     private String fileContentValidationError;
-    private DocumentContentRepresentation fileContent;
+    private FileContentRepresentation fileContent;
 
-    private DocumentSunatStatusRepresentation sunat;
+    private SunatStatusRepresentation sunat;
 
     public String getId() {
         return id;
@@ -80,19 +80,19 @@ public class DocumentRepresentation {
         this.fileContentValidationError = fileContentValidationError;
     }
 
-    public DocumentContentRepresentation getFileContent() {
+    public FileContentRepresentation getFileContent() {
         return fileContent;
     }
 
-    public void setFileContent(DocumentContentRepresentation fileContent) {
+    public void setFileContent(FileContentRepresentation fileContent) {
         this.fileContent = fileContent;
     }
 
-    public DocumentSunatStatusRepresentation getSunat() {
+    public SunatStatusRepresentation getSunat() {
         return sunat;
     }
 
-    public void setSunat(DocumentSunatStatusRepresentation sunat) {
+    public void setSunat(SunatStatusRepresentation sunat) {
         this.sunat = sunat;
     }
 }

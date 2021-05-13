@@ -19,43 +19,34 @@ package io.github.project.openubl.xsender.idm;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
-public class DocumentSunatStatusRepresentation {
+public class FileContentRepresentation {
 
-    private Integer code;
-    private String ticket;
-    private String status;
-    private String description;
+    private String ruc;
+    private String documentID;
+    private String documentType;
 
-    public Integer getCode() {
-        return code;
+    public String getRuc() {
+        return ruc;
     }
 
-    public void setCode(Integer code) {
-        this.code = code;
+    public void setRuc(String ruc) {
+        this.ruc = ruc;
     }
 
-    public String getTicket() {
-        return ticket;
+    public String getDocumentID() {
+        return documentID;
     }
 
-    public void setTicket(String ticket) {
-        this.ticket = ticket;
+    public void setDocumentID(String documentID) {
+        this.documentID = documentID;
     }
 
-    public String getStatus() {
-        return status;
+    public String getDocumentType() {
+        return documentType;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public void setDocumentType(String documentType) {
+        this.documentType = documentType;
     }
 
 }
