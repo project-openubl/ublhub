@@ -25,7 +25,6 @@ import org.apache.http.client.utils.URIBuilder;
 
 import javax.ws.rs.core.UriInfo;
 import java.net.URISyntaxException;
-import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 

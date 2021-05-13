@@ -17,15 +17,7 @@ package io.github.project.openubl.xsender.resources;
  * limitations under the License.
  */
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
-import io.github.project.openubl.xsender.kafka.idm.NamespaceCrudEventRepresentation;
-import io.github.project.openubl.xsender.kafka.producers.EntityEventProducer;
-import io.github.project.openubl.xsender.kafka.producers.EntityType;
-import io.github.project.openubl.xsender.kafka.producers.EventType;
-import io.github.project.openubl.xsender.kafka.utils.EventEntityToRepresentation;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
@@ -33,7 +25,6 @@ import io.github.project.openubl.xsender.security.UserIdentity;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
@@ -53,12 +44,6 @@ public class NamespaceResource {
 
     @Inject
     NamespaceRepository namespaceRepository;
-
-    @Inject
-    Event<ExportedEvent<?, ?>> event;
-
-    @Inject
-    ObjectMapper objectMapper;
 
     @GET
     @Path("/{namespaceId}")
@@ -82,14 +67,6 @@ public class NamespaceResource {
         }
         namespaceRepository.persist(namespaceEntity);
 
-        try {
-            NamespaceCrudEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(namespaceEntity);
-            String eventPayload = objectMapper.writeValueAsString(eventRep);
-            event.fire(new EntityEventProducer(namespaceEntity.getId(), EntityType.namespace, EventType.UPDATED, eventPayload));
-        } catch (JsonProcessingException e) {
-            LOG.error(e);
-        }
-
         return EntityToRepresentation.toRepresentation(namespaceEntity);
     }
 
@@ -98,14 +75,6 @@ public class NamespaceResource {
     public void deleteNamespace(@PathParam("namespaceId") @NotNull String namespaceId) {
         NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
         namespaceRepository.deleteById(namespaceEntity.getId());
-
-        try {
-            NamespaceCrudEventRepresentation eventRep = EventEntityToRepresentation.toRepresentation(namespaceEntity);
-            String eventPayload = objectMapper.writeValueAsString(eventRep);
-            event.fire(new EntityEventProducer(namespaceEntity.getId(), EntityType.namespace, EventType.DELETED, eventPayload));
-        } catch (JsonProcessingException e) {
-            LOG.error(e);
-        }
     }
 
 }

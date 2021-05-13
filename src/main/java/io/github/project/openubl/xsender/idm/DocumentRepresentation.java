@@ -18,9 +18,6 @@ package io.github.project.openubl.xsender.idm;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
-import java.util.Date;
-import java.util.List;
-
 @RegisterForReflection
 public class DocumentRepresentation {
 
