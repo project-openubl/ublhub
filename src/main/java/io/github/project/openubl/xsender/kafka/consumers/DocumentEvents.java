@@ -37,6 +37,7 @@ import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
+import io.github.project.openubl.xsender.scheduler.Scheduler;
 import io.github.project.openubl.xsender.xsender.AppBillServiceConfig;
 import io.smallrye.common.annotation.Blocking;
 import org.apache.commons.lang3.StringUtils;
@@ -44,6 +45,7 @@ import org.eclipse.microprofile.reactive.messaging.Acknowledgment;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 import org.jboss.logging.Logger;
+import org.quartz.SchedulerException;
 import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -52,6 +54,7 @@ import javax.transaction.Transactional;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
@@ -67,6 +70,9 @@ public class DocumentEvents {
 
     public static final String NS_NOT_FOUND = "Namespace no encontrado";
     public static final String RUC_IN_COMPANY_NOT_FOUND = "No se pudo encontrar una empresa para el RUC especificado";
+
+    @Inject
+    Scheduler scheduler;
 
     @Inject
     FilesManager filesManager;
@@ -182,7 +188,7 @@ public class DocumentEvents {
     @Incoming("send-document-sunat-incoming")
     @Outgoing("verify-ticket-sunat")
     @Acknowledgment(Acknowledgment.Strategy.POST_PROCESSING)
-    public UBLDocumentSunatEventRepresentation verifyTicket(String payload) {
+    public UBLDocumentSunatEventRepresentation sendDocument(String payload) {
         UBLDocumentSunatEventRepresentation eventRep;
 
         try {
@@ -203,11 +209,23 @@ public class DocumentEvents {
 
             billServiceModel = smartBillServiceModel.getBillServiceModel();
         } catch (UnknownWebServiceException e) {
-            // TODO schedule a new send using quarkts
+            int retries = documentEntity.getRetries();
+            Date date = null;
+            if (retries <= 2) {
+                try {
+                    retries++;
+                    date = scheduler.scheduleSend(documentEntity, retries);
+                } catch (SchedulerException schedulerException) {
+                    LOG.error(schedulerException);
+                }
+            }
+
+            // Save
             documentEntity.setInProgress(false);
-            documentEntity.setError(RUC_IN_COMPANY_NOT_FOUND);
+            documentEntity.setRetries(retries);
+            documentEntity.setWillRetryOn(date);
             documentRepository.persist(documentEntity);
-            return eventRep;
+            return null;
         } catch (ValidationWebServiceException e) {
             // The error code in the
             billServiceModel = new BillServiceModel();
@@ -220,7 +238,7 @@ public class DocumentEvents {
             documentRepository.persist(documentEntity);
 
             LOG.error(e);
-            return eventRep;
+            return null;
         }
 
         // Save CDR
@@ -246,7 +264,7 @@ public class DocumentEvents {
         if (ticket == null) {
             documentEntity.setInProgress(false);
             documentRepository.persist(documentEntity);
-            return eventRep;
+            return null;
         }
 
         eventRep.setTicket(ticket);
@@ -292,9 +310,21 @@ public class DocumentEvents {
                     billServiceConfig
             );
         } catch (UnknownWebServiceException e) {
-            // TODO schedule a new send using quarkts
+            int retries = documentEntity.getRetries();
+            Date date = null;
+            if (retries <= 2) {
+                try {
+                    retries++;
+                    date = scheduler.scheduleSend(documentEntity, retries);
+                } catch (SchedulerException schedulerException) {
+                    LOG.error(schedulerException);
+                }
+            }
+
+            // Save
             documentEntity.setInProgress(false);
-            documentEntity.setError(RUC_IN_COMPANY_NOT_FOUND);
+            documentEntity.setRetries(retries);
+            documentEntity.setWillRetryOn(date);
             documentRepository.persist(documentEntity);
             return;
         } catch (ValidationWebServiceException e) {
