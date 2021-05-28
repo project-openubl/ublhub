@@ -45,7 +45,7 @@ create table ubl_document
     file_validation_error          varchar(255),
     error                          varchar(255),
     voided_line_document_type_code varchar(255),
-    will_retry_on                  timestamp,
+    scheduled_delivery             timestamp,
     namespace_id                   varchar(255),
     primary key (id)
 );

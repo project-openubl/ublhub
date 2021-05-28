@@ -49,6 +49,10 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdOn;
 
+    @Column(name = "scheduled_delivery")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date scheduledDelivery;
+
     @Type(type = "org.hibernate.type.YesNoType")
     @Column(name = "file_valid")
     private Boolean fileValid;
@@ -62,10 +66,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     @NotNull
     @Column(name = "retries")
     private int retries;
-
-    @Column(name = "will_retry_on")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date willRetryOn;
 
     // XML Content
 
@@ -176,12 +176,12 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.retries = retries;
     }
 
-    public Date getWillRetryOn() {
-        return willRetryOn;
+    public Date getScheduledDelivery() {
+        return scheduledDelivery;
     }
 
-    public void setWillRetryOn(Date willRetryOn) {
-        this.willRetryOn = willRetryOn;
+    public void setScheduledDelivery(Date willRetryOn) {
+        this.scheduledDelivery = willRetryOn;
     }
 
     public String getRuc() {
@@ -280,17 +280,16 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.sunatEvents = sunatEvents;
     }
 
-
     public static final class UBLDocumentEntityBuilder {
         private String id;
         private NamespaceEntity namespace;
         private boolean inProgress;
         private Date createdOn;
+        private Date scheduledDelivery;
         private Boolean fileValid;
         private String fileValidationError;
         private String error;
         private int retries;
-        private Date willRetryOn;
         private String ruc;
         private String documentID;
         private String documentType;
@@ -331,6 +330,11 @@ public class UBLDocumentEntity extends PanacheEntityBase {
             return this;
         }
 
+        public UBLDocumentEntityBuilder withScheduledDelivery(Date scheduledDelivery) {
+            this.scheduledDelivery = scheduledDelivery;
+            return this;
+        }
+
         public UBLDocumentEntityBuilder withFileValid(Boolean fileValid) {
             this.fileValid = fileValid;
             return this;
@@ -348,11 +352,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
 
         public UBLDocumentEntityBuilder withRetries(int retries) {
             this.retries = retries;
-            return this;
-        }
-
-        public UBLDocumentEntityBuilder withWillRetryOn(Date willRetryOn) {
-            this.willRetryOn = willRetryOn;
             return this;
         }
 
@@ -422,11 +421,11 @@ public class UBLDocumentEntity extends PanacheEntityBase {
             uBLDocumentEntity.setNamespace(namespace);
             uBLDocumentEntity.setInProgress(inProgress);
             uBLDocumentEntity.setCreatedOn(createdOn);
+            uBLDocumentEntity.setScheduledDelivery(scheduledDelivery);
             uBLDocumentEntity.setFileValid(fileValid);
             uBLDocumentEntity.setFileValidationError(fileValidationError);
             uBLDocumentEntity.setError(error);
             uBLDocumentEntity.setRetries(retries);
-            uBLDocumentEntity.setWillRetryOn(willRetryOn);
             uBLDocumentEntity.setRuc(ruc);
             uBLDocumentEntity.setDocumentID(documentID);
             uBLDocumentEntity.setDocumentType(documentType);

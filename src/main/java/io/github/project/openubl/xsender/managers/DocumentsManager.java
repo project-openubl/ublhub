@@ -22,7 +22,6 @@ import io.github.project.openubl.xsender.models.FileType;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
-import io.github.project.openubl.xsender.sendstream.SendStream;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -40,9 +39,6 @@ public class DocumentsManager {
     @Inject
     UBLDocumentRepository documentRepository;
 
-    @Inject
-    SendStream sendStream;
-
     public UBLDocumentEntity createDocumentAndScheduleDelivery(NamespaceEntity namespaceEntity, byte[] xmlFile) throws StorageException {
         // Save file in Storage
 
@@ -55,16 +51,17 @@ public class DocumentsManager {
 
         UBLDocumentEntity documentEntity = UBLDocumentEntity.UBLDocumentEntityBuilder.anUBLDocumentEntity()
                 .withId(UUID.randomUUID().toString())
-                .withStorageFile(fileID)
-                .withInProgress(true)
                 .withCreatedOn(new Date())
+                .withStorageFile(fileID)
                 .withNamespace(namespaceEntity)
+                .withRetries(0)
+                .withInProgress(true)
+                .withScheduledDelivery(new Date())
                 .build();
 
         documentRepository.persist(documentEntity);
 
         // Result
-        sendStream.send(documentEntity);
         return documentEntity;
     }
 

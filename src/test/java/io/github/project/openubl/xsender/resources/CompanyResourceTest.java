@@ -25,13 +25,11 @@ import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
-import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
-import io.github.project.openubl.xsender.resources.config.KafkaServer;
-import io.github.project.openubl.xsender.resources.config.KeycloakServer;
-import io.github.project.openubl.xsender.resources.config.PostgreSQLServer;
+import io.github.project.openubl.xsender.resources.config.*;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -46,9 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @QuarkusTest
-@QuarkusTestResource(KeycloakServer.class)
-@QuarkusTestResource(PostgreSQLServer.class)
-@QuarkusTestResource(KafkaServer.class)
+@ServerDependencies
 public class CompanyResourceTest extends BaseKeycloakTest {
 
     final SunatCredentialsEntity credentials = SunatCredentialsEntity.Builder.aSunatCredentialsEntity()

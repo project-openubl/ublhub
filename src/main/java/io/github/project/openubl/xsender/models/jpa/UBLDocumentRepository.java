@@ -72,7 +72,7 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
         StringBuilder queryBuilder = new StringBuilder("From UBLDocumentEntity as c where c.namespace.id = :namespaceId and lower(c.documentID) like :filterText");
-        Parameters queryParameters = Parameters.with("namespaceId", namespace.getId()).and("filterText", filterText);
+        Parameters queryParameters = Parameters.with("namespaceId", namespace.getId()).and("filterText", "%" + filterText.toLowerCase());
 
         if (filters.getRuc() != null) {
             queryBuilder.append(" and c.ruc = :ruc");

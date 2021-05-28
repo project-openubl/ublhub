@@ -14,11 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.kafka.producers;
+package io.github.project.openubl.xsender.sender;
 
-public enum EventType {
-    CREATED,
-    UPDATED,
-    DELETED,
-    SCHEDULED,
+import javax.enterprise.util.AnnotationLiteral;
+
+public class SenderProviderLiteral extends AnnotationLiteral<SenderProvider> implements SenderProvider {
+
+    private final Type providerType;
+
+    public SenderProviderLiteral(Type providerType) {
+        this.providerType = providerType;
+    }
+
+    @Override
+    public Type value() {
+        return providerType;
+    }
 }
