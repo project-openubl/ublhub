@@ -25,6 +25,8 @@ public class DocumentRepresentation {
     private Long createdOn;
     private boolean inProgress;
     private String error;
+    private Long scheduledDelivery;
+    private int retryCount;
 
     private Boolean fileContentValid;
     private String fileContentValidationError;
@@ -94,5 +96,21 @@ public class DocumentRepresentation {
 
     public void setSunat(SunatStatusRepresentation sunat) {
         this.sunat = sunat;
+    }
+
+    public Long getScheduledDelivery() {
+        return scheduledDelivery;
+    }
+
+    public void setScheduledDelivery(Long scheduledDelivery) {
+        this.scheduledDelivery = scheduledDelivery;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public void setRetryCount(int retryCount) {
+        this.retryCount = retryCount;
     }
 }

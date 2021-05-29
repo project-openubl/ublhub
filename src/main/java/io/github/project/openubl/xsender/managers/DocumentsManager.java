@@ -54,9 +54,10 @@ public class DocumentsManager {
                 .withCreatedOn(new Date())
                 .withStorageFile(fileID)
                 .withNamespace(namespaceEntity)
+
                 .withRetries(0)
                 .withInProgress(true)
-                .withScheduledDelivery(new Date())
+
                 .build();
 
         documentRepository.persist(documentEntity);
