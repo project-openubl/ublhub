@@ -13,9 +13,6 @@ import io.smallrye.reactive.messaging.annotations.Blocking;
 import org.eclipse.microprofile.reactive.messaging.*;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Event;
-import javax.enterprise.event.Observes;
-import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.util.Calendar;
@@ -103,11 +100,10 @@ public class AMQPSenderManager implements SenderManager {
         if (retries <= 2) {
             retries++;
 
-            long currentTime = System.currentTimeMillis();
             Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(currentTime);
-            calendar.add(Calendar.MINUTE, (int) Math.pow(5, retries));
+            long currentTime = calendar.getTimeInMillis();
 
+            calendar.add(Calendar.MINUTE, (int) Math.pow(5, retries));
             date = calendar.getTime();
 
             OutgoingAmqpMetadata metadata = OutgoingAmqpMetadata.builder()
@@ -116,6 +112,8 @@ public class AMQPSenderManager implements SenderManager {
 
             Message<String> message = Message.of(documentId).addMetadata(metadata);
             emitter.send(message);
+        } else {
+            documentEntity.setError("Número de reintentos de reenvío agotados");
         }
 
         // Save

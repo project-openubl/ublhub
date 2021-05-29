@@ -20,11 +20,15 @@ package io.github.project.openubl.xsender.resources;
 import io.github.project.openubl.xsender.events.DocumentEvent;
 import io.github.project.openubl.xsender.events.DocumentEventBroadcaster;
 import io.github.project.openubl.xsender.exceptions.StorageException;
+import io.github.project.openubl.xsender.files.FilesManager;
 import io.github.project.openubl.xsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xsender.idm.ErrorRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
 import io.github.project.openubl.xsender.managers.DocumentsManager;
-import io.github.project.openubl.xsender.models.*;
+import io.github.project.openubl.xsender.models.DocumentFilterModel;
+import io.github.project.openubl.xsender.models.PageBean;
+import io.github.project.openubl.xsender.models.PageModel;
+import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
@@ -37,9 +41,6 @@ import io.github.project.openubl.xsender.sender.SenderProvider;
 import io.github.project.openubl.xsender.sender.SenderProviderLiteral;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -48,15 +49,17 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.transaction.*;
 import javax.transaction.NotSupportedException;
+import javax.transaction.*;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -75,6 +78,9 @@ public class DocumentResource {
     @Inject
     @Any
     Instance<SenderManager> senderManagers;
+
+    @Inject
+    FilesManager filesManager;
 
     @Inject
     UserIdentity userIdentity;
@@ -177,8 +183,8 @@ public class DocumentResource {
     @Path("/")
     public PageRepresentation<DocumentRepresentation> getDocuments(
             @PathParam("namespaceId") @NotNull String namespaceId,
-            @QueryParam("ruc") String ruc,
-            @QueryParam("documentType") String documentType,
+            @QueryParam("ruc") List<String> ruc,
+            @QueryParam("documentType") List<String> documentType,
             @QueryParam("filterText") String filterText,
             @QueryParam("offset") @DefaultValue("0") Integer offset,
             @QueryParam("limit") @DefaultValue("10") Integer limit,
@@ -214,40 +220,109 @@ public class DocumentResource {
         return null;
     }
 
+    @Transactional(Transactional.TxType.NOT_SUPPORTED)
+    @POST
+    @Path("/{documentId}/retry-send")
+    public void resend(
+            @PathParam("namespaceId") @NotNull String namespaceId,
+            @PathParam("documentId") @NotNull String documentId
+    ) {
+        try {
+            transaction.begin();
+
+            NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+            UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
+
+            documentEntity.setInProgress(true);
+            documentEntity.setError(null);
+            documentEntity.setScheduledDelivery(null);
+
+            // Fire event
+            DocumentEvent documentEvent = new DocumentEvent(documentEntity.getId(), namespaceEntity.getId());
+            documentEventBroadcaster.fire(documentEvent);
+
+            transaction.commit();
+        } catch (NotSupportedException | SystemException | HeuristicRollbackException | HeuristicMixedException | RollbackException e) {
+            LOG.error(e);
+            try {
+                transaction.rollback();
+            } catch (SystemException systemException) {
+                LOG.error(systemException);
+            }
+        }
+
+        SenderProvider.Type providerType = SenderProvider.Type.valueOf(senderType.toUpperCase());
+        Annotation annotation = new SenderProviderLiteral(providerType);
+        SenderManager senderManager = senderManagers.select(annotation).get();
+        senderManager.fireSendDocument(documentId);
+    }
+
     @GET
     @Path("/{documentId}/file")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
     public Response getDocumentFile(
             @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("documentId") @NotNull String documentId
     ) {
-        return null;
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
+
+        byte[] file = filesManager.getFileAsBytesAfterUnzip(documentEntity.getStorageFile());
+        return Response.ok(file, MediaType.APPLICATION_XML)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".xml" + "\"")
+                .build();
     }
 
     @GET
     @Path("/{documentId}/file-link")
-    public String getDocumentFileLink(
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response getDocumentFileLink(
             @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("documentId") @NotNull String documentId
     ) {
-        return null;
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
+        if (documentEntity == null) {
+            throw new NotFoundException();
+        }
+
+        String fileLink = filesManager.getFileLink(documentEntity.getStorageFile());
+        return Response.ok(fileLink)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".xml" + "\"")
+                .build();
     }
 
     @GET
     @Path("/{documentId}/cdr")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response getDocumentCdr(
             @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("documentId") @NotNull String documentId
     ) {
-        return null;
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
+
+        byte[] file = filesManager.getFileAsBytesWithoutUnzipping(documentEntity.getStorageCdr());
+
+        return Response.ok(file, "application/zip")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".zip" + "\"")
+                .build();
     }
 
     @GET
     @Path("/{documentId}/cdr-link")
-    public String getDocumentCdrLink(
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response getDocumentCdrLink(
             @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("documentId") @NotNull String documentId
     ) {
-        return null;
+        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+        UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
+
+        String fileLink = filesManager.getFileLink(documentEntity.getStorageCdr());
+        return Response.ok(fileLink)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".zip" + "\"")
+                .build();
     }
 
 }

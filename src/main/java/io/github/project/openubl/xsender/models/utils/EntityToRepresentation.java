@@ -78,6 +78,8 @@ public class EntityToRepresentation {
 
         rep.setCreatedOn(entity.getCreatedOn().getTime());
         rep.setError(entity.getError());
+        rep.setScheduledDelivery(entity.getScheduledDelivery() != null ? entity.getScheduledDelivery().getTime() : null);
+        rep.setRetryCount(entity.getRetries());
 
         // File
 
@@ -97,6 +99,7 @@ public class EntityToRepresentation {
         rep.getSunat().setTicket(entity.getSunatTicket());
         rep.getSunat().setStatus(entity.getSunatStatus());
         rep.getSunat().setDescription(entity.getSunatDescription());
+        rep.getSunat().setHasCdr(entity.getStorageCdr() != null);
 
         // Events
 

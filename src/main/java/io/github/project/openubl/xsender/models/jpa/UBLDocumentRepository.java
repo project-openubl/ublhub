@@ -31,16 +31,13 @@ import io.quarkus.panache.common.Sort;
 import javax.enterprise.context.ApplicationScoped;
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Transactional
 @ApplicationScoped
 public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentEntity, String> {
 
     public static final String[] SORT_BY_FIELDS = {"createdOn"};
-
-//    public List<UBLDocumentEntity> findAllThatCouldNotBeDelivered() {
-//        return list("deliveryStatus", DeliveryStatusType.COULD_NOT_BE_DELIVERED);
-//    }
 
     public PageModel<UBLDocumentEntity> list(NamespaceEntity namespace, DocumentFilterModel filters, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
@@ -49,12 +46,12 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
         StringBuilder queryBuilder = new StringBuilder("From UBLDocumentEntity as c where c.namespace.id = :namespaceId");
         Parameters queryParameters = Parameters.with("namespaceId", namespace.getId());
 
-        if (filters.getRuc() != null) {
-            queryBuilder.append(" and c.ruc = :ruc");
+        if (filters.getRuc() != null && !filters.getRuc().isEmpty()) {
+            queryBuilder.append(" and c.ruc in :ruc");
             queryParameters = queryParameters.and("ruc", filters.getRuc());
         }
-        if (filters.getDocumentType() != null) {
-            queryBuilder.append(" and c.documentType = :documentType");
+        if (filters.getDocumentType() != null && !filters.getDocumentType().isEmpty()) {
+            queryBuilder.append(" and c.documentType in :documentType");
             queryParameters = queryParameters.and("documentType", filters.getDocumentType());
         }
 
@@ -74,12 +71,12 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
         StringBuilder queryBuilder = new StringBuilder("From UBLDocumentEntity as c where c.namespace.id = :namespaceId and lower(c.documentID) like :filterText");
         Parameters queryParameters = Parameters.with("namespaceId", namespace.getId()).and("filterText", "%" + filterText.toLowerCase());
 
-        if (filters.getRuc() != null) {
-            queryBuilder.append(" and c.ruc = :ruc");
+        if (filters.getRuc() != null && !filters.getRuc().isEmpty()) {
+            queryBuilder.append(" and c.ruc in :ruc");
             queryParameters = queryParameters.and("ruc", filters.getRuc());
         }
-        if (filters.getDocumentType() != null) {
-            queryBuilder.append(" and c.documentType = :documentType");
+        if (filters.getDocumentType() != null && !filters.getDocumentType().isEmpty()) {
+            queryBuilder.append(" and c.documentType in :documentType");
             queryParameters = queryParameters.and("documentType", filters.getDocumentType());
         }
 
