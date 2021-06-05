@@ -14,8 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.websockets.idm;
+package io.github.project.openubl.xsender.sender.common;
 
-public enum TypeMessage {
-    EVENT
+public class WSException extends Exception {
+    public WSException(Throwable e) {
+        super(e);
+    }
 }

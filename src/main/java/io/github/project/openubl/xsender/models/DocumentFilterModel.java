@@ -16,30 +16,32 @@
  */
 package io.github.project.openubl.xsender.models;
 
+import java.util.List;
+
 public class DocumentFilterModel {
 
-    private String ruc;
-    private String documentType;
+    private List<String> ruc;
+    private List<String> documentType;
 
-    public String getRuc() {
+    public List<String> getRuc() {
         return ruc;
     }
 
-    public void setRuc(String ruc) {
+    public void setRuc(List<String> ruc) {
         this.ruc = ruc;
     }
 
-    public String getDocumentType() {
+    public List<String> getDocumentType() {
         return documentType;
     }
 
-    public void setDocumentType(String documentType) {
+    public void setDocumentType(List<String> documentType) {
         this.documentType = documentType;
     }
 
     public static final class DocumentFilterModelBuilder {
-        private String ruc;
-        private String documentType;
+        private List<String> ruc;
+        private List<String> documentType;
 
         private DocumentFilterModelBuilder() {
         }
@@ -48,12 +50,12 @@ public class DocumentFilterModel {
             return new DocumentFilterModelBuilder();
         }
 
-        public DocumentFilterModelBuilder withRuc(String ruc) {
+        public DocumentFilterModelBuilder withRuc(List<String> ruc) {
             this.ruc = ruc;
             return this;
         }
 
-        public DocumentFilterModelBuilder withDocumentType(String documentType) {
+        public DocumentFilterModelBuilder withDocumentType(List<String> documentType) {
             this.documentType = documentType;
             return this;
         }

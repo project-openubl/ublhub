@@ -14,17 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.xsender;
+package io.github.project.openubl.xsender.sender.common;
 
 import io.github.project.openubl.xmlsenderws.webservices.managers.smart.custom.CustomBillServiceConfig;
 
-public class AppBillServiceConfig implements CustomBillServiceConfig {
+public class XSenderBillServiceConfig implements CustomBillServiceConfig {
 
     private final String invoiceUrl;
     private final String perception;
     private final String despatchUrl;
 
-    public AppBillServiceConfig(String invoiceUrl, String perception, String despatchUrl) {
+    public XSenderBillServiceConfig(String invoiceUrl, String perception, String despatchUrl) {
         this.invoiceUrl = invoiceUrl;
         this.perception = perception;
         this.despatchUrl = despatchUrl;

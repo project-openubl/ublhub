@@ -77,12 +77,13 @@ public class EntityToRepresentation {
         rep.setInProgress(entity.isInProgress());
 
         rep.setCreatedOn(entity.getCreatedOn().getTime());
-        rep.setError(entity.getError());
+        rep.setError(entity.getError() != null ? entity.getError().getMessage() : null);
+        rep.setScheduledDelivery(entity.getScheduledDelivery() != null ? entity.getScheduledDelivery().getTime() : null);
+        rep.setRetryCount(entity.getRetries());
 
         // File
 
         rep.setFileContentValid(entity.getFileValid());
-        rep.setFileContentValidationError(entity.getFileValidationError());
 
         rep.setFileContent(new FileContentRepresentation());
         rep.getFileContent().setRuc(entity.getRuc());
@@ -97,6 +98,7 @@ public class EntityToRepresentation {
         rep.getSunat().setTicket(entity.getSunatTicket());
         rep.getSunat().setStatus(entity.getSunatStatus());
         rep.getSunat().setDescription(entity.getSunatDescription());
+        rep.getSunat().setHasCdr(entity.getStorageCdr() != null);
 
         // Events
 

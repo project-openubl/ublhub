@@ -36,7 +36,7 @@ import java.lang.annotation.Annotation;
 public class StorageReadinessHealthCheck implements HealthCheck {
 
     @ConfigProperty(name = "openubl.storage.type")
-    private String storageType;
+    String storageType;
 
     @Inject
     @Any

@@ -17,13 +17,13 @@
 package io.github.project.openubl.xsender.resources;
 
 import io.github.project.openubl.xsender.idm.DocumentRepresentation;
-import io.github.project.openubl.xsender.kafka.consumers.DocumentEvents;
+import io.github.project.openubl.xsender.models.ErrorType;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.*;
-import io.github.project.openubl.xsender.resources.config.*;
-import io.quarkus.test.common.QuarkusTestResource;
+import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
+import io.github.project.openubl.xsender.resources.config.ServerDependencies;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,11 +44,10 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
-@QuarkusTestResource(value = KeycloakServer.class)
-@QuarkusTestResource(value = PostgreSQLServer.class)
-@QuarkusTestResource(value = KafkaServer.class)
-@QuarkusTestResource(value = S3Server.class)
+@ServerDependencies
 public class DocumentResourceTest extends BaseKeycloakTest {
+
+    final int TIMEOUT = 40;
 
     final SunatCredentialsEntity credentials = SunatCredentialsEntity.Builder.aSunatCredentialsEntity()
             .withSunatUsername("12345678912MODDATOS")
@@ -125,13 +124,13 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 ).extract().body().as(DocumentRepresentation.class);
 
         // Then
-        await().atMost(20, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
 
         //
         UBLDocumentEntity document = documentRepository.findById(response.getId());
 
         assertFalse(document.getFileValid());
-        assertEquals(DocumentEvents.INVALID_FILE_MSG, document.getFileValidationError());
+        assertEquals(ErrorType.INVALID_FILE, document.getError());
 
         assertNotNull(document.getStorageFile());
     }
@@ -158,7 +157,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 ).extract().body().as(DocumentRepresentation.class);
 
         // Then
-        await().atMost(20, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
 
         //
         UBLDocumentEntity document = documentRepository.findById(response.getId());
@@ -167,11 +166,10 @@ public class DocumentResourceTest extends BaseKeycloakTest {
 
         assertFalse(document.isInProgress());
         assertTrue(document.getFileValid());
-        assertNull(document.getFileValidationError());
         assertEquals("11111111111", document.getRuc());
         assertEquals("F001-1", document.getDocumentID());
         assertEquals("Invoice", document.getDocumentType());
-        assertEquals(DocumentEvents.RUC_IN_COMPANY_NOT_FOUND, document.getError());
+        assertEquals(ErrorType.NS_COMPANY_NOT_FOUND, document.getError());
     }
 
     @Test
@@ -196,7 +194,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 ).extract().body().as(DocumentRepresentation.class);
 
         // Then
-        await().atMost(20, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
 
         //
 
@@ -205,7 +203,6 @@ public class DocumentResourceTest extends BaseKeycloakTest {
         assertFalse(document.isInProgress());
 
         assertTrue(document.getFileValid());
-        assertNull(document.getFileValidationError());
 
         assertNotNull(document.getStorageFile());
 
@@ -240,7 +237,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 ).extract().body().as(DocumentRepresentation.class);
 
         // Then
-        await().atMost(20, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> !documentRepository.findById(response.getId()).isInProgress());
 
         //
 
@@ -249,7 +246,6 @@ public class DocumentResourceTest extends BaseKeycloakTest {
         assertFalse(document.isInProgress());
 
         assertTrue(document.getFileValid());
-        assertNull(document.getFileValidationError());
 
         assertNotNull(document.getStorageFile());
         assertNotNull(document.getStorageCdr());

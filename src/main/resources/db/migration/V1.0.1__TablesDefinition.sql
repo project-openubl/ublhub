@@ -42,10 +42,9 @@ create table ubl_document
     sunat_status                   varchar(255),
     sunat_ticket                   varchar(255),
     file_valid                     char(1),
-    file_validation_error          varchar(255),
     error                          varchar(255),
     voided_line_document_type_code varchar(255),
-    will_retry_on                  timestamp,
+    scheduled_delivery             timestamp,
     namespace_id                   varchar(255),
     primary key (id)
 );
@@ -54,16 +53,6 @@ create table ubl_document_sunat_notes
 (
     ubl_document_id varchar(255) not null,
     value           varchar(255)
-);
-
-create table ubl_document_event
-(
-    id          varchar(255) not null,
-    created_on  timestamp,
-    description varchar(255),
-    status      varchar(255),
-    document_id varchar(255),
-    primary key (id)
 );
 
 
@@ -103,10 +92,3 @@ alter table if exists ubl_document_sunat_notes
 delete
 cascade;
 
-
-alter table if exists ubl_document_event
-    add constraint FKhkjjk98wgev9l7vlccl8kg7yq
-    foreign key (document_id)
-    references ubl_document on
-delete
-cascade;

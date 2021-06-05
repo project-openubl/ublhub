@@ -25,6 +25,7 @@ public class SunatStatusRepresentation {
     private String ticket;
     private String status;
     private String description;
+    private boolean hasCdr;
 
     public Integer getCode() {
         return code;
@@ -58,4 +59,11 @@ public class SunatStatusRepresentation {
         this.description = description;
     }
 
+    public boolean isHasCdr() {
+        return hasCdr;
+    }
+
+    public void setHasCdr(boolean hasCdr) {
+        this.hasCdr = hasCdr;
+    }
 }

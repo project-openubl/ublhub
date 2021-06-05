@@ -23,13 +23,13 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import java.util.HashMap;
 import java.util.Map;
 
-public class S3Server implements QuarkusTestResourceLifecycleManager {
+public class StorageServer implements QuarkusTestResourceLifecycleManager {
 
-    private GenericContainer minio;
+    private GenericContainer<?> minio;
 
     @Override
     public Map<String, String> start() {
-        minio = new GenericContainer("minio/minio:RELEASE.2021-03-17T02-33-02Z")
+        minio = new GenericContainer<>("minio/minio:RELEASE.2021-03-17T02-33-02Z")
                 .withExposedPorts(9000)
                 .withEnv("MINIO_ACCESS_KEY", "BQA2GEXO711FVBVXDWKM")
                 .withEnv("MINIO_SECRET_KEY", "uvgz3LCwWM3e400cDkQIH/y1Y4xgU4iV91CwFSPC")
@@ -41,6 +41,7 @@ public class S3Server implements QuarkusTestResourceLifecycleManager {
         Integer port = minio.getMappedPort(9000);
 
         Map<String, String> properties = new HashMap<>();
+        properties.put("openubl.storage.type=s3", "s3");
         properties.put("openubl.storage.s3.host", "http://" + host + ":" + port);
         properties.put("openubl.storage.s3.access_key_id", "BQA2GEXO711FVBVXDWKM");
         properties.put("openubl.storage.s3.secret_access_key", "uvgz3LCwWM3e400cDkQIH/y1Y4xgU4iV91CwFSPC");

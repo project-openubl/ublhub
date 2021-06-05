@@ -16,20 +16,14 @@
  */
 package io.github.project.openubl.xsender.managers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.debezium.outbox.quarkus.ExportedEvent;
 import io.github.project.openubl.xsender.exceptions.StorageException;
 import io.github.project.openubl.xsender.files.FilesManager;
-import io.github.project.openubl.xsender.kafka.idm.UBLDocumentSunatEventRepresentation;
-import io.github.project.openubl.xsender.kafka.producers.UBLDocumentCreatedEventProducer;
 import io.github.project.openubl.xsender.models.FileType;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.util.Date;
@@ -45,13 +39,7 @@ public class DocumentsManager {
     @Inject
     UBLDocumentRepository documentRepository;
 
-    @Inject
-    Event<ExportedEvent<?, ?>> event;
-
-    @Inject
-    ObjectMapper objectMapper;
-
-    public UBLDocumentEntity createDocumentAndScheduleDelivery(NamespaceEntity namespaceEntity, byte[] xmlFile) throws StorageException {
+    public UBLDocumentEntity createDocument(NamespaceEntity namespaceEntity, byte[] xmlFile) throws StorageException {
         // Save file in Storage
 
         String fileID = filesManager.createFile(xmlFile, FileType.getFilename(UUID.randomUUID().toString(), FileType.XML), FileType.XML);
@@ -63,28 +51,15 @@ public class DocumentsManager {
 
         UBLDocumentEntity documentEntity = UBLDocumentEntity.UBLDocumentEntityBuilder.anUBLDocumentEntity()
                 .withId(UUID.randomUUID().toString())
-                .withStorageFile(fileID)
-                .withInProgress(true)
                 .withCreatedOn(new Date())
+                .withStorageFile(fileID)
                 .withNamespace(namespaceEntity)
+                .withInProgress(true)
                 .build();
 
         documentRepository.persist(documentEntity);
 
-        try {
-            UBLDocumentSunatEventRepresentation eventRep = new UBLDocumentSunatEventRepresentation();
-            eventRep.setId(documentEntity.getId());
-            eventRep.setStorageFile(documentEntity.getStorageFile());
-            eventRep.setNamespace(namespaceEntity.getName());
-
-            String eventPayload = objectMapper.writeValueAsString(eventRep);
-            event.fire(new UBLDocumentCreatedEventProducer(documentEntity.getId(), eventPayload));
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException(e);
-        }
-
         // Result
-
         return documentEntity;
     }
 

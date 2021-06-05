@@ -14,22 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.websockets;
+package io.github.project.openubl.xsender.models;
 
-import io.smallrye.reactive.messaging.kafka.KafkaRecord;
-import org.apache.kafka.common.header.Header;
+public enum ErrorType {
+    INVALID_FILE("Documento no soportado"),
+    NS_COMPANY_NOT_FOUND("No se pudo encontrar una empresa en el ns"),
+    AMQP_SCHEDULE("No se pudo programar envio"),
+    RETRY_CONSUMED("Reenvios agotados");
 
-import java.nio.charset.Charset;
+    private final String message;
 
-public class WebsocketUtils {
-
-    public static String getHeaderAsString(KafkaRecord<?, ?> record, String name) {
-        Header header = record.getHeaders().lastHeader(name);
-        if (header == null) {
-            throw new IllegalArgumentException("Expected record header '" + name + "' not present");
-        }
-
-        return new String(header.value(), Charset.forName("UTF-8"));
+    ErrorType(String message) {
+        this.message = message;
     }
 
+    public String getMessage() {
+        return message;
+    }
 }

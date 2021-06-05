@@ -59,8 +59,4 @@ public class PostgreSQLServer implements QuarkusTestResourceLifecycleManager {
         postgreSQL.stop();
     }
 
-    @Override
-    public int order() {
-        return 10;
-    }
 }

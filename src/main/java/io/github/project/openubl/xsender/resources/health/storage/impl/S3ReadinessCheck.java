@@ -33,7 +33,7 @@ import java.net.http.HttpResponse;
 public class S3ReadinessCheck implements StorageReadinessCheck {
 
     @ConfigProperty(name = "openubl.storage.s3.health.url")
-    private String s3HostHealthCheckUrl;
+    String s3HostHealthCheckUrl;
 
     private final HttpClient client = HttpClient.newHttpClient();
 
