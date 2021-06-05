@@ -26,7 +26,7 @@ import java.util.Date;
 import java.util.Set;
 
 @Entity
-@Table(name = "UBL_DOCUMENT")
+@Table(name = "ubl_document")
 public class UBLDocumentEntity extends PanacheEntityBase {
 
     @Id

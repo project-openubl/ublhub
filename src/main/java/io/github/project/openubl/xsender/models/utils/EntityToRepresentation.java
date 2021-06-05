@@ -17,14 +17,23 @@
 package io.github.project.openubl.xsender.models.utils;
 
 import io.github.project.openubl.xsender.idm.*;
+import io.github.project.openubl.xsender.keys.component.ComponentModel;
+import io.github.project.openubl.xsender.keys.component.utils.ComponentUtil;
+import io.github.project.openubl.xsender.keys.provider.ProviderConfigProperty;
+import io.github.project.openubl.xsender.keys.utils.StripSecretsUtils;
 import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 import org.apache.http.client.utils.URIBuilder;
+import org.keycloak.common.util.MultivaluedHashMap;
+import org.keycloak.representations.idm.ComponentRepresentation;
+import org.keycloak.representations.idm.ConfigPropertyRepresentation;
 
 import javax.ws.rs.core.UriInfo;
 import java.net.URISyntaxException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -113,6 +122,47 @@ public class EntityToRepresentation {
 //        rep.setSunatEvents(eventsRepresentation);
 
         return rep;
+    }
+
+    public static ComponentRepresentation toRepresentation(ComponentModel component, boolean internal, ComponentUtil componentUtil) {
+        ComponentRepresentation rep = toRepresentationWithoutConfig(component);
+        if (!internal) {
+            rep = StripSecretsUtils.strip(componentUtil, rep);
+        }
+        return rep;
+    }
+
+    public static ComponentRepresentation toRepresentationWithoutConfig(ComponentModel component) {
+        org.keycloak.representations.idm.ComponentRepresentation rep = new org.keycloak.representations.idm.ComponentRepresentation();
+        rep.setId(component.getId());
+        rep.setName(component.getName());
+        rep.setProviderId(component.getProviderId());
+        rep.setProviderType(component.getProviderType());
+        rep.setSubType(component.getSubType());
+        rep.setParentId(component.getParentId());
+        rep.setConfig(new MultivaluedHashMap<>(component.getConfig()));
+        return rep;
+    }
+
+    public static List<ConfigPropertyRepresentation> toRepresentation(List<ProviderConfigProperty> configProperties) {
+        List<org.keycloak.representations.idm.ConfigPropertyRepresentation> propertiesRep = new LinkedList<>();
+        for (ProviderConfigProperty prop : configProperties) {
+            ConfigPropertyRepresentation propRep = toRepresentation(prop);
+            propertiesRep.add(propRep);
+        }
+        return propertiesRep;
+    }
+
+    public static ConfigPropertyRepresentation toRepresentation(ProviderConfigProperty prop) {
+        ConfigPropertyRepresentation propRep = new ConfigPropertyRepresentation();
+        propRep.setName(prop.getName());
+        propRep.setLabel(prop.getLabel());
+        propRep.setType(prop.getType());
+        propRep.setDefaultValue(prop.getDefaultValue());
+        propRep.setOptions(prop.getOptions());
+        propRep.setHelpText(prop.getHelpText());
+        propRep.setSecret(prop.isSecret());
+        return propRep;
     }
 
     public static <T, R> PageRepresentation<R> toRepresentation(PageModel<T> model, Function<T, R> mapper) {
