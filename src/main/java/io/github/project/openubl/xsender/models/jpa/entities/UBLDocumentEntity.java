@@ -16,14 +16,13 @@
  */
 package io.github.project.openubl.xsender.models.jpa.entities;
 
+import io.github.project.openubl.xsender.models.ErrorType;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -57,11 +56,9 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     @Column(name = "file_valid")
     private Boolean fileValid;
 
-    @Column(name = "file_validation_error")
-    private String fileValidationError;
-
+    @Enumerated(EnumType.STRING)
     @Column(name = "error")
-    private String error;
+    private ErrorType error;
 
     @NotNull
     @Column(name = "retries")
@@ -109,9 +106,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     @CollectionTable(name = "ubl_document_sunat_notes", joinColumns={ @JoinColumn(name="ubl_document_id") })
     private Set<String> sunatNotes;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "ublDocument")
-    private List<UBLDocumentEventEntity> sunatEvents = new ArrayList<>();
-
     public String getId() {
         return id;
     }
@@ -144,6 +138,14 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.createdOn = createdOn;
     }
 
+    public Date getScheduledDelivery() {
+        return scheduledDelivery;
+    }
+
+    public void setScheduledDelivery(Date scheduledDelivery) {
+        this.scheduledDelivery = scheduledDelivery;
+    }
+
     public Boolean getFileValid() {
         return fileValid;
     }
@@ -152,19 +154,11 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.fileValid = fileValid;
     }
 
-    public String getFileValidationError() {
-        return fileValidationError;
-    }
-
-    public void setFileValidationError(String fileValidationError) {
-        this.fileValidationError = fileValidationError;
-    }
-
-    public String getError() {
+    public ErrorType getError() {
         return error;
     }
 
-    public void setError(String error) {
+    public void setError(ErrorType error) {
         this.error = error;
     }
 
@@ -174,14 +168,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
 
     public void setRetries(int retries) {
         this.retries = retries;
-    }
-
-    public Date getScheduledDelivery() {
-        return scheduledDelivery;
-    }
-
-    public void setScheduledDelivery(Date willRetryOn) {
-        this.scheduledDelivery = willRetryOn;
     }
 
     public String getRuc() {
@@ -272,14 +258,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         this.sunatNotes = sunatNotes;
     }
 
-    public List<UBLDocumentEventEntity> getSunatEvents() {
-        return sunatEvents;
-    }
-
-    public void setSunatEvents(List<UBLDocumentEventEntity> sunatEvents) {
-        this.sunatEvents = sunatEvents;
-    }
-
     public static final class UBLDocumentEntityBuilder {
         private String id;
         private NamespaceEntity namespace;
@@ -287,8 +265,7 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         private Date createdOn;
         private Date scheduledDelivery;
         private Boolean fileValid;
-        private String fileValidationError;
-        private String error;
+        private ErrorType error;
         private int retries;
         private String ruc;
         private String documentID;
@@ -301,7 +278,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
         private Integer sunatCode;
         private String sunatDescription;
         private Set<String> sunatNotes;
-        private List<UBLDocumentEventEntity> sunatEvents = new ArrayList<>();
 
         private UBLDocumentEntityBuilder() {
         }
@@ -340,12 +316,7 @@ public class UBLDocumentEntity extends PanacheEntityBase {
             return this;
         }
 
-        public UBLDocumentEntityBuilder withFileValidationError(String fileValidationError) {
-            this.fileValidationError = fileValidationError;
-            return this;
-        }
-
-        public UBLDocumentEntityBuilder withError(String error) {
+        public UBLDocumentEntityBuilder withError(ErrorType error) {
             this.error = error;
             return this;
         }
@@ -410,11 +381,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
             return this;
         }
 
-        public UBLDocumentEntityBuilder withSunatEvents(List<UBLDocumentEventEntity> sunatEvents) {
-            this.sunatEvents = sunatEvents;
-            return this;
-        }
-
         public UBLDocumentEntity build() {
             UBLDocumentEntity uBLDocumentEntity = new UBLDocumentEntity();
             uBLDocumentEntity.setId(id);
@@ -423,7 +389,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
             uBLDocumentEntity.setCreatedOn(createdOn);
             uBLDocumentEntity.setScheduledDelivery(scheduledDelivery);
             uBLDocumentEntity.setFileValid(fileValid);
-            uBLDocumentEntity.setFileValidationError(fileValidationError);
             uBLDocumentEntity.setError(error);
             uBLDocumentEntity.setRetries(retries);
             uBLDocumentEntity.setRuc(ruc);
@@ -437,7 +402,6 @@ public class UBLDocumentEntity extends PanacheEntityBase {
             uBLDocumentEntity.setSunatCode(sunatCode);
             uBLDocumentEntity.setSunatDescription(sunatDescription);
             uBLDocumentEntity.setSunatNotes(sunatNotes);
-            uBLDocumentEntity.setSunatEvents(sunatEvents);
             return uBLDocumentEntity;
         }
     }

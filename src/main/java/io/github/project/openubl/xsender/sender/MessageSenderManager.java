@@ -14,10 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.models;
+package io.github.project.openubl.xsender.sender;
 
-public enum DeliveryStatusType {
-    IN_PROGRESS,
-    DELIVERED,
-    ERROR,
+import org.eclipse.microprofile.reactive.messaging.Message;
+
+import java.util.concurrent.CompletionStage;
+
+public interface MessageSenderManager {
+
+    void sendToDocumentQueue(Message<String> message);
+
+    void sendToTicketQueue(Message<String> message);
+
+    CompletionStage<Void> handleDocumentMessageError(String documentId, Throwable e);
+
 }

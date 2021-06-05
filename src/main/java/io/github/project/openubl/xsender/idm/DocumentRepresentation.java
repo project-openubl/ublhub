@@ -29,7 +29,6 @@ public class DocumentRepresentation {
     private int retryCount;
 
     private Boolean fileContentValid;
-    private String fileContentValidationError;
     private FileContentRepresentation fileContent;
 
     private SunatStatusRepresentation sunat;
@@ -72,14 +71,6 @@ public class DocumentRepresentation {
 
     public void setFileContentValid(Boolean fileContentValid) {
         this.fileContentValid = fileContentValid;
-    }
-
-    public String getFileContentValidationError() {
-        return fileContentValidationError;
-    }
-
-    public void setFileContentValidationError(String fileContentValidationError) {
-        this.fileContentValidationError = fileContentValidationError;
     }
 
     public FileContentRepresentation getFileContent() {

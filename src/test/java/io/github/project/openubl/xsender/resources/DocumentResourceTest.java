@@ -17,16 +17,15 @@
 package io.github.project.openubl.xsender.resources;
 
 import io.github.project.openubl.xsender.idm.DocumentRepresentation;
+import io.github.project.openubl.xsender.models.ErrorType;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.*;
 import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
 import io.github.project.openubl.xsender.resources.config.ServerDependencies;
-import io.github.project.openubl.xsender.sender.XSenderManager;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -131,7 +130,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
         UBLDocumentEntity document = documentRepository.findById(response.getId());
 
         assertFalse(document.getFileValid());
-        assertEquals(XSenderManager.INVALID_FILE_MSG, document.getFileValidationError());
+        assertEquals(ErrorType.INVALID_FILE, document.getError());
 
         assertNotNull(document.getStorageFile());
     }
@@ -167,11 +166,10 @@ public class DocumentResourceTest extends BaseKeycloakTest {
 
         assertFalse(document.isInProgress());
         assertTrue(document.getFileValid());
-        assertNull(document.getFileValidationError());
         assertEquals("11111111111", document.getRuc());
         assertEquals("F001-1", document.getDocumentID());
         assertEquals("Invoice", document.getDocumentType());
-        assertEquals(XSenderManager.RUC_IN_COMPANY_NOT_FOUND, document.getError());
+        assertEquals(ErrorType.NS_COMPANY_NOT_FOUND, document.getError());
     }
 
     @Test
@@ -205,7 +203,6 @@ public class DocumentResourceTest extends BaseKeycloakTest {
         assertFalse(document.isInProgress());
 
         assertTrue(document.getFileValid());
-        assertNull(document.getFileValidationError());
 
         assertNotNull(document.getStorageFile());
 
@@ -249,7 +246,6 @@ public class DocumentResourceTest extends BaseKeycloakTest {
         assertFalse(document.isInProgress());
 
         assertTrue(document.getFileValid());
-        assertNull(document.getFileValidationError());
 
         assertNotNull(document.getStorageFile());
         assertNotNull(document.getStorageCdr());

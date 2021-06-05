@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.models;
+package io.github.project.openubl.xsender.sender.common;
 
-public enum EventStatusType {
-    info,
-    success,
-    warning,
-    danger
+public class WSException extends Exception {
+    public WSException(Throwable e) {
+        super(e);
+    }
 }

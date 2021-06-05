@@ -24,7 +24,6 @@ import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -35,8 +34,6 @@ import java.util.UUID;
 @Transactional
 @ApplicationScoped
 public class CompanyManager {
-
-    private static final Logger LOG = Logger.getLogger(CompanyManager.class);
 
     @Inject
     CompanyRepository companyRepository;
@@ -70,9 +67,6 @@ public class CompanyManager {
         return companyEntity;
     }
 
-    /**
-     * Shouldn't update 'name'
-     */
     public CompanyEntity updateCompany(CompanyRepresentation rep, CompanyEntity entity) {
         if (rep.getRuc() != null) {
             entity.setRuc(rep.getRuc());

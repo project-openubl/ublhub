@@ -14,8 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.websockets.idm;
+package io.github.project.openubl.xsender.models;
 
-public enum TypeMessage {
-    EVENT
+public enum ErrorType {
+    INVALID_FILE("Documento no soportado"),
+    NS_COMPANY_NOT_FOUND("No se pudo encontrar una empresa en el ns"),
+    AMQP_SCHEDULE("No se pudo programar envio"),
+    RETRY_CONSUMED("Reenvios agotados");
+
+    private final String message;
+
+    ErrorType(String message) {
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return message;
+    }
 }

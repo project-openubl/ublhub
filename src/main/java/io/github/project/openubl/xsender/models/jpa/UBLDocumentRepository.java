@@ -20,7 +20,6 @@ import io.github.project.openubl.xsender.models.DocumentFilterModel;
 import io.github.project.openubl.xsender.models.PageBean;
 import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.SortBean;
-import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
@@ -31,13 +30,21 @@ import io.quarkus.panache.common.Sort;
 import javax.enterprise.context.ApplicationScoped;
 import javax.transaction.Transactional;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Transactional
 @ApplicationScoped
 public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentEntity, String> {
 
     public static final String[] SORT_BY_FIELDS = {"createdOn"};
+
+    public Optional<UBLDocumentEntity> findById(NamespaceEntity namespace, String id) {
+        Parameters queryParameters = Parameters.with("namespaceId", namespace.getId())
+                .and("id", id);
+        return UBLDocumentEntity
+                .find("From UBLDocumentEntity as d where d.namespace.id = :namespaceId and d.id = :id", queryParameters)
+                .firstResultOptional();
+    }
 
     public PageModel<UBLDocumentEntity> list(NamespaceEntity namespace, DocumentFilterModel filters, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
@@ -55,7 +62,7 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
             queryParameters = queryParameters.and("documentType", filters.getDocumentType());
         }
 
-        PanacheQuery<UBLDocumentEntity> query = CompanyEntity
+        PanacheQuery<UBLDocumentEntity> query = UBLDocumentEntity
                 .find(queryBuilder.toString(), sort, queryParameters)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
@@ -80,7 +87,7 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
             queryParameters = queryParameters.and("documentType", filters.getDocumentType());
         }
 
-        PanacheQuery<UBLDocumentEntity> query = CompanyEntity
+        PanacheQuery<UBLDocumentEntity> query = UBLDocumentEntity
                 .find(queryBuilder.toString(), sort, queryParameters)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 

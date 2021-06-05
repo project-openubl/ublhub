@@ -39,7 +39,7 @@ public class DocumentsManager {
     @Inject
     UBLDocumentRepository documentRepository;
 
-    public UBLDocumentEntity createDocumentAndScheduleDelivery(NamespaceEntity namespaceEntity, byte[] xmlFile) throws StorageException {
+    public UBLDocumentEntity createDocument(NamespaceEntity namespaceEntity, byte[] xmlFile) throws StorageException {
         // Save file in Storage
 
         String fileID = filesManager.createFile(xmlFile, FileType.getFilename(UUID.randomUUID().toString(), FileType.XML), FileType.XML);
@@ -54,10 +54,7 @@ public class DocumentsManager {
                 .withCreatedOn(new Date())
                 .withStorageFile(fileID)
                 .withNamespace(namespaceEntity)
-
-                .withRetries(0)
                 .withInProgress(true)
-
                 .build();
 
         documentRepository.persist(documentEntity);
