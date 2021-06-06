@@ -19,6 +19,9 @@ package io.github.project.openubl.xsender.managers;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
+import io.github.project.openubl.xsender.keys.ComponentProvider;
+import io.github.project.openubl.xsender.keys.DefaultKeyProviders;
+import io.github.project.openubl.xsender.keys.KeyProvider;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
@@ -37,6 +40,12 @@ public class CompanyManager {
 
     @Inject
     CompanyRepository companyRepository;
+
+    @Inject
+    ComponentProvider componentProvider;
+
+    @Inject
+    DefaultKeyProviders defaultKeyProviders;
 
     public CompanyEntity createCompany(NamespaceEntity namespaceEntity, CompanyRepresentation rep) {
         CompanyEntity companyEntity = new CompanyEntity();
@@ -61,6 +70,11 @@ public class CompanyManager {
             companyEntity.setSunatCredentials(sunatCredentialsEntity);
 
             updateCorporateCredentials(rep.getCredentials(), companyEntity.getSunatCredentials());
+        }
+
+        // Certificate
+        if (componentProvider.getComponents(companyEntity.getId(), companyEntity.getId(), KeyProvider.class.getName()).isEmpty()) {
+            defaultKeyProviders.createProviders(companyEntity.getId());
         }
 
         companyRepository.persist(companyEntity);
