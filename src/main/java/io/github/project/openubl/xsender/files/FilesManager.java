@@ -75,7 +75,7 @@ public class FilesManager {
     public void delete(String fileID) {
         camelContext
                 .createProducerTemplate()
-                .requestBody("direct:" + storageType + "delete-file", fileID);
+                .requestBody("direct:" + storageType + "-delete-file", fileID);
     }
 
 }
