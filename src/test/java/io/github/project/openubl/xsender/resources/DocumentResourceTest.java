@@ -16,7 +16,15 @@
  */
 package io.github.project.openubl.xsender.resources;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.project.openubl.xmlbuilderlib.models.catalogs.Catalog6;
+import io.github.project.openubl.xmlbuilderlib.models.input.common.ClienteInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.common.ProveedorInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.standard.DocumentLineInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.standard.invoice.InvoiceInputModel;
+import io.github.project.openubl.xmlsenderws.webservices.xml.DocumentType;
 import io.github.project.openubl.xsender.idm.DocumentRepresentation;
+import io.github.project.openubl.xsender.idm.InputDocumentRepresentation;
 import io.github.project.openubl.xsender.models.ErrorType;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
@@ -31,8 +39,10 @@ import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -61,6 +71,9 @@ public class DocumentResourceTest extends BaseKeycloakTest {
 
     NamespaceEntity namespace;
     CompanyEntity company;
+
+    @Inject
+    ObjectMapper objectMapper;
 
     @Inject
     NamespaceRepository namespaceRepository;
@@ -257,6 +270,57 @@ public class DocumentResourceTest extends BaseKeycloakTest {
         assertEquals(0, document.getSunatCode());
         assertEquals("La Comunicacion de baja RA-20200328-1, ha sido aceptada", document.getSunatDescription());
         assertNotNull(document.getSunatTicket());
+    }
+
+    @Test
+    public void createXMLFromSpec() throws URISyntaxException {
+        // Given
+        InvoiceInputModel invoiceInput = InvoiceInputModel.Builder.anInvoiceInputModel()
+                .withSerie("F001")
+                .withNumero(1)
+                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
+                        .withRuc("12345678912")
+                        .withRazonSocial("Softgreen S.A.C.")
+                        .build()
+                )
+                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
+                        .withNombre("Carlos Feria")
+                        .withNumeroDocumentoIdentidad("12121212121")
+                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
+                        .build()
+                )
+                .withDetalle(Arrays.asList(
+                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
+                                .withDescripcion("Item1")
+                                .withCantidad(new BigDecimal(10))
+                                .withPrecioUnitario(new BigDecimal(100))
+                                .withUnidadMedida("KGM")
+                                .build(),
+                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
+                                .withDescripcion("Item2")
+                                .withCantidad(new BigDecimal(10))
+                                .withPrecioUnitario(new BigDecimal(100))
+                                .withUnidadMedida("KGM")
+                                .build())
+                )
+                .build();
+
+        InputDocumentRepresentation payload = new InputDocumentRepresentation();
+        payload.setKind(DocumentType.INVOICE.toString());
+        payload.setSpec(objectMapper.valueToTree(invoiceInput));
+
+        // When
+
+        given().auth().oauth2(getAccessToken("alice"))
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(payload)
+                .when()
+                .post("/api/namespaces/" + namespace.getId() + "/documents")
+                .then()
+                .statusCode(200);
+
+        // Then
     }
 
 }

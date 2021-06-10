@@ -17,13 +17,31 @@ package io.github.project.openubl.xsender.resources;
  * limitations under the License.
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.project.openubl.xmlbuilderlib.config.DefaultConfig;
+import io.github.project.openubl.xmlbuilderlib.facade.DocumentManager;
+import io.github.project.openubl.xmlbuilderlib.facade.DocumentWrapper;
+import io.github.project.openubl.xmlbuilderlib.models.input.standard.invoice.InvoiceInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.creditNote.CreditNoteInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.debitNote.DebitNoteInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.sunat.SummaryDocumentInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.sunat.VoidedDocumentInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.output.standard.invoice.InvoiceOutputModel;
+import io.github.project.openubl.xmlbuilderlib.models.output.standard.note.creditNote.CreditNoteOutputModel;
+import io.github.project.openubl.xmlbuilderlib.models.output.standard.note.debitNote.DebitNoteOutputModel;
+import io.github.project.openubl.xmlbuilderlib.models.output.sunat.SummaryDocumentOutputModel;
+import io.github.project.openubl.xmlbuilderlib.models.output.sunat.VoidedDocumentOutputModel;
+import io.github.project.openubl.xmlbuilderlib.xml.XMLSigner;
+import io.github.project.openubl.xmlbuilderlib.xml.XmlSignatureHelper;
+import io.github.project.openubl.xmlsenderws.webservices.xml.DocumentType;
 import io.github.project.openubl.xsender.events.DocumentEvent;
 import io.github.project.openubl.xsender.events.DocumentEventManager;
-import io.github.project.openubl.xsender.exceptions.StorageException;
 import io.github.project.openubl.xsender.files.FilesManager;
 import io.github.project.openubl.xsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xsender.idm.ErrorRepresentation;
+import io.github.project.openubl.xsender.idm.InputDocumentRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
+import io.github.project.openubl.xsender.keys.KeyManager;
 import io.github.project.openubl.xsender.managers.DocumentsManager;
 import io.github.project.openubl.xsender.models.DocumentFilterModel;
 import io.github.project.openubl.xsender.models.PageBean;
@@ -37,11 +55,16 @@ import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
 import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
 import io.github.project.openubl.xsender.security.UserIdentity;
 import io.github.project.openubl.xsender.sender.MessageSenderManager;
+import io.github.project.openubl.xsender.xbuilder.XBuilderSystemClock;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
+import org.keycloak.crypto.Algorithm;
+import org.keycloak.crypto.KeyUse;
+import org.keycloak.crypto.KeyWrapper;
+import org.w3c.dom.Document;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -54,6 +77,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.List;
 import java.util.Map;
 
@@ -67,10 +92,16 @@ public class DocumentResource {
     private static final Logger LOG = Logger.getLogger(DocumentResource.class);
 
     @Inject
+    ObjectMapper objectMapper;
+
+    @Inject
     UserTransaction transaction;
 
     @Inject
     UserIdentity userIdentity;
+
+    @Inject
+    KeyManager keystore;
 
     @Inject
     FilesManager filesManager;
@@ -89,6 +120,90 @@ public class DocumentResource {
 
     @Inject
     UBLDocumentRepository documentRepository;
+
+    @Transactional(Transactional.TxType.NOT_SUPPORTED)
+    @POST
+    @Path("/")
+    public Response createXML(
+            @PathParam("namespaceId") @NotNull String namespaceId,
+            InputDocumentRepresentation inputDocument
+    ) throws Exception {
+        DocumentEvent documentEvent;
+        DocumentRepresentation documentRepresentation;
+
+        try {
+            transaction.begin();
+
+            // Get namespace
+            NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+
+            DocumentType documentType = DocumentType.valueOf(inputDocument.getKind().toUpperCase());
+            String xml;
+            switch (documentType) {
+                case INVOICE:
+                    InvoiceInputModel invoiceInputModel = objectMapper.treeToValue(inputDocument.getSpec(), InvoiceInputModel.class);
+                    DocumentWrapper<InvoiceOutputModel> invoiceDocumentWrapper = DocumentManager.createXML(invoiceInputModel, new DefaultConfig(), new XBuilderSystemClock());
+                    xml = invoiceDocumentWrapper.getXml();
+                    break;
+                case CREDIT_NOTE:
+                    CreditNoteInputModel creditNoteInputModel = objectMapper.treeToValue(inputDocument.getSpec(), CreditNoteInputModel.class);
+                    DocumentWrapper<CreditNoteOutputModel> creditNoteDocumentWrapper = DocumentManager.createXML(creditNoteInputModel, new DefaultConfig(), new XBuilderSystemClock());
+                    xml = creditNoteDocumentWrapper.getXml();
+                    break;
+                case DEBIT_NOTE:
+                    DebitNoteInputModel debitNoteInputModel = objectMapper.treeToValue(inputDocument.getSpec(), DebitNoteInputModel.class);
+                    DocumentWrapper<DebitNoteOutputModel> debitNoteDocumentWrapper = DocumentManager.createXML(debitNoteInputModel, new DefaultConfig(), new XBuilderSystemClock());
+                    xml = debitNoteDocumentWrapper.getXml();
+                    break;
+                case VOIDED_DOCUMENT:
+                    VoidedDocumentInputModel voidedDocumentInputModel = objectMapper.treeToValue(inputDocument.getSpec(), VoidedDocumentInputModel.class);
+                    DocumentWrapper<VoidedDocumentOutputModel> voidedDocumentDocumentWrapper = DocumentManager.createXML(voidedDocumentInputModel, new DefaultConfig(), new XBuilderSystemClock());
+                    xml = voidedDocumentDocumentWrapper.getXml();
+                    break;
+                case SUMMARY_DOCUMENT:
+                    SummaryDocumentInputModel summaryDocumentInputModel = objectMapper.treeToValue(inputDocument.getSpec(), SummaryDocumentInputModel.class);
+                    DocumentWrapper<SummaryDocumentOutputModel> summaryDocumentDocumentWrapper = DocumentManager.createXML(summaryDocumentInputModel, new DefaultConfig(), new XBuilderSystemClock());
+                    xml = summaryDocumentDocumentWrapper.getXml();
+                    break;
+                default:
+                    throw new Exception("Document not supported");
+            }
+
+            KeyWrapper key = keystore.getActiveKey(namespaceEntity.getId(), KeyUse.SIG, Algorithm.RS256);
+            KeyManager.ActiveRsaKey activeRsaKey = new KeyManager.ActiveRsaKey(key.getKid(), (PrivateKey) key.getPrivateKey(), (PublicKey) key.getPublicKey(), key.getCertificate());
+            Document xmlFile = XMLSigner.signXML(xml, "OPENUBL", activeRsaKey.getCertificate(), activeRsaKey.getPrivateKey());
+
+            UBLDocumentEntity documentEntity = documentsManager.createDocument(namespaceEntity, XmlSignatureHelper.getBytesFromDocument(xmlFile));
+            documentRepresentation = EntityToRepresentation.toRepresentation(documentEntity);
+            documentEvent = new DocumentEvent(documentEntity.getId(), namespaceEntity.getId());
+
+            // Commit transaction
+            transaction.commit();
+        } catch (Exception e) {
+            LOG.error(e);
+            try {
+                transaction.rollback();
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            } catch (SystemException systemException) {
+                LOG.error(systemException);
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
+        }
+
+        // Event: new document has been created
+        documentEventManager.fire(documentEvent);
+
+        // Send file
+        String documentId = documentRepresentation.getId();
+        Message<String> message = Message.of(documentId)
+                .withNack(throwable -> messageSenderManager.handleDocumentMessageError(documentId, throwable));
+        messageSenderManager.sendToDocumentQueue(message);
+
+        // Return result
+        return Response.status(Response.Status.OK)
+                .entity(documentRepresentation)
+                .build();
+    }
 
     @Transactional(Transactional.TxType.NOT_SUPPORTED)
     @POST
@@ -130,20 +245,13 @@ public class DocumentResource {
                 return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
             }
 
-            UBLDocumentEntity documentEntity;
-            try {
-                documentEntity = documentsManager.createDocument(namespaceEntity, xmlFile);
-                documentRepresentation = EntityToRepresentation.toRepresentation(documentEntity);
-                documentEvent = new DocumentEvent(documentEntity.getId(), namespaceEntity.getId());
-            } catch (StorageException e) {
-                LOG.error(e);
-                ErrorRepresentation error = new ErrorRepresentation(e.getMessage());
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(error).build();
-            }
+            UBLDocumentEntity documentEntity = documentsManager.createDocument(namespaceEntity, xmlFile);
+            documentRepresentation = EntityToRepresentation.toRepresentation(documentEntity);
+            documentEvent = new DocumentEvent(documentEntity.getId(), namespaceEntity.getId());
 
             // Commit transaction
             transaction.commit();
-        } catch (NotSupportedException | SystemException | HeuristicRollbackException | HeuristicMixedException | RollbackException e) {
+        } catch (Exception e) {
             LOG.error(e);
             try {
                 transaction.rollback();
