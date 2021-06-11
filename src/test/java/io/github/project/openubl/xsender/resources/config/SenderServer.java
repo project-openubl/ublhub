@@ -17,16 +17,11 @@
 package io.github.project.openubl.xsender.resources.config;
 
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
 
 public class SenderServer implements QuarkusTestResourceLifecycleManager {
 

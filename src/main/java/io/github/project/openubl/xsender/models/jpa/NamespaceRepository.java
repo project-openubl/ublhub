@@ -16,66 +16,19 @@
  */
 package io.github.project.openubl.xsender.models.jpa;
 
-import io.github.project.openubl.xsender.models.PageBean;
-import io.github.project.openubl.xsender.models.PageModel;
-import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
-import io.quarkus.panache.common.Parameters;
-import io.quarkus.panache.common.Sort;
+import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
+import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.transaction.Transactional;
-import java.util.List;
-import java.util.Optional;
 
-@Transactional
 @ApplicationScoped
 public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntity, String> {
 
     public static final String[] SORT_BY_FIELDS = {"name", "createdOn"};
 
-    public Optional<NamespaceEntity> findByName(String name) {
-        return find("name", name).firstResultOptional();
-    }
-
-    public Optional<NamespaceEntity> findByIdAndOwner(String id, String owner) {
-        return find("id = ?1 and owner = ?2", id, owner).firstResultOptional();
-    }
-
-    public PageModel<NamespaceEntity> list(String owner, PageBean pageBean, List<SortBean> sortBy) {
-        Sort sort = Sort.by();
-        sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
-
-        PanacheQuery<NamespaceEntity> query = NamespaceEntity
-                .find(
-                        "From NamespaceEntity as o where o.owner =:owner",
-                        sort,
-                        Parameters.with("owner", owner)
-                )
-                .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
-
-        long count = query.count();
-        List<NamespaceEntity> list = query.list();
-        return new PageModel<>(pageBean, count, list);
-    }
-
-    public PageModel<NamespaceEntity> list(String owner, String filterText, PageBean pageBean, List<SortBean> sortBy) {
-        Sort sort = Sort.by();
-        sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
-
-        PanacheQuery<NamespaceEntity> query = NamespaceEntity
-                .find(
-                        "From NamespaceEntity as o where o.owner =:owner and lower(o.name) like :filterText",
-                        sort,
-                        Parameters.with("owner", owner).and("filterText", "%" + filterText.toLowerCase() + "%")
-                )
-                .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
-
-        long count = query.count();
-        List<NamespaceEntity> list = query.list();
-        return new PageModel<>(pageBean, count, list);
+    public Uni<NamespaceEntity> findByName(String name) {
+        return find("name", name).firstResult();
     }
 
 }

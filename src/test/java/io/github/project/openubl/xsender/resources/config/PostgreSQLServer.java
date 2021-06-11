@@ -19,6 +19,9 @@ package io.github.project.openubl.xsender.resources.config;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import org.testcontainers.containers.GenericContainer;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +38,7 @@ public class PostgreSQLServer implements QuarkusTestResourceLifecycleManager {
 
     @Override
     public Map<String, String> start() {
-        postgreSQL = new GenericContainer<>("debezium/postgres:12")
+        postgreSQL = new GenericContainer<>("postgres:13.2")
                 .withNetwork(KeycloakServer.network)
                 .withNetworkAliases(NETWORK_ALIAS)
                 .withExposedPorts(CONTAINER_PORT)
@@ -47,8 +50,14 @@ public class PostgreSQLServer implements QuarkusTestResourceLifecycleManager {
         String host = postgreSQL.getHost();
         Integer port = postgreSQL.getMappedPort(CONTAINER_PORT);
 
+        try {
+            Files.write(Paths.get("esteban.txt"), (port + "").getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         return new HashMap<>() {{
-            put("quarkus.datasource.jdbc.url", "jdbc:postgresql://" + host + ":" + port + "/" + DB_NAME);
+            put("quarkus.datasource.reactive.url", "vertx-reactive:postgresql://" + host + ":" + port + "/" + DB_NAME);
             put("quarkus.datasource.username", DB_USERNAME);
             put("quarkus.datasource.password", DB_PASSWORD);
         }};
