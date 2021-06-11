@@ -39,7 +39,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
-@ServerDependencies
+@QuarkusTestResource(KeycloakServer.class)
+@QuarkusTestResource(PostgreSQLServer.class)
+@QuarkusTestResource(StorageServer.class)
+@QuarkusTestResource(SenderServer.class)
 public class CurrentUserResourceTest extends BaseKeycloakTest {
 
     @Inject

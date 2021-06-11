@@ -33,7 +33,10 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 
 @QuarkusTest
-@ServerDependencies
+@QuarkusTestResource(KeycloakServer.class)
+@QuarkusTestResource(PostgreSQLServer.class)
+@QuarkusTestResource(StorageServer.class)
+@QuarkusTestResource(SenderServer.class)
 public class NamespaceResourceTest extends BaseKeycloakTest {
 
     @Inject

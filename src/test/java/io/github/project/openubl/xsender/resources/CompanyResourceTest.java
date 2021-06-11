@@ -44,7 +44,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @QuarkusTest
-@ServerDependencies
+@QuarkusTestResource(KeycloakServer.class)
+@QuarkusTestResource(PostgreSQLServer.class)
+@QuarkusTestResource(StorageServer.class)
+@QuarkusTestResource(SenderServer.class)
 public class CompanyResourceTest extends BaseKeycloakTest {
 
     final SunatCredentialsEntity credentials = SunatCredentialsEntity.Builder.aSunatCredentialsEntity()

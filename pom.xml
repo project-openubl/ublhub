@@ -39,8 +39,8 @@
         <!--Quarkus-->
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
-        <quarkus.platform.version>1.12.2.Final</quarkus.platform.version>
-        <quarkus-plugin.version>1.12.2.Final</quarkus-plugin.version>
+        <quarkus.platform.version>1.13.7.Final</quarkus.platform.version>
+        <quarkus-plugin.version>1.13.7.Final</quarkus-plugin.version>
 
         <!--plugings-->
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
@@ -238,7 +238,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel.quarkus</groupId>
-            <artifactId>camel-quarkus-aws-s3</artifactId>
+            <artifactId>camel-quarkus-aws2-s3</artifactId>
         </dependency>
 
         <!--Jdbc-->

@@ -22,8 +22,8 @@ import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.*;
-import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
-import io.github.project.openubl.xsender.resources.config.ServerDependencies;
+import io.github.project.openubl.xsender.resources.config.*;
+import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +44,10 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
-@ServerDependencies
+@QuarkusTestResource(KeycloakServer.class)
+@QuarkusTestResource(PostgreSQLServer.class)
+@QuarkusTestResource(StorageServer.class)
+@QuarkusTestResource(SenderServer.class)
 public class DocumentResourceTest extends BaseKeycloakTest {
 
     final int TIMEOUT = 40;
