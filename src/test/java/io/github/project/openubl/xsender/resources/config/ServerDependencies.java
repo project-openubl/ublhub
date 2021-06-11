@@ -25,7 +25,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @QuarkusTestResource(KeycloakServer.class)
-@QuarkusTestResource(PostgreSQLServer.class)
 @QuarkusTestResource(StorageServer.class)
 @QuarkusTestResource(SenderServer.class)
 @Stereotype

@@ -19,17 +19,14 @@ package io.github.project.openubl.xsender.resources;
 import com.radcortez.flyway.test.annotation.DataSource;
 import com.radcortez.flyway.test.annotation.FlywayTest;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
-import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
+import io.github.project.openubl.xsender.resources.common.QuarkusDataSourceProvider;
 import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
 import io.github.project.openubl.xsender.resources.config.KeycloakServer;
-import io.github.project.openubl.xsender.resources.config.PostgreSQLServer;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
-
-import javax.inject.Inject;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
@@ -38,12 +35,8 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 @QuarkusTest
 @TestHTTPEndpoint(CurrentUserResource.class)
 @QuarkusTestResource(KeycloakServer.class)
-@QuarkusTestResource(PostgreSQLServer.class)
 @FlywayTest(@DataSource(QuarkusDataSourceProvider.class))
 public class CurrentUserResourceTest extends BaseKeycloakTest {
-
-    @Inject
-    NamespaceRepository namespaceRepository;
 
     @Test
     public void createNamespace() {
@@ -65,7 +58,8 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
                 .then()
                 .statusCode(200)
                 .body("id", is(notNullValue()),
-                        "name", is(namespace.getName())
+                        "name", is(namespace.getName()),
+                        "description", is(namespace.getDescription())
                 );
 
         // Then
