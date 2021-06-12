@@ -18,42 +18,39 @@ package io.github.project.openubl.xsender.idm;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-
 @RegisterForReflection
-public class NamespaceRepresentation {
-
+public final class NamespaceRepresentationBuilder {
     private String id;
-
-    @NotNull
     private String name;
-
-    @Size(max = 250)
     private String description;
 
-    public String getId() {
-        return id;
+    private NamespaceRepresentationBuilder() {
     }
 
-    public void setId(String id) {
+    public static NamespaceRepresentationBuilder aNamespaceRepresentation() {
+        return new NamespaceRepresentationBuilder();
+    }
+
+    public NamespaceRepresentationBuilder withId(String id) {
         this.id = id;
+        return this;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
+    public NamespaceRepresentationBuilder withName(String name) {
         this.name = name;
+        return this;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
+    public NamespaceRepresentationBuilder withDescription(String description) {
         this.description = description;
+        return this;
     }
 
+    public NamespaceRepresentation build() {
+        NamespaceRepresentation namespaceRepresentation = new NamespaceRepresentation();
+        namespaceRepresentation.setId(id);
+        namespaceRepresentation.setName(name);
+        namespaceRepresentation.setDescription(description);
+        return namespaceRepresentation;
+    }
 }
