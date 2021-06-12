@@ -16,25 +16,23 @@
  */
 package io.github.project.openubl.xsender.resources.config;
 
-import io.restassured.RestAssured;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import static io.restassured.RestAssured.given;
 
 public abstract class BaseKeycloakTest {
 
-    @ConfigProperty(name = "quarkus.oidc.auth-server-url")
-    String oidcAuthServerUrl;
+    private static final String oidcAuthServerUrl = System.getProperty("quarkus.oidc.auth-server-url");
 
     protected String getAccessToken(String userName) {
-        return RestAssured
-                .given()
-                .param("grant_type", "password")
-                .param("username", userName)
-                .param("password", userName)
-                .param("client_id", "xsender")
-                .param("client_secret", "secret")
+        return given()
+                .relaxedHTTPSValidation()
+                .auth().preemptive().basic("xsender", "secret")
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("grant_type", "password")
+                .formParam("username", userName)
+                .formParam("password", userName)
                 .when()
                 .post(oidcAuthServerUrl + "/protocol/openid-connect/token")
-                .jsonPath().get("access_token");
+                .then().extract().path("access_token").toString();
     }
 
 }

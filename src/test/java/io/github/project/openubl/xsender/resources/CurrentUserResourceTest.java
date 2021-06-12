@@ -19,6 +19,7 @@ package io.github.project.openubl.xsender.resources;
 import com.radcortez.flyway.test.annotation.DataSource;
 import com.radcortez.flyway.test.annotation.FlywayTest;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
+import io.github.project.openubl.xsender.idm.NamespaceRepresentationBuilder;
 import io.github.project.openubl.xsender.resources.common.QuarkusDataSourceProvider;
 import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
 import io.github.project.openubl.xsender.resources.config.KeycloakServer;
@@ -35,7 +36,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 @QuarkusTest
 @TestHTTPEndpoint(CurrentUserResource.class)
 @QuarkusTestResource(KeycloakServer.class)
-@FlywayTest(@DataSource(QuarkusDataSourceProvider.class))
+@FlywayTest(value = @DataSource(QuarkusDataSourceProvider.class))
 public class CurrentUserResourceTest extends BaseKeycloakTest {
 
     @Test
@@ -43,7 +44,7 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
         // Given
         final String NAME = "mynamespace";
 
-        NamespaceRepresentation namespace = NamespaceRepresentation.NamespaceRepresentationBuilder.aNamespaceRepresentation()
+        NamespaceRepresentation namespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
                 .withName(NAME)
                 .withDescription("my description")
                 .build();
@@ -70,14 +71,13 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
         // Given
         final String NAME = "mynamespace";
 
-        NamespaceRepresentation namespace = NamespaceRepresentation.NamespaceRepresentationBuilder.aNamespaceRepresentation()
+        NamespaceRepresentation namespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
                 .withName(NAME)
                 .build();
 
         // When
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .body(namespace)
                 .when()
                 .post("/namespaces")
@@ -88,7 +88,6 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
         // Then
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .body(namespace)
                 .when()
                 .post("/namespaces")
