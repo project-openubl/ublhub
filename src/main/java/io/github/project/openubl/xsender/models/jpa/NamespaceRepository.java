@@ -38,6 +38,10 @@ public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntit
         return find("name", name).firstResult();
     }
 
+    public Uni<NamespaceEntity> findByIdAndOwner(String id, String owner) {
+        return find("id = ?1 and owner = ?2", id, owner).firstResult();
+    }
+
     public UniAndGroup2<List<NamespaceEntity>, Long> list(String owner, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
