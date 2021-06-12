@@ -71,15 +71,15 @@ services:
         condition: service_healthy
 
   xsender-db:
-    image: debezium/postgres:12
+    image: postgres:13.2
     ports:
-      - 5432:5432
+      - 5439:5432
     environment:
       - POSTGRES_USER=xsender_username
       - POSTGRES_PASSWORD=xsender_password
-      - POSTGRES_DB=xsender_db
+      - POSTGRES_DB=default
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U xsender_username -d xsender_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U xsender_username -d default" ]
       interval: 2s
       timeout: 20s
       retries: 10
