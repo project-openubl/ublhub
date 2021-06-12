@@ -16,8 +16,8 @@
  */
 package io.github.project.openubl.xsender.models.utils;
 
-import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
-import io.github.project.openubl.xsender.idm.PageRepresentation;
+import io.github.project.openubl.xsender.idm.*;
+import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 
 import java.util.List;
@@ -39,33 +39,33 @@ public class EntityToRepresentation {
         return rep;
     }
 
-//    public static CompanyRepresentation toRepresentation(CompanyEntity entity) {
-//        CompanyRepresentation rep = new CompanyRepresentation();
-//
-//        rep.setId(entity.getId());
-//        rep.setRuc(entity.getRuc());
-//        rep.setName(entity.getName());
-//        rep.setDescription(entity.getDescription());
-//
-//        if (entity.getSunatUrls() != null) {
-//            SunatUrlsRepresentation sunatUrlsRep = new SunatUrlsRepresentation();
-//            rep.setWebServices(sunatUrlsRep);
-//
-//            sunatUrlsRep.setFactura(entity.getSunatUrls().getSunatUrlFactura());
-//            sunatUrlsRep.setGuia(entity.getSunatUrls().getSunatUrlGuiaRemision());
-//            sunatUrlsRep.setRetenciones(entity.getSunatUrls().getSunatUrlPercepcionRetencion());
-//        }
-//
-//        if (entity.getSunatCredentials() != null) {
-//            SunatCredentialsRepresentation credentialsRep = new SunatCredentialsRepresentation();
-//            rep.setCredentials(credentialsRep);
-//
-//            credentialsRep.setUsername(entity.getSunatCredentials().getSunatUsername());
-//        }
-//
-//        return rep;
-//    }
-//
+    public static CompanyRepresentation toRepresentation(CompanyEntity entity) {
+        CompanyRepresentation rep = new CompanyRepresentation();
+
+        rep.setId(entity.id);
+        rep.setRuc(entity.ruc);
+        rep.setName(entity.name);
+        rep.setDescription(entity.description);
+
+        if (entity.sunatUrls != null) {
+            SunatUrlsRepresentation sunatUrlsRep = new SunatUrlsRepresentation();
+            rep.setWebServices(sunatUrlsRep);
+
+            sunatUrlsRep.setFactura(entity.sunatUrls.sunatUrlFactura);
+            sunatUrlsRep.setGuia(entity.sunatUrls.sunatUrlGuiaRemision);
+            sunatUrlsRep.setRetenciones(entity.sunatUrls.sunatUrlPercepcionRetencion);
+        }
+
+        if (entity.sunatCredentials != null) {
+            SunatCredentialsRepresentation credentialsRep = new SunatCredentialsRepresentation();
+            rep.setCredentials(credentialsRep);
+
+            credentialsRep.setUsername(entity.sunatCredentials.sunatUsername);
+        }
+
+        return rep;
+    }
+
 //    public static DocumentRepresentation toRepresentation(UBLDocumentEntity entity) {
 //        DocumentRepresentation rep = new DocumentRepresentation();
 //

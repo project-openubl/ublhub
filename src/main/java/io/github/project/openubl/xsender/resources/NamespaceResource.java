@@ -51,7 +51,7 @@ public class NamespaceResource {
     public Uni<Response> getNamespace(@PathParam("namespaceId") @NotNull String namespaceId) {
         return Panache.withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()))
                 .onItem().ifNotNull().transform(entity -> Response.ok().entity(EntityToRepresentation.toRepresentation(entity)).build())
-                .onItem().ifNull().continueWith(Response.ok().status(Response.Status.NOT_FOUND)::build);
+                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
     }
 
     @PUT
@@ -68,7 +68,7 @@ public class NamespaceResource {
                         })
                 )
                 .onItem().ifNotNull().transform(entity -> Response.ok().entity(EntityToRepresentation.toRepresentation(entity)).build())
-                .onItem().ifNull().continueWith(Response.ok().status(Response.Status.NOT_FOUND)::build);
+                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
     }
 
     @DELETE
@@ -78,8 +78,8 @@ public class NamespaceResource {
                 .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
                         .onItem().ifNotNull().call(PanacheEntityBase::delete)
                 )
-                .onItem().ifNotNull().transform(entity -> Response.ok().status(Response.Status.NO_CONTENT).build())
-                .onItem().ifNull().continueWith(Response.ok().status(Response.Status.NOT_FOUND)::build);
+                .onItem().ifNotNull().transform(entity -> Response.status(Response.Status.NO_CONTENT).build())
+                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
     }
 
 }

@@ -17,21 +17,17 @@
 package io.github.project.openubl.xsender.models.jpa.entities;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 @Entity
-@Table(name = "namespace", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"name"})
+@Table(name = "company", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"namespace_id", "ruc"})
 })
-public class NamespaceEntity extends PanacheEntityBase {
+public class CompanyEntity extends PanacheEntityBase {
 
     @Id
     @Column(name = "id")
@@ -39,14 +35,13 @@ public class NamespaceEntity extends PanacheEntityBase {
     public String id;
 
     @NotNull
-    @Column(name = "owner")
-    public String owner;
+    @Column(name = "ruc")
+    public String ruc;
 
     @NotNull
     @Column(name = "name")
     public String name;
 
-    @Size(max = 250)
     public String description;
 
     @NotNull
@@ -54,16 +49,23 @@ public class NamespaceEntity extends PanacheEntityBase {
     @Column(name = "created_on")
     public Date createdOn;
 
+    @NotNull
+    @Valid
+    @Embedded
+    public SunatCredentialsEntity sunatCredentials;
+
+    @NotNull
+    @Valid
+    @Embedded
+    public SunatUrlsEntity sunatUrls;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
+    public NamespaceEntity namespace;
+
     @Version
     @Column(name = "version")
     public int version;
-
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "namespace", orphanRemoval = true)
-    public List<CompanyEntity> companies = new ArrayList<>();
-
-//    @OnDelete(action = OnDeleteAction.CASCADE)
-//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "namespace", orphanRemoval = true)
-//    public List<UBLDocumentEntity> documents = new ArrayList<>();
 
 }
