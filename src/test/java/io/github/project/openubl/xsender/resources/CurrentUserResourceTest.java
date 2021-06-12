@@ -95,5 +95,39 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
                 .statusCode(409);
     }
 
+    @Test
+    public void getNamespaces() {
+        // Given
+        // When
+        given().auth().oauth2(getAccessToken("alice"))
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/namespaces")
+                .then()
+                .statusCode(200)
+                .body("meta.count", is(2),
+                        "data.size()", is(2),
+                        "data[0].name", is("my-namespace2"),
+                        "data[1].name", is("my-namespace1")
+                );
+        // Then
+    }
+
+    @Test
+    public void getNamespaces_filterText() {
+        // Given
+        // When
+        given().auth().oauth2(getAccessToken("alice"))
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/namespaces?filterText=namespace1")
+                .then()
+                .statusCode(200)
+                .body("meta.count", is(1),
+                        "data.size()", is(1),
+                        "data[0].name", is("my-namespace1")
+                );
+        //then
+    }
 }
 

@@ -17,7 +17,12 @@
 package io.github.project.openubl.xsender.models.utils;
 
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
+import io.github.project.openubl.xsender.idm.PageRepresentation;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
+
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class EntityToRepresentation {
     private EntityToRepresentation() {
@@ -147,24 +152,24 @@ public class EntityToRepresentation {
 //        return propRep;
 //    }
 //
-//    public static <T, R> PageRepresentation<R> toRepresentation(PageModel<T> model, Function<T, R> mapper) {
-//        PageRepresentation<R> rep = new PageRepresentation<>();
-//
-//        // Meta
-//        PageRepresentation.Meta repMeta = new PageRepresentation.Meta();
-//        rep.setMeta(repMeta);
-//
-//        repMeta.setCount(model.getTotalElements());
-//
-//        // Data
-//        rep.setData(model.getPageElements().stream()
-//                .map(mapper)
-//                .collect(Collectors.toList())
-//        );
-//
-//        return rep;
-//    }
-//
+    public static <T, R> PageRepresentation<R> toRepresentation(List<T> pageElements, Long totalElements, Function<T, R> mapper) {
+        PageRepresentation<R> rep = new PageRepresentation<>();
+
+        // Meta
+        PageRepresentation.Meta repMeta = new PageRepresentation.Meta();
+        rep.setMeta(repMeta);
+
+        repMeta.setCount(totalElements);
+
+        // Data
+        rep.setData(pageElements.stream()
+                .map(mapper)
+                .collect(Collectors.toList())
+        );
+
+        return rep;
+    }
+
 //    private static URIBuilder getURIBuilder(UriInfo uriInfo) throws URISyntaxException {
 //        return new URIBuilder(uriInfo.getPath());
 //    }

@@ -16,11 +16,18 @@
  */
 package io.github.project.openubl.xsender.models.jpa;
 
+import io.github.project.openubl.xsender.models.PageBean;
+import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
+import io.quarkus.hibernate.reactive.panache.PanacheQuery;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
+import io.quarkus.panache.common.Parameters;
+import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniAndGroup2;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.util.List;
 
 @ApplicationScoped
 public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntity, String> {
@@ -29,6 +36,36 @@ public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntit
 
     public Uni<NamespaceEntity> findByName(String name) {
         return find("name", name).firstResult();
+    }
+
+    public UniAndGroup2<List<NamespaceEntity>, Long> list(String owner, PageBean pageBean, List<SortBean> sortBy) {
+        Sort sort = Sort.by();
+        sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
+
+        PanacheQuery<NamespaceEntity> query = NamespaceEntity
+                .find(
+                        "From NamespaceEntity as o where o.owner =:owner",
+                        sort,
+                        Parameters.with("owner", owner)
+                )
+                .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
+
+        return Uni.combine().all().unis(query.list(), query.count());
+    }
+
+    public UniAndGroup2<List<NamespaceEntity>, Long> list(String owner, String filterText, PageBean pageBean, List<SortBean> sortBy) {
+        Sort sort = Sort.by();
+        sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
+
+        PanacheQuery<NamespaceEntity> query = NamespaceEntity
+                .find(
+                        "From NamespaceEntity as o where o.owner =:owner and lower(o.name) like :filterText",
+                        sort,
+                        Parameters.with("owner", owner).and("filterText", "%" + filterText.toLowerCase() + "%")
+                )
+                .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
+
+        return Uni.combine().all().unis(query.list(), query.count());
     }
 
 }

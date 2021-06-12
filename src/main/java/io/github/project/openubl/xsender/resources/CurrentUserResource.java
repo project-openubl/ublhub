@@ -17,24 +17,27 @@
 package io.github.project.openubl.xsender.resources;
 
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
+import io.github.project.openubl.xsender.idm.PageRepresentation;
+import io.github.project.openubl.xsender.models.PageBean;
+import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
+import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
 import io.github.project.openubl.xsender.security.UserIdentity;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.tuples.Tuple2;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Path("/user")
@@ -66,6 +69,29 @@ public class CurrentUserResource {
                     return Panache.withTransaction(namespaceEntity::persist)
                             .replaceWith(Response.ok().entity(EntityToRepresentation.toRepresentation(namespaceEntity))::build);
                 });
+    }
+
+    @GET
+    @Path("/namespaces")
+    public Uni<PageRepresentation<NamespaceRepresentation>> getNamespaces(
+            @QueryParam("filterText") String filterText,
+            @QueryParam("offset") @DefaultValue("0") Integer offset,
+            @QueryParam("limit") @DefaultValue("10") Integer limit,
+            @QueryParam("sort_by") @DefaultValue("createdOn:desc") List<String> sortBy
+    ) {
+        PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
+        List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, NamespaceRepository.SORT_BY_FIELDS);
+
+        Uni<Tuple2<List<NamespaceEntity>, Long>> searchResult;
+        if (filterText != null && !filterText.trim().isEmpty()) {
+            searchResult = Panache.withTransaction(namespaceRepository.list(userIdentity.getUsername(), filterText, pageBean, sortBeans)::asTuple);
+        } else {
+            searchResult = Panache.withTransaction(namespaceRepository.list(userIdentity.getUsername(), pageBean, sortBeans)::asTuple);
+        }
+
+        return searchResult.onItem().transform(
+                tuple2 -> EntityToRepresentation.toRepresentation(tuple2.getItem1(), tuple2.getItem2(), EntityToRepresentation::toRepresentation)
+        );
     }
 
 }
