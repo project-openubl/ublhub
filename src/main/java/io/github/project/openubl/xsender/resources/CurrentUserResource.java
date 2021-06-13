@@ -59,16 +59,19 @@ public class CurrentUserResource {
     public Uni<Response> createNameSpace(@NotNull @Valid NamespaceRepresentation rep) {
         return namespaceRepository.findByName(rep.getName())
                 .onItem().ifNotNull().transform(entity -> Response.status(Response.Status.CONFLICT).build())
-                .onItem().ifNull().switchTo(() -> {
-                    NamespaceEntity namespaceEntity = new NamespaceEntity();
-                    namespaceEntity.id = UUID.randomUUID().toString();
-                    namespaceEntity.name = rep.getName();
-                    namespaceEntity.description = rep.getDescription();
-                    namespaceEntity.createdOn = new Date();
-                    namespaceEntity.owner = userIdentity.getUsername();
-                    return Panache.withTransaction(namespaceEntity::persist)
-                            .replaceWith(Response.ok().entity(EntityToRepresentation.toRepresentation(namespaceEntity))::build);
-                });
+                .onItem().ifNull().switchTo(() -> Panache.withTransaction(() -> {
+                            NamespaceEntity namespaceEntity = new NamespaceEntity();
+                            namespaceEntity.id = UUID.randomUUID().toString();
+                            namespaceEntity.name = rep.getName();
+                            namespaceEntity.description = rep.getDescription();
+                            namespaceEntity.createdOn = new Date();
+                            namespaceEntity.owner = userIdentity.getUsername();
+                            return namespaceEntity.persist().map(unused -> namespaceEntity);
+                        }).map(namespaceEntity -> Response.ok()
+                                .entity(EntityToRepresentation.toRepresentation(namespaceEntity))
+                                .build()
+                        )
+                );
     }
 
     @GET
@@ -89,7 +92,7 @@ public class CurrentUserResource {
             searchResult = Panache.withTransaction(namespaceRepository.list(userIdentity.getUsername(), pageBean, sortBeans)::asTuple);
         }
 
-        return searchResult.onItem().transform(
+        return searchResult.map(
                 tuple2 -> EntityToRepresentation.toRepresentation(tuple2.getItem1(), tuple2.getItem2(), EntityToRepresentation::toRepresentation)
         );
     }
