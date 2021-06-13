@@ -26,6 +26,7 @@ import io.github.project.openubl.xsender.resources.common.QuarkusDataSourceProvi
 import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
 import io.github.project.openubl.xsender.resources.config.KeycloakServer;
 import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
+@TestHTTPEndpoint(CompanyResource.class)
 @QuarkusTestResource(KeycloakServer.class)
 @FlywayTest(value = @DataSource(QuarkusDataSourceProvider.class))
 public class CompanyResourceTest extends BaseKeycloakTest {
@@ -48,7 +50,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .get("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(200)
                 .body("id", is(notNullValue()),
@@ -71,7 +73,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .get("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
 
@@ -79,7 +81,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .get("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(200);
         // Then
@@ -97,14 +99,14 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsOwnerId + "/companies/" + companyId)
+                .get("/" + nsOwnerId + "/companies/" + companyId)
                 .then()
                 .statusCode(200);
 
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsToTestId + "/companies/" + companyId)
+                .get("/" + nsToTestId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
         // Then
@@ -136,7 +138,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .body(company)
                 .when()
-                .post("/api/namespaces/" + nsId + "/companies")
+                .post("/" + nsId + "/companies")
                 .then()
                 .statusCode(200)
                 .body("id", is(notNullValue()),
@@ -152,7 +154,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsId + "/companies/" + response.getId())
+                .get("/" + nsId + "/companies/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("id", is(response.getId()),
@@ -191,7 +193,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .body(company)
                 .when()
-                .post("/api/namespaces/" + nsId + "/companies")
+                .post("/" + nsId + "/companies")
                 .then()
                 .statusCode(404);
         // Then
@@ -223,7 +225,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .body(company)
                 .when()
-                .post("/api/namespaces/" + nsId + "/companies")
+                .post("/" + nsId + "/companies")
                 .then()
                 .statusCode(409);
         // Then
@@ -257,7 +259,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .body(companyRepresentation)
                 .when()
-                .put("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .put("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(200)
                 .body("ruc", is(companyRepresentation.getRuc()),
@@ -274,7 +276,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .get("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(200)
                 .body("id", is(companyId),
@@ -317,7 +319,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .body(companyRepresentation)
                 .when()
-                .put("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .put("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
 
@@ -325,7 +327,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .body(companyRepresentation)
                 .when()
-                .put("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .put("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(200);
         // Then
@@ -359,7 +361,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 .contentType(ContentType.JSON)
                 .body(companyRepresentation)
                 .when()
-                .put("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .put("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
         // Then
@@ -375,7 +377,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .delete("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(204);
 
@@ -383,7 +385,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .get("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
     }
@@ -398,14 +400,14 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .delete("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
 
         given().auth().oauth2(getAccessToken("admin"))
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .delete("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(204);
 
@@ -422,7 +424,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + nsId + "/companies/" + companyId)
+                .delete("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
         // Then
@@ -437,7 +439,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsId + "/companies")
+                .get("/" + nsId + "/companies")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(2),
@@ -449,7 +451,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsId + "/companies?sort_by=createdOn:asc")
+                .get("/" + nsId + "/companies?sort_by=createdOn:asc")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(2),
@@ -469,7 +471,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsId + "/companies?filterText=company1")
+                .get("/" + nsId + "/companies?filterText=company1")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(1),
@@ -488,7 +490,7 @@ public class CompanyResourceTest extends BaseKeycloakTest {
         given().auth().oauth2(getAccessToken("alice"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsId + "/companies?filterText=222222")
+                .get("/" + nsId + "/companies?filterText=222222")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(1),
