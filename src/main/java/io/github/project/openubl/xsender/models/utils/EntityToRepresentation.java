@@ -19,6 +19,7 @@ package io.github.project.openubl.xsender.models.utils;
 import io.github.project.openubl.xsender.idm.*;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 
 import java.util.List;
 import java.util.function.Function;
@@ -66,51 +67,39 @@ public class EntityToRepresentation {
         return rep;
     }
 
-//    public static DocumentRepresentation toRepresentation(UBLDocumentEntity entity) {
-//        DocumentRepresentation rep = new DocumentRepresentation();
-//
-//        rep.setId(entity.getId());
-//        rep.setInProgress(entity.isInProgress());
-//
-//        rep.setCreatedOn(entity.getCreatedOn().getTime());
-//        rep.setError(entity.getError() != null ? entity.getError().getMessage() : null);
-//        rep.setScheduledDelivery(entity.getScheduledDelivery() != null ? entity.getScheduledDelivery().getTime() : null);
-//        rep.setRetryCount(entity.getRetries());
-//
-//        // File
-//
-//        rep.setFileContentValid(entity.getFileValid());
-//
-//        rep.setFileContent(new FileContentRepresentation());
-//        rep.getFileContent().setRuc(entity.getRuc());
-//        rep.getFileContent().setDocumentID(entity.getDocumentID());
-//        rep.getFileContent().setDocumentType(entity.getDocumentType());
-//
-//        // Sunat
-//
-//        rep.setSunat(new SunatStatusRepresentation());
-//
-//        rep.getSunat().setCode(entity.getSunatCode());
-//        rep.getSunat().setTicket(entity.getSunatTicket());
-//        rep.getSunat().setStatus(entity.getSunatStatus());
-//        rep.getSunat().setDescription(entity.getSunatDescription());
-//        rep.getSunat().setHasCdr(entity.getStorageCdr() != null);
-//
-//        // Events
-//
-////        List<DocumentSunatEventRepresentation> eventsRepresentation = entity.getSunatEvents().stream().map(f -> {
-////            DocumentSunatEventRepresentation e = new DocumentSunatEventRepresentation();
-////            e.setDescription(f.getDescription());
-////            e.setStatus(f.getStatus().toString());
-////            e.setCreatedOn(f.getCreatedOn().getTime());
-////            return e;
-////        }).collect(Collectors.toList());
-////
-////        rep.setSunatEvents(eventsRepresentation);
-//
-//        return rep;
-//    }
-//
+    public static DocumentRepresentation toRepresentation(UBLDocumentEntity entity) {
+        DocumentRepresentation rep = new DocumentRepresentation();
+
+        rep.setId(entity.id);
+        rep.setInProgress(entity.inProgress);
+
+        rep.setCreatedOn(entity.createdOn.getTime());
+        rep.setError(entity.error != null ? entity.error.getMessage() : null);
+        rep.setScheduledDelivery(entity.scheduledDelivery != null ? entity.scheduledDelivery.getTime() : null);
+        rep.setRetryCount(entity.retries);
+
+        // File
+
+        rep.setFileContentValid(entity.fileValid);
+
+        rep.setFileContent(new FileContentRepresentation());
+        rep.getFileContent().setRuc(entity.ruc);
+        rep.getFileContent().setDocumentID(entity.documentID);
+        rep.getFileContent().setDocumentType(entity.documentType);
+
+        // Sunat
+
+        rep.setSunat(new SunatStatusRepresentation());
+
+        rep.getSunat().setCode(entity.sunatCode);
+        rep.getSunat().setTicket(entity.sunatTicket);
+        rep.getSunat().setStatus(entity.sunatStatus);
+        rep.getSunat().setDescription(entity.sunatDescription);
+        rep.getSunat().setHasCdr(entity.storageCdr != null);
+
+        return rep;
+    }
+
 //    public static ComponentRepresentation toRepresentation(ComponentModel component, boolean internal, ComponentUtil componentUtil) {
 //        ComponentRepresentation rep = toRepresentationWithoutConfig(component);
 //        if (!internal) {
