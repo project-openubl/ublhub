@@ -14,11 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.resources;
+package io.github.project.openubl.xsender.exceptions;
 
-import io.quarkus.test.junit.NativeImageTest;
+public class ReadFileException extends Exception {
+    public ReadFileException(Throwable e) {
+        super(e);
+    }
 
-@NativeImageTest
-public class NativeCurrentUserResourceIT extends CurrentUserResourceTest {
-    // Execute the same tests but in native mode.
+    public ReadFileException(String message) {
+        super(message);
+    }
 }

@@ -16,14 +16,19 @@
  */
 package io.github.project.openubl.xsender.files;
 
+import com.google.common.io.Files;
 import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
 import io.github.project.openubl.xsender.resources.config.KeycloakServer;
 import io.github.project.openubl.xsender.resources.config.StorageServer;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import javax.inject.Inject;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -36,37 +41,41 @@ public class FilesTest extends BaseKeycloakTest {
     FilesManager filesManager;
 
     @Test
-    public void uploadXMLFile() {
+    public void uploadBytes() {
         // Given
-        String filename = "myfile.xml";
         byte[] file = new byte[]{1,2,3};
 
         // When
-        String result = filesManager.createFile(file, filename, FileType.XML);
+        String result1 = filesManager.createFile(file, false);
+        String result2 = filesManager.createFile(file, true);
 
         // Then
-        assertNotNull(result);
+        assertNotNull(result1);
+        assertNotNull(result2);
     }
 
     @Test
-    public void uploadZIPFile() {
+    public void uploadFile(@TempDir Path tempPath) throws IOException {
         // Given
-        String filename = "myfile.zip";
-        byte[] file = new byte[]{1,2,3};
+        String filename = "myfile.xml";
+        byte[] fileContent = new byte[]{1,2,3};
+        File file = tempPath.resolve(filename).toFile();
+        Files.write(fileContent, file);
 
         // When
-        String result = filesManager.createFile(file, filename, FileType.XML);
+        String result = filesManager.createFile(file, false);
+        String result2 = filesManager.createFile(file, true);
 
         // Then
         assertNotNull(result);
+        assertNotNull(result2);
     }
 
     @Test
     public void uploadThenGetFile() {
         // Given
-        String filename = "myfile.xml";
-        byte[] file = new byte[]{1,2,3};
-        String fileId = filesManager.createFile(file, filename, FileType.XML);
+        byte[] fileContent = new byte[]{1,2,3};
+        String fileId = filesManager.createFile(fileContent, true);
 
         // When
         byte[] fileAsBytesWithoutUnzipping = filesManager.getFileAsBytesWithoutUnzipping(fileId);
@@ -80,9 +89,8 @@ public class FilesTest extends BaseKeycloakTest {
     @Test
     public void uploadFileThenDeleteIt() {
         // Given
-        String filename = "myfile.xml";
-        byte[] file = new byte[]{1,2,3};
-        String fileId = filesManager.createFile(file, filename, FileType.XML);
+        byte[] fileContent = new byte[]{1,2,3};
+        String fileId = filesManager.createFile(fileContent, true);
 
         // When
         filesManager.delete(fileId);
@@ -93,9 +101,8 @@ public class FilesTest extends BaseKeycloakTest {
     @Test
     public void uploadFileThenGetLink() {
         // Given
-        String filename = "myfile.xml";
-        byte[] file = new byte[]{1,2,3};
-        String fileId = filesManager.createFile(file, filename, FileType.XML);
+        byte[] fileContent = new byte[]{1,2,3};
+        String fileId = filesManager.createFile(fileContent, true);
 
         // When
         String fileLink = filesManager.getFileLink(fileId);
