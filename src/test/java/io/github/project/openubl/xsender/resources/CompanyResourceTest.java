@@ -25,6 +25,7 @@ import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
 import io.github.project.openubl.xsender.resources.common.QuarkusDataSourceProvider;
 import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
 import io.github.project.openubl.xsender.resources.config.KeycloakServer;
+import io.github.project.openubl.xsender.resources.config.StorageServer;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -37,6 +38,7 @@ import static org.hamcrest.CoreMatchers.*;
 @QuarkusTest
 @TestHTTPEndpoint(CompanyResource.class)
 @QuarkusTestResource(KeycloakServer.class)
+@QuarkusTestResource(StorageServer.class)
 @FlywayTest(value = @DataSource(QuarkusDataSourceProvider.class))
 public class CompanyResourceTest extends BaseKeycloakTest {
 
