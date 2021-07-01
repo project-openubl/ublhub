@@ -14,30 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.models.jpa.entities;
+package io.github.project.openubl.xsender.events;
 
-import org.hibernate.validator.constraints.URL;
+public class DocumentEvent {
+    private String id;
+    private String namespaceId;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.validation.constraints.NotNull;
+    public DocumentEvent() {
+    }
 
-@Embeddable
-public class SunatUrlsEntity {
+    public DocumentEvent(String id, String namespaceId) {
+        this.id = id;
+        this.namespaceId = namespaceId;
+    }
 
-    @NotNull
-    @URL
-    @Column(name = "sunat_url_factura")
-    public String sunatUrlFactura;
+    public String getId() {
+        return id;
+    }
 
-    @NotNull
-    @URL
-    @Column(name = "sunat_url_guia_remision")
-    public String sunatUrlGuiaRemision;
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    @NotNull
-    @URL
-    @Column(name = "sunat_url_percepcion_retencion")
-    public String sunatUrlPercepcionRetencion;
+    public String getNamespaceId() {
+        return namespaceId;
+    }
 
+    public void setNamespaceId(String namespaceId) {
+        this.namespaceId = namespaceId;
+    }
 }

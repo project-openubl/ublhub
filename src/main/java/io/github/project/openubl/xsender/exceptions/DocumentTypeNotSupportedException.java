@@ -14,27 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.models;
+package io.github.project.openubl.xsender.exceptions;
 
-public enum ErrorType {
-    FETCH_FILE("No se pudo extraer el archivo del servidor"),
-    READ_FILE("Documento no válido"),
-    UNSUPPORTED_DOCUMENT_TYPE("Documento no válido"),
-    COMPANY_NOT_FOUND("No se pudo encontrar una empresa para el archivo"),
-    SEND_FILE("No se pudo enviar el archivo a la SUNAT"),
-    SAVE_CRD_FILE("No se pudo guardar el CDR"),
-    AMQP_SCHEDULE("No se pudo programar envio"),
-    RETRY_CONSUMED("Reenvios agotados"),
-    UNKNOWN("Reenvios agotados"),
-    ;
+public class DocumentTypeNotSupportedException extends Exception {
+    private final String documentType;
 
-    private final String message;
-
-    ErrorType(String message) {
-        this.message = message;
+    public DocumentTypeNotSupportedException(String documentType) {
+        super();
+        this.documentType = documentType;
     }
 
-    public String getMessage() {
-        return message;
+    public String getDocumentType() {
+        return documentType;
     }
 }

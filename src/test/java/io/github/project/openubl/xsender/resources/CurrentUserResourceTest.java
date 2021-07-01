@@ -21,9 +21,7 @@ import com.radcortez.flyway.test.annotation.FlywayTest;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentationBuilder;
 import io.github.project.openubl.xsender.resources.common.QuarkusDataSourceProvider;
-import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
-import io.github.project.openubl.xsender.resources.config.KeycloakServer;
-import io.github.project.openubl.xsender.resources.config.StorageServer;
+import io.github.project.openubl.xsender.resources.config.*;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -35,9 +33,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
 @QuarkusTest
-@TestHTTPEndpoint(CurrentUserResource.class)
 @QuarkusTestResource(KeycloakServer.class)
 @QuarkusTestResource(StorageServer.class)
+@QuarkusTestResource(SenderServer.class)
+@TestHTTPEndpoint(CurrentUserResource.class)
 @FlywayTest(value = @DataSource(QuarkusDataSourceProvider.class))
 public class CurrentUserResourceTest extends BaseKeycloakTest {
 

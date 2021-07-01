@@ -14,24 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.files;
+package io.github.project.openubl.xsender.events;
 
-public enum FileType {
-    XML("xml"),
-    ZIP("zip");
+import io.smallrye.mutiny.Uni;
 
-    private final String extension;
+public interface EventManager {
 
-    FileType(String extension) {
-        this.extension = extension;
-    }
-
-    public String getExtension() {
-        return extension;
-    }
-
-    public static String getFilename(String filenameWithoutExtension, FileType fileType) {
-        return filenameWithoutExtension + "." + fileType.getExtension();
-    }
+    Uni<Void> sendDocumentToSUNAT(String documentId);
 
 }

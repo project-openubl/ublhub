@@ -18,25 +18,36 @@ package io.github.project.openubl.xsender.resources;
 
 import com.radcortez.flyway.test.annotation.DataSource;
 import com.radcortez.flyway.test.annotation.FlywayTest;
+import io.github.project.openubl.xsender.idm.DocumentRepresentation;
+import io.github.project.openubl.xsender.models.ErrorType;
 import io.github.project.openubl.xsender.resources.common.QuarkusDataSourceProvider;
-import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
-import io.github.project.openubl.xsender.resources.config.KeycloakServer;
-import io.github.project.openubl.xsender.resources.config.StorageServer;
+import io.github.project.openubl.xsender.resources.config.*;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
+
 import static io.restassured.RestAssured.given;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
-@TestHTTPEndpoint(DocumentResource.class)
 @QuarkusTestResource(KeycloakServer.class)
 @QuarkusTestResource(StorageServer.class)
+@QuarkusTestResource(SenderServer.class)
+@ServerDependencies
+@TestHTTPEndpoint(DocumentResource.class)
 @FlywayTest(value = @DataSource(QuarkusDataSourceProvider.class))
 public class DocumentResourceTest extends BaseKeycloakTest {
+
+    final int TIMEOUT = 40;
 
     @Test
     public void getDocument() {
@@ -87,7 +98,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
     }
 
     @Test
-    public void getCompanyThatBelongsToOtherNamespace_shouldNotBeAllowed() {
+    public void getDocumentThatBelongsToOtherNamespace_shouldNotBeAllowed() {
         // Given
         String nsOwnerId = "1";
         String nsToTestId = "2";
@@ -162,323 +173,119 @@ public class DocumentResourceTest extends BaseKeycloakTest {
         // Then
     }
 
-//    @Test
-//    public void createCompany() {
-//        // Given
-//        String nsId = "1";
-//
-//        CompanyRepresentation company = CompanyRepresentationBuilder.aCompanyRepresentation()
-//                .withName("My company")
-//                .withRuc("12345678910")
-//                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
-//                        .withFactura("http://url1.com")
-//                        .withGuia("http://url2.com")
-//                        .withRetenciones("http://url3.com")
-//                        .build()
-//                )
-//                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
-//                        .withUsername("myUsername")
-//                        .withPassword("myPassword")
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        CompanyRepresentation response = given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .body(company)
-//                .when()
-//                .post("/" + nsId + "/documents")
-//                .then()
-//                .statusCode(200)
-//                .body("id", is(notNullValue()),
-//                        "name", is(company.getName()),
-//                        "webServices.factura", is(company.getWebServices().getFactura()),
-//                        "webServices.guia", is(company.getWebServices().getGuia()),
-//                        "webServices.retenciones", is(company.getWebServices().getRetenciones()),
-//                        "credentials.username", is(company.getCredentials().getUsername()),
-//                        "credentials.password", nullValue()
-//                ).extract().body().as(CompanyRepresentation.class);
-//
-//        // Then
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("id", is(response.getId()),
-//                        "name", is(company.getName()),
-//                        "webServices.factura", is(company.getWebServices().getFactura()),
-//                        "webServices.guia", is(company.getWebServices().getGuia()),
-//                        "webServices.retenciones", is(company.getWebServices().getRetenciones()),
-//                        "credentials.username", is(company.getCredentials().getUsername()),
-//                        "credentials.password", nullValue()
-//                );
-//    }
-//
-//    @Test
-//    public void createCompanyByNotNsOwner_shouldNotBeAllowed() {
-//        // Given
-//        String nsId = "3";
-//
-//        CompanyRepresentation company = CompanyRepresentationBuilder.aCompanyRepresentation()
-//                .withName("My company")
-//                .withRuc("12345678910")
-//                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
-//                        .withFactura("http://url1.com")
-//                        .withGuia("http://url2.com")
-//                        .withRetenciones("http://url3.com")
-//                        .build()
-//                )
-//                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
-//                        .withUsername("myUsername")
-//                        .withPassword("myPassword")
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .body(company)
-//                .when()
-//                .post("/" + nsId + "/documents")
-//                .then()
-//                .statusCode(404);
-//        // Then
-//    }
-//
-//    @Test
-//    public void create2CompaniesWithSameRuc_shouldNotBeAllowed() {
-//        // Given
-//        String nsId = "1";
-//
-//        CompanyRepresentation company = CompanyRepresentationBuilder.aCompanyRepresentation()
-//                .withName("My company")
-//                .withRuc("11111111111")
-//                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
-//                        .withFactura("http://url1.com")
-//                        .withGuia("http://url2.com")
-//                        .withRetenciones("http://url3.com")
-//                        .build()
-//                )
-//                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
-//                        .withUsername("myUsername")
-//                        .withPassword("myPassword")
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .body(company)
-//                .when()
-//                .post("/" + nsId + "/documents")
-//                .then()
-//                .statusCode(409);
-//        // Then
-//    }
-//
-//    @Test
-//    public void updateCompany() {
-//        // Given
-//        String nsId = "1";
-//        String documentId = "11";
-//
-//        CompanyRepresentation companyRepresentation = CompanyRepresentationBuilder.aCompanyRepresentation()
-//                .withRuc("99999999999")
-//                .withName("new name")
-//                .withDescription("new description")
-//                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
-//                        .withFactura("http://newUrl1.com")
-//                        .withRetenciones("http://newUrl2.com")
-//                        .withGuia("http://newUrl3.com")
-//                        .build()
-//                )
-//                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
-//                        .withUsername("new username")
-//                        .withPassword("new password")
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .body(companyRepresentation)
-//                .when()
-//                .put("/" + nsId + "/documents/" + companyId)
-//                .then()
-//                .statusCode(200)
-//                .body("ruc", is(companyRepresentation.getRuc()),
-//                        "name", is(companyRepresentation.getName()),
-//                        "description", is(companyRepresentation.getDescription()),
-//                        "webServices.factura", is(companyRepresentation.getWebServices().getFactura()),
-//                        "webServices.retenciones", is(companyRepresentation.getWebServices().getRetenciones()),
-//                        "webServices.guia", is(companyRepresentation.getWebServices().getGuia()),
-//                        "credentials.username", is(companyRepresentation.getCredentials().getUsername()),
-//                        "credentials.password", is(nullValue())
-//                );
-//
-//        // Then
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents/" + companyId)
-//                .then()
-//                .statusCode(200)
-//                .body("id", is(companyId),
-//                        "ruc", is(companyRepresentation.getRuc()),
-//                        "name", is(companyRepresentation.getName()),
-//                        "description", is(companyRepresentation.getDescription()),
-//                        "webServices.factura", is(companyRepresentation.getWebServices().getFactura()),
-//                        "webServices.retenciones", is(companyRepresentation.getWebServices().getRetenciones()),
-//                        "webServices.guia", is(companyRepresentation.getWebServices().getGuia()),
-//                        "credentials.username", is(companyRepresentation.getCredentials().getUsername()),
-//                        "credentials.password", is(nullValue())
-//                );
-//    }
-//
-//    @Test
-//    public void updateCompanyByNotOwner_shouldNotBeAllowed() {
-//        String nsId = "3";
-//        String documentId = "44";
-//
-//        // Given
-//        CompanyRepresentation companyRepresentation = CompanyRepresentationBuilder.aCompanyRepresentation()
-//                .withRuc("99999999999")
-//                .withName("new name")
-//                .withDescription("new description")
-//                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
-//                        .withFactura("http://newUrl1.com")
-//                        .withRetenciones("http://newUrl2.com")
-//                        .withGuia("http://newUrl3.com")
-//                        .build()
-//                )
-//                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
-//                        .withUsername("new username")
-//                        .withPassword("new password")
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .body(companyRepresentation)
-//                .when()
-//                .put("/" + nsId + "/documents/" + companyId)
-//                .then()
-//                .statusCode(404);
-//
-//        given().auth().oauth2(getAccessToken("admin"))
-//                .contentType(ContentType.JSON)
-//                .body(companyRepresentation)
-//                .when()
-//                .put("/" + nsId + "/documents/" + companyId)
-//                .then()
-//                .statusCode(200);
-//        // Then
-//    }
-//
-//    @Test
-//    public void updateCompanyWithIncorrectNs_shouldNotBeAllowed() {
-//        String nsId = "1";
-//        String documentId = "33";
-//
-//        // Given
-//        CompanyRepresentation companyRepresentation = CompanyRepresentationBuilder.aCompanyRepresentation()
-//                .withRuc("99999999999")
-//                .withName("new name")
-//                .withDescription("new description")
-//                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
-//                        .withFactura("http://newUrl1.com")
-//                        .withRetenciones("http://newUrl2.com")
-//                        .withGuia("http://newUrl3.com")
-//                        .build()
-//                )
-//                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
-//                        .withUsername("new username")
-//                        .withPassword("new password")
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .body(companyRepresentation)
-//                .when()
-//                .put("/" + nsId + "/documents/" + companyId)
-//                .then()
-//                .statusCode(404);
-//        // Then
-//    }
-//
-//    @Test
-//    public void deleteCompany() {
-//        // Given
-//        String nsId = "1";
-//        String documentId = "11";
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .delete("/" + nsId + "/documents/" + companyId)
-//                .then()
-//                .statusCode(204);
-//
-//        // Then
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents/" + companyId)
-//                .then()
-//                .statusCode(404);
-//    }
-//
-//    @Test
-//    public void deleteCompanyByNotOwner_shouldNotBeAllowed() {
-//        // Given
-//        String nsId = "3";
-//        String documentId = "44";
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .delete("/" + nsId + "/documents/" + companyId)
-//                .then()
-//                .statusCode(404);
-//
-//        given().auth().oauth2(getAccessToken("admin"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .delete("/" + nsId + "/documents/" + companyId)
-//                .then()
-//                .statusCode(204);
-//
-//        // Then
-//    }
-//
-//    @Test
-//    public void deleteCompanyByIncorrectNs_shouldNotBeAllowed() {
-//        // Given
-//        String nsId = "1";
-//        String documentId = "33";
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .delete("/" + nsId + "/documents/" + companyId)
-//                .then()
-//                .statusCode(404);
-//        // Then
-//    }
+    @Test
+    public void updoadXML_byNotNsOwnerShouldNotBeAllowed() throws URISyntaxException {
+        // Given
+        String nsId = "3";
+
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_12345678912.xml").toURI();
+        File file = new File(fileURI);
+
+        // When
+        given().auth().oauth2(getAccessToken("alice"))
+                .accept(ContentType.JSON)
+                .multiPart("file", file, "application/xml")
+                .when()
+                .post("/" + nsId + "/documents/upload")
+                .then()
+                .statusCode(404);
+        // Then
+    }
+
+    @Test
+    public void updoadInvalidImageFile_shouldSetErrorStatus() throws URISyntaxException {
+        // Given
+        String nsId = "1";
+
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("images/java-jar-icon-59.png").toURI();
+        File file = new File(fileURI);
+
+        // When
+        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+                .accept(ContentType.JSON)
+                .multiPart("file", file, "application/xml")
+                .when()
+                .post("/" + nsId + "/documents/upload")
+                .then()
+                .statusCode(200)
+                .extract().body().as(DocumentRepresentation.class);
+
+        // Then
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+                    .contentType(ContentType.JSON)
+                    .when()
+                    .get("/" + nsId + "/documents/" + response.getId())
+                    .then()
+                    .statusCode(200)
+                    .extract().body().as(DocumentRepresentation.class);
+            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage());
+        });
+
+        given().auth().oauth2(getAccessToken("alice"))
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents/" + response.getId())
+                .then()
+                .statusCode(200)
+                .body("inProgress", is(false),
+                        "error", is(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage()),
+                        "scheduledDelivery", is(nullValue()),
+                        "retryCount", is(0),
+                        "fileContentValid", is(false),
+                        "fileContent.ruc", is(nullValue()),
+                        "fileContent.documentID", is(nullValue()),
+                        "fileContent.documentType", is(nullValue())
+                );
+    }
+
+    @Test
+    public void updoadInvalidXMLFile_shouldSetErrorStatus() throws URISyntaxException {
+        // Given
+        String nsId = "1";
+
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/maven.xml").toURI();
+        File file = new File(fileURI);
+
+        // When
+        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+                .accept(ContentType.JSON)
+                .multiPart("file", file, "application/xml")
+                .when()
+                .post("/" + nsId + "/documents/upload")
+                .then()
+                .statusCode(200)
+                .extract().body().as(DocumentRepresentation.class);
+
+        // Then
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+                    .contentType(ContentType.JSON)
+                    .when()
+
+                    .get("/" + nsId + "/documents/" + response.getId())
+                    .then()
+                    .statusCode(200)
+                    .extract().body().as(DocumentRepresentation.class);
+            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage());
+        });
+
+        given().auth().oauth2(getAccessToken("alice"))
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents/" + response.getId())
+                .then()
+                .statusCode(200)
+                .body("inProgress", is(false),
+                        "error", is(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage()),
+                        "scheduledDelivery", is(nullValue()),
+                        "retryCount", is(0),
+                        "fileContentValid", is(false),
+                        "fileContent.ruc", is(nullValue()),
+                        "fileContent.documentID", is(nullValue()),
+                        "fileContent.documentType", is("project")
+                        );
+    }
 
 }
 

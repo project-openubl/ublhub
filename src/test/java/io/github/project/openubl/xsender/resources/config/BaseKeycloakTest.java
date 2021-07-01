@@ -16,11 +16,14 @@
  */
 package io.github.project.openubl.xsender.resources.config;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import static io.restassured.RestAssured.given;
 
 public abstract class BaseKeycloakTest {
 
-    private static final String oidcAuthServerUrl = System.getProperty("quarkus.oidc.auth-server-url");
+    @ConfigProperty(name = "quarkus.oidc.auth-server-url")
+    String oidcAuthServerUrl;
 
     protected String getAccessToken(String userName) {
         return given()

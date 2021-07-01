@@ -14,30 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.models.jpa.entities;
+package io.github.project.openubl.xsender.exceptions;
 
-import org.hibernate.validator.constraints.URL;
+public class NoCompanyWithRucException extends Exception {
+    public NoCompanyWithRucException(Throwable e) {
+        super(e);
+    }
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.validation.constraints.NotNull;
-
-@Embeddable
-public class SunatUrlsEntity {
-
-    @NotNull
-    @URL
-    @Column(name = "sunat_url_factura")
-    public String sunatUrlFactura;
-
-    @NotNull
-    @URL
-    @Column(name = "sunat_url_guia_remision")
-    public String sunatUrlGuiaRemision;
-
-    @NotNull
-    @URL
-    @Column(name = "sunat_url_percepcion_retencion")
-    public String sunatUrlPercepcionRetencion;
-
+    public NoCompanyWithRucException(String message) {
+        super(message);
+    }
 }

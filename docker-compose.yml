@@ -70,19 +70,5 @@ services:
       keycloak:
         condition: service_healthy
 
-  xsender-db:
-    image: postgres:13.2
-    ports:
-      - 5439:5432
-    environment:
-      - POSTGRES_USER=xsender_username
-      - POSTGRES_PASSWORD=xsender_password
-      - POSTGRES_DB=default
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U xsender_username -d default" ]
-      interval: 2s
-      timeout: 20s
-      retries: 10
-
 volumes:
   minio-data:

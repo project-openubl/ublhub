@@ -90,21 +90,13 @@ public class S3FilesRoute extends RouteBuilder {
         from("direct:s3-save-file")
                 .id("s3-save-file")
                 .choice()
-                    .when(header("isZipFile").isEqualTo(false))
+                    .when(header("shouldZipFile").isEqualTo(true))
                         .marshal().zipFile()
                     .endChoice()
                 .end()
-                .convertBodyTo(byte[].class)
                 .process(exchange -> {
-                    byte[] body = exchange.getIn().getBody(byte[].class);
-                    String filenameWithoutExtension = UUID.randomUUID().toString();
-
-                    exchange.getIn().setHeader(Exchange.FILE_NAME, filenameWithoutExtension + ".zip");
-                    exchange.getIn().setHeader(AWS2S3Constants.KEY, filenameWithoutExtension);
+                    exchange.getIn().setHeader(AWS2S3Constants.KEY, UUID.randomUUID().toString());
                     exchange.getIn().setHeader(AWS2S3Constants.BUCKET_DESTINATION_NAME, s3Bucket);
-                    exchange.getIn().setHeader(AWS2S3Constants.CONTENT_LENGTH, body.length);
-                    exchange.getIn().setHeader(AWS2S3Constants.CONTENT_TYPE, "application/zip");
-                    exchange.getIn().setHeader(AWS2S3Constants.CONTENT_DISPOSITION, "attachment;filename=\"${header.CamelFileName}\"");
                 })
                 .toD("aws2-s3://" + s3Bucket + "?autoCreateBucket=true&deleteAfterWrite=true&amazonS3Client=#s3client")
                 .process(exchange -> {
