@@ -29,7 +29,7 @@ public class SenderServer implements QuarkusTestResourceLifecycleManager {
 
     @Override
     public Map<String, String> start() {
-        artemis = new GenericContainer<>("vromero/activemq-artemis:2.8.0-alpine")
+        artemis = new GenericContainer<>("vromero/activemq-artemis:2.9.0-alpine")
                 .withNetwork(KeycloakServer.network)
                 .withNetworkAliases("amqp")
                 .withExposedPorts(8161, 61616, 5672)
