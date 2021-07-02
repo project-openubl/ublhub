@@ -31,18 +31,16 @@ public class FilesMutiny {
     FilesManager filesManager;
 
     public Uni<String> createFile(byte[] file, boolean shouldZipFile) {
-        if (file == null) {
-            return Uni.createFrom().failure(new SaveFileException("Invalid body"));
-        }
-
-        return Uni.createFrom().emitter(uniEmitter -> {
-            try {
-                String fileID = filesManager.createFile(file, shouldZipFile);
-                uniEmitter.complete(fileID);
-            } catch (Throwable e) {
-                uniEmitter.fail(new SaveFileException(e));
-            }
-        });
+        return Uni.createFrom().item(file)
+                .onItem().ifNull().failWith(() -> new SaveFileException("Invalid body"))
+                .onItem().ifNotNull().transformToUni((bytes, uniEmitter) -> {
+                    try {
+                        String fileID = filesManager.createFile(file, shouldZipFile);
+                        uniEmitter.complete(fileID);
+                    } catch (Throwable e) {
+                        uniEmitter.fail(new SaveFileException(e));
+                    }
+                });
     }
 
     public Uni<String> createFile(File file, boolean shouldZipFile) {
@@ -51,7 +49,7 @@ public class FilesMutiny {
                 String fileID = filesManager.createFile(file, shouldZipFile);
                 uniEmitter.complete(fileID);
             } catch (Throwable e) {
-                uniEmitter.fail(new FetchFileException(e));
+                uniEmitter.fail(new SaveFileException(e));
             }
         });
     }
