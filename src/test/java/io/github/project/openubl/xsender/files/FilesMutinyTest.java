@@ -17,12 +17,14 @@
 package io.github.project.openubl.xsender.files;
 
 import com.google.common.io.Files;
-import io.github.project.openubl.xsender.resources.config.*;
+import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
+import io.github.project.openubl.xsender.resources.config.KeycloakServer;
+import io.github.project.openubl.xsender.resources.config.SenderServer;
+import io.github.project.openubl.xsender.resources.config.StorageServer;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -31,7 +33,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
-@Disabled
 @QuarkusTest
 @QuarkusTestResource(KeycloakServer.class)
 @QuarkusTestResource(StorageServer.class)
