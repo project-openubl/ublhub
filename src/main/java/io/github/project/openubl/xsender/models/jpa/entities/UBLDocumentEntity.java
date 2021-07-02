@@ -106,4 +106,7 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     @CollectionTable(name = "ubl_document_sunat_notes", joinColumns = {@JoinColumn(name = "ubl_document_id")})
     public Set<String> sunatNotes;
 
+    @Version
+    @Column(name = "version")
+    public int version;
 }

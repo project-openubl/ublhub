@@ -10,11 +10,9 @@ import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceMo
 import io.github.project.openubl.xmlsenderws.webservices.xml.DocumentType;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentProvider;
-import io.github.project.openubl.xsender.exceptions.DocumentTypeNotSupportedException;
 import io.github.project.openubl.xsender.exceptions.NoCompanyWithRucException;
 import io.github.project.openubl.xsender.exceptions.ReadFileException;
 import io.github.project.openubl.xsender.exceptions.SendFileToSUNATException;
-import io.github.project.openubl.xsender.models.ErrorType;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.quarkus.hibernate.reactive.panache.Panache;
@@ -43,7 +41,7 @@ public class XSenderMutiny {
                 if (isValidDocumentType) {
                     uniEmitter.complete(fileContent);
                 } else {
-                    uniEmitter.fail(new DocumentTypeNotSupportedException(fileContent.getDocumentType()));
+                    uniEmitter.fail(new ReadFileException(fileContent.getDocumentType()));
                 }
             } catch (ParserConfigurationException | SAXException | IOException e) {
                 uniEmitter.fail(new ReadFileException(e));
@@ -58,49 +56,51 @@ public class XSenderMutiny {
     }
 
     public Uni<BillServiceModel> sendFile(byte[] file, XSenderRequiredData xSenderRequiredData) {
-        return Uni.createFrom().emitter(uniEmitter -> {
-            CustomBillServiceConfig billServiceConfig = new CustomBillServiceConfig() {
-                @Override
-                public String getInvoiceAndNoteDeliveryURL() {
-                    return xSenderRequiredData.getUrls().sunatUrlFactura;
-                }
+        return Uni.createFrom()
+                .<BillServiceModel>emitter(uniEmitter -> {
+                    CustomBillServiceConfig billServiceConfig = new CustomBillServiceConfig() {
+                        @Override
+                        public String getInvoiceAndNoteDeliveryURL() {
+                            return xSenderRequiredData.getUrls().sunatUrlFactura;
+                        }
 
-                @Override
-                public String getPerceptionAndRetentionDeliveryURL() {
-                    return xSenderRequiredData.getUrls().sunatUrlPercepcionRetencion;
-                }
+                        @Override
+                        public String getPerceptionAndRetentionDeliveryURL() {
+                            return xSenderRequiredData.getUrls().sunatUrlPercepcionRetencion;
+                        }
 
-                @Override
-                public String getDespatchAdviceDeliveryURL() {
-                    return xSenderRequiredData.getUrls().sunatUrlGuiaRemision;
-                }
-            };
+                        @Override
+                        public String getDespatchAdviceDeliveryURL() {
+                            return xSenderRequiredData.getUrls().sunatUrlGuiaRemision;
+                        }
+                    };
 
-            try {
-                SmartBillServiceModel smartBillServiceModel = CustomSmartBillServiceManager.send(
-                        file,
-                        xSenderRequiredData.getCredentials().sunatUsername,
-                        xSenderRequiredData.getCredentials().sunatPassword,
-                        billServiceConfig
-                );
+                    try {
+                        SmartBillServiceModel smartBillServiceModel = CustomSmartBillServiceManager.send(
+                                file,
+                                xSenderRequiredData.getCredentials().sunatUsername,
+                                xSenderRequiredData.getCredentials().sunatPassword,
+                                billServiceConfig
+                        );
 
-                uniEmitter.complete(smartBillServiceModel.getBillServiceModel());
-            } catch (ValidationWebServiceException e) {
-                // Should not retry
-                BillServiceModel billServiceModel = new BillServiceModel();
-                billServiceModel.setCode(e.getSUNATErrorCode());
-                billServiceModel.setDescription(e.getSUNATErrorMessage(MAX_STRING));
-                billServiceModel.setStatus(BillServiceModel.Status.RECHAZADO);
+                        uniEmitter.complete(smartBillServiceModel.getBillServiceModel());
+                    } catch (ValidationWebServiceException e) {
+                        // Should not retry
+                        BillServiceModel billServiceModel = new BillServiceModel();
+                        billServiceModel.setCode(e.getSUNATErrorCode());
+                        billServiceModel.setDescription(e.getSUNATErrorMessage(MAX_STRING));
+                        billServiceModel.setStatus(BillServiceModel.Status.RECHAZADO);
 
-                uniEmitter.complete(billServiceModel);
-            } catch (InvalidXMLFileException | UnsupportedDocumentTypeException e) {
-                // Should not retry
-                uniEmitter.fail(new DocumentTypeNotSupportedException(""));
-            } catch (Throwable e) {
-                // Should retry
-                uniEmitter.fail(new SendFileToSUNATException(e));
-            }
-        });
+                        uniEmitter.complete(billServiceModel);
+                    } catch (InvalidXMLFileException | UnsupportedDocumentTypeException e) {
+                        // Should not retry
+                        uniEmitter.fail(new ReadFileException(e));
+                    } catch (Throwable e) {
+                        // Should retry
+                        uniEmitter.fail(new SendFileToSUNATException(e));
+                    }
+                });
+//                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
     public Uni<BillServiceModel> verifyTicket(String ticket, XmlContentModel xmlContentModel, XSenderRequiredData xSenderRequiredData) {

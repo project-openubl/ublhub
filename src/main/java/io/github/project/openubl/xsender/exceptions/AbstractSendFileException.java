@@ -16,15 +16,14 @@
  */
 package io.github.project.openubl.xsender.exceptions;
 
-public class DocumentTypeNotSupportedException extends Exception {
-    private final String documentType;
+public abstract class AbstractSendFileException extends Exception {
 
-    public DocumentTypeNotSupportedException(String documentType) {
-        super();
-        this.documentType = documentType;
+    public AbstractSendFileException(Throwable throwable) {
+        super(throwable);
     }
 
-    public String getDocumentType() {
-        return documentType;
+    public AbstractSendFileException(String message) {
+        super(message);
     }
+
 }

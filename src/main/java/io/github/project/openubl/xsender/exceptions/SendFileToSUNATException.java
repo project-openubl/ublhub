@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.xsender.exceptions;
 
-public class SendFileToSUNATException extends Exception {
+public class SendFileToSUNATException extends AbstractSendFileException {
     public SendFileToSUNATException(Throwable e) {
         super(e);
     }

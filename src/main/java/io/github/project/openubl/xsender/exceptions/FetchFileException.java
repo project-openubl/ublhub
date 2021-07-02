@@ -16,11 +16,7 @@
  */
 package io.github.project.openubl.xsender.exceptions;
 
-public class FetchFileException extends Exception {
-    public FetchFileException(String message) {
-        super(message);
-    }
-
+public class FetchFileException extends AbstractSendFileException {
     public FetchFileException(Throwable e) {
         super(e);
     }

@@ -16,11 +16,7 @@
  */
 package io.github.project.openubl.xsender.exceptions;
 
-public class NoCompanyWithRucException extends Exception {
-    public NoCompanyWithRucException(Throwable e) {
-        super(e);
-    }
-
+public class NoCompanyWithRucException extends AbstractSendFileException {
     public NoCompanyWithRucException(String message) {
         super(message);
     }

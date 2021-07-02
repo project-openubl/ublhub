@@ -16,12 +16,20 @@
  */
 package io.github.project.openubl.xsender.exceptions;
 
-public class ReadFileException extends Exception {
+public class ReadFileException extends AbstractSendFileException {
+    private final String documentType;
+
     public ReadFileException(Throwable e) {
         super(e);
+        documentType = null;
     }
 
-    public ReadFileException(String message) {
-        super(message);
+    public ReadFileException(String documentType) {
+        super("DocumentType=" + documentType + " not supported");
+        this.documentType = documentType;
+    }
+
+    public String getDocumentType() {
+        return documentType;
     }
 }

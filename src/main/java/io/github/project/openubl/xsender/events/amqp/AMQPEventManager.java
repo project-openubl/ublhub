@@ -27,12 +27,16 @@ import io.github.project.openubl.xsender.models.ErrorType;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.xsender.sender.XSenderMutiny;
+import io.github.project.openubl.xsender.sender.XSenderRequiredData;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.reactive.messaging.amqp.OutgoingAmqpMetadata;
 import org.eclipse.microprofile.reactive.messaging.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -83,6 +87,30 @@ public class AMQPEventManager implements EventManager {
         return Uni.createFrom().item(xmlContentModel);
     }
 
+    protected OutgoingAmqpMetadata createScheduledMessage(Date scheduleDelivery) {
+        return OutgoingAmqpMetadata.builder()
+                .withMessageAnnotations("x-opt-delivery-delay", scheduleDelivery.getTime() - Calendar.getInstance().getTimeInMillis())
+                .build();
+    }
+
+    private void handleRetry(UBLDocumentEntity documentEntity) {
+        int retries = documentEntity.retries;
+        Date scheduleDelivery = null;
+        if (retries <= 2) {
+            retries++;
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.MINUTE, (int) Math.pow(5, retries));
+            scheduleDelivery = calendar.getTime();
+        } else {
+            documentEntity.error = ErrorType.RETRY_CONSUMED;
+        }
+
+        // Result
+        documentEntity.retries = retries;
+        documentEntity.scheduledDelivery = scheduleDelivery;
+    }
+
 //    @Override
 //    public Uni<Void> sendDocumentEvent(DocumentEvent event) {
 //        return Uni.createFrom()
@@ -102,108 +130,127 @@ public class AMQPEventManager implements EventManager {
     protected Uni<Message<String>> sendFile(Message<String> inMessage) {
         return Panache
                 .withTransaction(() -> documentRepository.findById(inMessage.getPayload()))
-                .invoke(documentEntity -> documentEntity.error = null)
-                .chain(documentEntity -> filesMutiny
-                        .getFileAsBytesAfterUnzip(documentEntity.storageFile)
-                        .chain(bytes -> xSenderMutiny
-                                .getFileContent(bytes)
-                                .invoke(xmlContentModel -> {
-                                    documentEntity.fileValid = true;
+                .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + inMessage.getPayload() + " was not found"))
+                .invoke(documentEntity -> {
+                    documentEntity.error = null;
+                    documentEntity.scheduledDelivery = null;
+                    documentEntity.inProgress = false;
+                })
+                .chain(documentEntity -> {
+                    Uni<byte[]> fileBytesUni = filesMutiny.getFileAsBytesAfterUnzip(documentEntity.storageFile)
+                            .onFailure(throwable -> throwable instanceof FetchFileException).invoke(throwable -> {
+                                documentEntity.error = ErrorType.FETCH_FILE;
+                            });
 
-                                    documentEntity.ruc = xmlContentModel.getRuc();
-                                    documentEntity.documentID = xmlContentModel.getDocumentID();
-                                    documentEntity.documentType = xmlContentModel.getDocumentType();
-                                    documentEntity.voidedLineDocumentTypeCode = xmlContentModel.getVoidedLineDocumentTypeCode();
-                                })
+                    return fileBytesUni
+                            .chain(fileBytes -> {
+                                Uni<XmlContentModel> xmlContentUni = xSenderMutiny.getFileContent(fileBytes)
+                                        .invoke(xmlContentModel -> {
+                                            documentEntity.fileValid = true;
 
-                                .chain(xmlContentModel -> xSenderMutiny.getXSenderRequiredData(documentEntity.namespace, xmlContentModel.getRuc()))
-                                .chain(xSenderRequiredData -> xSenderMutiny.sendFile(bytes, xSenderRequiredData))
-                                .invoke(billServiceModel -> {
-                                    documentEntity.sunatStatus = billServiceModel.getStatus() != null ? billServiceModel.getStatus().toString() : null;
-                                    documentEntity.sunatCode = billServiceModel.getCode();
-                                    documentEntity.sunatDescription = billServiceModel.getDescription();
-                                    documentEntity.sunatTicket = billServiceModel.getTicket();
-                                    documentEntity.sunatNotes = billServiceModel.getNotes() != null ? new HashSet<>(billServiceModel.getNotes()) : null;
-                                })
-                                .map(BillServiceModel::getCdr)
-                                .onItem().ifNotNull().transformToUni(cdrBytes -> filesMutiny.createFile(cdrBytes, false))
-                                .invoke(cdrId -> documentEntity.storageCdr = cdrId)
-                                .map(unused -> documentEntity)
+                                            documentEntity.ruc = xmlContentModel.getRuc();
+                                            documentEntity.documentID = xmlContentModel.getDocumentID();
+                                            documentEntity.documentType = xmlContentModel.getDocumentType();
+                                            documentEntity.voidedLineDocumentTypeCode = xmlContentModel.getVoidedLineDocumentTypeCode();
+                                        })
+                                        .onFailure(throwable -> throwable instanceof ReadFileException).invoke(throwable -> {
+                                            ReadFileException readFileException = (ReadFileException) throwable;
 
-                                .onFailure().recoverWithItem(throwable -> {
-                                    if (throwable instanceof FetchFileException) {
-                                        documentEntity.error = ErrorType.FETCH_FILE;
-                                    } else if (throwable instanceof ReadFileException) {
-                                        documentEntity.error = ErrorType.READ_FILE;
-                                        documentEntity.fileValid = false;
-                                    } else if (throwable instanceof DocumentTypeNotSupportedException) {
-                                        documentEntity.error = ErrorType.UNSUPPORTED_DOCUMENT_TYPE;
-                                        documentEntity.fileValid = false;
-                                        documentEntity.documentType = ((DocumentTypeNotSupportedException) throwable).getDocumentType();
-                                    } else if (throwable instanceof NoCompanyWithRucException) {
-                                        documentEntity.error = ErrorType.COMPANY_NOT_FOUND;
-                                    } else if (throwable instanceof SendFileToSUNATException) {
-                                        documentEntity.error = ErrorType.SEND_FILE;
-                                    } else if (throwable instanceof SaveFileException) {
-                                        documentEntity.error = ErrorType.SAVE_CRD_FILE;
-                                    } else {
-                                        documentEntity.error = ErrorType.UNKNOWN;
-                                    }
+                                            documentEntity.fileValid = false;
+                                            documentEntity.documentType = readFileException.getDocumentType();
+                                            documentEntity.error = readFileException.getDocumentType() == null ? ErrorType.READ_FILE : ErrorType.UNSUPPORTED_DOCUMENT_TYPE;
+                                        });
 
-                                    return documentEntity;
-                                })
-                        )
-                )
+                                Uni<XSenderRequiredData> xSenderRequiredDataUni = xmlContentUni
+                                        .chain(xmlContentModel -> xSenderMutiny.getXSenderRequiredData(documentEntity.namespace, xmlContentModel.getRuc()))
+                                        .onFailure(throwable -> throwable instanceof NoCompanyWithRucException).invoke(throwable -> {
+                                            documentEntity.error = ErrorType.COMPANY_NOT_FOUND;
+                                        });
+
+                                Uni<BillServiceModel> billServiceModelUni = xSenderRequiredDataUni
+                                        .chain(xSenderRequiredData -> xSenderMutiny.sendFile(fileBytes, xSenderRequiredData))
+                                        .invoke(billServiceModel -> {
+                                            documentEntity.sunatStatus = billServiceModel.getStatus() != null ? billServiceModel.getStatus().toString() : null;
+                                            documentEntity.sunatCode = billServiceModel.getCode();
+                                            documentEntity.sunatDescription = billServiceModel.getDescription();
+                                            documentEntity.sunatTicket = billServiceModel.getTicket();
+                                            documentEntity.sunatNotes = billServiceModel.getNotes() != null ? new HashSet<>(billServiceModel.getNotes()) : null;
+                                        })
+                                        .onFailure(throwable -> throwable instanceof SendFileToSUNATException).invoke(throwable -> {
+                                            documentEntity.error = ErrorType.SEND_FILE;
+                                        });
+
+                                Uni<String> cdrUni = billServiceModelUni
+                                        .map(BillServiceModel::getCdr)
+                                        .onItem().ifNotNull().transformToUni(cdrBytes -> filesMutiny.createFile(cdrBytes, false))
+                                        .invoke(cdrId -> documentEntity.storageCdr = cdrId)
+                                        .onFailure(throwable -> throwable instanceof SaveFileException).invoke(throwable -> {
+                                            documentEntity.error = ErrorType.SAVE_CRD_FILE;
+                                        });
+
+                                return cdrUni.map(billServiceModel -> documentEntity);
+                            })
+                            .onFailure(throwable -> throwable instanceof AbstractSendFileException).recoverWithUni(throwable -> {
+                                Uni<UBLDocumentEntity> result = Uni.createFrom().item(documentEntity);
+                                if (throwable instanceof SendFileToSUNATException) {
+                                    return result.invoke(() -> {
+                                        handleRetry(documentEntity);
+                                        if (documentEntity.scheduledDelivery != null) {
+                                            OutgoingAmqpMetadata outgoingAmqpMetadata = createScheduledMessage(documentEntity.scheduledDelivery);
+                                            Message<String> scheduledMessage = Message
+                                                    .of(inMessage.getPayload())
+                                                    .withMetadata(Metadata.of(outgoingAmqpMetadata));
+                                            documentEmitter.send(scheduledMessage);
+                                        }
+                                    });
+                                } else {
+                                    return result;
+                                }
+                            });
+                })
                 .chain(documentEntity -> Panache
                         .withTransaction(() -> {
-                            documentEntity.inProgress = documentEntity.sunatTicket != null;
+                            documentEntity.inProgress = documentEntity.sunatTicket != null && documentEntity.error == null;
                             return documentRepository.persist(documentEntity);
                         })
                         .map(unused -> documentEntity)
                 )
                 .chain(documentEntity -> {
-                    if (documentEntity.error == ErrorType.FETCH_FILE) {
-                        return Uni.createFrom()
-                                .completionStage(
-                                        inMessage.nack(new FetchFileException(ErrorType.FETCH_FILE.getMessage()))
-                                )
-                                .map(unused -> null);
-                    } else if (documentEntity.error == ErrorType.READ_FILE) {
-                        return Uni.createFrom()
-                                .completionStage(inMessage.ack())
-                                .map(unused -> null);
-                    } else if (documentEntity.error == ErrorType.UNSUPPORTED_DOCUMENT_TYPE) {
-                        return Uni.createFrom()
-                                .completionStage(inMessage.ack())
-                                .map(unused -> null);
-                    } else if (documentEntity.error == ErrorType.COMPANY_NOT_FOUND) {
-                        return Uni.createFrom()
-                                .completionStage(inMessage.ack())
-                                .map(unused -> null);
-                    } else if (documentEntity.error == ErrorType.SEND_FILE) {
-                        // retry
-                        return Uni.createFrom()
-                                .completionStage(inMessage.ack())
-                                .map(unused -> null);
-                    } else if (documentEntity.error == ErrorType.SAVE_CRD_FILE) {
-                        // retry
-                        return Uni.createFrom()
-                                .completionStage(
-                                        inMessage.nack(new FetchFileException(ErrorType.SAVE_CRD_FILE.getMessage()))
-                                )
-                                .map(unused -> null);
-                    }
+                    Uni<Message<String>> result;
 
-                    if (documentEntity.sunatTicket != null) {
-                        return Uni.createFrom().item(Message.of(documentEntity.id)
-                                        .withAck(inMessage::ack)
-//                                .withNack(throwable -> withNack(documentEntity.id))
-                        );
+                    if (documentEntity.error != null) {
+                        switch (documentEntity.error) {
+                            case FETCH_FILE:
+                                result = Uni.createFrom()
+                                        .completionStage(inMessage.nack(new IllegalStateException("Uncontrolled error=" + documentEntity.error)))
+                                        .chain(unused -> Uni.createFrom().nullItem());
+                                break;
+                            case READ_FILE:
+                            case UNSUPPORTED_DOCUMENT_TYPE:
+                            case COMPANY_NOT_FOUND:
+                            case SEND_FILE:
+                                result = Uni.createFrom()
+                                        .completionStage(inMessage.ack())
+                                        .chain(unused -> Uni.createFrom().nullItem());
+                                break;
+                            case SAVE_CRD_FILE:
+                                result = Uni.createFrom()
+                                        .completionStage(inMessage.nack(new SaveFileException(ErrorType.SAVE_CRD_FILE.getMessage())))
+                                        .chain(unused -> Uni.createFrom().nullItem());
+                                break;
+                            default:
+                                throw new IllegalStateException("Uncontrolled error=" + documentEntity.error);
+                        }
                     } else {
-                        return Uni.createFrom()
-                                .completionStage(inMessage.ack())
-                                .map(unused -> null);
+                        if (documentEntity.sunatTicket != null) {
+                            result = Uni.createFrom().item(inMessage);
+                        } else {
+                            result = Uni.createFrom()
+                                    .completionStage(inMessage.ack())
+                                    .chain(unused -> Uni.createFrom().nullItem());
+                        }
                     }
+                    return result;
                 });
     }
 

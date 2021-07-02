@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.xsender.exceptions;
 
-public class SaveFileException extends Exception {
+public class SaveFileException extends AbstractSendFileException {
     public SaveFileException(String msg) {
         super(msg);
     }

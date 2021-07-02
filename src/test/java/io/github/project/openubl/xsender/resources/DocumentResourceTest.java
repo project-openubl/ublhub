@@ -174,11 +174,11 @@ public class DocumentResourceTest extends BaseKeycloakTest {
     }
 
     @Test
-    public void updoadXML_byNotNsOwnerShouldNotBeAllowed() throws URISyntaxException {
+    public void uploadXML_byNotNsOwnerShouldNotBeAllowed() throws URISyntaxException {
         // Given
         String nsId = "3";
 
-        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_12345678912.xml").toURI();
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_alterado_12345678912.xml").toURI();
         File file = new File(fileURI);
 
         // When
@@ -193,7 +193,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
     }
 
     @Test
-    public void updoadInvalidImageFile_shouldSetErrorStatus() throws URISyntaxException {
+    public void uploadInvalidImageFile_shouldSetErrorStatus() throws URISyntaxException {
         // Given
         String nsId = "1";
 
@@ -219,7 +219,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage());
+            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.READ_FILE.getMessage());
         });
 
         given().auth().oauth2(getAccessToken("alice"))
@@ -229,7 +229,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
-                        "error", is(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage()),
+                        "error", is(ErrorType.READ_FILE.getMessage()),
                         "scheduledDelivery", is(nullValue()),
                         "retryCount", is(0),
                         "fileContentValid", is(false),
@@ -239,53 +239,203 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                 );
     }
 
-    @Test
-    public void updoadInvalidXMLFile_shouldSetErrorStatus() throws URISyntaxException {
-        // Given
-        String nsId = "1";
+//    @Test
+//    public void uploadInvalidXMLFile_shouldSetErrorStatus() throws URISyntaxException {
+//        // Given
+//        String nsId = "1";
+//
+//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/maven.xml").toURI();
+//        File file = new File(fileURI);
+//
+//        // When
+//        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+//                .accept(ContentType.JSON)
+//                .multiPart("file", file, "application/xml")
+//                .when()
+//                .post("/" + nsId + "/documents/upload")
+//                .then()
+//                .statusCode(200)
+//                .extract().body().as(DocumentRepresentation.class);
+//
+//        // Then
+//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+//            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+//                    .contentType(ContentType.JSON)
+//                    .when()
+//
+//                    .get("/" + nsId + "/documents/" + response.getId())
+//                    .then()
+//                    .statusCode(200)
+//                    .extract().body().as(DocumentRepresentation.class);
+//            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage());
+//        });
+//
+//        given().auth().oauth2(getAccessToken("alice"))
+//                .contentType(ContentType.JSON)
+//                .when()
+//                .get("/" + nsId + "/documents/" + response.getId())
+//                .then()
+//                .statusCode(200)
+//                .body("inProgress", is(false),
+//                        "error", is(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage()),
+//                        "scheduledDelivery", is(nullValue()),
+//                        "retryCount", is(0),
+//                        "fileContentValid", is(false),
+//                        "fileContent.ruc", is(nullValue()),
+//                        "fileContent.documentID", is(nullValue()),
+//                        "fileContent.documentType", is("project")
+//                        );
+//    }
+//
+//    @Test
+//    public void uploadValidXMLFile_noCompanyRuc_shouldSetErrorStatus() throws URISyntaxException {
+//        // Given
+//        String nsId = "1";
+//
+//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_alterado_22222222222.xml").toURI();
+//        File file = new File(fileURI);
+//
+//        // When
+//        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+//                .accept(ContentType.JSON)
+//                .multiPart("file", file, "application/xml")
+//                .when()
+//                .post("/" + nsId + "/documents/upload")
+//                .then()
+//                .statusCode(200)
+//                .extract().body().as(DocumentRepresentation.class);
+//
+//        // Then
+//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+//            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+//                    .contentType(ContentType.JSON)
+//                    .when()
+//
+//                    .get("/" + nsId + "/documents/" + response.getId())
+//                    .then()
+//                    .statusCode(200)
+//                    .extract().body().as(DocumentRepresentation.class);
+//            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.COMPANY_NOT_FOUND.getMessage());
+//        });
+//
+//        given().auth().oauth2(getAccessToken("alice"))
+//                .contentType(ContentType.JSON)
+//                .when()
+//                .get("/" + nsId + "/documents/" + response.getId())
+//                .then()
+//                .statusCode(200)
+//                .body("inProgress", is(false),
+//                        "error", is(ErrorType.COMPANY_NOT_FOUND.getMessage()),
+//                        "scheduledDelivery", is(nullValue()),
+//                        "retryCount", is(0),
+//                        "fileContentValid", is(true),
+//                        "fileContent.ruc", is("22222222222"),
+//                        "fileContent.documentID", is("F001-1"),
+//                        "fileContent.documentType", is("Invoice")
+//                );
+//    }
 
-        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/maven.xml").toURI();
-        File file = new File(fileURI);
+//    @Test
+//    public void updoadValidXMLFile_existingCompanyRuc_wrongUrls_shouldHaveError() throws URISyntaxException {
+//        // Given
+//        String nsId = "1";
+//
+//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_11111111111.xml").toURI();
+//        File file = new File(fileURI);
+//
+//        // When
+//        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+//                .accept(ContentType.JSON)
+//                .multiPart("file", file, "application/xml")
+//                .when()
+//                .post("/" + nsId + "/documents/upload")
+//                .then()
+//                .statusCode(200)
+//                .extract().body().as(DocumentRepresentation.class);
+//
+//        // Then
+//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+//            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+//                    .contentType(ContentType.JSON)
+//                    .when()
+//
+//                    .get("/" + nsId + "/documents/" + response.getId())
+//                    .then()
+//                    .statusCode(200)
+//                    .extract().body().as(DocumentRepresentation.class);
+//            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.SEND_FILE.getMessage());
+//        });
+//
+//        given().auth().oauth2(getAccessToken("alice"))
+//                .contentType(ContentType.JSON)
+//                .when()
+//                .get("/" + nsId + "/documents/" + response.getId())
+//                .then()
+//                .statusCode(200)
+//                .body("inProgress", is(false),
+//                        "error", is(ErrorType.SEND_FILE.getMessage()),
+//                        "scheduledDelivery", is(notNullValue()),
+//                        "retryCount", is(1),
+//                        "fileContentValid", is(true),
+//                        "fileContent.ruc", is("11111111111"),
+//                        "fileContent.documentID", is("F001-1"),
+//                        "fileContent.documentType", is("Invoice")
+//                );
+//    }
 
-        // When
-        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
-                .accept(ContentType.JSON)
-                .multiPart("file", file, "application/xml")
-                .when()
-                .post("/" + nsId + "/documents/upload")
-                .then()
-                .statusCode(200)
-                .extract().body().as(DocumentRepresentation.class);
-
-        // Then
-        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
-                    .contentType(ContentType.JSON)
-                    .when()
-
-                    .get("/" + nsId + "/documents/" + response.getId())
-                    .then()
-                    .statusCode(200)
-                    .extract().body().as(DocumentRepresentation.class);
-            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage());
-        });
-
-        given().auth().oauth2(getAccessToken("alice"))
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/" + nsId + "/documents/" + response.getId())
-                .then()
-                .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage()),
-                        "scheduledDelivery", is(nullValue()),
-                        "retryCount", is(0),
-                        "fileContentValid", is(false),
-                        "fileContent.ruc", is(nullValue()),
-                        "fileContent.documentID", is(nullValue()),
-                        "fileContent.documentType", is("project")
-                        );
-    }
+//    @Test
+//    public void updoadValidXMLFile_existingCompanyRuc_validURLs_shouldNotHaveError() throws URISyntaxException {
+//        // Given
+//        String nsId = "1";
+//
+//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_alterado_12345678912.xml").toURI();
+//        File file = new File(fileURI);
+//
+//        // When
+//        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+//                .accept(ContentType.JSON)
+//                .multiPart("file", file, "application/xml")
+//                .when()
+//                .post("/" + nsId + "/documents/upload")
+//                .then()
+//                .statusCode(200)
+//                .body("inProgress", is(true))
+//                .extract().body().as(DocumentRepresentation.class);
+//
+//        // Then
+//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+//            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+//                    .contentType(ContentType.JSON)
+//                    .when()
+//
+//                    .get("/" + nsId + "/documents/" + response.getId())
+//                    .then()
+//                    .statusCode(200)
+//                    .extract().body().as(DocumentRepresentation.class);
+//            return !watchResponse.isInProgress();
+//        });
+//
+//        given().auth().oauth2(getAccessToken("alice"))
+//                .contentType(ContentType.JSON)
+//                .when()
+//                .get("/" + nsId + "/documents/" + response.getId())
+//                .then()
+//                .statusCode(200)
+//                .body("inProgress", is(false),
+//                        "error", is(nullValue()),
+//                        "scheduledDelivery", is(nullValue()),
+//                        "retryCount", is(0),
+//                        "fileContentValid", is(true),
+//                        "fileContent.ruc", is("12345678912"),
+//                        "fileContent.documentID", is("F001-1"),
+//                        "fileContent.documentType", is("Invoice"),
+//                        "sunat.code", is("11"),
+//                        "sunat.ticket", is(nullValue()),
+//                        "sunat.status", is("RECHAZADO"),
+//                        "sunat.description", is("ss"),
+//                        "sunat.hasCdr", is(true)
+//                );
+//    }
 
 }
 

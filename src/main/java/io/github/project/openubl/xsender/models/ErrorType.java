@@ -17,9 +17,9 @@
 package io.github.project.openubl.xsender.models;
 
 public enum ErrorType {
-    FETCH_FILE("No se pudo extraer el archivo del servidor"),
-    READ_FILE("Documento no válido"),
-    UNSUPPORTED_DOCUMENT_TYPE("Documento no válido"),
+    FETCH_FILE("No se pudo recuperar el archivo"),
+    READ_FILE("Documento no pudo ser parseado"),
+    UNSUPPORTED_DOCUMENT_TYPE("Tipo de documento no válido"),
     COMPANY_NOT_FOUND("No se pudo encontrar una empresa para el archivo"),
     SEND_FILE("No se pudo enviar el archivo a la SUNAT"),
     SAVE_CRD_FILE("No se pudo guardar el CDR"),

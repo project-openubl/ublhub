@@ -46,6 +46,7 @@ create table ubl_document
     sunat_ticket                   varchar(255),
     voided_line_document_type_code varchar(255),
     namespace_id                   varchar(255),
+    version                        int4,
     primary key (id)
 );
 
