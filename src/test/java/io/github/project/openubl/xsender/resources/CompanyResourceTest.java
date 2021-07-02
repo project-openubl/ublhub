@@ -23,18 +23,19 @@ import io.github.project.openubl.xsender.idm.CompanyRepresentationBuilder;
 import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
 import io.github.project.openubl.xsender.resources.common.QuarkusDataSourceProvider;
-import io.github.project.openubl.xsender.resources.config.*;
+import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
+import io.github.project.openubl.xsender.resources.config.KeycloakServer;
+import io.github.project.openubl.xsender.resources.config.SenderServer;
+import io.github.project.openubl.xsender.resources.config.StorageServer;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.*;
 
-@Disabled
 @QuarkusTest
 @QuarkusTestResource(KeycloakServer.class)
 @QuarkusTestResource(StorageServer.class)
