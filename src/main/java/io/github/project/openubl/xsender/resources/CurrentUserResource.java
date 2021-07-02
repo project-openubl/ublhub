@@ -60,15 +60,18 @@ public class CurrentUserResource {
     public Uni<Response> createNameSpace(@NotNull @Valid NamespaceRepresentation rep) {
         return namespaceRepository.findByName(rep.getName())
                 .onItem().ifNotNull().transform(entity -> Response.status(Response.Status.CONFLICT).build())
-                .onItem().ifNull().switchTo(() -> Panache.withTransaction(() -> {
-                            NamespaceEntity namespaceEntity = new NamespaceEntity();
+                .onItem().ifNull().switchTo(() -> Panache
+                        .withTransaction(() -> {
+                            final NamespaceEntity namespaceEntity = new NamespaceEntity();
                             namespaceEntity.id = UUID.randomUUID().toString();
                             namespaceEntity.name = rep.getName();
                             namespaceEntity.description = rep.getDescription();
                             namespaceEntity.createdOn = new Date();
                             namespaceEntity.owner = userIdentity.getUsername();
-                            return namespaceEntity.persist().map(unused -> namespaceEntity);
-                        }).map(namespaceEntity -> Response.ok()
+
+                            return namespaceRepository.persist(namespaceEntity);
+                        })
+                        .map(namespaceEntity -> Response.ok()
                                 .entity(EntityToRepresentation.toRepresentation(namespaceEntity))
                                 .build()
                         )
