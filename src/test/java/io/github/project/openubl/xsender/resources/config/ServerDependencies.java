@@ -25,8 +25,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @QuarkusTestResource(KeycloakServer.class)
-@QuarkusTestResource(StorageServer.class)
-@QuarkusTestResource(SenderServer.class)
+@QuarkusTestResource(MinioServer.class)
+@QuarkusTestResource(ArtemisServer.class)
+@QuarkusTestResource(PostgreSQLServer.class)
 @Stereotype
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

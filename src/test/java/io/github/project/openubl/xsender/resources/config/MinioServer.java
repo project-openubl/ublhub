@@ -23,7 +23,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import java.util.HashMap;
 import java.util.Map;
 
-public class StorageServer implements QuarkusTestResourceLifecycleManager {
+public class MinioServer implements QuarkusTestResourceLifecycleManager {
 
     private GenericContainer<?> minio;
 

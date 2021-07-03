@@ -23,7 +23,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SenderServer implements QuarkusTestResourceLifecycleManager {
+public class ArtemisServer implements QuarkusTestResourceLifecycleManager {
 
     private GenericContainer<?> artemis;
 

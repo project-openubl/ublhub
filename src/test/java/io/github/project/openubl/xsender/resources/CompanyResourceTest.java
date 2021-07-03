@@ -32,8 +32,8 @@ import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
 @QuarkusTestResource(KeycloakServer.class)
-@QuarkusTestResource(StorageServer.class)
-@QuarkusTestResource(SenderServer.class)
+@QuarkusTestResource(MinioServer.class)
+@QuarkusTestResource(ArtemisServer.class)
 @QuarkusTestResource(PostgreSQLServer.class)
 @TestHTTPEndpoint(CompanyResource.class)
 public class CompanyResourceTest extends BaseKeycloakTest {
