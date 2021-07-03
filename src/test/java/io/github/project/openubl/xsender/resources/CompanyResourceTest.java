@@ -16,17 +16,11 @@
  */
 package io.github.project.openubl.xsender.resources;
 
-import com.radcortez.flyway.test.annotation.DataSource;
-import com.radcortez.flyway.test.annotation.FlywayTest;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.CompanyRepresentationBuilder;
 import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
-import io.github.project.openubl.xsender.resources.common.QuarkusDataSourceProvider;
-import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
-import io.github.project.openubl.xsender.resources.config.KeycloakServer;
-import io.github.project.openubl.xsender.resources.config.SenderServer;
-import io.github.project.openubl.xsender.resources.config.StorageServer;
+import io.github.project.openubl.xsender.resources.config.*;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -40,8 +34,8 @@ import static org.hamcrest.CoreMatchers.*;
 @QuarkusTestResource(KeycloakServer.class)
 @QuarkusTestResource(StorageServer.class)
 @QuarkusTestResource(SenderServer.class)
+@QuarkusTestResource(PostgreSQLServer.class)
 @TestHTTPEndpoint(CompanyResource.class)
-@FlywayTest(value = @DataSource(QuarkusDataSourceProvider.class))
 public class CompanyResourceTest extends BaseKeycloakTest {
 
     @Test
