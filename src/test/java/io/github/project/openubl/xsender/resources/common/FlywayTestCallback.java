@@ -43,9 +43,9 @@ public class FlywayTestCallback implements QuarkusTestBeforeEachCallback, Quarku
 
     private Flyway flyway(final QuarkusTestMethodContext context) {
         Config config = ConfigProvider.getConfig();
-        String username = config.getConfigValue("quarkus.datasource.username").getValue();
-        String password = config.getConfigValue("quarkus.datasource.password").getValue();
-        String reactiveUrl = config.getConfigValue("quarkus.datasource.reactive.url").getValue();
+        String username = config.getValue("quarkus.datasource.username", String.class);
+        String password = config.getValue("quarkus.datasource.password", String.class);
+        String reactiveUrl = config.getValue("quarkus.datasource.reactive.url", String.class);
         String jdbUrl = reactiveUrl.replaceFirst("vertx-reactive", "jdbc");
 
         // Flyway
