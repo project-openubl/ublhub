@@ -39,16 +39,15 @@
         <!--Quarkus-->
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
-        <quarkus.platform.version>2.0.0.Final</quarkus.platform.version>
-
+        <quarkus.platform.version>1.13.7.Final</quarkus.platform.version>
         <!--plugings-->
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
         <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
 
         <!--libs-->
         <xsender-lib.version>3.0.3.Final</xsender-lib.version>
-        <testcontainers.version>1.15.2</testcontainers.version>
-        <awaitility.version>4.0.3</awaitility.version>
+        <testcontainers.version>1.15.3</testcontainers.version>
+        <awaitility.version>4.1.0</awaitility.version>
         <keycloak.version>14.0.0</keycloak.version>
         <postgresql.version>13.1</postgresql.version>
 
@@ -122,10 +121,14 @@
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-core</artifactId>
-            <version>10.0.2</version>
+            <version>${keycloak.version}</version>
         </dependency>
 
         <!--Quarkus-->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-arc</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-reactive-jackson</artifactId>

@@ -19,7 +19,6 @@ package io.github.project.openubl.xsender.resources.config;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.util.Collections;
@@ -27,9 +26,6 @@ import java.util.Map;
 
 public class KeycloakServer implements QuarkusTestResourceLifecycleManager {
 
-    public static final Network network = Network.newNetwork();
-
-    public static final String NETWORK_ALIAS = "keycloak";
     public static final int CONTAINER_PORT = 8080;
 
     private GenericContainer<?> keycloak;
@@ -37,7 +33,6 @@ public class KeycloakServer implements QuarkusTestResourceLifecycleManager {
     @Override
     public Map<String, String> start() {
         keycloak = new GenericContainer<>("quay.io/keycloak/keycloak:" + System.getProperty("keycloak.version", "14.0.0"))
-                .withNetworkAliases(NETWORK_ALIAS)
                 .withExposedPorts(CONTAINER_PORT)
                 .withEnv("DB_VENDOR", "H2")
                 .withEnv("KEYCLOAK_USER", "admin")
@@ -58,7 +53,6 @@ public class KeycloakServer implements QuarkusTestResourceLifecycleManager {
 
     @Override
     public void stop() {
-        network.close();
         keycloak.stop();
     }
 }

@@ -106,13 +106,13 @@ public class DocumentResource {
                 // Events
                 .chain(documentEntity -> eventManager
                         .sendDocumentToSUNAT(documentEntity.id)
-                        .map(unused -> Response.ok()
-                                .entity(EntityToRepresentation.toRepresentation(documentEntity))
-                                .build()
-                        )
+                        .map(unused -> documentEntity)
                 )
 
-
+                .map(documentEntity -> Response.ok()
+                        .entity(EntityToRepresentation.toRepresentation(documentEntity))
+                        .build()
+                )
                 .onFailure(throwable -> throwable instanceof NoNamespaceException).recoverWithItem(Response.status(Response.Status.NOT_FOUND).build())
                 .onFailure().recoverWithItem(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
     }

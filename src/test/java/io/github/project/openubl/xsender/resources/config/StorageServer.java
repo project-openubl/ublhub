@@ -29,7 +29,7 @@ public class StorageServer implements QuarkusTestResourceLifecycleManager {
 
     @Override
     public Map<String, String> start() {
-        minio = new GenericContainer<>("minio/minio:RELEASE.2021-03-17T02-33-02Z")
+        minio = new GenericContainer<>("minio/minio:RELEASE.2021-06-17T00-10-46Z")
                 .withExposedPorts(9000)
                 .withEnv("MINIO_ACCESS_KEY", "BQA2GEXO711FVBVXDWKM")
                 .withEnv("MINIO_SECRET_KEY", "uvgz3LCwWM3e400cDkQIH/y1Y4xgU4iV91CwFSPC")

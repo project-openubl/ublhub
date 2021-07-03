@@ -69,7 +69,7 @@ public class CurrentUserResource {
                             namespaceEntity.createdOn = new Date();
                             namespaceEntity.owner = userIdentity.getUsername();
 
-                            return namespaceRepository.persist(namespaceEntity);
+                            return namespaceRepository.persist(namespaceEntity).map(unused -> namespaceEntity);
                         })
                         .map(namespaceEntity -> Response.ok()
                                 .entity(EntityToRepresentation.toRepresentation(namespaceEntity))
