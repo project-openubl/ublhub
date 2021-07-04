@@ -42,10 +42,14 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
         ).firstResult();
     }
 
-    public Uni<CompanyEntity> findByRuc(NamespaceEntity namespace, String ruc) {
+    public Uni<CompanyEntity> findByRuc(String namespaceId, String ruc) {
         return find("ruc = :ruc and namespace.id = :namespaceId",
-                Parameters.with("namespaceId", namespace.id).and("ruc", ruc).map()
+                Parameters.with("namespaceId", namespaceId).and("ruc", ruc).map()
         ).firstResult();
+    }
+
+    public Uni<CompanyEntity> findByRuc(NamespaceEntity namespace, String ruc) {
+        return findByRuc(namespace.id, ruc);
     }
 
     public UniAndGroup2<List<CompanyEntity>, Long> list(NamespaceEntity namespace, PageBean pageBean, List<SortBean> sortBy) {

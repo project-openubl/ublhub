@@ -65,8 +65,8 @@ public class XSenderMutiny {
         });
     }
 
-    public Uni<XSenderRequiredData> getXSenderRequiredData(NamespaceEntity namespaceEntity, String ruc) {
-        return Panache.withTransaction(() -> companyRepository.findByRuc(namespaceEntity, ruc))
+    public Uni<XSenderRequiredData> getXSenderRequiredData(String namespaceId, String ruc) {
+        return Panache.withTransaction(() -> companyRepository.findByRuc(namespaceId, ruc))
                 .onItem().ifNotNull().transform(companyEntity -> new XSenderRequiredData(companyEntity.sunatUrls, companyEntity.sunatCredentials))
                 .onItem().ifNull().failWith(() -> new NoCompanyWithRucException("No company with ruc found"));
     }

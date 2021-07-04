@@ -279,56 +279,56 @@ public class DocumentResourceTest extends BaseKeycloakTest {
                         "fileContent.ruc", is(nullValue()),
                         "fileContent.documentID", is(nullValue()),
                         "fileContent.documentType", is("project")
-                        );
+                );
     }
 
-//    @Test
-//    public void uploadValidXMLFile_noCompanyRuc_shouldSetErrorStatus() throws URISyntaxException {
-//        // Given
-//        String nsId = "1";
-//
-//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_alterado_22222222222.xml").toURI();
-//        File file = new File(fileURI);
-//
-//        // When
-//        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
-//                .accept(ContentType.JSON)
-//                .multiPart("file", file, "application/xml")
-//                .when()
-//                .post("/" + nsId + "/documents/upload")
-//                .then()
-//                .statusCode(200)
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//
-//                    .get("/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.COMPANY_NOT_FOUND.getMessage());
-//        });
-//
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("inProgress", is(false),
-//                        "error", is(ErrorType.COMPANY_NOT_FOUND.getMessage()),
-//                        "scheduledDelivery", is(nullValue()),
-//                        "retryCount", is(0),
-//                        "fileContentValid", is(true),
-//                        "fileContent.ruc", is("22222222222"),
-//                        "fileContent.documentID", is("F001-1"),
-//                        "fileContent.documentType", is("Invoice")
-//                );
-//    }
+    @Test
+    public void uploadValidXMLFile_noCompanyRuc_shouldSetErrorStatus() throws URISyntaxException {
+        // Given
+        String nsId = "1";
+
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_alterado_22222222222.xml").toURI();
+        File file = new File(fileURI);
+
+        // When
+        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+                .accept(ContentType.JSON)
+                .multiPart("file", file, "application/xml")
+                .when()
+                .post("/" + nsId + "/documents/upload")
+                .then()
+                .statusCode(200)
+                .extract().body().as(DocumentRepresentation.class);
+
+        // Then
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+                    .contentType(ContentType.JSON)
+                    .when()
+
+                    .get("/" + nsId + "/documents/" + response.getId())
+                    .then()
+                    .statusCode(200)
+                    .extract().body().as(DocumentRepresentation.class);
+            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.COMPANY_NOT_FOUND.getMessage());
+        });
+
+        given().auth().oauth2(getAccessToken("alice"))
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents/" + response.getId())
+                .then()
+                .statusCode(200)
+                .body("inProgress", is(false),
+                        "error", is(ErrorType.COMPANY_NOT_FOUND.getMessage()),
+                        "scheduledDelivery", is(nullValue()),
+                        "retryCount", is(0),
+                        "fileContentValid", is(true),
+                        "fileContent.ruc", is("22222222222"),
+                        "fileContent.documentID", is("F001-1"),
+                        "fileContent.documentType", is("Invoice")
+                );
+    }
 
 //    @Test
 //    public void updoadValidXMLFile_existingCompanyRuc_wrongUrls_shouldHaveError() throws URISyntaxException {
