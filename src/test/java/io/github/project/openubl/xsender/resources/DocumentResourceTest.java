@@ -331,7 +331,7 @@ public class DocumentResourceTest extends BaseKeycloakTest {
     }
 
 //    @Test
-//    public void updoadValidXMLFile_existingCompanyRuc_wrongUrls_shouldHaveError() throws URISyntaxException {
+//    public void uploadValidXMLFile_existingCompanyRuc_wrongUrls_shouldHaveError() throws URISyntaxException {
 //        // Given
 //        String nsId = "1";
 //

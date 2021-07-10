@@ -59,8 +59,8 @@ public class XSenderMutiny {
                 } else {
                     uniEmitter.fail(new ReadFileException(fileContent.getDocumentType()));
                 }
-            } catch (ParserConfigurationException | SAXException | IOException e) {
-                uniEmitter.fail(new ReadFileException(e));
+            } catch (Throwable e) {
+                uniEmitter.fail(new ReadFileException(null));
             }
         });
     }
@@ -110,10 +110,10 @@ public class XSenderMutiny {
                         uniEmitter.complete(billServiceModel);
                     } catch (InvalidXMLFileException | UnsupportedDocumentTypeException e) {
                         // Should not retry
-                        uniEmitter.fail(new ReadFileException(e));
+                        uniEmitter.fail(new ReadFileException(null));
                     } catch (Throwable e) {
                         // Should retry
-                        uniEmitter.fail(new SendFileToSUNATException(e));
+                        uniEmitter.fail(new SendFileToSUNATException("Could not send file"));
                     }
                 });
 //                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
@@ -149,7 +149,7 @@ public class XSenderMutiny {
 
                 uniEmitter.complete(billServiceModel);
             } catch (Throwable e) {
-                uniEmitter.fail(new SendFileToSUNATException(e));
+                uniEmitter.fail(new SendFileToSUNATException("Could not verify ticket"));
             }
         });
     }
