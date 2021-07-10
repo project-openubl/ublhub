@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Optional;
 
 @ApplicationScoped
 public class AMQPEventManager implements EventManager {
@@ -191,12 +192,15 @@ public class AMQPEventManager implements EventManager {
                                 .item(billServiceModel.getCdr())
                                 .onItem().ifNotNull().transformToUni(cdrBytes -> filesMutiny
                                         .createFile(cdrBytes, false)
+                                        .map(Optional::of)
                                         .onFailure(throwable -> throwable instanceof SaveFileException).invoke(throwable -> {
                                             documentCache.setError(ErrorType.SAVE_CRD_FILE);
                                         })
                                 )
-                                .onItem().ifNull().continueWith(() -> null)
-                                .invoke(documentCache::setCdrFileId)
+                                .onItem().ifNull().continueWith(Optional::empty)
+                                .invoke(cdrFileIdOptional -> {
+                                    documentCache.setCdrFileId(cdrFileIdOptional.orElse(null));
+                                })
                         )
 
                         .map(unused -> documentCache)

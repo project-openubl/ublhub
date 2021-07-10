@@ -16,7 +16,7 @@ values
  'https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService',
  'https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService'),
 -- Companies in namespace 2
-('33', '33333333333', 'company3', CURRENT_TIMESTAMP + INTERVAL '3 day', '2', 1, 'username3', 'password3',
+('33', '11111111111', 'company3', CURRENT_TIMESTAMP + INTERVAL '3 day', '2', 1, 'username3', 'password3',
  'http://urlFactura3', 'http://urlGuia3', 'http://urlPercepcionRetencion3'),
 -- Companies in namespace 3
 ('44', '44444444444', 'company4', CURRENT_TIMESTAMP + INTERVAL '4 day', '3', 1, 'username4', 'password4',

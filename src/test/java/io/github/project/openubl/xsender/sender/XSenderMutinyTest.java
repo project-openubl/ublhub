@@ -80,7 +80,7 @@ public class XSenderMutinyTest {
     @Test
     public void getFileContentOf_validXMLFile() throws URISyntaxException, IOException {
         // Given
-        URI uri = XSenderMutinyTest.class.getClassLoader().getResource("xml/invoice_11111111111.xml").toURI();
+        URI uri = XSenderMutinyTest.class.getClassLoader().getResource("xml/invoice_alterado_11111111111.xml").toURI();
         byte[] file = Files.readAllBytes(Paths.get(uri));
 
         // When
@@ -106,7 +106,7 @@ public class XSenderMutinyTest {
     @Test
     public void sendFile_invalidUrls() throws URISyntaxException, IOException {
         // Given
-        URI uri = XSenderMutinyTest.class.getClassLoader().getResource("xml/invoice_11111111111.xml").toURI();
+        URI uri = XSenderMutinyTest.class.getClassLoader().getResource("xml/invoice_alterado_11111111111.xml").toURI();
         byte[] file = Files.readAllBytes(Paths.get(uri));
 
         SunatUrlsEntity urls = new SunatUrlsEntity();
