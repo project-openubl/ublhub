@@ -27,6 +27,8 @@ public class DocumentCache {
     private final String storageFile;
     private final String namespaceId;
 
+    private Integer retries;
+
     private ErrorType error;
     private Boolean fileValid;
     private boolean inProgress;
@@ -200,5 +202,13 @@ public class DocumentCache {
 
     public void setCdrFileId(String cdrFileId) {
         this.cdrFileId = cdrFileId;
+    }
+
+    public Integer getRetries() {
+        return retries;
+    }
+
+    public void setRetries(Integer retries) {
+        this.retries = retries;
     }
 }

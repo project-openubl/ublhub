@@ -87,8 +87,8 @@ public class AMQPEventManager implements EventManager {
                 .build();
     }
 
-    private void handleRetry(UBLDocumentEntity documentEntity) {
-        int retries = documentEntity.retries;
+    private void handleRetry(DocumentCache document) {
+        int retries = document.getRetries();
         Date scheduleDelivery = null;
         if (retries <= 2) {
             retries++;
@@ -97,12 +97,12 @@ public class AMQPEventManager implements EventManager {
             calendar.add(Calendar.MINUTE, (int) Math.pow(5, retries));
             scheduleDelivery = calendar.getTime();
         } else {
-            documentEntity.error = ErrorType.RETRY_CONSUMED;
+            document.setError(ErrorType.RETRY_CONSUMED);
         }
 
         // Result
-        documentEntity.retries = retries;
-        documentEntity.scheduledDelivery = scheduleDelivery;
+        document.setRetries(retries);
+        document.scheduledDelivery = scheduleDelivery;
     }
 
 //    @Override
@@ -126,7 +126,11 @@ public class AMQPEventManager implements EventManager {
                 .withTransaction(() -> documentRepository
                         .findById(inMessage.getPayload())
                         .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + inMessage.getPayload() + " was not found"))
-                        .onItem().ifNotNull().transform(documentEntity -> new DocumentCache(documentEntity.id, documentEntity.storageFile, documentEntity.namespace.id))
+                        .onItem().ifNotNull().transform(documentEntity -> {
+                            DocumentCache documentCache = new DocumentCache(documentEntity.id, documentEntity.storageFile, documentEntity.namespace.id);
+                            documentCache.setRetries(documentEntity.retries);
+                            return documentCache;
+                        })
                 )
                 .invoke(documentCache -> {
                     documentCache.setError(null);
@@ -198,20 +202,18 @@ public class AMQPEventManager implements EventManager {
                         .map(unused -> documentCache)
                         .onFailure(throwable -> throwable instanceof AbstractSendFileException).recoverWithUni(throwable -> {
                             Uni<DocumentCache> result = Uni.createFrom().item(documentCache);
-//                            if (throwable instanceof SendFileToSUNATException) {
-//                                return result.invoke(() -> {
-//                                    handleRetry(documentEntity);
-//                                    if (documentEntity.scheduledDelivery != null) {
-//                                        OutgoingAmqpMetadata outgoingAmqpMetadata = createScheduledMessage(documentEntity.scheduledDelivery);
-//                                        Message<String> scheduledMessage = Message
-//                                                .of(inMessage.getPayload())
-//                                                .withMetadata(Metadata.of(outgoingAmqpMetadata));
-//                                        documentEmitter.send(scheduledMessage);
-//                                    }
-//                                });
-//                            } else {
-//                                return result;
-//                            }
+                            if (throwable instanceof SendFileToSUNATException) {
+                                result = result.invoke(() -> {
+                                    handleRetry(documentCache);
+                                    if (documentCache.getScheduledDelivery() != null) {
+                                        OutgoingAmqpMetadata outgoingAmqpMetadata = createScheduledMessage(documentCache.getScheduledDelivery());
+                                        Message<String> scheduledMessage = Message
+                                                .of(inMessage.getPayload())
+                                                .withMetadata(Metadata.of(outgoingAmqpMetadata));
+                                        documentEmitter.send(scheduledMessage);
+                                    }
+                                });
+                            }
                             return result;
                         })
                 )
@@ -223,6 +225,8 @@ public class AMQPEventManager implements EventManager {
                                     documentEntity.fileValid = documentCache.getFileValid();
                                     documentEntity.inProgress = documentCache.getSunatTicket() != null && documentCache.getError() == null;
                                     documentEntity.scheduledDelivery = documentCache.getScheduledDelivery();
+
+                                    documentEntity.retries = documentCache.getRetries();
 
                                     documentEntity.ruc = documentCache.getRuc();
                                     documentEntity.documentID = documentCache.getDocumentID();
