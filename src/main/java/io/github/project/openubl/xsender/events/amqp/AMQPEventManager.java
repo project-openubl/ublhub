@@ -166,7 +166,7 @@ public class AMQPEventManager implements EventManager {
                         )
 
                         .chain(xmlContentModel -> xSenderMutiny
-                                .getXSenderRequiredData(documentCache.getNamespaceId(), xmlContentModel.getRuc())
+                                .getWsConfig(documentCache.getNamespaceId(), xmlContentModel.getRuc())
                                 .onFailure(throwable -> throwable instanceof NoCompanyWithRucException).invoke(throwable -> {
                                     documentCache.setError(ErrorType.COMPANY_NOT_FOUND);
                                 })
@@ -275,7 +275,7 @@ public class AMQPEventManager implements EventManager {
                         }
                     } else {
                         if (documentCache.getSunatTicket() != null) {
-                            result = Uni.createFrom().item(inMessage);
+                            result = Uni.createFrom().item(Message.of(inMessage.getPayload()));
                         } else {
                             result = Uni.createFrom()
                                     .completionStage(inMessage.ack())
@@ -286,21 +286,34 @@ public class AMQPEventManager implements EventManager {
                 });
     }
 
-    @Incoming("verify-ticket-sunat-incoming")
-    @Acknowledgment(Acknowledgment.Strategy.MANUAL)
-    protected Uni<Void> verifyTicket(Message<String> inMessage) {
-        return Panache
-                .withTransaction(() -> documentRepository.findById(inMessage.getPayload()))
-                .invoke(documentEntity -> documentEntity.error = null)
-                .chain(documentEntity -> Uni.combine().all()
-                        .unis(
-                                getXmlContent(documentEntity),
-                                xSenderMutiny.getXSenderRequiredData(documentEntity.namespace.id, documentEntity.ruc)
-                        )
-                        .asTuple()
-                        .chain(tuple -> xSenderMutiny.verifyTicket(documentEntity.sunatTicket, tuple.getItem1(), tuple.getItem2()))
-                )
-                .chain(() -> Uni.createFrom().completionStage(inMessage.ack()));
-    }
+//    @Incoming("verify-ticket-sunat-incoming")
+//    @Acknowledgment(Acknowledgment.Strategy.MANUAL)
+//    protected Uni<Void> verifyTicket(Message<String> inMessage) {
+//        return Panache
+//                .withTransaction(() -> documentRepository
+//                        .findById(inMessage.getPayload())
+//                        .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + inMessage.getPayload() + " was not found"))
+//                        .onItem().ifNotNull().transform(documentEntity -> {
+//                            DocumentCache documentCache = new DocumentCache(documentEntity.id, documentEntity.storageFile, documentEntity.namespace.id);
+//                            documentCache.setRetries(documentEntity.retries);
+//                            return documentCache;
+//                        })
+//                )
+//                .invoke(documentCache -> {
+//                    documentCache.setError(null);
+//                    documentCache.setFileValid(null);
+//                    documentCache.setScheduledDelivery(null);
+//                    documentCache.setInProgress(false);
+//                })
+//                .chain(documentCache -> Uni.combine().all()
+//                        .unis(
+//                                getXmlContent(null),
+//                                xSenderMutiny.getXSenderRequiredData(documentCache.getNamespaceId(), documentCache.getRuc())
+//                        )
+//                        .asTuple()
+//                        .chain(tuple -> xSenderMutiny.verifyTicket(documentEntity.sunatTicket, tuple.getItem1(), tuple.getItem2()))
+//                )
+//                .chain(() -> Uni.createFrom().completionStage(inMessage.ack()));
+//    }
 
 }

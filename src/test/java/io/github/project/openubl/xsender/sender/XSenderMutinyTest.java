@@ -109,19 +109,16 @@ public class XSenderMutinyTest {
         URI uri = XSenderMutinyTest.class.getClassLoader().getResource("xml/invoice_alterado_11111111111.xml").toURI();
         byte[] file = Files.readAllBytes(Paths.get(uri));
 
-        SunatUrlsEntity urls = new SunatUrlsEntity();
-        urls.sunatUrlFactura = "http://url1.com";
-        urls.sunatUrlGuiaRemision = "http://url1.com";
-        urls.sunatUrlPercepcionRetencion = "http://url1.com";
-
-        SunatCredentialsEntity credentials = new SunatCredentialsEntity();
-        credentials.sunatUsername = "MODDATOS11111111111";
-        credentials.sunatPassword = "MODDATOS";
-
-        XSenderRequiredData xsenderConfig = new XSenderRequiredData(urls, credentials);
+        WsConfigCache wsConfig = WsConfigCacheBuilder.aWsConfigCache()
+                .withFacturaUrl( "http://url1.com")
+                .withGuiaUrl("http://url1.com")
+                .withPercepcionRetencionUrl("http://url1.com")
+                .withUsername("MODDATOS11111111111")
+                .withPassword("MODDATOS")
+                .build();
 
         // When
-        UniAssertSubscriber<BillServiceModel> subscriber = xSenderMutiny.sendFile(file, xsenderConfig).subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<BillServiceModel> subscriber = xSenderMutiny.sendFile(file, wsConfig).subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Then
         subscriber.assertFailedWith(SendFileToSUNATException.class, "Could not send file");
@@ -133,19 +130,16 @@ public class XSenderMutinyTest {
         URI uri = XSenderMutinyTest.class.getClassLoader().getResource("xml/invoice_alterado_12345678912.xml").toURI();
         byte[] file = Files.readAllBytes(Paths.get(uri));
 
-        SunatUrlsEntity urls = new SunatUrlsEntity();
-        urls.sunatUrlFactura = "https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService";
-        urls.sunatUrlGuiaRemision = "https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService";
-        urls.sunatUrlPercepcionRetencion = "https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService";
-
-        SunatCredentialsEntity credentials = new SunatCredentialsEntity();
-        credentials.sunatUsername = "MODDATOS11111111111";
-        credentials.sunatPassword = "MODDATOS";
-
-        XSenderRequiredData xsenderConfig = new XSenderRequiredData(urls, credentials);
+        WsConfigCache wsConfig = WsConfigCacheBuilder.aWsConfigCache()
+                .withFacturaUrl( "https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
+                .withGuiaUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
+                .withPercepcionRetencionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")
+                .withUsername("MODDATOS11111111111")
+                .withPassword("MODDATOS")
+                .build();
 
         // When
-        UniAssertSubscriber<BillServiceModel> subscriber = xSenderMutiny.sendFile(file, xsenderConfig).subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<BillServiceModel> subscriber = xSenderMutiny.sendFile(file, wsConfig).subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Then
         subscriber.assertCompleted();

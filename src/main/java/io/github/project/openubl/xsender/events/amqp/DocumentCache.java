@@ -17,7 +17,7 @@
 package io.github.project.openubl.xsender.events.amqp;
 
 import io.github.project.openubl.xsender.models.ErrorType;
-import io.github.project.openubl.xsender.sender.XSenderRequiredData;
+import io.github.project.openubl.xsender.sender.WsConfigCache;
 
 import java.util.Date;
 import java.util.Set;
@@ -48,7 +48,7 @@ public class DocumentCache {
     private byte[] file;
     private byte[] cdrFile;
     private String cdrFileId;
-    private XSenderRequiredData wsConfig;
+    private WsConfigCache wsConfig;
 
     public DocumentCache(String id, String storageFile, String namespaceId) {
         this.id = id;
@@ -180,11 +180,11 @@ public class DocumentCache {
         return namespaceId;
     }
 
-    public XSenderRequiredData getWsConfig() {
+    public WsConfigCache getWsConfig() {
         return wsConfig;
     }
 
-    public void setWsConfig(XSenderRequiredData wsConfig) {
+    public void setWsConfig(WsConfigCache wsConfig) {
         this.wsConfig = wsConfig;
     }
 

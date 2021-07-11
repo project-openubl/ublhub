@@ -30,16 +30,12 @@ import io.github.project.openubl.xsender.exceptions.NoCompanyWithRucException;
 import io.github.project.openubl.xsender.exceptions.ReadFileException;
 import io.github.project.openubl.xsender.exceptions.SendFileToSUNATException;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
-import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
 @ApplicationScoped
 public class XSenderMutiny {
@@ -65,37 +61,44 @@ public class XSenderMutiny {
         });
     }
 
-    public Uni<XSenderRequiredData> getXSenderRequiredData(String namespaceId, String ruc) {
+    public Uni<WsConfigCache> getWsConfig(String namespaceId, String ruc) {
         return Panache.withTransaction(() -> companyRepository.findByRuc(namespaceId, ruc))
-                .onItem().ifNotNull().transform(companyEntity -> new XSenderRequiredData(companyEntity.sunatUrls, companyEntity.sunatCredentials))
+                .onItem().ifNotNull().transform(companyEntity -> WsConfigCacheBuilder.aWsConfigCache()
+                        .withFacturaUrl(companyEntity.sunatUrls.sunatUrlFactura)
+                        .withGuiaUrl(companyEntity.sunatUrls.sunatUrlGuiaRemision)
+                        .withPercepcionRetencionUrl(companyEntity.sunatUrls.sunatUrlPercepcionRetencion)
+                        .withUsername(companyEntity.sunatCredentials.sunatUsername)
+                        .withPassword(companyEntity.sunatCredentials.sunatPassword)
+                        .build()
+                )
                 .onItem().ifNull().failWith(() -> new NoCompanyWithRucException("No company with ruc found"));
     }
 
-    public Uni<BillServiceModel> sendFile(byte[] file, XSenderRequiredData xSenderRequiredData) {
+    public Uni<BillServiceModel> sendFile(byte[] file, WsConfigCache wsConfig) {
         return Uni.createFrom()
                 .<BillServiceModel>emitter(uniEmitter -> {
                     CustomBillServiceConfig billServiceConfig = new CustomBillServiceConfig() {
                         @Override
                         public String getInvoiceAndNoteDeliveryURL() {
-                            return xSenderRequiredData.getUrls().sunatUrlFactura;
+                            return wsConfig.getFacturaUrl();
                         }
 
                         @Override
                         public String getPerceptionAndRetentionDeliveryURL() {
-                            return xSenderRequiredData.getUrls().sunatUrlPercepcionRetencion;
+                            return wsConfig.getPercepcionRetencionUrl();
                         }
 
                         @Override
                         public String getDespatchAdviceDeliveryURL() {
-                            return xSenderRequiredData.getUrls().sunatUrlGuiaRemision;
+                            return wsConfig.getGuiaUrl();
                         }
                     };
 
                     try {
                         SmartBillServiceModel smartBillServiceModel = CustomSmartBillServiceManager.send(
                                 file,
-                                xSenderRequiredData.getCredentials().sunatUsername,
-                                xSenderRequiredData.getCredentials().sunatPassword,
+                                wsConfig.getUsername(),
+                                wsConfig.getPassword(),
                                 billServiceConfig
                         );
 
@@ -119,22 +122,26 @@ public class XSenderMutiny {
 //                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
-    public Uni<BillServiceModel> verifyTicket(String ticket, XmlContentModel xmlContentModel, XSenderRequiredData xSenderRequiredData) {
+    public Uni<BillServiceModel> verifyTicket(
+            String ticket,
+            XmlContentModel xmlContentModel,
+            WsConfigCache wsConfig
+    ) {
         return Uni.createFrom().emitter(uniEmitter -> {
             CustomBillServiceConfig billServiceConfig = new CustomBillServiceConfig() {
                 @Override
                 public String getInvoiceAndNoteDeliveryURL() {
-                    return xSenderRequiredData.getUrls().sunatUrlFactura;
+                    return wsConfig.getFacturaUrl();
                 }
 
                 @Override
                 public String getPerceptionAndRetentionDeliveryURL() {
-                    return xSenderRequiredData.getUrls().sunatUrlPercepcionRetencion;
+                    return wsConfig.getPercepcionRetencionUrl();
                 }
 
                 @Override
                 public String getDespatchAdviceDeliveryURL() {
-                    return xSenderRequiredData.getUrls().sunatUrlGuiaRemision;
+                    return wsConfig.getGuiaUrl();
                 }
             };
 
@@ -142,8 +149,8 @@ public class XSenderMutiny {
                 BillServiceModel billServiceModel = CustomSmartBillServiceManager.getStatus(
                         ticket,
                         xmlContentModel,
-                        xSenderRequiredData.getCredentials().sunatUsername,
-                        xSenderRequiredData.getCredentials().sunatPassword,
+                        wsConfig.getUsername(),
+                        wsConfig.getPassword(),
                         billServiceConfig
                 );
 
