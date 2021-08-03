@@ -16,51 +16,52 @@
  */
 package io.github.project.openubl.xsender.sender;
 
-public class WsConfigCache {
+public final class XSenderConfigBuilder {
     private String facturaUrl;
     private String guiaUrl;
     private String percepcionRetencionUrl;
-
     private String username;
     private String password;
 
-    public String getFacturaUrl() {
-        return facturaUrl;
+    private XSenderConfigBuilder() {
     }
 
-    public void setFacturaUrl(String facturaUrl) {
+    public static XSenderConfigBuilder aXSenderConfig() {
+        return new XSenderConfigBuilder();
+    }
+
+    public XSenderConfigBuilder withFacturaUrl(String facturaUrl) {
         this.facturaUrl = facturaUrl;
+        return this;
     }
 
-    public String getGuiaUrl() {
-        return guiaUrl;
-    }
-
-    public void setGuiaUrl(String guiaUrl) {
+    public XSenderConfigBuilder withGuiaUrl(String guiaUrl) {
         this.guiaUrl = guiaUrl;
+        return this;
     }
 
-    public String getPercepcionRetencionUrl() {
-        return percepcionRetencionUrl;
-    }
-
-    public void setPercepcionRetencionUrl(String percepcionRetencionUrl) {
+    public XSenderConfigBuilder withPercepcionRetencionUrl(String percepcionRetencionUrl) {
         this.percepcionRetencionUrl = percepcionRetencionUrl;
+        return this;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
+    public XSenderConfigBuilder withUsername(String username) {
         this.username = username;
+        return this;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
+    public XSenderConfigBuilder withPassword(String password) {
         this.password = password;
+        return this;
+    }
+
+    public XSenderConfig build() {
+        XSenderConfig XSenderConfig = new XSenderConfig();
+        XSenderConfig.setFacturaUrl(facturaUrl);
+        XSenderConfig.setGuiaUrl(guiaUrl);
+        XSenderConfig.setPercepcionRetencionUrl(percepcionRetencionUrl);
+        XSenderConfig.setUsername(username);
+        XSenderConfig.setPassword(password);
+        return XSenderConfig;
     }
 }

@@ -18,11 +18,8 @@ package io.github.project.openubl.xsender.sender;
 
 import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
-import io.github.project.openubl.xsender.exceptions.NoCompanyWithRucException;
 import io.github.project.openubl.xsender.exceptions.ReadFileException;
 import io.github.project.openubl.xsender.exceptions.SendFileToSUNATException;
-import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
-import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
 import io.github.project.openubl.xsender.resources.config.ArtemisServer;
 import io.github.project.openubl.xsender.resources.config.KeycloakServer;
 import io.github.project.openubl.xsender.resources.config.MinioServer;
@@ -39,8 +36,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
 @QuarkusTestResource(KeycloakServer.class)
@@ -109,7 +104,7 @@ public class XSenderMutinyTest {
         URI uri = XSenderMutinyTest.class.getClassLoader().getResource("xml/invoice_alterado_11111111111.xml").toURI();
         byte[] file = Files.readAllBytes(Paths.get(uri));
 
-        WsConfigCache wsConfig = WsConfigCacheBuilder.aWsConfigCache()
+        XSenderConfig wsConfig = XSenderConfigBuilder.aXSenderConfig()
                 .withFacturaUrl( "http://url1.com")
                 .withGuiaUrl("http://url1.com")
                 .withPercepcionRetencionUrl("http://url1.com")
@@ -130,7 +125,7 @@ public class XSenderMutinyTest {
         URI uri = XSenderMutinyTest.class.getClassLoader().getResource("xml/invoice_alterado_12345678912.xml").toURI();
         byte[] file = Files.readAllBytes(Paths.get(uri));
 
-        WsConfigCache wsConfig = WsConfigCacheBuilder.aWsConfigCache()
+        XSenderConfig wsConfig = XSenderConfigBuilder.aXSenderConfig()
                 .withFacturaUrl( "https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
                 .withGuiaUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
                 .withPercepcionRetencionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")

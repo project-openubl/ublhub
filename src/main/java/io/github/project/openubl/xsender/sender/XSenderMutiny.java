@@ -61,9 +61,9 @@ public class XSenderMutiny {
         });
     }
 
-    public Uni<WsConfigCache> getWsConfig(String namespaceId, String ruc) {
+    public Uni<XSenderConfig> getXSenderConfig(String namespaceId, String ruc) {
         return Panache.withTransaction(() -> companyRepository.findByRuc(namespaceId, ruc))
-                .onItem().ifNotNull().transform(companyEntity -> WsConfigCacheBuilder.aWsConfigCache()
+                .onItem().ifNotNull().transform(companyEntity -> XSenderConfigBuilder.aXSenderConfig()
                         .withFacturaUrl(companyEntity.sunatUrls.sunatUrlFactura)
                         .withGuiaUrl(companyEntity.sunatUrls.sunatUrlGuiaRemision)
                         .withPercepcionRetencionUrl(companyEntity.sunatUrls.sunatUrlPercepcionRetencion)
@@ -74,7 +74,7 @@ public class XSenderMutiny {
                 .onItem().ifNull().failWith(() -> new NoCompanyWithRucException("No company with ruc found"));
     }
 
-    public Uni<BillServiceModel> sendFile(byte[] file, WsConfigCache wsConfig) {
+    public Uni<BillServiceModel> sendFile(byte[] file, XSenderConfig wsConfig) {
         return Uni.createFrom()
                 .<BillServiceModel>emitter(uniEmitter -> {
                     CustomBillServiceConfig billServiceConfig = new CustomBillServiceConfig() {
@@ -119,13 +119,12 @@ public class XSenderMutiny {
                         uniEmitter.fail(new SendFileToSUNATException("Could not send file"));
                     }
                 });
-//                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
     public Uni<BillServiceModel> verifyTicket(
             String ticket,
             XmlContentModel xmlContentModel,
-            WsConfigCache wsConfig
+            XSenderConfig wsConfig
     ) {
         return Uni.createFrom().emitter(uniEmitter -> {
             CustomBillServiceConfig billServiceConfig = new CustomBillServiceConfig() {

@@ -16,52 +16,51 @@
  */
 package io.github.project.openubl.xsender.sender;
 
-public final class WsConfigCacheBuilder {
+public class XSenderConfig {
     private String facturaUrl;
     private String guiaUrl;
     private String percepcionRetencionUrl;
+
     private String username;
     private String password;
 
-    private WsConfigCacheBuilder() {
+    public String getFacturaUrl() {
+        return facturaUrl;
     }
 
-    public static WsConfigCacheBuilder aWsConfigCache() {
-        return new WsConfigCacheBuilder();
-    }
-
-    public WsConfigCacheBuilder withFacturaUrl(String facturaUrl) {
+    public void setFacturaUrl(String facturaUrl) {
         this.facturaUrl = facturaUrl;
-        return this;
     }
 
-    public WsConfigCacheBuilder withGuiaUrl(String guiaUrl) {
+    public String getGuiaUrl() {
+        return guiaUrl;
+    }
+
+    public void setGuiaUrl(String guiaUrl) {
         this.guiaUrl = guiaUrl;
-        return this;
     }
 
-    public WsConfigCacheBuilder withPercepcionRetencionUrl(String percepcionRetencionUrl) {
+    public String getPercepcionRetencionUrl() {
+        return percepcionRetencionUrl;
+    }
+
+    public void setPercepcionRetencionUrl(String percepcionRetencionUrl) {
         this.percepcionRetencionUrl = percepcionRetencionUrl;
-        return this;
     }
 
-    public WsConfigCacheBuilder withUsername(String username) {
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
         this.username = username;
-        return this;
     }
 
-    public WsConfigCacheBuilder withPassword(String password) {
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
         this.password = password;
-        return this;
-    }
-
-    public WsConfigCache build() {
-        WsConfigCache wsConfigCache = new WsConfigCache();
-        wsConfigCache.setFacturaUrl(facturaUrl);
-        wsConfigCache.setGuiaUrl(guiaUrl);
-        wsConfigCache.setPercepcionRetencionUrl(percepcionRetencionUrl);
-        wsConfigCache.setUsername(username);
-        wsConfigCache.setPassword(password);
-        return wsConfigCache;
     }
 }
