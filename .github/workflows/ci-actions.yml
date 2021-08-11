@@ -32,7 +32,7 @@ jobs:
         uses: actions/upload-artifact@v1
         if: failure()
         with:
-          name: test-reports
+          name: test-reports-${{ matrix.flavor }}
           path: 'test-reports.tgz'
 
   container-images:
