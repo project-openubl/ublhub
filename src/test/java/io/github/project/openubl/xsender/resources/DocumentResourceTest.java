@@ -16,24 +16,13 @@
  */
 package io.github.project.openubl.xsender.resources;
 
-import io.github.project.openubl.xsender.idm.DocumentRepresentation;
-import io.github.project.openubl.xsender.models.ErrorType;
-import io.github.project.openubl.xsender.resources.config.*;
-import io.quarkus.test.common.QuarkusTestResource;
+import io.github.project.openubl.xsender.BaseAuthTest;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.concurrent.TimeUnit;
 
 import static io.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
-import static org.hamcrest.CoreMatchers.*;
 
 @Disabled
 @QuarkusTest
@@ -42,7 +31,7 @@ import static org.hamcrest.CoreMatchers.*;
 //@QuarkusTestResource(ArtemisServer.class)
 //@QuarkusTestResource(PostgreSQLServer.class)
 @TestHTTPEndpoint(DocumentResource.class)
-public class DocumentResourceTest extends BaseKeycloakTest {
+public class DocumentResourceTest extends BaseAuthTest {
 
     final int TIMEOUT = 40;
 

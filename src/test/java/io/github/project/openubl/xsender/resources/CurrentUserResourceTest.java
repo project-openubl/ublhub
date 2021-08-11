@@ -19,7 +19,7 @@ package io.github.project.openubl.xsender.resources;
 import io.github.project.openubl.xsender.ProfileManager;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentationBuilder;
-import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
+import io.github.project.openubl.xsender.BaseAuthTest;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
@@ -32,7 +32,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 @QuarkusTest
 @TestProfile(ProfileManager.class)
 @TestHTTPEndpoint(CurrentUserResource.class)
-public class CurrentUserResourceTest extends BaseKeycloakTest {
+public class CurrentUserResourceTest extends BaseAuthTest {
 
     @Test
     public void createNamespace() {

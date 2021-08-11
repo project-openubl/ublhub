@@ -21,7 +21,7 @@ import io.github.project.openubl.xsender.idm.CompanyRepresentation;
 import io.github.project.openubl.xsender.idm.CompanyRepresentationBuilder;
 import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
-import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
+import io.github.project.openubl.xsender.BaseAuthTest;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
@@ -33,7 +33,7 @@ import static org.hamcrest.CoreMatchers.*;
 @QuarkusTest
 @TestProfile(ProfileManager.class)
 @TestHTTPEndpoint(CompanyResource.class)
-public class CompanyResourceTest extends BaseKeycloakTest {
+public class CompanyResourceTest extends BaseAuthTest {
 
     @Test
     public void getCompany() {

@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.xsender;
 
-import io.github.project.openubl.xsender.resources.config.MinioServer;
+import io.github.project.openubl.xsender.containers.MinioServer;
 import io.quarkus.test.junit.QuarkusTestProfile;
 
 import java.util.ArrayList;

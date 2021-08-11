@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.resources.config;
+package io.github.project.openubl.xsender;
 
 import io.restassured.specification.RequestSpecification;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static io.restassured.RestAssured.given;
 
-public abstract class BaseKeycloakTest {
+public abstract class BaseAuthTest {
 
     @ConfigProperty(name = "quarkus.oidc.enabled")
     Boolean oidcEnabled;

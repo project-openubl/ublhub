@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.resources.common;
+package io.github.project.openubl.xsender;
 
 import io.quarkus.test.junit.callback.*;
 import org.eclipse.microprofile.config.Config;
