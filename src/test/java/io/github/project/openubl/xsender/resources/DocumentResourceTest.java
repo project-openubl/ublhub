@@ -186,52 +186,52 @@ public class DocumentResourceTest extends BaseAuthTest {
         // Then
     }
 
-    @Test
-    public void uploadInvalidImageFile_shouldSetErrorStatus() throws URISyntaxException {
-        // Given
-        String nsId = "1";
-
-        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("images/java-jar-icon-59.png").toURI();
-        File file = new File(fileURI);
-
-        // When
-        DocumentRepresentation response = givenAuth("alice")
-                .accept(ContentType.JSON)
-                .multiPart("file", file, "application/xml")
-                .when()
-                .post("/" + nsId + "/documents/upload")
-                .then()
-                .statusCode(200)
-                .extract().body().as(DocumentRepresentation.class);
-
-        // Then
-        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
-                    .contentType(ContentType.JSON)
-                    .when()
-                    .get("/" + nsId + "/documents/" + response.getId())
-                    .then()
-                    .statusCode(200)
-                    .extract().body().as(DocumentRepresentation.class);
-            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.READ_FILE.getMessage());
-        });
-
-        givenAuth("alice")
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/" + nsId + "/documents/" + response.getId())
-                .then()
-                .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(ErrorType.READ_FILE.getMessage()),
-                        "scheduledDelivery", is(nullValue()),
-                        "retryCount", is(0),
-                        "fileContentValid", is(false),
-                        "fileContent.ruc", is(nullValue()),
-                        "fileContent.documentID", is(nullValue()),
-                        "fileContent.documentType", is(nullValue())
-                );
-    }
+//    @Test
+//    public void uploadInvalidImageFile_shouldSetErrorStatus() throws URISyntaxException {
+//        // Given
+//        String nsId = "1";
+//
+//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("images/java-jar-icon-59.png").toURI();
+//        File file = new File(fileURI);
+//
+//        // When
+//        DocumentRepresentation response = givenAuth("alice")
+//                .accept(ContentType.JSON)
+//                .multiPart("file", file, "application/xml")
+//                .when()
+//                .post("/" + nsId + "/documents/upload")
+//                .then()
+//                .statusCode(200)
+//                .extract().body().as(DocumentRepresentation.class);
+//
+//        // Then
+//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+//            DocumentRepresentation watchResponse = givenAuth("alice")
+//                    .contentType(ContentType.JSON)
+//                    .when()
+//                    .get("/" + nsId + "/documents/" + response.getId())
+//                    .then()
+//                    .statusCode(200)
+//                    .extract().body().as(DocumentRepresentation.class);
+//            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.READ_FILE.getMessage());
+//        });
+//
+//        givenAuth("alice")
+//                .contentType(ContentType.JSON)
+//                .when()
+//                .get("/" + nsId + "/documents/" + response.getId())
+//                .then()
+//                .statusCode(200)
+//                .body("inProgress", is(false),
+//                        "error", is(ErrorType.READ_FILE.getMessage()),
+//                        "scheduledDelivery", is(nullValue()),
+//                        "retryCount", is(0),
+//                        "fileContentValid", is(false),
+//                        "fileContent.ruc", is(nullValue()),
+//                        "fileContent.documentID", is(nullValue()),
+//                        "fileContent.documentType", is(nullValue())
+//                );
+//    }
 
 //    @Test
 //    public void uploadInvalidXMLFile_shouldSetErrorStatus() throws URISyntaxException {
