@@ -89,16 +89,19 @@ public class CurrentUserResource {
         PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
         List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, NamespaceRepository.SORT_BY_FIELDS);
 
-        Uni<Tuple2<List<NamespaceEntity>, Long>> searchResult;
         if (filterText != null && !filterText.trim().isEmpty()) {
-            searchResult = Panache.withTransaction(namespaceRepository.list(userIdentity.getUsername(), filterText, pageBean, sortBeans)::asTuple);
+            return Panache.withTransaction(() -> namespaceRepository
+                    .list(userIdentity.getUsername(), filterText, pageBean, sortBeans)
+                    .asTuple()
+                    .map(tuple2 -> EntityToRepresentation.toRepresentation(tuple2.getItem1(), tuple2.getItem2(), EntityToRepresentation::toRepresentation))
+            );
         } else {
-            searchResult = Panache.withTransaction(namespaceRepository.list(userIdentity.getUsername(), pageBean, sortBeans)::asTuple);
+            return Panache.withTransaction(() -> namespaceRepository
+                    .list(userIdentity.getUsername(), pageBean, sortBeans)
+                    .asTuple()
+                    .map(tuple2 -> EntityToRepresentation.toRepresentation(tuple2.getItem1(), tuple2.getItem2(), EntityToRepresentation::toRepresentation))
+            );
         }
-
-        return searchResult.map(
-                tuple2 -> EntityToRepresentation.toRepresentation(tuple2.getItem1(), tuple2.getItem2(), EntityToRepresentation::toRepresentation)
-        );
     }
 
 }

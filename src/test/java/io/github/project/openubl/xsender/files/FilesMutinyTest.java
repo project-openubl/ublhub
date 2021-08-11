@@ -17,9 +17,11 @@
 package io.github.project.openubl.xsender.files;
 
 import com.google.common.io.Files;
+import io.github.project.openubl.xsender.ProfileManager;
 import io.github.project.openubl.xsender.resources.config.*;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import org.junit.jupiter.api.Test;
@@ -31,11 +33,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 @QuarkusTest
-@QuarkusTestResource(KeycloakServer.class)
-@QuarkusTestResource(MinioServer.class)
-@QuarkusTestResource(ArtemisServer.class)
-@QuarkusTestResource(PostgreSQLServer.class)
-public class FilesMutinyTest extends BaseKeycloakTest {
+@TestProfile(ProfileManager.class)
+public class FilesMutinyTest {
 
     @Inject
     FilesMutiny filesMutiny;

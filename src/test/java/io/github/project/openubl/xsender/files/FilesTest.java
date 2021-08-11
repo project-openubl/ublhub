@@ -17,9 +17,9 @@
 package io.github.project.openubl.xsender.files;
 
 import com.google.common.io.Files;
-import io.github.project.openubl.xsender.resources.config.*;
-import io.quarkus.test.common.QuarkusTestResource;
+import io.github.project.openubl.xsender.ProfileManager;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -31,11 +31,8 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
-@QuarkusTestResource(KeycloakServer.class)
-@QuarkusTestResource(MinioServer.class)
-@QuarkusTestResource(ArtemisServer.class)
-@QuarkusTestResource(PostgreSQLServer.class)
-public class FilesTest extends BaseKeycloakTest {
+@TestProfile(ProfileManager.class)
+public class FilesTest {
 
     @Inject
     FilesManager filesManager;

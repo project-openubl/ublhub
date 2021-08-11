@@ -16,24 +16,21 @@
  */
 package io.github.project.openubl.xsender.resources;
 
+import io.github.project.openubl.xsender.ProfileManager;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentationBuilder;
-import io.github.project.openubl.xsender.resources.config.*;
-import io.quarkus.test.common.QuarkusTestResource;
+import io.github.project.openubl.xsender.resources.config.BaseKeycloakTest;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
 @QuarkusTest
-@QuarkusTestResource(KeycloakServer.class)
-@QuarkusTestResource(MinioServer.class)
-@QuarkusTestResource(ArtemisServer.class)
-@QuarkusTestResource(PostgreSQLServer.class)
+@TestProfile(ProfileManager.class)
 @TestHTTPEndpoint(CurrentUserResource.class)
 public class CurrentUserResourceTest extends BaseKeycloakTest {
 
@@ -48,7 +45,7 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
                 .build();
 
         // When
-        given().auth().oauth2(getAccessToken("alice"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(namespace)
@@ -74,7 +71,7 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
                 .build();
 
         // When
-        given().auth().oauth2(getAccessToken("alice"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .body(namespace)
                 .when()
@@ -84,7 +81,7 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
                 .body("name", is(namespace.getName()));
 
         // Then
-        given().auth().oauth2(getAccessToken("alice"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .body(namespace)
                 .when()
@@ -97,7 +94,7 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
     public void getNamespaces() {
         // Given
         // When
-        given().auth().oauth2(getAccessToken("alice"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
                 .get("/namespaces")
@@ -115,7 +112,7 @@ public class CurrentUserResourceTest extends BaseKeycloakTest {
     public void getNamespaces_filterText() {
         // Given
         // When
-        given().auth().oauth2(getAccessToken("alice"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
                 .get("/namespaces?filterText=namespace1")

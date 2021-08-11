@@ -16,16 +16,20 @@
  */
 package io.github.project.openubl.xsender.resources.config;
 
+import io.restassured.specification.RequestSpecification;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static io.restassured.RestAssured.given;
 
 public abstract class BaseKeycloakTest {
 
+    @ConfigProperty(name = "quarkus.oidc.enabled")
+    Boolean oidcEnabled;
+
     @ConfigProperty(name = "quarkus.oidc.auth-server-url")
     String oidcAuthServerUrl;
 
-    protected String getAccessToken(String userName) {
+    private String getAccessToken(String userName) {
         return given()
                 .relaxedHTTPSValidation()
                 .auth().preemptive().basic("xsender", "secret")
@@ -38,4 +42,11 @@ public abstract class BaseKeycloakTest {
                 .then().extract().path("access_token").toString();
     }
 
+    protected RequestSpecification givenAuth(String username) {
+        if (oidcEnabled) {
+            return given().auth().oauth2(getAccessToken(username));
+        } else {
+            return given().auth().basic(username, username);
+        }
+    }
 }

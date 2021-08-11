@@ -18,6 +18,7 @@ package io.github.project.openubl.xsender.sender;
 
 import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
+import io.github.project.openubl.xsender.ProfileManager;
 import io.github.project.openubl.xsender.exceptions.ReadFileException;
 import io.github.project.openubl.xsender.exceptions.SendFileToSUNATException;
 import io.github.project.openubl.xsender.resources.config.ArtemisServer;
@@ -26,6 +27,7 @@ import io.github.project.openubl.xsender.resources.config.MinioServer;
 import io.github.project.openubl.xsender.resources.config.PostgreSQLServer;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import org.junit.jupiter.api.Test;
 
@@ -38,10 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 @QuarkusTest
-@QuarkusTestResource(KeycloakServer.class)
-@QuarkusTestResource(MinioServer.class)
-@QuarkusTestResource(ArtemisServer.class)
-@QuarkusTestResource(PostgreSQLServer.class)
+@TestProfile(ProfileManager.class)
 public class XSenderMutinyTest {
 
     @Inject
