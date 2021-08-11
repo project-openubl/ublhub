@@ -25,6 +25,10 @@ import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import static io.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.*;
@@ -160,25 +164,25 @@ public class DocumentResourceTest extends BaseAuthTest {
         // Then
     }
 
-//    @Test
-//    public void uploadXML_byNotNsOwnerShouldNotBeAllowed() throws URISyntaxException {
-//        // Given
-//        String nsId = "3";
-//
-//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_alterado_12345678912.xml").toURI();
-//        File file = new File(fileURI);
-//
-//        // When
-//        givenAuth("alice")
-//                .accept(ContentType.JSON)
-//                .multiPart("file", file, "application/xml")
-//                .when()
-//                .post("/" + nsId + "/documents/upload")
-//                .then()
-//                .statusCode(404);
-//        // Then
-//    }
-//
+    @Test
+    public void uploadXML_byNotNsOwnerShouldNotBeAllowed() throws URISyntaxException {
+        // Given
+        String nsId = "3";
+
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_alterado_12345678912.xml").toURI();
+        File file = new File(fileURI);
+
+        // When
+        givenAuth("alice")
+                .accept(ContentType.JSON)
+                .multiPart("file", file, "application/xml")
+                .when()
+                .post("/" + nsId + "/documents/upload")
+                .then()
+                .statusCode(404);
+        // Then
+    }
+
 //    @Test
 //    public void uploadInvalidImageFile_shouldSetErrorStatus() throws URISyntaxException {
 //        // Given
