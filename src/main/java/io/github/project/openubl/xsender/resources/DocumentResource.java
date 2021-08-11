@@ -17,7 +17,6 @@ package io.github.project.openubl.xsender.resources;
  * limitations under the License.
  */
 
-import io.github.project.openubl.xsender.events.DocumentEvent;
 import io.github.project.openubl.xsender.events.EventManager;
 import io.github.project.openubl.xsender.exceptions.NoNamespaceException;
 import io.github.project.openubl.xsender.files.FilesMutiny;

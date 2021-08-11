@@ -16,12 +16,6 @@
  */
 package io.github.project.openubl.xsender.events.amqp;
 
-import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
-import io.github.project.openubl.xsender.models.ErrorType;
-import io.github.project.openubl.xsender.sender.XSenderConfig;
-
-import java.util.Date;
-
 public class DocumentUniTicket extends DocumentUni{
 
     private String ticket;

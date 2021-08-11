@@ -27,7 +27,6 @@ import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
 import io.github.project.openubl.xsender.security.UserIdentity;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.tuples.Tuple2;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;

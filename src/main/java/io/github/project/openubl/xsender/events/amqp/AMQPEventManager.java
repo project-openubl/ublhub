@@ -24,7 +24,6 @@ import io.github.project.openubl.xsender.models.ErrorType;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
-import io.github.project.openubl.xsender.sender.XSenderConfigBuilder;
 import io.github.project.openubl.xsender.sender.XSenderMutiny;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
