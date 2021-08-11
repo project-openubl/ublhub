@@ -17,148 +17,149 @@
 package io.github.project.openubl.xsender.resources;
 
 import io.github.project.openubl.xsender.BaseAuthTest;
+import io.github.project.openubl.xsender.ProfileManager;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.CoreMatchers.*;
 
-@Disabled
 @QuarkusTest
-//@QuarkusTestResource(KeycloakServer.class)
-//@QuarkusTestResource(MinioServer.class)
-//@QuarkusTestResource(ArtemisServer.class)
-//@QuarkusTestResource(PostgreSQLServer.class)
+@TestProfile(ProfileManager.class)
 @TestHTTPEndpoint(DocumentResource.class)
 public class DocumentResourceTest extends BaseAuthTest {
 
     final int TIMEOUT = 40;
 
-//    @Test
-//    public void getDocument() {
-//        // Given
-//        String nsId = "1";
-//        String documentId = "11";
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents/" + documentId)
-//                .then()
-//                .statusCode(200)
-//                .body("id", is("11"),
-//                        "createdOn", is(notNullValue()),
-//                        "inProgress", is(false),
-//                        "error", is(nullValue()),
-//                        "scheduledDelivery", is(nullValue()),
-//                        "retryCount", is(0),
-//                        "fileContentValid", is(nullValue())
-//                );
-//        // Then
-//    }
-//
-//    @Test
-//    public void getDocumentByNotOwner_shouldNotBeAllowed() {
-//        // Given
-//        String nsId = "3";
-//        String documentId = "44";
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents/" + documentId)
-//                .then()
-//                .statusCode(404);
-//
-//        given().auth().oauth2(getAccessToken("admin"))
-//                .contentType(ContentType.JSON)
-//                .accept(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents/" + documentId)
-//                .then()
-//                .statusCode(200);
-//        // Then
-//    }
-//
-//    @Test
-//    public void getDocumentThatBelongsToOtherNamespace_shouldNotBeAllowed() {
-//        // Given
-//        String nsOwnerId = "1";
-//        String nsToTestId = "2";
-//
-//        String documentId = "11";
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsOwnerId + "/documents/" + documentId)
-//                .then()
-//                .statusCode(200);
-//
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsToTestId + "/documents/" + documentId)
-//                .then()
-//                .statusCode(404);
-//        // Then
-//    }
-//
-//    @Test
-//    public void searchDocuments() {
-//        // Given
-//        String nsId = "1";
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents")
-//                .then()
-//                .statusCode(200)
-//                .body("meta.count", is(2),
-//                        "data.size()", is(2),
-//                        "data[0].id", is("22"),
-//                        "data[1].id", is("11")
-//                );
-//
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents?sort_by=createdOn:asc")
-//                .then()
-//                .statusCode(200)
-//                .body("meta.count", is(2),
-//                        "data.size()", is(2),
-//                        "data[0].id", is("11"),
-//                        "data[1].id", is("22")
-//                );
-//        // Then
-//    }
-//
-//    @Test
-//    public void searchDocuments_filterTextByName() {
-//        // Given
-//        String nsId = "1";
-//
-//        // When
-//        given().auth().oauth2(getAccessToken("alice"))
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents?filterText=11")
-//                .then()
-//                .statusCode(200)
-//                .body("meta.count", is(1),
-//                        "data.size()", is(1),
-//                        "data[0].fileContent.documentID", is("F-11")
-//                );
-//        // Then
-//    }
-//
+    @Test
+    public void getDocument() {
+        // Given
+        String nsId = "1";
+        String documentId = "11";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents/" + documentId)
+                .then()
+                .statusCode(200)
+                .body("id", is("11"),
+                        "createdOn", is(notNullValue()),
+                        "inProgress", is(false),
+                        "error", is(nullValue()),
+                        "scheduledDelivery", is(nullValue()),
+                        "retryCount", is(0),
+                        "fileContentValid", is(nullValue())
+                );
+        // Then
+    }
+
+    @Test
+    public void getDocumentByNotOwner_shouldNotBeAllowed() {
+        // Given
+        String nsId = "3";
+        String documentId = "44";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents/" + documentId)
+                .then()
+                .statusCode(404);
+
+        givenAuth("carlos")
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents/" + documentId)
+                .then()
+                .statusCode(200);
+        // Then
+    }
+
+    @Test
+    public void getDocumentThatBelongsToOtherNamespace_shouldNotBeAllowed() {
+        // Given
+        String nsOwnerId = "1";
+        String nsToTestId = "2";
+
+        String documentId = "11";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsOwnerId + "/documents/" + documentId)
+                .then()
+                .statusCode(200);
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsToTestId + "/documents/" + documentId)
+                .then()
+                .statusCode(404);
+        // Then
+    }
+
+    @Test
+    public void searchDocuments() {
+        // Given
+        String nsId = "1";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents")
+                .then()
+                .statusCode(200)
+                .body("meta.count", is(2),
+                        "data.size()", is(2),
+                        "data[0].id", is("22"),
+                        "data[1].id", is("11")
+                );
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents?sort_by=createdOn:asc")
+                .then()
+                .statusCode(200)
+                .body("meta.count", is(2),
+                        "data.size()", is(2),
+                        "data[0].id", is("11"),
+                        "data[1].id", is("22")
+                );
+        // Then
+    }
+
+    @Test
+    public void searchDocuments_filterTextByName() {
+        // Given
+        String nsId = "1";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents?filterText=11")
+                .then()
+                .statusCode(200)
+                .body("meta.count", is(1),
+                        "data.size()", is(1),
+                        "data[0].fileContent.documentID", is("F-11")
+                );
+        // Then
+    }
+
 //    @Test
 //    public void uploadXML_byNotNsOwnerShouldNotBeAllowed() throws URISyntaxException {
 //        // Given
@@ -168,7 +169,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //        File file = new File(fileURI);
 //
 //        // When
-//        given().auth().oauth2(getAccessToken("alice"))
+//        givenAuth("alice")
 //                .accept(ContentType.JSON)
 //                .multiPart("file", file, "application/xml")
 //                .when()
@@ -187,7 +188,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //        File file = new File(fileURI);
 //
 //        // When
-//        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+//        DocumentRepresentation response = givenAuth("alice")
 //                .accept(ContentType.JSON)
 //                .multiPart("file", file, "application/xml")
 //                .when()
@@ -198,7 +199,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //
 //        // Then
 //        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+//            DocumentRepresentation watchResponse = givenAuth("alice")
 //                    .contentType(ContentType.JSON)
 //                    .when()
 //                    .get("/" + nsId + "/documents/" + response.getId())
@@ -208,7 +209,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.READ_FILE.getMessage());
 //        });
 //
-//        given().auth().oauth2(getAccessToken("alice"))
+//        givenAuth("alice")
 //                .contentType(ContentType.JSON)
 //                .when()
 //                .get("/" + nsId + "/documents/" + response.getId())
@@ -234,7 +235,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //        File file = new File(fileURI);
 //
 //        // When
-//        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+//        DocumentRepresentation response = givenAuth("alice")
 //                .accept(ContentType.JSON)
 //                .multiPart("file", file, "application/xml")
 //                .when()
@@ -245,7 +246,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //
 //        // Then
 //        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+//            DocumentRepresentation watchResponse = givenAuth("alice")
 //                    .contentType(ContentType.JSON)
 //                    .when()
 //
@@ -256,7 +257,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage());
 //        });
 //
-//        given().auth().oauth2(getAccessToken("alice"))
+//        givenAuth("alice")
 //                .contentType(ContentType.JSON)
 //                .when()
 //                .get("/" + nsId + "/documents/" + response.getId())
@@ -282,7 +283,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //        File file = new File(fileURI);
 //
 //        // When
-//        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+//        DocumentRepresentation response = givenAuth("alice")
 //                .accept(ContentType.JSON)
 //                .multiPart("file", file, "application/xml")
 //                .when()
@@ -293,7 +294,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //
 //        // Then
 //        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+//            DocumentRepresentation watchResponse = givenAuth("alice")
 //                    .contentType(ContentType.JSON)
 //                    .when()
 //
@@ -304,7 +305,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.COMPANY_NOT_FOUND.getMessage());
 //        });
 //
-//        given().auth().oauth2(getAccessToken("alice"))
+//        givenAuth("alice")
 //                .contentType(ContentType.JSON)
 //                .when()
 //                .get("/" + nsId + "/documents/" + response.getId())
@@ -330,7 +331,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //        File file = new File(fileURI);
 //
 //        // When
-//        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+//        DocumentRepresentation response = givenAuth("alice")
 //                .accept(ContentType.JSON)
 //                .multiPart("file", file, "application/xml")
 //                .when()
@@ -341,7 +342,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //
 //        // Then
 //        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+//            DocumentRepresentation watchResponse = givenAuth("alice")
 //                    .contentType(ContentType.JSON)
 //                    .when()
 //
@@ -352,7 +353,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.SEND_FILE.getMessage());
 //        });
 //
-//        given().auth().oauth2(getAccessToken("alice"))
+//        givenAuth("alice")
 //                .contentType(ContentType.JSON)
 //                .when()
 //                .get("/" + nsId + "/documents/" + response.getId())
@@ -378,7 +379,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //        File file = new File(fileURI);
 //
 //        // When
-//        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+//        DocumentRepresentation response = givenAuth("alice")
 //                .accept(ContentType.JSON)
 //                .multiPart("file", file, "application/xml")
 //                .when()
@@ -390,7 +391,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //
 //        // Then
 //        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+//            DocumentRepresentation watchResponse = givenAuth("alice")
 //                    .contentType(ContentType.JSON)
 //                    .when()
 //
@@ -401,7 +402,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //            return !watchResponse.isInProgress();
 //        });
 //
-//        given().auth().oauth2(getAccessToken("alice"))
+//        givenAuth("alice")
 //                .contentType(ContentType.JSON)
 //                .when()
 //                .get("/" + nsId + "/documents/" + response.getId())
@@ -432,7 +433,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //        File file = new File(fileURI);
 //
 //        // When
-//        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+//        DocumentRepresentation response = givenAuth("alice")
 //                .accept(ContentType.JSON)
 //                .multiPart("file", file, "application/xml")
 //                .when()
@@ -444,7 +445,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //
 //        // Then
 //        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+//            DocumentRepresentation watchResponse = givenAuth("alice")
 //                    .contentType(ContentType.JSON)
 //                    .when()
 //
@@ -455,7 +456,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //            return !watchResponse.isInProgress();
 //        });
 //
-//        given().auth().oauth2(getAccessToken("alice"))
+//        givenAuth("alice")
 //                .contentType(ContentType.JSON)
 //                .when()
 //                .get("/" + nsId + "/documents/" + response.getId())
@@ -486,7 +487,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //        File file = new File(fileURI);
 //
 //        // When
-//        DocumentRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+//        DocumentRepresentation response = givenAuth("alice")
 //                .accept(ContentType.JSON)
 //                .multiPart("file", file, "application/xml")
 //                .when()
@@ -498,7 +499,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //
 //        // Then
 //        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given().auth().oauth2(getAccessToken("alice"))
+//            DocumentRepresentation watchResponse = givenAuth("alice")
 //                    .contentType(ContentType.JSON)
 //                    .when()
 //
@@ -509,7 +510,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //            return !watchResponse.isInProgress();
 //        });
 //
-//        given().auth().oauth2(getAccessToken("alice"))
+//        givenAuth("alice")
 //                .contentType(ContentType.JSON)
 //                .when()
 //                .get("/" + nsId + "/documents/" + response.getId())
