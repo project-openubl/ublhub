@@ -34,13 +34,6 @@ public class StorageHealthCheckTest extends BaseAuthTest {
     public void getCompany() {
         // Given
         // When
-        String s = given()
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/q/health")
-                .then()
-                .extract().asString();
-
         given()
                 .contentType(ContentType.JSON)
                 .when()
