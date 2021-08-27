@@ -113,7 +113,7 @@ public class EventManagerUtils {
         if (numberOfRetryAttempts > 0) {
             billServiceModelUni = billServiceModelUni
                     .onFailure(throwable -> throwable instanceof SendFileToSUNATException)
-                    .retry().withBackOff(Duration.ofSeconds(30)).atMost(numberOfRetryAttempts);
+                    .retry().atMost(numberOfRetryAttempts);
         }
 
         return billServiceModelUni
