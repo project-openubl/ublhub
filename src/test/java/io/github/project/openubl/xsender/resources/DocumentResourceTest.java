@@ -41,7 +41,7 @@ import static org.hamcrest.CoreMatchers.*;
 @TestHTTPEndpoint(DocumentResource.class)
 public class DocumentResourceTest extends BaseAuthTest {
 
-    final int TIMEOUT = 40;
+    final int TIMEOUT = 60;
 
     @Test
     public void getDocument() {
