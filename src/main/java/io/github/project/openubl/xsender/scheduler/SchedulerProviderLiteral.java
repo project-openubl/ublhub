@@ -14,12 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.events;
+package io.github.project.openubl.xsender.scheduler;
 
-import io.smallrye.mutiny.Uni;
+import javax.enterprise.util.AnnotationLiteral;
 
-public interface EventManager {
+public class SchedulerProviderLiteral extends AnnotationLiteral<SchedulerProvider> implements SchedulerProvider {
 
-    Uni<Void> sendDocumentToSUNAT(String documentId);
+    private final Type providerType;
 
+    public SchedulerProviderLiteral(Type providerType) {
+        this.providerType = providerType;
+    }
+
+    @Override
+    public Type value() {
+        return providerType;
+    }
 }

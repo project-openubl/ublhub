@@ -17,7 +17,6 @@ package io.github.project.openubl.xsender.resources;
  * limitations under the License.
  */
 
-import io.github.project.openubl.xsender.events.EventManager;
 import io.github.project.openubl.xsender.exceptions.NoNamespaceException;
 import io.github.project.openubl.xsender.files.FilesMutiny;
 import io.github.project.openubl.xsender.models.DocumentFilterModel;
@@ -28,6 +27,7 @@ import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
 import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
+import io.github.project.openubl.xsender.scheduler.SchedulerManager;
 import io.github.project.openubl.xsender.security.UserIdentity;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
@@ -60,7 +60,7 @@ public class DocumentResource {
     FilesMutiny filesMutiny;
 
     @Inject
-    EventManager eventManager;
+    SchedulerManager schedulerManager;
 
     @Inject
     NamespaceRepository namespaceRepository;
@@ -103,7 +103,7 @@ public class DocumentResource {
                 )
 
                 // Events
-                .chain(documentEntity -> eventManager
+                .chain(documentEntity -> schedulerManager
                         .sendDocumentToSUNAT(documentEntity.id)
                         .map(unused -> documentEntity)
                 )
@@ -113,7 +113,7 @@ public class DocumentResource {
                         .build()
                 )
                 .onFailure(throwable -> throwable instanceof NoNamespaceException).recoverWithItem(Response.status(Response.Status.NOT_FOUND).build())
-                .onFailure().recoverWithItem(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+                .onFailure(throwable -> !(throwable instanceof NoNamespaceException)).recoverWithItem(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
     }
 
     @GET

@@ -17,13 +17,14 @@
 package io.github.project.openubl.xsender.events.amqp;
 
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
-import io.github.project.openubl.xsender.events.EventManager;
+import io.github.project.openubl.xsender.events.EventManagerUtils;
 import io.github.project.openubl.xsender.exceptions.*;
 import io.github.project.openubl.xsender.files.FilesMutiny;
 import io.github.project.openubl.xsender.models.ErrorType;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
+import io.github.project.openubl.xsender.scheduler.SchedulerManager;
 import io.github.project.openubl.xsender.sender.XSenderMutiny;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
@@ -38,29 +39,27 @@ import java.util.HashSet;
 import java.util.Optional;
 
 @ApplicationScoped
-public class AMQPEventManager implements EventManager {
+public class AMQPEventManager {
 
     @Inject
-    FilesMutiny filesMutiny;
+    SchedulerManager schedulerManager;
 
     @Inject
-    XSenderMutiny xSenderMutiny;
+    EventManagerUtils eventManagerUtils;
 
     @Inject
     UBLDocumentRepository documentRepository;
 
     @Inject
-    CompanyRepository companyRepository;
+    @Channel("send-document-sunat-emitter")
+    @OnOverflow(value = OnOverflow.Strategy.BUFFER)
+    Emitter<String> documentEmitter;
 
 //    @Inject
 //    @Channel("document-event-emitter")
 //    @OnOverflow(value = OnOverflow.Strategy.LATEST)
 //    Emitter<DocumentEvent> eventEmitter;
 
-    @Inject
-    @Channel("send-document-sunat-emitter")
-    @OnOverflow(value = OnOverflow.Strategy.BUFFER)
-    Emitter<String> documentEmitter;
 
 //    private CompletionStage<Void> withNack(String documentId) {
 //        return Panache
@@ -86,11 +85,6 @@ public class AMQPEventManager implements EventManager {
         return Uni.createFrom().item(xmlContentModel);
     }
 
-    protected OutgoingAmqpMetadata createScheduledMessage(Date scheduleDelivery) {
-        return OutgoingAmqpMetadata.builder()
-                .withMessageAnnotations("x-opt-delivery-delay", scheduleDelivery.getTime() - Calendar.getInstance().getTimeInMillis())
-                .build();
-    }
 
     private void handleRetry(DocumentUniSend document) {
         int retries = document.getRetries();
@@ -110,6 +104,12 @@ public class AMQPEventManager implements EventManager {
         document.scheduledDelivery = scheduleDelivery;
     }
 
+    protected OutgoingAmqpMetadata createScheduledMessage(Date scheduleDelivery) {
+        return OutgoingAmqpMetadata.builder()
+                .withMessageAnnotations("x-opt-delivery-delay", scheduleDelivery.getTime() - Calendar.getInstance().getTimeInMillis())
+                .build();
+    }
+
 //    @Override
 //    public Uni<Void> sendDocumentEvent(DocumentEvent event) {
 //        return Uni.createFrom()
@@ -117,93 +117,22 @@ public class AMQPEventManager implements EventManager {
 //                .onFailure().recoverWithNull();
 //    }
 
-    @Override
-    public Uni<Void> sendDocumentToSUNAT(String documentId) {
-        return Uni.createFrom()
-                .completionStage(documentEmitter.send(documentId));
-    }
-
     @Incoming("send-document-sunat-incoming")
     @Outgoing("verify-ticket-sunat")
     @Acknowledgment(Acknowledgment.Strategy.MANUAL)
     protected Uni<Message<String>> sendFile(Message<String> inMessage) {
-        return Panache
-                .withTransaction(() -> findDocumentById(inMessage.getPayload())
-                        .onItem().ifNotNull().transform(documentEntity -> DocumentUniSendBuilder.aDocumentUniSend()
-                                .withNamespaceId(documentEntity.namespace.id)
-                                .withId(documentEntity.id)
-                                .withRetries(documentEntity.retries)
-                                .withXmlFileId(documentEntity.storageFile)
-                                .build()
-                        )
-                )
-                .invoke(documentUni -> {
-                    documentUni.setError(null);
-                    documentUni.setInProgress(false);
-                    documentUni.setScheduledDelivery(null);
-
-                    documentUni.setFileValid(null);
-                })
-                .chain(documentUni -> filesMutiny
-                        .getFileAsBytesAfterUnzip(documentUni.getXmlFileId())
-                        .onFailure(throwable -> throwable instanceof FetchFileException).invoke(throwable -> {
-                            documentUni.setError(ErrorType.FETCH_FILE);
-                        })
-                        .invoke(documentUni::setFile)
-
-                        .chain(fileBytes -> xSenderMutiny
-                                .getFileContent(fileBytes)
-                                .onFailure(throwable -> throwable instanceof ReadFileException).invoke(throwable -> {
-                                    ReadFileException readFileException = (ReadFileException) throwable;
-
-                                    XmlContentModel xmlContentModel = new XmlContentModel();
-                                    xmlContentModel.setDocumentType(readFileException.getDocumentType());
-
-                                    documentUni.setError(readFileException.getDocumentType() == null ? ErrorType.READ_FILE : ErrorType.UNSUPPORTED_DOCUMENT_TYPE);
-                                    documentUni.setFileValid(false);
-                                    documentUni.setXmlContent(xmlContentModel);
-                                })
-                                .invoke(xmlContentModel -> {
-                                    documentUni.setFileValid(true);
-                                    documentUni.setXmlContent(xmlContentModel);
-                                })
-                        )
-
-                        .chain(xmlContentModel -> xSenderMutiny
-                                .getXSenderConfig(documentUni.getNamespaceId(), xmlContentModel.getRuc())
-                                .onFailure(throwable -> throwable instanceof NoCompanyWithRucException).invoke(throwable -> {
-                                    documentUni.setError(ErrorType.COMPANY_NOT_FOUND);
-                                })
-                                .invoke(documentUni::setWsConfig)
-                        )
-
-                        .chain(wsConfig -> xSenderMutiny
-                                .sendFile(documentUni.getFile(), wsConfig)
-                                .onFailure(throwable -> throwable instanceof SendFileToSUNATException).invoke(throwable -> {
-                                    documentUni.setError(ErrorType.SEND_FILE);
-                                })
-                                .invoke(billServiceModel -> {
-                                    documentUni.setBillServiceModel(billServiceModel);
-                                })
-                        )
-
-                        .chain(billServiceModel -> Uni.createFrom()
-                                .item(billServiceModel.getCdr())
-                                .onItem().ifNotNull().transformToUni(cdrBytes -> filesMutiny
-                                        .createFile(cdrBytes, false)
-                                        .map(Optional::of)
-                                        .onFailure(throwable -> throwable instanceof SaveFileException).invoke(throwable -> {
-                                            documentUni.setError(ErrorType.SAVE_CRD_FILE);
-                                        })
-                                )
-                                .onItem().ifNull().continueWith(Optional::empty)
-                                .invoke(cdrFileIdOptional -> {
-                                    documentUni.setCdrFileId(cdrFileIdOptional.orElse(null));
-                                })
-                        )
+        return eventManagerUtils.initDocumentUniSend(inMessage.getPayload())
+                // Process file
+                .chain(documentUni -> eventManagerUtils.enrichWithFileAsBytes(documentUni)
+                        .chain(fileBytes -> eventManagerUtils.enrichWithFileContent(documentUni, fileBytes))
+                        .chain(xmlContentModel -> eventManagerUtils.enrichWithWsConfig(documentUni, xmlContentModel))
+                        .chain(wsConfig -> eventManagerUtils.enrichWithSendingFile(documentUni, wsConfig, 1))
+                        .chain(billServiceModel -> eventManagerUtils.enrichSavingCDRIfExists(documentUni, billServiceModel))
 
                         .map(unused -> documentUni)
-                        .onFailure(throwable -> throwable instanceof AbstractSendFileException).recoverWithUni(throwable -> {
+
+                        .onFailure(throwable -> throwable instanceof AbstractSendFileException)
+                        .recoverWithUni(throwable -> {
                             Uni<DocumentUniSend> result = Uni.createFrom().item(documentUni);
                             if (throwable instanceof SendFileToSUNATException) {
                                 result = result.invoke(() -> {
@@ -220,37 +149,11 @@ public class AMQPEventManager implements EventManager {
                             return result;
                         })
                 )
-                .chain(documentUni -> Panache
-                        .withTransaction(() -> documentRepository
-                                .findById(documentUni.getId())
-                                .invoke(documentEntity -> {
-                                    documentEntity.error = documentUni.getError();
-                                    documentEntity.fileValid = documentUni.getFileValid();
-                                    documentEntity.inProgress = documentUni.getError() == null && documentUni.getBillServiceModel() != null && documentUni.getBillServiceModel().getTicket() != null;
-                                    documentEntity.scheduledDelivery = documentUni.getScheduledDelivery();
-
-                                    documentEntity.retries = documentUni.getRetries();
-
-                                    if (documentUni.getXmlContent() != null) {
-                                        documentEntity.ruc = documentUni.getXmlContent().getRuc();
-                                        documentEntity.documentID = documentUni.getXmlContent().getDocumentID();
-                                        documentEntity.documentType = documentUni.getXmlContent().getDocumentType();
-                                        documentEntity.voidedLineDocumentTypeCode = documentUni.getXmlContent().getVoidedLineDocumentTypeCode();
-                                    }
-
-                                    if (documentUni.getBillServiceModel() != null) {
-                                        documentEntity.sunatStatus = documentUni.getBillServiceModel().getStatus() != null ? documentUni.getBillServiceModel().getStatus().toString() : null;
-                                        documentEntity.sunatCode = documentUni.getBillServiceModel().getCode();
-                                        documentEntity.sunatDescription = documentUni.getBillServiceModel().getDescription();
-                                        documentEntity.sunatTicket = documentUni.getBillServiceModel().getTicket();
-                                        documentEntity.sunatNotes = documentUni.getBillServiceModel().getNotes() != null ? new HashSet<>(documentUni.getBillServiceModel().getNotes()) : new HashSet<>();
-                                    }
-
-                                    documentEntity.storageCdr = documentUni.getCdrFileId();
-                                })
-                        )
+                // Persist changes in DB
+                .chain(documentUni -> eventManagerUtils.documentUniToEntity(documentUni)
                         .map(documentEntity -> documentUni)
                 )
+                // Final decision
                 .chain(documentUni -> {
                     Uni<Message<String>> result;
                     if (documentUni.getError() != null) {
