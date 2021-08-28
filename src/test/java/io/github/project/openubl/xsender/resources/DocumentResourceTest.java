@@ -60,8 +60,8 @@ public class DocumentResourceTest extends BaseAuthTest {
                         "createdOn", is(notNullValue()),
                         "inProgress", is(false),
                         "error", is(nullValue()),
-                        "scheduledDelivery", is(nullValue()),
-                        "retryCount", is(0),
+//                        "scheduledDelivery", is(nullValue()),
+//                        "retryCount", is(0),
                         "fileContentValid", is(nullValue())
                 );
         // Then
@@ -224,8 +224,8 @@ public class DocumentResourceTest extends BaseAuthTest {
                 .statusCode(200)
                 .body("inProgress", is(false),
                         "error", is(ErrorType.READ_FILE.getMessage()),
-                        "scheduledDelivery", is(nullValue()),
-                        "retryCount", is(0),
+//                        "scheduledDelivery", is(nullValue()),
+//                        "retryCount", is(0),
                         "fileContentValid", is(false),
                         "fileContent.ruc", is(nullValue()),
                         "fileContent.documentID", is(nullValue()),
@@ -272,8 +272,8 @@ public class DocumentResourceTest extends BaseAuthTest {
                 .statusCode(200)
                 .body("inProgress", is(false),
                         "error", is(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage()),
-                        "scheduledDelivery", is(nullValue()),
-                        "retryCount", is(0),
+//                        "scheduledDelivery", is(nullValue()),
+//                        "retryCount", is(0),
                         "fileContentValid", is(false),
                         "fileContent.ruc", is(nullValue()),
                         "fileContent.documentID", is(nullValue()),
@@ -320,8 +320,8 @@ public class DocumentResourceTest extends BaseAuthTest {
                 .statusCode(200)
                 .body("inProgress", is(false),
                         "error", is(ErrorType.COMPANY_NOT_FOUND.getMessage()),
-                        "scheduledDelivery", is(nullValue()),
-                        "retryCount", is(0),
+//                        "scheduledDelivery", is(nullValue()),
+//                        "retryCount", is(0),
                         "fileContentValid", is(true),
                         "fileContent.ruc", is("22222222222"),
                         "fileContent.documentID", is("F001-1"),
@@ -431,59 +431,59 @@ public class DocumentResourceTest extends BaseAuthTest {
                 );
     }
 
-//    @Test
-//    public void uploadValidXMLFile_existingCompanyRuc_validURLs_shouldNotHaveError() throws URISyntaxException {
-//        // Given
-//        String nsId = "1";
-//
-//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_12345678912.xml").toURI();
-//        File file = new File(fileURI);
-//
-//        // When
-//        DocumentRepresentation response = givenAuth("alice")
-//                .accept(ContentType.JSON)
-//                .multiPart("file", file, "application/xml")
-//                .when()
-//                .post("/" + nsId + "/documents/upload")
-//                .then()
-//                .statusCode(200)
-//                .body("inProgress", is(true))
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = givenAuth("alice")
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//
-//                    .get("/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isInProgress();
-//        });
-//
-//        givenAuth("alice")
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("inProgress", is(false),
-//                        "error", is(nullValue()),
+    @Test
+    public void uploadValidXMLFile_existingCompanyRuc_validURLs_shouldNotHaveError() throws URISyntaxException {
+        // Given
+        String nsId = "1";
+
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_12345678912.xml").toURI();
+        File file = new File(fileURI);
+
+        // When
+        DocumentRepresentation response = givenAuth("alice")
+                .accept(ContentType.JSON)
+                .multiPart("file", file, "application/xml")
+                .when()
+                .post("/" + nsId + "/documents/upload")
+                .then()
+                .statusCode(200)
+                .body("inProgress", is(true))
+                .extract().body().as(DocumentRepresentation.class);
+
+        // Then
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            DocumentRepresentation watchResponse = givenAuth("alice")
+                    .contentType(ContentType.JSON)
+                    .when()
+
+                    .get("/" + nsId + "/documents/" + response.getId())
+                    .then()
+                    .statusCode(200)
+                    .extract().body().as(DocumentRepresentation.class);
+            return !watchResponse.isInProgress();
+        });
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents/" + response.getId())
+                .then()
+                .statusCode(200)
+                .body("inProgress", is(false),
+                        "error", is(nullValue()),
 //                        "scheduledDelivery", is(nullValue()),
 //                        "retryCount", is(0),
-//                        "fileContentValid", is(true),
-//                        "fileContent.ruc", is("12345678912"),
-//                        "fileContent.documentID", is("F001-1"),
-//                        "fileContent.documentType", is("Invoice"),
-//                        "sunat.code", is(0),
-//                        "sunat.ticket", is(nullValue()),
-//                        "sunat.status", is("ACEPTADO"),
-//                        "sunat.description", is("La Factura numero F001-1, ha sido aceptada"),
-//                        "sunat.hasCdr", is(true)
-//                );
-//    }
+                        "fileContentValid", is(true),
+                        "fileContent.ruc", is("12345678912"),
+                        "fileContent.documentID", is("F001-1"),
+                        "fileContent.documentType", is("Invoice"),
+                        "sunat.code", is(0),
+                        "sunat.ticket", is(nullValue()),
+                        "sunat.status", is("ACEPTADO"),
+                        "sunat.description", is("La Factura numero F001-1, ha sido aceptada"),
+                        "sunat.hasCdr", is(true)
+                );
+    }
 
 //    @Test
 //    public void uploadValidVoidedXMLFile_existingCompanyRuc_validURLs_shouldNotHaveError() throws URISyntaxException {
