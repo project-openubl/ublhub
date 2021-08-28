@@ -18,21 +18,20 @@ package io.github.project.openubl.xsender.events;
 
 import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
-import io.github.project.openubl.xsender.events.amqp.DocumentUniSend;
-import io.github.project.openubl.xsender.events.amqp.DocumentUniSendBuilder;
 import io.github.project.openubl.xsender.exceptions.*;
 import io.github.project.openubl.xsender.files.FilesMutiny;
 import io.github.project.openubl.xsender.models.ErrorType;
+import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.xsender.sender.XSenderConfig;
+import io.github.project.openubl.xsender.sender.XSenderConfigBuilder;
 import io.github.project.openubl.xsender.sender.XSenderMutiny;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.Optional;
 
@@ -47,6 +46,9 @@ public class EventManagerUtils {
 
     @Inject
     UBLDocumentRepository documentRepository;
+
+    @Inject
+    CompanyRepository companyRepository;
 
     public Uni<DocumentUniSend> initDocumentUniSend(String documentId) {
         return Panache
@@ -67,6 +69,35 @@ public class EventManagerUtils {
                     documentUni.setScheduledDelivery(null);
 
                     documentUni.setFileValid(null);
+                });
+    }
+
+    public Uni<DocumentUniTicket> initDocumentUniTicket(String documentId) {
+        return Panache
+                .withTransaction(() -> documentRepository
+                        .findById(documentId)
+                        .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + documentId + " was not found"))
+                        .onItem().ifNotNull().transform(documentEntity -> {
+                                    XmlContentModel xmlContent = XmlContentModel.Builder.aXmlContentModel()
+                                            .withRuc(documentEntity.ruc)
+                                            .withDocumentType(documentEntity.documentType)
+                                            .withDocumentID(documentEntity.documentID)
+                                            .withVoidedLineDocumentTypeCode(documentEntity.voidedLineDocumentTypeCode)
+                                            .build();
+
+                                    return DocumentUniTicketBuilder.aDocumentUniTicket()
+                                            .withNamespaceId(documentEntity.namespace.id)
+                                            .withId(documentEntity.id)
+                                            .withTicket(documentEntity.sunatTicket)
+                                            .withXmlContent(xmlContent)
+                                            .build();
+                                }
+                        )
+                )
+                .invoke(documentUniTicket -> {
+                    documentUniTicket.setError(null);
+                    documentUniTicket.setInProgress(false);
+                    documentUniTicket.setScheduledDelivery(null);
                 });
     }
 
@@ -108,6 +139,21 @@ public class EventManagerUtils {
                 .invoke(documentUni::setWsConfig);
     }
 
+    public Uni<XSenderConfig> enrichWithWsConfig(DocumentUniTicket documentUni) {
+        return companyRepository
+                .findByRuc(documentUni.getNamespaceId(), documentUni.getXmlContent().getRuc())
+                .onItem().ifNull().failWith(() -> new NoCompanyWithRucException("No company with ruc found"))
+                .onItem().ifNotNull().transform(companyEntity -> XSenderConfigBuilder.aXSenderConfig()
+                        .withFacturaUrl(companyEntity.sunatUrls.sunatUrlFactura)
+                        .withGuiaUrl(companyEntity.sunatUrls.sunatUrlGuiaRemision)
+                        .withPercepcionRetencionUrl(companyEntity.sunatUrls.sunatUrlPercepcionRetencion)
+                        .withUsername(companyEntity.sunatCredentials.sunatUsername)
+                        .withPassword(companyEntity.sunatCredentials.sunatPassword)
+                        .build()
+                )
+                .invoke(documentUni::setWsConfig);
+    }
+
     public Uni<BillServiceModel> enrichWithSendingFile(DocumentUniSend documentUni, XSenderConfig wsConfig, int numberOfRetryAttempts) {
         Uni<BillServiceModel> billServiceModelUni = xSenderMutiny.sendFile(documentUni.getFile(), wsConfig);
         if (numberOfRetryAttempts > 0) {
@@ -123,7 +169,22 @@ public class EventManagerUtils {
                 .invoke(documentUni::setBillServiceModel);
     }
 
-    public Uni<Optional<String>> enrichSavingCDRIfExists(DocumentUniSend documentUni, BillServiceModel billServiceModel) {
+    public Uni<BillServiceModel> enrichWithCheckingTicket(DocumentUniTicket documentUni, int numberOfRetryAttempts) {
+        Uni<BillServiceModel> billServiceModelUni = xSenderMutiny.verifyTicket(documentUni.getTicket(), documentUni.getXmlContent(), documentUni.getWsConfig());
+        if (numberOfRetryAttempts > 0) {
+            billServiceModelUni = billServiceModelUni
+                    .onFailure(throwable -> throwable instanceof CheckTicketAtSUNATException)
+                    .retry().atMost(numberOfRetryAttempts);
+        }
+
+        return billServiceModelUni
+                .onFailure(throwable -> throwable instanceof CheckTicketAtSUNATException).invoke(throwable -> {
+                    documentUni.setError(ErrorType.CHECK_TICKET);
+                })
+                .invoke(documentUni::setBillServiceModel);
+    }
+
+    public Uni<Optional<String>> enrichSavingCDRIfExists(DocumentUni documentUni, BillServiceModel billServiceModel) {
         return Uni.createFrom()
                 .item(billServiceModel.getCdr())
                 .onItem().ifNotNull().transformToUni(cdrBytes -> filesMutiny
@@ -148,7 +209,7 @@ public class EventManagerUtils {
                     documentEntity.inProgress = documentUni.getError() == null && documentUni.getBillServiceModel() != null && documentUni.getBillServiceModel().getTicket() != null;
                     documentEntity.scheduledDelivery = documentUni.getScheduledDelivery();
 
-                    documentEntity.retries = documentUni.getRetries();
+                    documentEntity.retries = documentUni.getRetries() != null ? documentUni.getRetries() : 0;
 
                     if (documentUni.getXmlContent() != null) {
                         documentEntity.ruc = documentUni.getXmlContent().getRuc();
@@ -156,6 +217,29 @@ public class EventManagerUtils {
                         documentEntity.documentType = documentUni.getXmlContent().getDocumentType();
                         documentEntity.voidedLineDocumentTypeCode = documentUni.getXmlContent().getVoidedLineDocumentTypeCode();
                     }
+
+                    if (documentUni.getBillServiceModel() != null) {
+                        documentEntity.sunatStatus = documentUni.getBillServiceModel().getStatus() != null ? documentUni.getBillServiceModel().getStatus().toString() : null;
+                        documentEntity.sunatCode = documentUni.getBillServiceModel().getCode();
+                        documentEntity.sunatDescription = documentUni.getBillServiceModel().getDescription();
+                        documentEntity.sunatTicket = documentUni.getBillServiceModel().getTicket();
+                        documentEntity.sunatNotes = documentUni.getBillServiceModel().getNotes() != null ? new HashSet<>(documentUni.getBillServiceModel().getNotes()) : new HashSet<>();
+                    }
+
+                    documentEntity.storageCdr = documentUni.getCdrFileId();
+                })
+        );
+    }
+
+    public Uni<UBLDocumentEntity> documentUniToEntity(DocumentUniTicket documentUni) {
+        return Panache.withTransaction(() -> documentRepository.findById(documentUni.getId())
+                .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + documentUni.getId() + " was not found"))
+                .invoke(documentEntity -> {
+                    documentEntity.error = documentUni.getError();
+                    documentEntity.inProgress = false;
+                    documentEntity.scheduledDelivery = documentUni.getScheduledDelivery();
+
+                    documentEntity.retries = documentUni.getRetries() != null ? documentUni.getRetries() : 0;
 
                     if (documentUni.getBillServiceModel() != null) {
                         documentEntity.sunatStatus = documentUni.getBillServiceModel().getStatus() != null ? documentUni.getBillServiceModel().getStatus().toString() : null;

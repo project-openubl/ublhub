@@ -19,31 +19,30 @@ package io.github.project.openubl.xsender.scheduler.impl;
 import io.github.project.openubl.xsender.scheduler.Scheduler;
 import io.github.project.openubl.xsender.scheduler.SchedulerProvider;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 @SchedulerProvider(SchedulerProvider.Type.VERTX)
 public class VertxScheduler implements Scheduler {
 
-    public static final String VERTX_SCHEDULER_BUS_NAME = "vertx-scheduler";
+    public static final String VERTX_SEND_FILE_SCHEDULER_BUS_NAME = "vertx-scheduler-send-file";
+    public static final String VERTX_CHECK_TICKET_SCHEDULER_BUS_NAME = "vertx-scheduler-check-ticket";
 
     @Inject
     EventBus eventBus;
 
     @Override
     public Uni<Void> sendDocumentToSUNAT(String documentId) {
-        eventBus.send(VERTX_SCHEDULER_BUS_NAME, documentId);
+        eventBus.send(VERTX_SEND_FILE_SCHEDULER_BUS_NAME, documentId);
         return Uni.createFrom().voidItem();
     }
 
     @Override
     public Uni<Void> sendVerifyTicketAtSUNAT(String documentId) {
+        eventBus.send(VERTX_CHECK_TICKET_SCHEDULER_BUS_NAME, documentId);
         return Uni.createFrom().voidItem();
     }
 

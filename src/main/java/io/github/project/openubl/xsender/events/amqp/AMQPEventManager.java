@@ -16,17 +16,15 @@
  */
 package io.github.project.openubl.xsender.events.amqp;
 
-import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
+import io.github.project.openubl.xsender.events.DocumentUni;
+import io.github.project.openubl.xsender.events.DocumentUniSend;
+import io.github.project.openubl.xsender.events.DocumentUniTicket;
 import io.github.project.openubl.xsender.events.EventManagerUtils;
-import io.github.project.openubl.xsender.exceptions.*;
-import io.github.project.openubl.xsender.files.FilesMutiny;
+import io.github.project.openubl.xsender.exceptions.AbstractSendFileException;
+import io.github.project.openubl.xsender.exceptions.CheckTicketAtSUNATException;
+import io.github.project.openubl.xsender.exceptions.SaveFileException;
+import io.github.project.openubl.xsender.exceptions.SendFileToSUNATException;
 import io.github.project.openubl.xsender.models.ErrorType;
-import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
-import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
-import io.github.project.openubl.xsender.scheduler.SchedulerManager;
-import io.github.project.openubl.xsender.sender.XSenderMutiny;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.amqp.OutgoingAmqpMetadata;
 import org.eclipse.microprofile.reactive.messaging.*;
@@ -35,58 +33,24 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Optional;
 
 @ApplicationScoped
 public class AMQPEventManager {
 
     @Inject
-    SchedulerManager schedulerManager;
-
-    @Inject
     EventManagerUtils eventManagerUtils;
-
-    @Inject
-    UBLDocumentRepository documentRepository;
 
     @Inject
     @Channel("send-document-sunat-emitter")
     @OnOverflow(value = OnOverflow.Strategy.BUFFER)
     Emitter<String> documentEmitter;
 
-//    @Inject
-//    @Channel("document-event-emitter")
-//    @OnOverflow(value = OnOverflow.Strategy.LATEST)
-//    Emitter<DocumentEvent> eventEmitter;
+    @Inject
+    @Channel("verify-ticket-sunat-emitter")
+    @OnOverflow(value = OnOverflow.Strategy.BUFFER)
+    Emitter<String> ticketEmitter;
 
-
-//    private CompletionStage<Void> withNack(String documentId) {
-//        return Panache
-//                .withTransaction(() -> documentRepository
-//                        .findById(documentId)
-//                        .invoke(documentEntity -> {
-//                            documentEntity.inProgress = false;
-//                            documentEntity.error = ErrorType.AMQP_SCHEDULE;
-//                            documentEntity.scheduledDelivery = null;
-//                        })
-//                )
-//                .chain(documentEntity -> sendDocumentEvent(new DocumentEvent(documentEntity.id, documentEntity.namespace.id)))
-//                .subscribeAsCompletionStage();
-//    }
-
-    private Uni<XmlContentModel> getXmlContent(UBLDocumentEntity documentEntity) {
-        XmlContentModel xmlContentModel = new XmlContentModel();
-        xmlContentModel.setRuc(documentEntity.ruc);
-        xmlContentModel.setDocumentType(documentEntity.documentType);
-        xmlContentModel.setDocumentID(documentEntity.documentID);
-        xmlContentModel.setVoidedLineDocumentTypeCode(documentEntity.voidedLineDocumentTypeCode);
-
-        return Uni.createFrom().item(xmlContentModel);
-    }
-
-
-    private void handleRetry(DocumentUniSend document) {
+    private void handleRetry(DocumentUni document) {
         int retries = document.getRetries();
         Date scheduleDelivery = null;
         if (retries <= 2) {
@@ -101,7 +65,7 @@ public class AMQPEventManager {
 
         // Result
         document.setRetries(retries);
-        document.scheduledDelivery = scheduleDelivery;
+        document.setScheduledDelivery(scheduleDelivery);
     }
 
     protected OutgoingAmqpMetadata createScheduledMessage(Date scheduleDelivery) {
@@ -109,13 +73,6 @@ public class AMQPEventManager {
                 .withMessageAnnotations("x-opt-delivery-delay", scheduleDelivery.getTime() - Calendar.getInstance().getTimeInMillis())
                 .build();
     }
-
-//    @Override
-//    public Uni<Void> sendDocumentEvent(DocumentEvent event) {
-//        return Uni.createFrom()
-//                .completionStage(eventEmitter.send(event))
-//                .onFailure().recoverWithNull();
-//    }
 
     @Incoming("send-document-sunat-incoming")
     @Outgoing("verify-ticket-sunat")
@@ -192,136 +149,68 @@ public class AMQPEventManager {
                 });
     }
 
-//    @Incoming("verify-ticket-sunat-incoming")
-//    @Acknowledgment(Acknowledgment.Strategy.MANUAL)
-//    protected Uni<Void> verifyTicket(Message<String> inMessage) {
-//        return Panache
-//                .withTransaction(() -> findDocumentById(inMessage.getPayload())
-//                        .onItem().ifNotNull().transform(documentEntity -> {
-//                            XmlContentModel xmlContent = XmlContentModel.Builder.aXmlContentModel()
-//                                    .withRuc(documentEntity.ruc)
-//                                    .withDocumentType(documentEntity.documentType)
-//                                    .withDocumentID(documentEntity.documentID)
-//                                    .withVoidedLineDocumentTypeCode(documentEntity.voidedLineDocumentTypeCode)
-//                                    .build();
-//
-//                            return DocumentTicketCacheBuilder.aDocumentTicketCache()
-//                                    .withNamespaceId(documentEntity.namespace.id)
-//                                    .withId(documentEntity.id)
-//                                    .withTicket(documentEntity.sunatTicket)
-//                                    .withXmlContent(xmlContent)
-//                                    .build();
-//                        })
-//                        .chain(documentTicketCache -> companyRepository
-//                                .findByRuc(documentTicketCache.getNamespaceId(), documentTicketCache.getXmlContent().getRuc())
-//                                .onItem().ifNull().failWith(() -> new NoCompanyWithRucException("No company with ruc found"))
-//                                .onItem().ifNotNull().transform(companyEntity -> XSenderConfigBuilder.aXSenderConfig()
-//                                        .withFacturaUrl(companyEntity.sunatUrls.sunatUrlFactura)
-//                                        .withGuiaUrl(companyEntity.sunatUrls.sunatUrlGuiaRemision)
-//                                        .withPercepcionRetencionUrl(companyEntity.sunatUrls.sunatUrlPercepcionRetencion)
-//                                        .withUsername(companyEntity.sunatCredentials.sunatUsername)
-//                                        .withPassword(companyEntity.sunatCredentials.sunatPassword)
-//                                        .build()
-//                                )
-//                                .map(xSenderConfig -> {
-//                                    documentTicketCache.setWsConfig(xSenderConfig);
-//                                    return documentTicketCache;
-//                                })
-//                        )
-//                )
-//                .invoke(documentTicketCache -> {
-//                    documentTicketCache.setError(null);
-//                    documentTicketCache.setScheduledDelivery(null);
-//                    documentTicketCache.setInProgress(false);
-//                })
-//                .chain(documentTicketCache -> xSenderMutiny
-//                        .verifyTicket(documentTicketCache.getTicket(), documentTicketCache.getXmlContent(), documentTicketCache.getWsConfig())
-//                        .chain(billServiceModel -> Uni.createFrom()
-//                                .item(billServiceModel.getCdr())
-//                                .onItem().ifNotNull().transformToUni(cdrBytes -> filesMutiny
-//                                        .createFile(cdrBytes, false)
-//                                        .map(Optional::of)
-//                                        .onFailure(throwable -> throwable instanceof SaveFileException).invoke(throwable -> {
-//                                            documentTicketCache.setError(ErrorType.SAVE_CRD_FILE);
-//                                        })
-//                                )
-//                                .onItem().ifNull().continueWith(Optional::empty)
-//                                .invoke(cdrFileIdOptional -> {
-//                                    documentTicketCache.setCdrFileId(cdrFileIdOptional.orElse(null));
-//                                })
-//                        )
-//
-//                        .map(unused -> documentTicketCache)
-//                        .onFailure(throwable -> throwable instanceof AbstractSendFileException).recoverWithUni(throwable -> {
-//                            Uni<DocumentUniTicket> result = Uni.createFrom().item(documentTicketCache);
-//                            if (throwable instanceof SendFileToSUNATException) {
-//                                result = result.invoke(() -> {
-//                                    handleRetry(documentCache);
-//                                    if (documentTicketCache.getScheduledDelivery() != null) {
-//                                        OutgoingAmqpMetadata outgoingAmqpMetadata = createScheduledMessage(documentTicketCache.getScheduledDelivery());
-//                                        Message<String> scheduledMessage = Message
-//                                                .of(inMessage.getPayload())
-//                                                .withMetadata(Metadata.of(outgoingAmqpMetadata));
-//                                        documentEmitter.send(scheduledMessage);
-//                                    }
-//                                });
-//                            }
-//                            return result;
-//                        })
-//                )
-//                .chain(documentTicketCache -> Panache
-//                        .withTransaction(() -> documentRepository
-//                                .findById(documentTicketCache.getId())
-//                                .invoke(documentEntity -> {
-//                                    documentEntity.error = documentTicketCache.getError();
-//                                    documentEntity.inProgress = false;
-//                                    documentEntity.scheduledDelivery = documentTicketCache.getScheduledDelivery();
-//
-//                                    documentEntity.retries = documentTicketCache.getRetries();
-//
-//                                    documentEntity.sunatStatus = documentTicketCache.getSunatStatus();
-//                                    documentEntity.sunatCode = documentTicketCache.getSunatCode();
-//                                    documentEntity.sunatDescription = documentTicketCache.getSunatDescription();
-//                                    documentEntity.sunatTicket = documentTicketCache.getSunatTicket();
-//                                    documentEntity.sunatNotes = documentTicketCache.getSunatNotes();
-//
-//                                    documentEntity.storageCdr = documentTicketCache.getCdrFileId();
-//                                })
-//                        )
-//                        .map(documentEntity -> documentTicketCache)
-//                )
-//                .chain(documentCache -> {
-//                    Uni<Void> result;
-//                    if (documentCache.getError() != null) {
-//                        switch (documentCache.getError()) {
-//                            case READ_FILE:
-//                            case UNSUPPORTED_DOCUMENT_TYPE:
-//                            case COMPANY_NOT_FOUND:
-//                            case SEND_FILE:
-//                                result = Uni.createFrom()
-//                                        .completionStage(inMessage.ack())
-//                                        .chain(unused -> Uni.createFrom().nullItem());
-//                                break;
-//                            case SAVE_CRD_FILE:
-//                                result = Uni.createFrom()
-//                                        .completionStage(inMessage.nack(new SaveFileException(ErrorType.SAVE_CRD_FILE.getMessage())))
-//                                        .chain(unused -> Uni.createFrom().nullItem());
-//                                break;
-//                            default:
-//                                throw new IllegalStateException("Uncontrolled error=" + documentCache.getError());
-//                        }
-//                    } else {
-//                        result = Uni.createFrom()
-//                                .completionStage(inMessage.ack())
-//                                .chain(unused -> Uni.createFrom().nullItem());
-//                    }
-//                    return result;
-//                });
-//    }
+    @Incoming("verify-ticket-sunat-incoming")
+    @Acknowledgment(Acknowledgment.Strategy.MANUAL)
+    protected Uni<Void> verifyTicket(Message<String> inMessage) {
+        return eventManagerUtils.initDocumentUniTicket(inMessage.getPayload())
+                // Process ticket
+                .chain(documentUniTicket -> eventManagerUtils.enrichWithWsConfig(documentUniTicket)
+                        .chain(() -> eventManagerUtils.enrichWithCheckingTicket(documentUniTicket, 1))
+                        .chain(billServiceModel -> eventManagerUtils.enrichSavingCDRIfExists(documentUniTicket, billServiceModel))
 
-    protected Uni<UBLDocumentEntity> findDocumentById(String documentId) {
-        return documentRepository
-                .findById(documentId)
-                .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + documentId + " was not found"));
+                        .map(unused -> documentUniTicket)
+
+                        .onFailure(throwable -> throwable instanceof AbstractSendFileException)
+                        .recoverWithUni(throwable -> {
+                            Uni<DocumentUniTicket> result = Uni.createFrom().item(documentUniTicket);
+                            if (throwable instanceof CheckTicketAtSUNATException) {
+                                result = result.invoke(() -> {
+                                    handleRetry(documentUniTicket);
+                                    if (documentUniTicket.getScheduledDelivery() != null) {
+                                        OutgoingAmqpMetadata outgoingAmqpMetadata = createScheduledMessage(documentUniTicket.getScheduledDelivery());
+                                        Message<String> scheduledMessage = Message
+                                                .of(inMessage.getPayload())
+                                                .withMetadata(Metadata.of(outgoingAmqpMetadata));
+                                        ticketEmitter.send(scheduledMessage);
+                                    }
+                                });
+                            }
+                            return result;
+                        })
+                )
+                // Persist in DB
+                .chain(documentUni -> eventManagerUtils.documentUniToEntity(documentUni)
+                        .map(documentEntity -> documentUni)
+                )
+                // Final decision
+                .chain(documentCache -> {
+                    Uni<Void> result;
+                    if (documentCache.getError() != null) {
+                        switch (documentCache.getError()) {
+                            case READ_FILE:
+                            case UNSUPPORTED_DOCUMENT_TYPE:
+                            case COMPANY_NOT_FOUND:
+                            case SEND_FILE:
+                            case CHECK_TICKET:
+                                result = Uni.createFrom()
+                                        .completionStage(inMessage.ack())
+                                        .chain(unused -> Uni.createFrom().nullItem());
+                                break;
+                            case SAVE_CRD_FILE:
+                                result = Uni.createFrom()
+                                        .completionStage(inMessage.nack(new SaveFileException(ErrorType.SAVE_CRD_FILE.getMessage())))
+                                        .chain(unused -> Uni.createFrom().nullItem());
+                                break;
+                            default:
+                                throw new IllegalStateException("Uncontrolled error=" + documentCache.getError());
+                        }
+                    } else {
+                        result = Uni.createFrom()
+                                .completionStage(inMessage.ack())
+                                .chain(unused -> Uni.createFrom().nullItem());
+                    }
+                    return result;
+                });
     }
+
 }

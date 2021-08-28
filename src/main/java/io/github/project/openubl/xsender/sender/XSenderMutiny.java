@@ -26,6 +26,7 @@ import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceMo
 import io.github.project.openubl.xmlsenderws.webservices.xml.DocumentType;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentProvider;
+import io.github.project.openubl.xsender.exceptions.CheckTicketAtSUNATException;
 import io.github.project.openubl.xsender.exceptions.NoCompanyWithRucException;
 import io.github.project.openubl.xsender.exceptions.ReadFileException;
 import io.github.project.openubl.xsender.exceptions.SendFileToSUNATException;
@@ -155,7 +156,7 @@ public class XSenderMutiny {
 
                 uniEmitter.complete(billServiceModel);
             } catch (Throwable e) {
-                uniEmitter.fail(new SendFileToSUNATException("Could not verify ticket"));
+                uniEmitter.fail(new CheckTicketAtSUNATException("Could not verify ticket"));
             }
         });
     }

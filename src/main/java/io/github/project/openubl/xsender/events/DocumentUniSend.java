@@ -16,31 +16,35 @@
  */
 package io.github.project.openubl.xsender.events;
 
-public class DocumentEvent {
-    private String id;
-    private String namespaceId;
+public class DocumentUniSend extends DocumentUni {
 
-    public DocumentEvent() {
+    protected String xmlFileId;
+
+    protected byte[] file;
+    protected Boolean fileValid;
+
+    public String getXmlFileId() {
+        return xmlFileId;
     }
 
-    public DocumentEvent(String id, String namespaceId) {
-        this.id = id;
-        this.namespaceId = namespaceId;
+    public void setXmlFileId(String xmlFileId) {
+        this.xmlFileId = xmlFileId;
     }
 
-    public String getId() {
-        return id;
+    public byte[] getFile() {
+        return file;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setFile(byte[] file) {
+        this.file = file;
     }
 
-    public String getNamespaceId() {
-        return namespaceId;
+    public Boolean getFileValid() {
+        return fileValid;
     }
 
-    public void setNamespaceId(String namespaceId) {
-        this.namespaceId = namespaceId;
+    public void setFileValid(Boolean fileValid) {
+        this.fileValid = fileValid;
     }
+
 }

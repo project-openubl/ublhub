@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.xsender.events.vertx;
 
+import io.github.project.openubl.xsender.events.DocumentUniTicket;
 import io.github.project.openubl.xsender.events.EventManagerUtils;
 import io.github.project.openubl.xsender.exceptions.AbstractSendFileException;
 import io.github.project.openubl.xsender.scheduler.SchedulerManager;
@@ -35,7 +36,7 @@ public class VertxEventManager {
     @Inject
     SchedulerManager schedulerManager;
 
-    @ConsumeEvent(VertxScheduler.VERTX_SCHEDULER_BUS_NAME)
+    @ConsumeEvent(VertxScheduler.VERTX_SEND_FILE_SCHEDULER_BUS_NAME)
     public Uni<Void> sendFile(String documentId) {
         return eventManagerUtils.initDocumentUniSend(documentId)
                 // Process file
@@ -68,4 +69,22 @@ public class VertxEventManager {
                 });
     }
 
+    @ConsumeEvent(VertxScheduler.VERTX_CHECK_TICKET_SCHEDULER_BUS_NAME)
+    public Uni<DocumentUniTicket> checkTicket(String documentId) {
+        return eventManagerUtils.initDocumentUniTicket(documentId)
+                // Process ticket
+                .chain(documentUniTicket -> eventManagerUtils.enrichWithWsConfig(documentUniTicket)
+                        .chain(() -> eventManagerUtils.enrichWithCheckingTicket(documentUniTicket, 1))
+                        .chain(billServiceModel -> eventManagerUtils.enrichSavingCDRIfExists(documentUniTicket, billServiceModel))
+
+                        .map(unused -> documentUniTicket)
+
+                        .onFailure(throwable -> throwable instanceof AbstractSendFileException)
+                        .recoverWithItem(documentUniTicket)
+                )
+                // Persist in DB
+                .chain(documentUni -> eventManagerUtils.documentUniToEntity(documentUni)
+                        .map(documentEntity -> documentUni)
+                );
+    }
 }

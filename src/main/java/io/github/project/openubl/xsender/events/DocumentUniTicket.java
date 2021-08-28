@@ -14,37 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.events.amqp;
+package io.github.project.openubl.xsender.events;
 
-public class DocumentUniSend extends DocumentUni {
+public class DocumentUniTicket extends DocumentUni {
 
-    protected String xmlFileId;
+    private String ticket;
 
-    protected byte[] file;
-    protected Boolean fileValid;
-
-    public String getXmlFileId() {
-        return xmlFileId;
+    public String getTicket() {
+        return ticket;
     }
 
-    public void setXmlFileId(String xmlFileId) {
-        this.xmlFileId = xmlFileId;
+    public void setTicket(String ticket) {
+        this.ticket = ticket;
     }
-
-    public byte[] getFile() {
-        return file;
-    }
-
-    public void setFile(byte[] file) {
-        this.file = file;
-    }
-
-    public Boolean getFileValid() {
-        return fileValid;
-    }
-
-    public void setFileValid(Boolean fileValid) {
-        this.fileValid = fileValid;
-    }
-
 }
