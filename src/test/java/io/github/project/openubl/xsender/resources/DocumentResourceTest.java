@@ -213,7 +213,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //                    .then()
 //                    .statusCode(200)
 //                    .extract().body().as(DocumentRepresentation.class);
-//            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.READ_FILE.getMessage());
+//            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.READ_FILE);
 //        });
 //
 //        givenAuth("alice")
@@ -223,7 +223,7 @@ public class DocumentResourceTest extends BaseAuthTest {
 //                .then()
 //                .statusCode(200)
 //                .body("inProgress", is(false),
-//                        "error", is(ErrorType.READ_FILE.getMessage()),
+//                        "error", is(ErrorType.READ_FILE.toString()),
 ////                        "scheduledDelivery", is(nullValue()),
 ////                        "retryCount", is(0),
 //                        "fileContentValid", is(false),
@@ -261,7 +261,7 @@ public class DocumentResourceTest extends BaseAuthTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage());
+            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.UNSUPPORTED_DOCUMENT_TYPE);
         });
 
         givenAuth("alice")
@@ -271,7 +271,7 @@ public class DocumentResourceTest extends BaseAuthTest {
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
-                        "error", is(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.getMessage()),
+                        "error", is(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.toString()),
 //                        "scheduledDelivery", is(nullValue()),
 //                        "retryCount", is(0),
                         "fileContentValid", is(false),
@@ -309,7 +309,7 @@ public class DocumentResourceTest extends BaseAuthTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.COMPANY_NOT_FOUND.getMessage());
+            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.COMPANY_NOT_FOUND);
         });
 
         givenAuth("alice")
@@ -319,7 +319,7 @@ public class DocumentResourceTest extends BaseAuthTest {
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
-                        "error", is(ErrorType.COMPANY_NOT_FOUND.getMessage()),
+                        "error", is(ErrorType.COMPANY_NOT_FOUND.toString()),
 //                        "scheduledDelivery", is(nullValue()),
 //                        "retryCount", is(0),
                         "fileContentValid", is(true),
@@ -357,7 +357,7 @@ public class DocumentResourceTest extends BaseAuthTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.SEND_FILE.getMessage());
+            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.SEND_FILE);
         });
 
         givenAuth("alice")
@@ -367,7 +367,7 @@ public class DocumentResourceTest extends BaseAuthTest {
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
-                        "error", is(ErrorType.SEND_FILE.getMessage()),
+                        "error", is(ErrorType.SEND_FILE.toString()),
                         "fileContentValid", is(true),
                         "fileContent.ruc", is("11111111111"),
                         "fileContent.documentID", is("F001-1"),

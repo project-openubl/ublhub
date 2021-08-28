@@ -74,7 +74,7 @@ public class EntityToRepresentation {
         rep.setInProgress(entity.inProgress);
 
         rep.setCreatedOn(entity.createdOn.getTime());
-        rep.setError(entity.error != null ? entity.error.getMessage() : null);
+        rep.setError(entity.error);
         rep.setScheduledDelivery(entity.scheduledDelivery != null ? entity.scheduledDelivery.getTime() : null);
         rep.setRetryCount(entity.retries);
 

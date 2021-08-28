@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.xsender.idm;
 
+import io.github.project.openubl.xsender.models.ErrorType;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
@@ -24,7 +25,7 @@ public class DocumentRepresentation {
     private String id;
     private Long createdOn;
     private boolean inProgress;
-    private String error;
+    private ErrorType error;
     private Long scheduledDelivery;
     private int retryCount;
 
@@ -57,11 +58,11 @@ public class DocumentRepresentation {
         this.inProgress = inProgress;
     }
 
-    public String getError() {
+    public ErrorType getError() {
         return error;
     }
 
-    public void setError(String error) {
+    public void setError(ErrorType error) {
         this.error = error;
     }
 
