@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.events;
+package io.github.project.openubl.xsender.scheduler.consumers;
 
 import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;

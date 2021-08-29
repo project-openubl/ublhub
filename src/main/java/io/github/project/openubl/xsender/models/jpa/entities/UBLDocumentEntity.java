@@ -17,6 +17,7 @@
 package io.github.project.openubl.xsender.models.jpa.entities;
 
 import io.github.project.openubl.xsender.models.ErrorType;
+import io.github.project.openubl.xsender.models.jpa.entities.listeners.UBLDocumentEntityListener;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import org.hibernate.annotations.Type;
 
@@ -27,6 +28,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "ubl_document")
+@EntityListeners(UBLDocumentEntityListener.class)
 public class UBLDocumentEntity extends PanacheEntityBase {
 
     @Id

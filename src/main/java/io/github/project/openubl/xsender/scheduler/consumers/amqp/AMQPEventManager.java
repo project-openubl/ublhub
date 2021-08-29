@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.events.amqp;
+package io.github.project.openubl.xsender.scheduler.consumers.amqp;
 
-import io.github.project.openubl.xsender.events.DocumentUni;
-import io.github.project.openubl.xsender.events.DocumentUniSend;
-import io.github.project.openubl.xsender.events.DocumentUniTicket;
-import io.github.project.openubl.xsender.events.EventManagerUtils;
+import io.github.project.openubl.xsender.scheduler.consumers.DocumentUni;
+import io.github.project.openubl.xsender.scheduler.consumers.DocumentUniSend;
+import io.github.project.openubl.xsender.scheduler.consumers.DocumentUniTicket;
+import io.github.project.openubl.xsender.scheduler.consumers.EventManagerUtils;
 import io.github.project.openubl.xsender.exceptions.AbstractSendFileException;
 import io.github.project.openubl.xsender.exceptions.CheckTicketAtSUNATException;
 import io.github.project.openubl.xsender.exceptions.SaveFileException;

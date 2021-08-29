@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.events.vertx;
+package io.github.project.openubl.xsender.scheduler.consumers.vertx;
 
-import io.github.project.openubl.xsender.events.DocumentUniTicket;
-import io.github.project.openubl.xsender.events.EventManagerUtils;
+import io.github.project.openubl.xsender.scheduler.consumers.DocumentUniTicket;
+import io.github.project.openubl.xsender.scheduler.consumers.EventManagerUtils;
 import io.github.project.openubl.xsender.exceptions.AbstractSendFileException;
 import io.github.project.openubl.xsender.scheduler.SchedulerManager;
 import io.github.project.openubl.xsender.scheduler.impl.VertxScheduler;

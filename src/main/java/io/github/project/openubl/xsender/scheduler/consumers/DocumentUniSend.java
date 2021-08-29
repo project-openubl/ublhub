@@ -14,17 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.events;
+package io.github.project.openubl.xsender.scheduler.consumers;
 
-public class DocumentUniTicket extends DocumentUni {
+public class DocumentUniSend extends DocumentUni {
 
-    private String ticket;
+    protected String xmlFileId;
 
-    public String getTicket() {
-        return ticket;
+    protected byte[] file;
+    protected Boolean fileValid;
+
+    public String getXmlFileId() {
+        return xmlFileId;
     }
 
-    public void setTicket(String ticket) {
-        this.ticket = ticket;
+    public void setXmlFileId(String xmlFileId) {
+        this.xmlFileId = xmlFileId;
     }
+
+    public byte[] getFile() {
+        return file;
+    }
+
+    public void setFile(byte[] file) {
+        this.file = file;
+    }
+
+    public Boolean getFileValid() {
+        return fileValid;
+    }
+
+    public void setFileValid(Boolean fileValid) {
+        this.fileValid = fileValid;
+    }
+
 }
