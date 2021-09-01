@@ -17,6 +17,7 @@ package io.github.project.openubl.xsender.resources;
  * limitations under the License.
  */
 
+import io.github.project.openubl.xsender.events.BroadcasterEventManager;
 import io.github.project.openubl.xsender.exceptions.NoNamespaceException;
 import io.github.project.openubl.xsender.files.FilesMutiny;
 import io.github.project.openubl.xsender.models.DocumentFilterModel;
@@ -61,6 +62,11 @@ public class DocumentResource {
 
     @Inject
     SchedulerManager schedulerManager;
+
+    // Needed to not remove BroadcasterEventManager at build-time
+    // https://github.com/quarkusio/quarkus/issues/6948
+    @Inject
+    BroadcasterEventManager broadcasterEventManager;
 
     @Inject
     NamespaceRepository namespaceRepository;

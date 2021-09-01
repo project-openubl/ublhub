@@ -24,7 +24,6 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -32,7 +31,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
-import static io.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.*;
 

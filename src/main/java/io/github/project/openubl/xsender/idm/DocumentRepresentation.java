@@ -23,6 +23,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 public class DocumentRepresentation {
 
     private String id;
+    private String namespaceId;
+
     private Long createdOn;
     private boolean inProgress;
     private ErrorType error;
@@ -104,5 +106,13 @@ public class DocumentRepresentation {
 
     public void setRetryCount(int retryCount) {
         this.retryCount = retryCount;
+    }
+
+    public String getNamespaceId() {
+        return namespaceId;
+    }
+
+    public void setNamespaceId(String namespaceId) {
+        this.namespaceId = namespaceId;
     }
 }

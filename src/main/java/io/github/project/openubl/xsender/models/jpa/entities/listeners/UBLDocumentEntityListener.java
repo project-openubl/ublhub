@@ -16,22 +16,24 @@
  */
 package io.github.project.openubl.xsender.models.jpa.entities.listeners;
 
-import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
+import io.github.project.openubl.xsender.events.BroadcasterEventManager;
+import io.github.project.openubl.xsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
+import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.spi.CDI;
 import javax.persistence.PostPersist;
-import javax.persistence.PostRemove;
 import javax.persistence.PostUpdate;
 
 public class UBLDocumentEntityListener {
 
     @PostPersist
     @PostUpdate
-    @PostRemove
     private void afterAnyUpdate(UBLDocumentEntity document) {
-        CompanyRepository companyRepository = CDI.current().select(CompanyRepository.class).get();
+        DocumentRepresentation documentRepresentation = EntityToRepresentation.toRepresentation(document);
+
+        BroadcasterEventManager broadcasterEventManager = CDI.current().select(BroadcasterEventManager.class).get();
+        broadcasterEventManager.broadcast(documentRepresentation);
     }
 
 }

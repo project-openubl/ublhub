@@ -71,6 +71,8 @@ public class EntityToRepresentation {
         DocumentRepresentation rep = new DocumentRepresentation();
 
         rep.setId(entity.id);
+        rep.setNamespaceId(entity.namespace.id);
+
         rep.setInProgress(entity.inProgress);
 
         rep.setCreatedOn(entity.createdOn.getTime());
