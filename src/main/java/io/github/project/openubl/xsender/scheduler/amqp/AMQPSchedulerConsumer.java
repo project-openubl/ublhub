@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.scheduler.consumers.amqp;
+package io.github.project.openubl.xsender.scheduler.amqp;
 
-import io.github.project.openubl.xsender.scheduler.consumers.DocumentUni;
-import io.github.project.openubl.xsender.scheduler.consumers.DocumentUniSend;
-import io.github.project.openubl.xsender.scheduler.consumers.DocumentUniTicket;
-import io.github.project.openubl.xsender.scheduler.consumers.EventManagerUtils;
+import io.github.project.openubl.xsender.scheduler.commons.DocumentUni;
+import io.github.project.openubl.xsender.scheduler.commons.DocumentUniSend;
+import io.github.project.openubl.xsender.scheduler.commons.DocumentUniTicket;
+import io.github.project.openubl.xsender.scheduler.commons.EventManagerUtils;
 import io.github.project.openubl.xsender.exceptions.AbstractSendFileException;
 import io.github.project.openubl.xsender.exceptions.CheckTicketAtSUNATException;
 import io.github.project.openubl.xsender.exceptions.SaveFileException;
@@ -35,7 +35,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 @ApplicationScoped
-public class AMQPEventManager {
+public class AMQPSchedulerConsumer {
 
     @Inject
     EventManagerUtils eventManagerUtils;

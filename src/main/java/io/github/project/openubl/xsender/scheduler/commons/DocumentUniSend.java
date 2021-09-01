@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.scheduler.consumers;
+package io.github.project.openubl.xsender.scheduler.commons;
 
 public class DocumentUniSend extends DocumentUni {
 

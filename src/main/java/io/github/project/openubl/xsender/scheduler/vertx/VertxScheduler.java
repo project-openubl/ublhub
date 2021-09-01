@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.scheduler.impl;
+package io.github.project.openubl.xsender.scheduler.vertx;
 
 import io.github.project.openubl.xsender.scheduler.Scheduler;
 import io.github.project.openubl.xsender.scheduler.SchedulerProvider;

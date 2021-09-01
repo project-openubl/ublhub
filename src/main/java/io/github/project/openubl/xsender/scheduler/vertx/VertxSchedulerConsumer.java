@@ -14,13 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.scheduler.consumers.vertx;
+package io.github.project.openubl.xsender.scheduler.vertx;
 
-import io.github.project.openubl.xsender.scheduler.consumers.DocumentUniTicket;
-import io.github.project.openubl.xsender.scheduler.consumers.EventManagerUtils;
+import io.github.project.openubl.xsender.scheduler.commons.DocumentUniTicket;
+import io.github.project.openubl.xsender.scheduler.commons.EventManagerUtils;
 import io.github.project.openubl.xsender.exceptions.AbstractSendFileException;
 import io.github.project.openubl.xsender.scheduler.SchedulerManager;
-import io.github.project.openubl.xsender.scheduler.impl.VertxScheduler;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 
@@ -28,7 +27,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 @ApplicationScoped
-public class VertxEventManager {
+public class VertxSchedulerConsumer {
 
     @Inject
     EventManagerUtils eventManagerUtils;
