@@ -47,7 +47,7 @@
 
         <!--libs-->
         <xsender-lib.version>3.0.3.Final</xsender-lib.version>
-        <testcontainers.version>1.15.3</testcontainers.version>
+        <testcontainers.version>1.16.0</testcontainers.version>
         <awaitility.version>4.1.0</awaitility.version>
         <keycloak.version>14.0.0</keycloak.version>
         <postgresql.version>13.1</postgresql.version>
