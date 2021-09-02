@@ -1,5 +1,5 @@
-![CI](https://github.com/project-openubl/xsender-server/workflows/CI/badge.svg)
-[![Docker Repository on Quay](https://quay.io/repository/projectopenubl/xsender-server/status "Docker Repository on Quay")](https://quay.io/repository/projectopenubl/xsender-server)
+![CI](https://github.com/project-openubl/ublhub/workflows/CI/badge.svg)
+[![Docker Repository on Quay](https://quay.io/repository/projectopenubl/ublhub/status "Docker Repository on Quay")](https://quay.io/repository/projectopenubl/ublhub)
 
 # XSender server
 
@@ -10,7 +10,7 @@ Envía tus XMLs a la SUNAT de manera fácil.
 Clona el repositorio:
 
 ```shell
-git clone https://github.com/project-openubl/xsender-server
+git clone https://github.com/project-openubl/ublhub
 ```
 
 ### Inicia las dependencias

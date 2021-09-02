@@ -79,9 +79,9 @@
     </developers>
 
     <scm>
-        <url>https://github.com/project-openubl/xsender-server</url>
-        <connection>scm:git:git://github.com/project-openubl/xsender-server.git</connection>
-        <developerConnection>scm:git:git@github.com:project-openubl/xsender-server.git</developerConnection>
+        <url>https://github.com/project-openubl/ublhub</url>
+        <connection>scm:git:git://github.com/project-openubl/ublhub.git</connection>
+        <developerConnection>scm:git:git@github.com:project-openubl/ublhub.git</developerConnection>
     </scm>
 
     <distributionManagement>

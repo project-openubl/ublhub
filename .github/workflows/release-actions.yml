@@ -67,12 +67,12 @@ jobs:
       - name: Prepare XML Sender archive
         shell: bash
         run: |
-          find api/target -name 'lib' -o -name 'xsender-server-api-*-runner.jar' | tar -czvf xsender-server-java-artifacts.tgz -T -
+          find api/target -name 'lib' -o -name 'ublhub-api-*-runner.jar' | tar -czvf ublhub-java-artifacts.tgz -T -
       - name: Upload Archive XML Sender
         uses: actions/upload-artifact@v1
         with:
-          name: xsender-server-java-artifacts
-          path: 'xsender-server-java-artifacts.tgz'
+          name: ublhub-java-artifacts
+          path: 'ublhub-java-artifacts.tgz'
 
 
   maven-central:
@@ -115,16 +115,16 @@ jobs:
       - name: Download Java XML Sender Artifacts
         uses: actions/download-artifact@v1
         with:
-          name: xsender-server-java-artifacts
+          name: ublhub-java-artifacts
           path: .
       - name: Extract Java Artifacs
         shell: bash
-        run: tar -xzvf xsender-server-java-artifacts.tgz
+        run: tar -xzvf ublhub-java-artifacts.tgz
       - name: Publish to Registry XML Sender (Release tag)
         # Uses sha for added security since tags can be updated
         uses: elgohr/Publish-Docker-Github-Action@b2f63259b466ca5a4be395c392546de447450334
         with:
-          name: projectopenubl/xsender-server
+          name: projectopenubl/ublhub
           dockerfile: api/src/main/docker/Dockerfile.jvm
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -133,7 +133,7 @@ jobs:
         # Uses sha for added security since tags can be updated
         uses: elgohr/Publish-Docker-Github-Action@b2f63259b466ca5a4be395c392546de447450334
         with:
-          name: projectopenubl/xsender-server
+          name: projectopenubl/ublhub
           dockerfile: api/src/main/docker/Dockerfile.jvm
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -148,7 +148,7 @@ jobs:
       - name: Download Java XML Sender Artifacts
         uses: actions/download-artifact@v1
         with:
-          name: xsender-server-java-artifacts
+          name: ublhub-java-artifacts
           path: .
       - name: changelog
         uses: heinrichreimer/github-changelog-generator-action@v2.1.1
@@ -177,6 +177,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./xsender-server-java-artifacts.tgz
-          asset_name: jdk-xsender-server.tgz
+          asset_path: ./ublhub-java-artifacts.tgz
+          asset_name: jdk-ublhub.tgz
           asset_content_type: application/tar+gzip
