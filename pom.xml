@@ -23,11 +23,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.project-openubl</groupId>
-    <artifactId>xsender-server</artifactId>
+    <artifactId>ublhub</artifactId>
     <version>2.0.0-SNAPSHOT</version>
 
-    <name>XSender :: Microservice</name>
-    <description>Microservice for sending XMLs to SUNAT</description>
+    <name>UBLHub</name>
+    <description>Microservice managing UBL files</description>
 
     <properties>
         <maven.compiler.target>11</maven.compiler.target>
