@@ -56,41 +56,4 @@ public class NamespaceRepresentation {
         this.description = description;
     }
 
-    @RegisterForReflection
-    public static final class NamespaceRepresentationBuilder {
-
-        private String id;
-        private String name;
-        private String description;
-
-        private NamespaceRepresentationBuilder() {
-        }
-
-        public static NamespaceRepresentationBuilder aNamespaceRepresentation() {
-            return new NamespaceRepresentationBuilder();
-        }
-
-        public NamespaceRepresentationBuilder withId(String id) {
-            this.id = id;
-            return this;
-        }
-
-        public NamespaceRepresentationBuilder withName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public NamespaceRepresentationBuilder withDescription(String description) {
-            this.description = description;
-            return this;
-        }
-
-        public NamespaceRepresentation build() {
-            NamespaceRepresentation namespaceRepresentation = new NamespaceRepresentation();
-            namespaceRepresentation.setId(id);
-            namespaceRepresentation.setName(name);
-            namespaceRepresentation.setDescription(description);
-            return namespaceRepresentation;
-        }
-    }
 }

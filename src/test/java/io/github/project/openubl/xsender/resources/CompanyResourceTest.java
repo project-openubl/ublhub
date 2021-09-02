@@ -16,80 +16,103 @@
  */
 package io.github.project.openubl.xsender.resources;
 
+import io.github.project.openubl.xsender.ProfileManager;
 import io.github.project.openubl.xsender.idm.CompanyRepresentation;
+import io.github.project.openubl.xsender.idm.CompanyRepresentationBuilder;
 import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
-import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
-import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
-import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
-import io.github.project.openubl.xsender.models.jpa.entities.SunatCredentialsEntity;
-import io.github.project.openubl.xsender.models.jpa.entities.SunatUrlsEntity;
-import io.github.project.openubl.xsender.resources.config.*;
-import io.quarkus.test.common.QuarkusTestResource;
+import io.github.project.openubl.xsender.BaseAuthTest;
+import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
-import org.junit.Ignore;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-import java.util.Date;
-import java.util.UUID;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
-@QuarkusTestResource(KeycloakServer.class)
-@QuarkusTestResource(PostgreSQLServer.class)
-@QuarkusTestResource(StorageServer.class)
-@QuarkusTestResource(SenderServer.class)
-public class CompanyResourceTest extends BaseKeycloakTest {
+@TestProfile(ProfileManager.class)
+@TestHTTPEndpoint(CompanyResource.class)
+public class CompanyResourceTest extends BaseAuthTest {
 
-    final SunatCredentialsEntity credentials = SunatCredentialsEntity.Builder.aSunatCredentialsEntity()
-            .withSunatUsername("anyUsername")
-            .withSunatPassword("anyPassword")
-            .build();
-    final SunatUrlsEntity urls = SunatUrlsEntity.Builder.aSunatUrlsEntity()
-            .withSunatUrlFactura("https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl")
-            .withSunatUrlGuiaRemision("https://e-guiaremision.sunat.gob.pe/ol-ti-itemision-guia-gem/billService?wsdl")
-            .withSunatUrlPercepcionRetencion("https://e-factura.sunat.gob.pe/ol-ti-itemision-otroscpe-gem/billService?wsdl")
-            .build();
+    @Test
+    public void getCompany() {
+        // Given
+        String nsId = "1";
+        String companyId = "11";
 
-    NamespaceEntity namespace;
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/companies/" + companyId)
+                .then()
+                .statusCode(200)
+                .body("id", is(notNullValue()),
+                        "name", is("company1"),
+                        "ruc", is("11111111111"),
+                        "webServices.factura", is("http://urlFactura1"),
+                        "webServices.guia", is("http://urlGuia1"),
+                        "webServices.retenciones", is("http://urlPercepcionRetencion1")
+                );
+        // Then
+    }
 
-    @Inject
-    NamespaceRepository namespaceRepository;
+    @Test
+    public void getCompanyByNotOwner_shouldNotBeAllowed() {
+        // Given
+        String nsId = "3";
+        String companyId = "44";
 
-    @Inject
-    CompanyRepository companyRepository;
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/companies/" + companyId)
+                .then()
+                .statusCode(404);
 
-    @BeforeEach
-    public void beforeEach() {
-        NamespaceEntity namespace = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my-namespace")
-                .withOwner("alice")
-                .withCreatedOn(new Date())
-                .build();
+        givenAuth("carlos")
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/companies/" + companyId)
+                .then()
+                .statusCode(200);
+        // Then
+    }
 
-        this.companyRepository.deleteAll();
-        this.namespaceRepository.deleteAll();
+    @Test
+    public void getCompanyThatBelongsToOtherNamespace_shouldNotBeAllowed() {
+        // Given
+        String nsOwnerId = "1";
+        String nsToTestId = "2";
 
-        this.namespaceRepository.persist(namespace);
-        this.namespace = namespace;
+        String companyId = "11";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsOwnerId + "/companies/" + companyId)
+                .then()
+                .statusCode(200);
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsToTestId + "/companies/" + companyId)
+                .then()
+                .statusCode(404);
+        // Then
     }
 
     @Test
     public void createCompany() {
         // Given
+        String nsId = "1";
 
-        // When
-        CompanyRepresentation company = CompanyRepresentation.CompanyRepresentationBuilder.aCompanyRepresentation()
+        CompanyRepresentation company = CompanyRepresentationBuilder.aCompanyRepresentation()
                 .withName("My company")
                 .withRuc("12345678910")
                 .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
@@ -105,15 +128,16 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 )
                 .build();
 
-        CompanyRepresentation response = given().auth().oauth2(getAccessToken("alice"))
+        // When
+        CompanyRepresentation response = givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .body(company)
                 .when()
-                .post("/api/namespaces/" + namespace.getId() + "/companies")
+                .post("/" + nsId + "/companies")
                 .then()
                 .statusCode(200)
-                .body("name", is(company.getName()),
+                .body("id", is(notNullValue()),
+                        "name", is(company.getName()),
                         "webServices.factura", is(company.getWebServices().getFactura()),
                         "webServices.guia", is(company.getWebServices().getGuia()),
                         "webServices.retenciones", is(company.getWebServices().getRetenciones()),
@@ -122,90 +146,94 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 ).extract().body().as(CompanyRepresentation.class);
 
         // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/companies/" + response.getId())
+                .then()
+                .statusCode(200)
+                .body("id", is(response.getId()),
+                        "name", is(company.getName()),
+                        "webServices.factura", is(company.getWebServices().getFactura()),
+                        "webServices.guia", is(company.getWebServices().getGuia()),
+                        "webServices.retenciones", is(company.getWebServices().getRetenciones()),
+                        "credentials.username", is(company.getCredentials().getUsername()),
+                        "credentials.password", nullValue()
+                );
     }
 
     @Test
-    public void getCompany() {
+    public void createCompanyByNotNsOwner_shouldNotBeAllowed() {
         // Given
-        CompanyEntity company = CompanyEntity.CompanyEntityBuilder.aCompanyEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my company")
+        String nsId = "3";
+
+        CompanyRepresentation company = CompanyRepresentationBuilder.aCompanyRepresentation()
+                .withName("My company")
                 .withRuc("12345678910")
-                .withCreatedOn(new Date())
-                .withSunatCredentials(credentials)
-                .withSunatUrls(urls)
-                .withNamespace(namespace)
+                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
+                        .withFactura("http://url1.com")
+                        .withGuia("http://url2.com")
+                        .withRetenciones("http://url3.com")
+                        .build()
+                )
+                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
+                        .withUsername("myUsername")
+                        .withPassword("myPassword")
+                        .build()
+                )
                 .build();
 
-        companyRepository.persist(company);
-
         // When
-        given().auth().oauth2(getAccessToken("alice"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
+                .body(company)
                 .when()
-                .get("/api/namespaces/" + namespace.getId() + "/companies/" + company.getId())
+                .post("/" + nsId + "/companies")
                 .then()
-                .statusCode(200)
-                .body("name", is(company.getName()),
-                        "ruc", is(company.getRuc())
-                );
-
+                .statusCode(404);
         // Then
     }
 
     @Test
-    public void getCompanyByNotOwner_shouldNotBeAllowed() {
+    public void create2CompaniesWithSameRuc_shouldNotBeAllowed() {
         // Given
-        CompanyEntity company = CompanyEntity.CompanyEntityBuilder.aCompanyEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my company")
-                .withRuc("12345678910")
-                .withCreatedOn(new Date())
-                .withSunatCredentials(credentials)
-                .withSunatUrls(urls)
-                .withNamespace(namespace)
+        String nsId = "1";
+
+        CompanyRepresentation company = CompanyRepresentationBuilder.aCompanyRepresentation()
+                .withName("My company")
+                .withRuc("11111111111")
+                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
+                        .withFactura("http://url1.com")
+                        .withGuia("http://url2.com")
+                        .withRetenciones("http://url3.com")
+                        .build()
+                )
+                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
+                        .withUsername("myUsername")
+                        .withPassword("myPassword")
+                        .build()
+                )
                 .build();
 
-        companyRepository.persist(company);
-
         // When
-        given().auth().oauth2(getAccessToken("admin"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
+                .body(company)
                 .when()
-                .get("/api/namespaces/" + namespace.getId() + "/companies/" + company.getId())
+                .post("/" + nsId + "/companies")
                 .then()
-                .statusCode(404);
-
-        given().auth().oauth2(getAccessToken("alice"))
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .when()
-                .get("/api/namespaces/" + namespace.getId() + "/companies/" + company.getId())
-                .then()
-                .statusCode(200);
+                .statusCode(409);
         // Then
     }
 
     @Test
     public void updateCompany() {
         // Given
-        CompanyEntity company = CompanyEntity.CompanyEntityBuilder.aCompanyEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my company")
-                .withRuc("12345678910")
-                .withCreatedOn(new Date())
-                .withSunatCredentials(credentials)
-                .withSunatUrls(urls)
-                .withNamespace(namespace)
-                .build();
+        String nsId = "1";
+        String companyId = "11";
 
-        companyRepository.persist(company);
-
-        // When
-        CompanyRepresentation companyRepresentation = CompanyRepresentation.CompanyRepresentationBuilder.aCompanyRepresentation()
-                .withRuc("11111111111")
+        CompanyRepresentation companyRepresentation = CompanyRepresentationBuilder.aCompanyRepresentation()
+                .withRuc("99999999999")
                 .withName("new name")
                 .withDescription("new description")
                 .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
@@ -221,12 +249,12 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 )
                 .build();
 
-        given().auth().oauth2(getAccessToken("alice"))
+        // When
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .body(companyRepresentation)
                 .when()
-                .put("/api/namespaces/" + namespace.getId() + "/companies/" + company.getId())
+                .put("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(200)
                 .body("ruc", is(companyRepresentation.getRuc()),
@@ -240,27 +268,32 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                 );
 
         // Then
-        assertEquals(companyRepresentation.getCredentials().getPassword(), companyRepository.findById(company.getId()).getSunatCredentials().getSunatPassword());
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/companies/" + companyId)
+                .then()
+                .statusCode(200)
+                .body("id", is(companyId),
+                        "ruc", is(companyRepresentation.getRuc()),
+                        "name", is(companyRepresentation.getName()),
+                        "description", is(companyRepresentation.getDescription()),
+                        "webServices.factura", is(companyRepresentation.getWebServices().getFactura()),
+                        "webServices.retenciones", is(companyRepresentation.getWebServices().getRetenciones()),
+                        "webServices.guia", is(companyRepresentation.getWebServices().getGuia()),
+                        "credentials.username", is(companyRepresentation.getCredentials().getUsername()),
+                        "credentials.password", is(nullValue())
+                );
     }
 
     @Test
     public void updateCompanyByNotOwner_shouldNotBeAllowed() {
+        String nsId = "3";
+        String companyId = "44";
+
         // Given
-        CompanyEntity company = CompanyEntity.CompanyEntityBuilder.aCompanyEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my company")
-                .withRuc("12345678910")
-                .withCreatedOn(new Date())
-                .withSunatCredentials(credentials)
-                .withSunatUrls(urls)
-                .withNamespace(namespace)
-                .build();
-
-        companyRepository.persist(company);
-
-        // When
-        CompanyRepresentation companyRepresentation = CompanyRepresentation.CompanyRepresentationBuilder.aCompanyRepresentation()
-                .withRuc("11111111111")
+        CompanyRepresentation companyRepresentation = CompanyRepresentationBuilder.aCompanyRepresentation()
+                .withRuc("99999999999")
                 .withName("new name")
                 .withDescription("new description")
                 .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
@@ -269,81 +302,198 @@ public class CompanyResourceTest extends BaseKeycloakTest {
                         .withGuia("http://newUrl3.com")
                         .build()
                 )
+                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
+                        .withUsername("new username")
+                        .withPassword("new password")
+                        .build()
+                )
                 .build();
 
-        given().auth().oauth2(getAccessToken("admin"))
+        // When
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .body(companyRepresentation)
                 .when()
-                .put("/api/namespaces/" + namespace.getId() + "/companies/" + company.getId())
+                .put("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
 
+        givenAuth("carlos")
+                .contentType(ContentType.JSON)
+                .body(companyRepresentation)
+                .when()
+                .put("/" + nsId + "/companies/" + companyId)
+                .then()
+                .statusCode(200);
+        // Then
+    }
+
+    @Test
+    public void updateCompanyWithIncorrectNs_shouldNotBeAllowed() {
+        String nsId = "1";
+        String companyId = "33";
+
+        // Given
+        CompanyRepresentation companyRepresentation = CompanyRepresentationBuilder.aCompanyRepresentation()
+                .withRuc("99999999999")
+                .withName("new name")
+                .withDescription("new description")
+                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
+                        .withFactura("http://newUrl1.com")
+                        .withRetenciones("http://newUrl2.com")
+                        .withGuia("http://newUrl3.com")
+                        .build()
+                )
+                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
+                        .withUsername("new username")
+                        .withPassword("new password")
+                        .build()
+                )
+                .build();
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(companyRepresentation)
+                .when()
+                .put("/" + nsId + "/companies/" + companyId)
+                .then()
+                .statusCode(404);
         // Then
     }
 
     @Test
     public void deleteCompany() {
         // Given
-        CompanyEntity company = CompanyEntity.CompanyEntityBuilder.aCompanyEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my company")
-                .withRuc("12345678910")
-                .withCreatedOn(new Date())
-                .withSunatCredentials(credentials)
-                .withSunatUrls(urls)
-                .withNamespace(namespace)
-                .build();
-
-        companyRepository.persist(company);
+        String nsId = "1";
+        String companyId = "11";
 
         // When
-        given().auth().oauth2(getAccessToken("alice"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + namespace.getId() + "/companies/" + company.getId())
+                .delete("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(204);
 
         // Then
-        assertNull(companyRepository.findById(company.getId()));
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/companies/" + companyId)
+                .then()
+                .statusCode(404);
     }
 
     @Test
-    public void deleteCompany_byNotOwner() {
+    public void deleteCompanyByNotOwner_shouldNotBeAllowed() {
         // Given
-        CompanyEntity company = CompanyEntity.CompanyEntityBuilder.aCompanyEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my company")
-                .withRuc("12345678910")
-                .withCreatedOn(new Date())
-                .withSunatCredentials(credentials)
-                .withSunatUrls(urls)
-                .withNamespace(namespace)
-                .build();
-
-        companyRepository.persist(company);
+        String nsId = "3";
+        String companyId = "44";
 
         // When
-        given().auth().oauth2(getAccessToken("admin"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + namespace.getId() + "/companies/" + company.getId())
+                .delete("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
 
-        given().auth().oauth2(getAccessToken("alice"))
+        givenAuth("carlos")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + namespace.getId() + "/companies/" + company.getId())
+                .delete("/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(204);
 
+        // Then
+    }
+
+    @Test
+    public void deleteCompanyByIncorrectNs_shouldNotBeAllowed() {
+        // Given
+        String nsId = "1";
+        String companyId = "33";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .delete("/" + nsId + "/companies/" + companyId)
+                .then()
+                .statusCode(404);
+        // Then
+    }
+
+    @Test
+    public void searchCompanies() {
+        // Given
+        String nsId = "1";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/companies")
+                .then()
+                .statusCode(200)
+                .body("meta.count", is(2),
+                        "data.size()", is(2),
+                        "data[0].name", is("company2"),
+                        "data[1].name", is("company1")
+                );
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/companies?sort_by=createdOn:asc")
+                .then()
+                .statusCode(200)
+                .body("meta.count", is(2),
+                        "data.size()", is(2),
+                        "data[0].name", is("company1"),
+                        "data[1].name", is("company2")
+                );
+        // Then
+    }
+
+    @Test
+    public void searchCompanies_filterTextByName() {
+        // Given
+        String nsId = "1";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/companies?filterText=company1")
+                .then()
+                .statusCode(200)
+                .body("meta.count", is(1),
+                        "data.size()", is(1),
+                        "data[0].name", is("company1")
+                );
+        // Then
+    }
+
+    @Test
+    public void searchCompanies_filterTextByRuc() {
+        // Given
+        String nsId = "1";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/companies?filterText=222222")
+                .then()
+                .statusCode(200)
+                .body("meta.count", is(1),
+                        "data.size()", is(1),
+                        "data[0].name", is("company2")
+                );
         // Then
     }
 
 }
+

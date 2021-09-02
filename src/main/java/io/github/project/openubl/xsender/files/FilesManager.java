@@ -16,13 +16,15 @@
  */
 package io.github.project.openubl.xsender.files;
 
-import io.github.project.openubl.xsender.models.FileType;
 import org.apache.camel.CamelContext;
-import org.apache.camel.Exchange;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,17 +37,23 @@ public class FilesManager {
     @ConfigProperty(name = "openubl.storage.type")
     String storageType;
 
-    /**
-     * Uploads a file and zip it if necessary
-     */
-    public String createFile(byte[] file, String fileName, FileType fileType) {
+    public String createFile(byte[] file, boolean shouldZipFile) {
         Map<String, Object> headers = new HashMap<>();
-        headers.put("isZipFile", fileType.equals(FileType.ZIP));
-        headers.put(Exchange.FILE_NAME, fileName);
+        headers.put("shouldZipFile", shouldZipFile);
 
         return camelContext
                 .createProducerTemplate()
                 .requestBodyAndHeaders("direct:" + storageType + "-save-file", file, headers, String.class);
+    }
+
+    public String createFile(File file, boolean shouldZipFile) throws FileNotFoundException {
+        Map<String, Object> headers = new HashMap<>();
+        headers.put("shouldZipFile", shouldZipFile);
+
+        InputStream is = new FileInputStream(file);
+        return camelContext
+                .createProducerTemplate()
+                .requestBodyAndHeaders("direct:" + storageType + "-save-file", is, headers, String.class);
     }
 
     public byte[] getFileAsBytesAfterUnzip(String fileID) {

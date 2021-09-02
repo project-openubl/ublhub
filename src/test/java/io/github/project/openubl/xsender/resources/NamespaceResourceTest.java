@@ -16,221 +16,177 @@
  */
 package io.github.project.openubl.xsender.resources;
 
-import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
-import io.github.project.openubl.xsender.resources.config.*;
-import io.quarkus.test.common.QuarkusTestResource;
+import io.github.project.openubl.xsender.ProfileManager;
+import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
+import io.github.project.openubl.xsender.idm.NamespaceRepresentationBuilder;
+import io.github.project.openubl.xsender.BaseAuthTest;
+import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-import java.util.Date;
-import java.util.UUID;
-
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 
 @QuarkusTest
-@QuarkusTestResource(KeycloakServer.class)
-@QuarkusTestResource(PostgreSQLServer.class)
-@QuarkusTestResource(StorageServer.class)
-@QuarkusTestResource(SenderServer.class)
-public class NamespaceResourceTest extends BaseKeycloakTest {
-
-    @Inject
-    NamespaceRepository namespaceRepository;
-
-    @BeforeEach
-    public void beforeEach() {
-        namespaceRepository.deleteAll();
-    }
+@TestProfile(ProfileManager.class)
+@TestHTTPEndpoint(NamespaceResource.class)
+public class NamespaceResourceTest extends BaseAuthTest {
 
     @Test
     public void getNamespace() {
         // Given
-
-        NamespaceEntity namespace = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my-namespace")
-                .withOwner("alice")
-                .withCreatedOn(new Date())
-                .build();
-        namespaceRepository.persist(namespace);
+        String nsId = "1";
 
         // When
-        given().auth().oauth2(getAccessToken("alice"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + namespace.getId())
+                .get("/" + nsId)
                 .then()
                 .statusCode(200)
-                .body("name", is(namespace.getName()),
-                        "description", is(namespace.getDescription())
+                .body("name", is("my-namespace1"),
+                        "description", is("description1")
                 );
 
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + 10)
+                .then()
+                .statusCode(404);
         // Then
-
     }
 
     @Test
     public void getNamespaceByNotOwner_shouldReturnNotFound() {
         // Given
-
-        NamespaceEntity namespace = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my-namespace1")
-                .withOwner("admin")
-                .withCreatedOn(new Date())
-                .build();
-        namespaceRepository.persist(namespace);
+        String nsId = "3";
 
         // When
-        given().auth().oauth2(getAccessToken("alice"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + namespace.getId())
+                .get("/" + nsId)
                 .then()
                 .statusCode(404);
 
-        given().auth().oauth2(getAccessToken("admin"))
+        givenAuth("carlos")
                 .header("Content-Type", "application/json")
                 .when()
-                .get("/api/namespaces/" + namespace.getId())
+                .get("/" + nsId)
                 .then()
                 .statusCode(200);
-
         // Then
     }
 
     @Test
     public void updateNamespace() {
         // Given
-        String NAME = "my-namespace";
-
-        NamespaceEntity namespace = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName(NAME)
-                .withOwner("admin")
-                .withCreatedOn(new Date())
-                .build();
-        namespaceRepository.persist(namespace);
-
-        // When
-        NamespaceEntity namespaceUpdate = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
+        String nsId = "1";
+        NamespaceRepresentation newNamespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
                 .withName("new name")
                 .withDescription("my description")
                 .build();
 
-        given().auth().oauth2(getAccessToken("admin"))
+        // When
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(namespaceUpdate)
+                .body(newNamespace)
                 .when()
-                .put("/api/namespaces/" + namespace.getId())
+                .put("/" + nsId)
                 .then()
                 .statusCode(200)
-                .body("name", is(namespaceUpdate.getName()),
-                        "description", is(namespaceUpdate.getDescription())
+                .body("id", is(nsId),
+                        "name", is(newNamespace.getName()),
+                        "description", is(newNamespace.getDescription())
                 );
 
         // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId)
+                .then()
+                .statusCode(200)
+                .body("id", is(nsId),
+                        "name", is(newNamespace.getName()),
+                        "description", is(newNamespace.getDescription())
+                );
     }
 
     @Test
     public void updateNamespaceByNotOwner_shouldNotBeAllowed() {
         // Given
-        String NAME = "my-namespace";
-
-        NamespaceEntity namespace = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName(NAME)
-                .withOwner("admin")
-                .withCreatedOn(new Date())
-                .build();
-        namespaceRepository.persist(namespace);
-
-        // When
-        NamespaceEntity namespaceUpdate = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
+        String nsId = "3";
+        NamespaceRepresentation newNamespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
+                .withName("new name")
                 .withDescription("my description")
                 .build();
 
-        given().auth().oauth2(getAccessToken("alice"))
+        // When
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(namespaceUpdate)
+                .body(newNamespace)
                 .when()
-                .put("/api/namespaces/" + namespace.getId())
+                .put("/" + nsId)
                 .then()
                 .statusCode(404);
 
-        given().auth().oauth2(getAccessToken("admin"))
+        givenAuth("carlos")
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body(namespaceUpdate)
+                .body(newNamespace)
                 .when()
-                .put("/api/namespaces/" + namespace.getId())
+                .put("/" + nsId)
                 .then()
                 .statusCode(200);
-
         // Then
     }
 
     @Test
     public void deleteNamespace() {
         // Given
-        NamespaceEntity namespace = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my-namespace")
-                .withOwner("alice")
-                .withCreatedOn(new Date())
-                .build();
-        namespaceRepository.persist(namespace);
+        String nsId = "1";
 
         // When
-        given().auth().oauth2(getAccessToken("alice"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + namespace.getId())
+                .delete("/" + nsId)
                 .then()
                 .statusCode(204);
 
         // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId)
+                .then()
+                .statusCode(404);
     }
 
     @Test
     public void deleteNamespaceByNotOwner_shouldNotBeAllowed() {
         // Given
-        NamespaceEntity namespace = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName("my-namespace")
-                .withOwner("admin")
-                .withCreatedOn(new Date())
-                .build();
-        namespaceRepository.persist(namespace);
+        String nsId = "3";
 
         // When
-        given().auth().oauth2(getAccessToken("alice"))
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + namespace.getId())
+                .delete("/" + nsId)
                 .then()
                 .statusCode(404);
 
-        given().auth().oauth2(getAccessToken("admin"))
+        givenAuth("carlos")
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .when()
-                .delete("/api/namespaces/" + namespace.getId())
+                .delete("/" + nsId)
                 .then()
                 .statusCode(204);
-
         // Then
     }
 
 }
+

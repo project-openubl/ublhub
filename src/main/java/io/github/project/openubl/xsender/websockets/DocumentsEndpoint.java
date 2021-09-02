@@ -16,38 +16,29 @@
  */
 package io.github.project.openubl.xsender.websockets;
 
-import io.github.project.openubl.xsender.events.DocumentEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.project.openubl.xsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
-import io.smallrye.common.annotation.Blocking;
-import io.smallrye.mutiny.Uni;
+import io.github.project.openubl.xsender.websockets.keycloak.KeycloakAuthenticator;
 import io.vertx.core.impl.ConcurrentHashSet;
-import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.reactive.messaging.Acknowledgment;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
-import javax.websocket.CloseReason;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-@ServerEndpoint("/namespaces/{namespaceId}/documents")
 @ApplicationScoped
+@ServerEndpoint("/namespaces/{namespaceId}/documents")
 public class DocumentsEndpoint {
 
     private static final Logger LOG = Logger.getLogger(DocumentsEndpoint.class);
@@ -55,50 +46,16 @@ public class DocumentsEndpoint {
     protected static final Map<Session, String> sessions = new ConcurrentHashMap<>();
     protected static final Map<String, Set<Session>> namespacesSessions = new ConcurrentHashMap<>();
 
-    ExecutorService executor;
-
     @Inject
-    NamespaceRepository namespaceRepository;
+    ObjectMapper objectMapper;
 
-    @Inject
-    KeycloakAuthenticator keycloakAuthenticator;
-
-    @PostConstruct
-    void postConstruct() {
-        executor = Executors.newFixedThreadPool(10);
-    }
-
-    @Blocking
-    @Transactional
     @OnMessage
     public void onMessage(String message, Session session, @PathParam("namespaceId") String namespaceId) {
-        Uni.createFrom()
-                .completionStage(() -> CompletableFuture.supplyAsync(() -> {
-                    String username = keycloakAuthenticator.authenticate(message, session).orElse(null);
-                    NamespaceEntity namespaceEntity = null;
-                    if (username != null) {
-                        namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, username).orElse(null);
-                    }
-                    return namespaceEntity;
-                }, executor))
-                .subscribe()
-                .with(namespaceEntity -> {
-                    if (namespaceEntity != null) {
-                        sessions.put(session, namespaceEntity.getId());
+        sessions.put(session, namespaceId);
 
-                        String key = namespaceEntity.getId();
-                        Set<Session> newValue = namespacesSessions.getOrDefault(namespaceEntity.getId(), new ConcurrentHashSet<>());
-                        newValue.add(session);
-
-                        namespacesSessions.put(key, newValue);
-                    } else {
-                        try {
-                            session.close(new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, "Unauthorized websocket"));
-                        } catch (IOException e) {
-                            LOG.warn(e.getMessage());
-                        }
-                    }
-                });
+        Set<Session> newValue = namespacesSessions.getOrDefault(namespaceId, new ConcurrentHashSet<>());
+        newValue.add(session);
+        namespacesSessions.put(namespaceId, newValue);
     }
 
     @OnClose
@@ -110,15 +67,20 @@ public class DocumentsEndpoint {
         }
     }
 
-    @Incoming("document-event-incoming")
-    @Acknowledgment(Acknowledgment.Strategy.PRE_PROCESSING)
-    public void documentEvent(JsonObject event) {
-        DocumentEvent documentEvent = event.mapTo(DocumentEvent.class);
-        namespacesSessions.getOrDefault(documentEvent.getNamespaceId(), Collections.emptySet())
-                .forEach(session -> session.getAsyncRemote().sendObject(documentEvent.getId(), result -> {
-                    if (result.getException() != null) {
-                        LOG.error("Unable to send message ", result.getException());
+    public void documentEvent(@Observes DocumentRepresentation documentRepresentation) {
+        namespacesSessions
+                .getOrDefault(documentRepresentation.getNamespaceId(), Collections.emptySet())
+                .forEach(session -> {
+                    try {
+                        session.getAsyncRemote().sendObject(objectMapper.writeValueAsString(documentRepresentation), result -> {
+                            if (result.getException() != null) {
+                                LOG.error("Unable to send message ", result.getException());
+                            }
+                        });
+                    } catch (JsonProcessingException e) {
+                        LOG.error("Unable encode JSON", e);
                     }
-                }));
+                });
     }
+
 }

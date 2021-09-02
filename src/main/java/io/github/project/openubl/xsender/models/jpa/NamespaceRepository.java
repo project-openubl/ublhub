@@ -17,34 +17,32 @@
 package io.github.project.openubl.xsender.models.jpa;
 
 import io.github.project.openubl.xsender.models.PageBean;
-import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import io.quarkus.hibernate.reactive.panache.PanacheQuery;
+import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniAndGroup2;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.transaction.Transactional;
 import java.util.List;
-import java.util.Optional;
 
-@Transactional
 @ApplicationScoped
 public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntity, String> {
 
     public static final String[] SORT_BY_FIELDS = {"name", "createdOn"};
 
-    public Optional<NamespaceEntity> findByName(String name) {
-        return find("name", name).firstResultOptional();
+    public Uni<NamespaceEntity> findByName(String name) {
+        return find("name", name).firstResult();
     }
 
-    public Optional<NamespaceEntity> findByIdAndOwner(String id, String owner) {
-        return find("id = ?1 and owner = ?2", id, owner).firstResultOptional();
+    public Uni<NamespaceEntity> findByIdAndOwner(String id, String owner) {
+        return find("id = ?1 and owner = ?2", id, owner).firstResult();
     }
 
-    public PageModel<NamespaceEntity> list(String owner, PageBean pageBean, List<SortBean> sortBy) {
+    public UniAndGroup2<List<NamespaceEntity>, Long> list(String owner, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
@@ -56,12 +54,10 @@ public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntit
                 )
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
-        long count = query.count();
-        List<NamespaceEntity> list = query.list();
-        return new PageModel<>(pageBean, count, list);
+        return Uni.combine().all().unis(query.list(), query.count());
     }
 
-    public PageModel<NamespaceEntity> list(String owner, String filterText, PageBean pageBean, List<SortBean> sortBy) {
+    public UniAndGroup2<List<NamespaceEntity>, Long> list(String owner, String filterText, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
@@ -73,9 +69,7 @@ public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntit
                 )
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
-        long count = query.count();
-        List<NamespaceEntity> list = query.list();
-        return new PageModel<>(pageBean, count, list);
+        return Uni.combine().all().unis(query.list(), query.count());
     }
 
 }

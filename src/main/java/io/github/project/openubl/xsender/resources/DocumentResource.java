@@ -17,72 +17,56 @@ package io.github.project.openubl.xsender.resources;
  * limitations under the License.
  */
 
-import io.github.project.openubl.xsender.events.DocumentEvent;
-import io.github.project.openubl.xsender.events.DocumentEventManager;
-import io.github.project.openubl.xsender.exceptions.StorageException;
-import io.github.project.openubl.xsender.files.FilesManager;
-import io.github.project.openubl.xsender.idm.DocumentRepresentation;
-import io.github.project.openubl.xsender.idm.ErrorRepresentation;
-import io.github.project.openubl.xsender.idm.PageRepresentation;
-import io.github.project.openubl.xsender.managers.DocumentsManager;
+import io.github.project.openubl.xsender.events.BroadcasterEventManager;
+import io.github.project.openubl.xsender.exceptions.NoNamespaceException;
+import io.github.project.openubl.xsender.files.FilesMutiny;
 import io.github.project.openubl.xsender.models.DocumentFilterModel;
 import io.github.project.openubl.xsender.models.PageBean;
-import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
-import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
 import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
+import io.github.project.openubl.xsender.scheduler.SchedulerManager;
 import io.github.project.openubl.xsender.security.UserIdentity;
-import io.github.project.openubl.xsender.sender.MessageSenderManager;
-import org.apache.commons.io.IOUtils;
-import org.eclipse.microprofile.reactive.messaging.Message;
+import io.quarkus.hibernate.reactive.panache.Panache;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniAndGroup2;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
-import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
+import org.jboss.resteasy.reactive.MultipartForm;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.transaction.NotSupportedException;
-import javax.transaction.*;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
-@Path("/namespaces/{namespaceId}/documents")
+@Path("/namespaces")
 @Produces("application/json")
 @Consumes("application/json")
-@Transactional
 @ApplicationScoped
 public class DocumentResource {
 
     private static final Logger LOG = Logger.getLogger(DocumentResource.class);
 
     @Inject
-    UserTransaction transaction;
-
-    @Inject
     UserIdentity userIdentity;
 
     @Inject
-    FilesManager filesManager;
+    FilesMutiny filesMutiny;
 
     @Inject
-    MessageSenderManager messageSenderManager;
+    SchedulerManager schedulerManager;
 
+    // Needed to not remove BroadcasterEventManager at build-time
+    // https://github.com/quarkusio/quarkus/issues/6948
     @Inject
-    DocumentsManager documentsManager;
-
-    @Inject
-    DocumentEventManager documentEventManager;
+    BroadcasterEventManager broadcasterEventManager;
 
     @Inject
     NamespaceRepository namespaceRepository;
@@ -90,88 +74,57 @@ public class DocumentResource {
     @Inject
     UBLDocumentRepository documentRepository;
 
-    @Transactional(Transactional.TxType.NOT_SUPPORTED)
     @POST
-    @Path("/upload")
+    @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response uploadXML(
+    @Path("/{namespaceId}/documents/upload")
+    public Uni<Response> uploadXML(
             @PathParam("namespaceId") @NotNull String namespaceId,
-            MultipartFormDataInput input
+            @MultipartForm FormData formData
     ) {
-        DocumentEvent documentEvent;
-        DocumentRepresentation documentRepresentation;
+        return Panache
+                // Verify namespace
+                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()))
+                .onItem().ifNull().failWith(NoNamespaceException::new)
 
-        try {
-            transaction.begin();
+                // Save file
+                .chain(namespaceEntity -> filesMutiny
+                        .createFile(formData.file.uploadedFile().toFile(), true)
+                        .map(fileID -> {
+                            UBLDocumentEntity documentEntity = new UBLDocumentEntity();
+                            documentEntity.storageFile = fileID;
+                            documentEntity.namespace = namespaceEntity;
+                            return documentEntity;
+                        })
+                )
 
-            // Get namespace
-            NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+                // Save entity
+                .chain(documentEntity -> Panache
+                        .withTransaction(() -> {
+                            documentEntity.id = UUID.randomUUID().toString();
+                            documentEntity.createdOn = new Date();
+                            documentEntity.inProgress = true;
+                            return documentEntity.<UBLDocumentEntity>persist().map(unused -> documentEntity);
+                        })
+                )
 
-            // Extract file
-            Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
-            List<InputPart> fileInputParts = uploadForm.get("file");
-            if (fileInputParts == null) {
-                ErrorRepresentation error = new ErrorRepresentation("Form[file] is required");
-                return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
-            }
+                // Events
+                .chain(documentEntity -> schedulerManager
+                        .sendDocumentToSUNAT(documentEntity.id)
+                        .map(unused -> documentEntity)
+                )
 
-            byte[] xmlFile = null;
-            try {
-                for (InputPart inputPart : fileInputParts) {
-                    InputStream fileInputStream = inputPart.getBody(InputStream.class, null);
-                    xmlFile = IOUtils.toByteArray(fileInputStream);
-                }
-            } catch (IOException e) {
-                throw new BadRequestException("Could not extract required data from upload/form");
-            }
-
-            if (xmlFile == null || xmlFile.length == 0) {
-                ErrorRepresentation error = new ErrorRepresentation("Form[file] is empty");
-                return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
-            }
-
-            UBLDocumentEntity documentEntity;
-            try {
-                documentEntity = documentsManager.createDocument(namespaceEntity, xmlFile);
-                documentRepresentation = EntityToRepresentation.toRepresentation(documentEntity);
-                documentEvent = new DocumentEvent(documentEntity.getId(), namespaceEntity.getId());
-            } catch (StorageException e) {
-                LOG.error(e);
-                ErrorRepresentation error = new ErrorRepresentation(e.getMessage());
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(error).build();
-            }
-
-            // Commit transaction
-            transaction.commit();
-        } catch (NotSupportedException | SystemException | HeuristicRollbackException | HeuristicMixedException | RollbackException e) {
-            LOG.error(e);
-            try {
-                transaction.rollback();
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-            } catch (SystemException systemException) {
-                LOG.error(systemException);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-            }
-        }
-
-        // Event: new document has been created
-        documentEventManager.fire(documentEvent);
-
-        // Send file
-        String documentId = documentRepresentation.getId();
-        Message<String> message = Message.of(documentId)
-                .withNack(throwable -> messageSenderManager.handleDocumentMessageError(documentId, throwable));
-        messageSenderManager.sendToDocumentQueue(message);
-
-        // Return result
-        return Response.status(Response.Status.OK)
-                .entity(documentRepresentation)
-                .build();
+                .map(documentEntity -> Response.ok()
+                        .entity(EntityToRepresentation.toRepresentation(documentEntity))
+                        .build()
+                )
+                .onFailure(throwable -> throwable instanceof NoNamespaceException).recoverWithItem(Response.status(Response.Status.NOT_FOUND).build())
+                .onFailure(throwable -> !(throwable instanceof NoNamespaceException)).recoverWithItem(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
     }
 
     @GET
-    @Path("/")
-    public PageRepresentation<DocumentRepresentation> getDocuments(
+    @Path("/{namespaceId}/documents")
+    public Uni<Response> getDocuments(
             @PathParam("namespaceId") @NotNull String namespaceId,
             @QueryParam("ruc") List<String> ruc,
             @QueryParam("documentType") List<String> documentType,
@@ -180,8 +133,6 @@ public class DocumentResource {
             @QueryParam("limit") @DefaultValue("10") Integer limit,
             @QueryParam("sort_by") @DefaultValue("createdOn:desc") List<String> sortBy
     ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-
         PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
         List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, UBLDocumentRepository.SORT_BY_FIELDS);
 
@@ -190,142 +141,159 @@ public class DocumentResource {
                 .withDocumentType(documentType)
                 .build();
 
-        PageModel<UBLDocumentEntity> pageModel;
-        if (filterText != null && !filterText.trim().isEmpty()) {
-            pageModel = documentRepository.list(namespaceEntity, filterText, filters, pageBean, sortBeans);
-        } else {
-            pageModel = documentRepository.list(namespaceEntity, filters, pageBean, sortBeans);
-        }
-
-        return EntityToRepresentation.toRepresentation(pageModel, EntityToRepresentation::toRepresentation);
-    }
-
-
-    @GET
-    @Path("/{documentId}")
-    public DocumentRepresentation getDocument(
-            @PathParam("namespaceId") @NotNull String namespaceId,
-            @PathParam("documentId") @NotNull String documentId
-    ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
-
-        return EntityToRepresentation.toRepresentation(documentEntity);
-    }
-
-    @Transactional(Transactional.TxType.NOT_SUPPORTED)
-    @POST
-    @Path("/{documentId}/retry-send")
-    public Response resend(
-            @PathParam("namespaceId") @NotNull String namespaceId,
-            @PathParam("documentId") @NotNull String documentId
-    ) {
-        try {
-            transaction.begin();
-
-            NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-            UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
-
-            documentEntity.setInProgress(true);
-            documentEntity.setError(null);
-            documentEntity.setScheduledDelivery(null);
-
-            // Commit transaction
-            transaction.commit();
-        } catch (NotSupportedException | SystemException | HeuristicRollbackException | HeuristicMixedException | RollbackException e) {
-            LOG.error(e);
-            try {
-                transaction.rollback();
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-            } catch (SystemException systemException) {
-                LOG.error(systemException);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-            }
-        }
-
-        // Event: new document has been created
-        documentEventManager.fire(new DocumentEvent(documentId, namespaceId));
-
-        // Send file
-        Message<String> message = Message.of(documentId)
-                .withNack(throwable -> messageSenderManager.handleDocumentMessageError(documentId, throwable));
-        messageSenderManager.sendToDocumentQueue(message);
-
-        return Response.status(Response.Status.OK)
-                .build();
+        return Panache
+                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                        .onItem().ifNotNull().transformToUni(namespaceEntity -> {
+                            UniAndGroup2<List<UBLDocumentEntity>, Long> searchResult;
+                            if (filterText != null && !filterText.trim().isEmpty()) {
+                                searchResult = documentRepository.list(namespaceEntity, filterText, filters, pageBean, sortBeans);
+                            } else {
+                                searchResult = documentRepository.list(namespaceEntity, filters, pageBean, sortBeans);
+                            }
+                            return searchResult.asTuple();
+                        })
+                )
+                .onItem().ifNotNull().transform(tuple2 -> Response.ok()
+                        .entity(EntityToRepresentation.toRepresentation(
+                                tuple2.getItem1(),
+                                tuple2.getItem2(),
+                                EntityToRepresentation::toRepresentation
+                        ))
+                        .build()
+                )
+                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
     }
 
     @GET
-    @Path("/{documentId}/file")
-    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
-    public Response getDocumentFile(
+    @Path("/{namespaceId}/documents/{documentId}")
+    public Uni<Response> getDocument(
             @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("documentId") @NotNull String documentId
     ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
-
-        byte[] file = filesManager.getFileAsBytesAfterUnzip(documentEntity.getStorageFile());
-        return Response.ok(file, MediaType.APPLICATION_XML)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".xml" + "\"")
-                .build();
+        return Panache
+                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                        .onItem().ifNotNull().transformToUni(namespaceEntity -> documentRepository.findById(namespaceEntity, documentId))
+                )
+                .onItem().ifNotNull().transform(documentEntity -> Response.ok()
+                        .entity(EntityToRepresentation.toRepresentation(documentEntity))
+                        .build()
+                )
+                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
     }
 
-    @GET
-    @Path("/{documentId}/file-link")
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response getDocumentFileLink(
-            @PathParam("namespaceId") @NotNull String namespaceId,
-            @PathParam("documentId") @NotNull String documentId
-    ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
+//    @Transactional(Transactional.TxType.NOT_SUPPORTED)
+//    @POST
+//    @Path("/{documentId}/retry-send")
+//    public Response resend(
+//            @PathParam("namespaceId") @NotNull String namespaceId,
+//            @PathParam("documentId") @NotNull String documentId
+//    ) {
+//        try {
+//            transaction.begin();
+//
+//            NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+//            UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
+//
+//            documentEntity.setInProgress(true);
+//            documentEntity.setError(null);
+//            documentEntity.setScheduledDelivery(null);
+//
+//            // Commit transaction
+//            transaction.commit();
+//        } catch (NotSupportedException | SystemException | HeuristicRollbackException | HeuristicMixedException | RollbackException e) {
+//            LOG.error(e);
+//            try {
+//                transaction.rollback();
+//                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+//            } catch (SystemException systemException) {
+//                LOG.error(systemException);
+//                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+//            }
+//        }
+//
+//        // Event: new document has been created
+//        documentEventManager.fire(new DocumentEvent(documentId, namespaceId));
+//
+//        // Send file
+//        Message<String> message = Message.of(documentId)
+//                .withNack(throwable -> messageSenderManager.handleDocumentMessageError(documentId, throwable));
+//        messageSenderManager.sendToDocumentQueue(message);
+//
+//        return Response.status(Response.Status.OK)
+//                .build();
+//    }
 
-        String fileLink = filesManager.getFileLink(documentEntity.getStorageFile());
-        return Response.ok(fileLink)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".xml" + "\"")
-                .build();
-    }
-
-    @GET
-    @Path("/{documentId}/cdr")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response getDocumentCdr(
-            @PathParam("namespaceId") @NotNull String namespaceId,
-            @PathParam("documentId") @NotNull String documentId
-    ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
-
-        if (documentEntity.getStorageCdr() == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-
-        byte[] file = filesManager.getFileAsBytesWithoutUnzipping(documentEntity.getStorageCdr());
-        return Response.ok(file, "application/zip")
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".zip" + "\"")
-                .build();
-    }
-
-    @GET
-    @Path("/{documentId}/cdr-link")
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response getDocumentCdrLink(
-            @PathParam("namespaceId") @NotNull String namespaceId,
-            @PathParam("documentId") @NotNull String documentId
-    ) {
-        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
-
-        if (documentEntity.getStorageCdr() == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-
-        String fileLink = filesManager.getFileLink(documentEntity.getStorageCdr());
-        return Response.ok(fileLink)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".zip" + "\"")
-                .build();
-    }
+//    @GET
+//    @Path("/{documentId}/file")
+//    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
+//    public Response getDocumentFile(
+//            @PathParam("namespaceId") @NotNull String namespaceId,
+//            @PathParam("documentId") @NotNull String documentId
+//    ) {
+//        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+//        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
+//
+//        byte[] file = filesManager.getFileAsBytesAfterUnzip(documentEntity.getStorageFile());
+//        return Response.ok(file, MediaType.APPLICATION_XML)
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".xml" + "\"")
+//                .build();
+//    }
+//
+//    @GET
+//    @Path("/{documentId}/file-link")
+//    @Produces(MediaType.TEXT_PLAIN)
+//    public Response getDocumentFileLink(
+//            @PathParam("namespaceId") @NotNull String namespaceId,
+//            @PathParam("documentId") @NotNull String documentId
+//    ) {
+//        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+//        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
+//
+//        String fileLink = filesManager.getFileLink(documentEntity.getStorageFile());
+//        return Response.ok(fileLink)
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".xml" + "\"")
+//                .build();
+//    }
+//
+//    @GET
+//    @Path("/{documentId}/cdr")
+//    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+//    public Response getDocumentCdr(
+//            @PathParam("namespaceId") @NotNull String namespaceId,
+//            @PathParam("documentId") @NotNull String documentId
+//    ) {
+//        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+//        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
+//
+//        if (documentEntity.getStorageCdr() == null) {
+//            return Response.status(Response.Status.NOT_FOUND).build();
+//        }
+//
+//        byte[] file = filesManager.getFileAsBytesWithoutUnzipping(documentEntity.getStorageCdr());
+//        return Response.ok(file, "application/zip")
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".zip" + "\"")
+//                .build();
+//    }
+//
+//    @GET
+//    @Path("/{documentId}/cdr-link")
+//    @Produces(MediaType.TEXT_PLAIN)
+//    public Response getDocumentCdrLink(
+//            @PathParam("namespaceId") @NotNull String namespaceId,
+//            @PathParam("documentId") @NotNull String documentId
+//    ) {
+//        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
+//        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
+//
+//        if (documentEntity.getStorageCdr() == null) {
+//            return Response.status(Response.Status.NOT_FOUND).build();
+//        }
+//
+//        String fileLink = filesManager.getFileLink(documentEntity.getStorageCdr());
+//        return Response.ok(fileLink)
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".zip" + "\"")
+//                .build();
+//    }
 
 }
 

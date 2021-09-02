@@ -19,30 +19,30 @@ package io.github.project.openubl.xsender.resources;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
 import io.github.project.openubl.xsender.models.PageBean;
-import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
 import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
 import io.github.project.openubl.xsender.security.UserIdentity;
+import io.quarkus.hibernate.reactive.panache.Panache;
+import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 @Path("/user")
-@Produces("application/json")
-@Consumes("application/json")
-@Transactional
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
 public class CurrentUserResource {
 
@@ -56,31 +56,30 @@ public class CurrentUserResource {
 
     @POST
     @Path("/namespaces")
-    public Response createNameSpace(@NotNull @Valid NamespaceRepresentation rep) {
-        if (namespaceRepository.findByName(rep.getName()).isPresent()) {
-            return Response.status(Response.Status.CONFLICT)
-                    .entity("Name already taken")
-                    .build();
-        }
+    public Uni<Response> createNameSpace(@NotNull @Valid NamespaceRepresentation rep) {
+        return namespaceRepository.findByName(rep.getName())
+                .onItem().ifNotNull().transform(entity -> Response.status(Response.Status.CONFLICT).build())
+                .onItem().ifNull().switchTo(() -> Panache
+                        .withTransaction(() -> {
+                            final NamespaceEntity namespaceEntity = new NamespaceEntity();
+                            namespaceEntity.id = UUID.randomUUID().toString();
+                            namespaceEntity.name = rep.getName();
+                            namespaceEntity.description = rep.getDescription();
+                            namespaceEntity.createdOn = new Date();
+                            namespaceEntity.owner = userIdentity.getUsername();
 
-        NamespaceEntity namespaceEntity = NamespaceEntity.NamespaceEntityBuilder.aNamespaceEntity()
-                .withId(UUID.randomUUID().toString())
-                .withName(rep.getName())
-                .withDescription(rep.getDescription())
-                .withCreatedOn(new Date())
-                .withOwner(userIdentity.getUsername())
-                .build();
-
-        namespaceRepository.persist(namespaceEntity);
-
-        return Response.ok()
-                .entity(EntityToRepresentation.toRepresentation(namespaceEntity))
-                .build();
+                            return namespaceRepository.persist(namespaceEntity).map(unused -> namespaceEntity);
+                        })
+                        .map(namespaceEntity -> Response.ok()
+                                .entity(EntityToRepresentation.toRepresentation(namespaceEntity))
+                                .build()
+                        )
+                );
     }
 
     @GET
     @Path("/namespaces")
-    public PageRepresentation<NamespaceRepresentation> getNamespaces(
+    public Uni<PageRepresentation<NamespaceRepresentation>> getNamespaces(
             @QueryParam("filterText") String filterText,
             @QueryParam("offset") @DefaultValue("0") Integer offset,
             @QueryParam("limit") @DefaultValue("10") Integer limit,
@@ -89,14 +88,19 @@ public class CurrentUserResource {
         PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
         List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, NamespaceRepository.SORT_BY_FIELDS);
 
-        PageModel<NamespaceEntity> pageModel;
         if (filterText != null && !filterText.trim().isEmpty()) {
-            pageModel = namespaceRepository.list(userIdentity.getUsername(), filterText, pageBean, sortBeans);
+            return Panache.withTransaction(() -> namespaceRepository
+                    .list(userIdentity.getUsername(), filterText, pageBean, sortBeans)
+                    .asTuple()
+                    .map(tuple2 -> EntityToRepresentation.toRepresentation(tuple2.getItem1(), tuple2.getItem2(), EntityToRepresentation::toRepresentation))
+            );
         } else {
-            pageModel = namespaceRepository.list(userIdentity.getUsername(), pageBean, sortBeans);
+            return Panache.withTransaction(() -> namespaceRepository
+                    .list(userIdentity.getUsername(), pageBean, sortBeans)
+                    .asTuple()
+                    .map(tuple2 -> EntityToRepresentation.toRepresentation(tuple2.getItem1(), tuple2.getItem2(), EntityToRepresentation::toRepresentation))
+            );
         }
-
-        return EntityToRepresentation.toRepresentation(pageModel, EntityToRepresentation::toRepresentation);
     }
 
 }

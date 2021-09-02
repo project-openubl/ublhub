@@ -17,22 +17,10 @@
 package io.github.project.openubl.xsender.models.utils;
 
 import io.github.project.openubl.xsender.idm.*;
-import io.github.project.openubl.xsender.keys.component.ComponentModel;
-import io.github.project.openubl.xsender.keys.component.utils.ComponentUtil;
-import io.github.project.openubl.xsender.keys.provider.ProviderConfigProperty;
-import io.github.project.openubl.xsender.keys.utils.StripSecretsUtils;
-import io.github.project.openubl.xsender.models.PageModel;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
-import org.apache.http.client.utils.URIBuilder;
-import org.keycloak.common.util.MultivaluedHashMap;
-import org.keycloak.representations.idm.ComponentRepresentation;
-import org.keycloak.representations.idm.ConfigPropertyRepresentation;
 
-import javax.ws.rs.core.UriInfo;
-import java.net.URISyntaxException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -45,9 +33,9 @@ public class EntityToRepresentation {
     public static NamespaceRepresentation toRepresentation(NamespaceEntity entity) {
         NamespaceRepresentation rep = new NamespaceRepresentation();
 
-        rep.setId(entity.getId());
-        rep.setName(entity.getName());
-        rep.setDescription(entity.getDescription());
+        rep.setId(entity.id);
+        rep.setName(entity.name);
+        rep.setDescription(entity.description);
 
         return rep;
     }
@@ -55,25 +43,25 @@ public class EntityToRepresentation {
     public static CompanyRepresentation toRepresentation(CompanyEntity entity) {
         CompanyRepresentation rep = new CompanyRepresentation();
 
-        rep.setId(entity.getId());
-        rep.setRuc(entity.getRuc());
-        rep.setName(entity.getName());
-        rep.setDescription(entity.getDescription());
+        rep.setId(entity.id);
+        rep.setRuc(entity.ruc);
+        rep.setName(entity.name);
+        rep.setDescription(entity.description);
 
-        if (entity.getSunatUrls() != null) {
+        if (entity.sunatUrls != null) {
             SunatUrlsRepresentation sunatUrlsRep = new SunatUrlsRepresentation();
             rep.setWebServices(sunatUrlsRep);
 
-            sunatUrlsRep.setFactura(entity.getSunatUrls().getSunatUrlFactura());
-            sunatUrlsRep.setGuia(entity.getSunatUrls().getSunatUrlGuiaRemision());
-            sunatUrlsRep.setRetenciones(entity.getSunatUrls().getSunatUrlPercepcionRetencion());
+            sunatUrlsRep.setFactura(entity.sunatUrls.sunatUrlFactura);
+            sunatUrlsRep.setGuia(entity.sunatUrls.sunatUrlGuiaRemision);
+            sunatUrlsRep.setRetenciones(entity.sunatUrls.sunatUrlPercepcionRetencion);
         }
 
-        if (entity.getSunatCredentials() != null) {
+        if (entity.sunatCredentials != null) {
             SunatCredentialsRepresentation credentialsRep = new SunatCredentialsRepresentation();
             rep.setCredentials(credentialsRep);
 
-            credentialsRep.setUsername(entity.getSunatCredentials().getSunatUsername());
+            credentialsRep.setUsername(entity.sunatCredentials.sunatUsername);
         }
 
         return rep;
@@ -82,100 +70,90 @@ public class EntityToRepresentation {
     public static DocumentRepresentation toRepresentation(UBLDocumentEntity entity) {
         DocumentRepresentation rep = new DocumentRepresentation();
 
-        rep.setId(entity.getId());
-        rep.setInProgress(entity.isInProgress());
+        rep.setId(entity.id);
+        rep.setNamespaceId(entity.namespace.id);
 
-        rep.setCreatedOn(entity.getCreatedOn().getTime());
-        rep.setError(entity.getError() != null ? entity.getError().getMessage() : null);
-        rep.setScheduledDelivery(entity.getScheduledDelivery() != null ? entity.getScheduledDelivery().getTime() : null);
-        rep.setRetryCount(entity.getRetries());
+        rep.setInProgress(entity.inProgress);
+
+        rep.setCreatedOn(entity.createdOn.getTime());
+        rep.setError(entity.error);
+        rep.setScheduledDelivery(entity.scheduledDelivery != null ? entity.scheduledDelivery.getTime() : null);
+        rep.setRetryCount(entity.retries);
 
         // File
 
-        rep.setFileContentValid(entity.getFileValid());
+        rep.setFileContentValid(entity.fileValid);
 
         rep.setFileContent(new FileContentRepresentation());
-        rep.getFileContent().setRuc(entity.getRuc());
-        rep.getFileContent().setDocumentID(entity.getDocumentID());
-        rep.getFileContent().setDocumentType(entity.getDocumentType());
+        rep.getFileContent().setRuc(entity.ruc);
+        rep.getFileContent().setDocumentID(entity.documentID);
+        rep.getFileContent().setDocumentType(entity.documentType);
 
         // Sunat
 
         rep.setSunat(new SunatStatusRepresentation());
 
-        rep.getSunat().setCode(entity.getSunatCode());
-        rep.getSunat().setTicket(entity.getSunatTicket());
-        rep.getSunat().setStatus(entity.getSunatStatus());
-        rep.getSunat().setDescription(entity.getSunatDescription());
-        rep.getSunat().setHasCdr(entity.getStorageCdr() != null);
+        rep.getSunat().setCode(entity.sunatCode);
+        rep.getSunat().setTicket(entity.sunatTicket);
+        rep.getSunat().setStatus(entity.sunatStatus);
+        rep.getSunat().setDescription(entity.sunatDescription);
+        rep.getSunat().setHasCdr(entity.storageCdr != null);
 
-        // Events
+        return rep;
+    }
 
-//        List<DocumentSunatEventRepresentation> eventsRepresentation = entity.getSunatEvents().stream().map(f -> {
-//            DocumentSunatEventRepresentation e = new DocumentSunatEventRepresentation();
-//            e.setDescription(f.getDescription());
-//            e.setStatus(f.getStatus().toString());
-//            e.setCreatedOn(f.getCreatedOn().getTime());
-//            return e;
-//        }).collect(Collectors.toList());
+//    public static ComponentRepresentation toRepresentation(ComponentModel component, boolean internal, ComponentUtil componentUtil) {
+//        ComponentRepresentation rep = toRepresentationWithoutConfig(component);
+//        if (!internal) {
+//            rep = StripSecretsUtils.strip(componentUtil, rep);
+//        }
+//        return rep;
+//    }
 //
-//        rep.setSunatEvents(eventsRepresentation);
-
-        return rep;
-    }
-
-    public static ComponentRepresentation toRepresentation(ComponentModel component, boolean internal, ComponentUtil componentUtil) {
-        ComponentRepresentation rep = toRepresentationWithoutConfig(component);
-        if (!internal) {
-            rep = StripSecretsUtils.strip(componentUtil, rep);
-        }
-        return rep;
-    }
-
-    public static ComponentRepresentation toRepresentationWithoutConfig(ComponentModel component) {
-        org.keycloak.representations.idm.ComponentRepresentation rep = new org.keycloak.representations.idm.ComponentRepresentation();
-        rep.setId(component.getId());
-        rep.setName(component.getName());
-        rep.setProviderId(component.getProviderId());
-        rep.setProviderType(component.getProviderType());
-        rep.setSubType(component.getSubType());
-        rep.setParentId(component.getParentId());
-        rep.setConfig(new MultivaluedHashMap<>(component.getConfig()));
-        return rep;
-    }
-
-    public static List<ConfigPropertyRepresentation> toRepresentation(List<ProviderConfigProperty> configProperties) {
-        List<org.keycloak.representations.idm.ConfigPropertyRepresentation> propertiesRep = new LinkedList<>();
-        for (ProviderConfigProperty prop : configProperties) {
-            ConfigPropertyRepresentation propRep = toRepresentation(prop);
-            propertiesRep.add(propRep);
-        }
-        return propertiesRep;
-    }
-
-    public static ConfigPropertyRepresentation toRepresentation(ProviderConfigProperty prop) {
-        ConfigPropertyRepresentation propRep = new ConfigPropertyRepresentation();
-        propRep.setName(prop.getName());
-        propRep.setLabel(prop.getLabel());
-        propRep.setType(prop.getType());
-        propRep.setDefaultValue(prop.getDefaultValue());
-        propRep.setOptions(prop.getOptions());
-        propRep.setHelpText(prop.getHelpText());
-        propRep.setSecret(prop.isSecret());
-        return propRep;
-    }
-
-    public static <T, R> PageRepresentation<R> toRepresentation(PageModel<T> model, Function<T, R> mapper) {
+//    public static ComponentRepresentation toRepresentationWithoutConfig(ComponentModel component) {
+//        ComponentRepresentation rep = new ComponentRepresentation();
+//        rep.setId(component.getId());
+//        rep.setName(component.getName());
+//        rep.setProviderId(component.getProviderId());
+//        rep.setProviderType(component.getProviderType());
+//        rep.setSubType(component.getSubType());
+//        rep.setParentId(component.getParentId());
+//        rep.setConfig(new MultivaluedHashMap<>(component.getConfig()));
+//        return rep;
+//    }
+//
+//    public static List<ConfigPropertyRepresentation> toRepresentation(List<ProviderConfigProperty> configProperties) {
+//        List<ConfigPropertyRepresentation> propertiesRep = new LinkedList<>();
+//        for (ProviderConfigProperty prop : configProperties) {
+//            ConfigPropertyRepresentation propRep = toRepresentation(prop);
+//            propertiesRep.add(propRep);
+//        }
+//        return propertiesRep;
+//    }
+//
+//    public static ConfigPropertyRepresentation toRepresentation(ProviderConfigProperty prop) {
+//        ConfigPropertyRepresentation propRep = new ConfigPropertyRepresentation();
+//        propRep.setName(prop.getName());
+//        propRep.setLabel(prop.getLabel());
+//        propRep.setType(prop.getType());
+//        propRep.setDefaultValue(prop.getDefaultValue());
+//        propRep.setOptions(prop.getOptions());
+//        propRep.setHelpText(prop.getHelpText());
+//        propRep.setSecret(prop.isSecret());
+//        return propRep;
+//    }
+//
+    public static <T, R> PageRepresentation<R> toRepresentation(List<T> pageElements, Long totalElements, Function<T, R> mapper) {
         PageRepresentation<R> rep = new PageRepresentation<>();
 
         // Meta
         PageRepresentation.Meta repMeta = new PageRepresentation.Meta();
         rep.setMeta(repMeta);
 
-        repMeta.setCount(model.getTotalElements());
+        repMeta.setCount(totalElements);
 
         // Data
-        rep.setData(model.getPageElements().stream()
+        rep.setData(pageElements.stream()
                 .map(mapper)
                 .collect(Collectors.toList())
         );
@@ -183,7 +161,7 @@ public class EntityToRepresentation {
         return rep;
     }
 
-    private static URIBuilder getURIBuilder(UriInfo uriInfo) throws URISyntaxException {
-        return new URIBuilder(uriInfo.getPath());
-    }
+//    private static URIBuilder getURIBuilder(UriInfo uriInfo) throws URISyntaxException {
+//        return new URIBuilder(uriInfo.getPath());
+//    }
 }

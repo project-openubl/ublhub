@@ -37,11 +37,11 @@ public class FilesystemRoute extends RouteBuilder {
         from("direct:filesystem-save-file")
                 .id("filesystem-save-file")
                 .choice()
-                    .when(header("isZipFile").isEqualTo(false))
+                    .when(header("shouldZipFile").isEqualTo(true))
                         .marshal().zipFile()
                     .endChoice()
                 .end()
-                .setHeader("CamelFileName", () -> UUID.randomUUID().toString() + ".zip")
+                .setHeader("CamelFileName", () -> UUID.randomUUID() + ".zip")
                 .setHeader("folderName", constant(fileSystemFolder))
                 .toD("file:${header.folderName}")
                 .process(exchange -> {

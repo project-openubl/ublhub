@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.xsender.models.jpa.entities;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 
 import javax.persistence.*;
 import javax.validation.Valid;
@@ -32,189 +32,40 @@ public class CompanyEntity extends PanacheEntityBase {
     @Id
     @Column(name = "id")
     @Access(AccessType.PROPERTY)
-    private String id;
+    public String id;
 
     @NotNull
     @Column(name = "ruc")
-    private String ruc;
+    public String ruc;
 
     @NotNull
     @Column(name = "name")
-    private String name;
+    public String name;
 
-    private String description;
+    public String description;
 
     @NotNull
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_on")
-    private Date createdOn;
+    public Date createdOn;
 
     @NotNull
     @Valid
     @Embedded
-    private SunatCredentialsEntity sunatCredentials;
+    public SunatCredentialsEntity sunatCredentials;
 
     @NotNull
     @Valid
     @Embedded
-    private SunatUrlsEntity sunatUrls;
+    public SunatUrlsEntity sunatUrls;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
-    private NamespaceEntity namespace;
+    public NamespaceEntity namespace;
 
     @Version
     @Column(name = "version")
-    private int version;
+    public int version;
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getRuc() {
-        return ruc;
-    }
-
-    public void setRuc(String ruc) {
-        this.ruc = ruc;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Date getCreatedOn() {
-        return createdOn;
-    }
-
-    public void setCreatedOn(Date createdOn) {
-        this.createdOn = createdOn;
-    }
-
-    public SunatCredentialsEntity getSunatCredentials() {
-        return sunatCredentials;
-    }
-
-    public void setSunatCredentials(SunatCredentialsEntity sunatCredentials) {
-        this.sunatCredentials = sunatCredentials;
-    }
-
-    public SunatUrlsEntity getSunatUrls() {
-        return sunatUrls;
-    }
-
-    public void setSunatUrls(SunatUrlsEntity sunatUrls) {
-        this.sunatUrls = sunatUrls;
-    }
-
-    public NamespaceEntity getNamespace() {
-        return namespace;
-    }
-
-    public void setNamespace(NamespaceEntity namespace) {
-        this.namespace = namespace;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public void setVersion(int version) {
-        this.version = version;
-    }
-
-    public static final class CompanyEntityBuilder {
-        private String id;
-        private String ruc;
-        private String name;
-        private String description;
-        private Date createdOn;
-        private SunatCredentialsEntity sunatCredentials;
-        private SunatUrlsEntity sunatUrls;
-        private NamespaceEntity namespace;
-        private int version;
-
-        private CompanyEntityBuilder() {
-        }
-
-        public static CompanyEntityBuilder aCompanyEntity() {
-            return new CompanyEntityBuilder();
-        }
-
-        public CompanyEntityBuilder withId(String id) {
-            this.id = id;
-            return this;
-        }
-
-        public CompanyEntityBuilder withRuc(String ruc) {
-            this.ruc = ruc;
-            return this;
-        }
-
-        public CompanyEntityBuilder withName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public CompanyEntityBuilder withDescription(String description) {
-            this.description = description;
-            return this;
-        }
-
-        public CompanyEntityBuilder withCreatedOn(Date createdOn) {
-            this.createdOn = createdOn;
-            return this;
-        }
-
-        public CompanyEntityBuilder withSunatCredentials(SunatCredentialsEntity sunatCredentials) {
-            this.sunatCredentials = sunatCredentials;
-            return this;
-        }
-
-        public CompanyEntityBuilder withSunatUrls(SunatUrlsEntity sunatUrls) {
-            this.sunatUrls = sunatUrls;
-            return this;
-        }
-
-        public CompanyEntityBuilder withNamespace(NamespaceEntity namespace) {
-            this.namespace = namespace;
-            return this;
-        }
-
-        public CompanyEntityBuilder withVersion(int version) {
-            this.version = version;
-            return this;
-        }
-
-        public CompanyEntity build() {
-            CompanyEntity companyEntity = new CompanyEntity();
-            companyEntity.setId(id);
-            companyEntity.setRuc(ruc);
-            companyEntity.setName(name);
-            companyEntity.setDescription(description);
-            companyEntity.setCreatedOn(createdOn);
-            companyEntity.setSunatCredentials(sunatCredentials);
-            companyEntity.setSunatUrls(sunatUrls);
-            companyEntity.setNamespace(namespace);
-            companyEntity.setVersion(version);
-            return companyEntity;
-        }
-    }
 }

@@ -28,75 +28,16 @@ public class SunatUrlsEntity {
     @NotNull
     @URL
     @Column(name = "sunat_url_factura")
-    private String sunatUrlFactura;
+    public String sunatUrlFactura;
 
     @NotNull
     @URL
     @Column(name = "sunat_url_guia_remision")
-    private String sunatUrlGuiaRemision;
+    public String sunatUrlGuiaRemision;
 
     @NotNull
     @URL
     @Column(name = "sunat_url_percepcion_retencion")
-    private String sunatUrlPercepcionRetencion;
+    public String sunatUrlPercepcionRetencion;
 
-    public String getSunatUrlFactura() {
-        return sunatUrlFactura;
-    }
-
-    public void setSunatUrlFactura(String sunatUrlFactura) {
-        this.sunatUrlFactura = sunatUrlFactura;
-    }
-
-    public String getSunatUrlGuiaRemision() {
-        return sunatUrlGuiaRemision;
-    }
-
-    public void setSunatUrlGuiaRemision(String sunatUrlGuiaRemision) {
-        this.sunatUrlGuiaRemision = sunatUrlGuiaRemision;
-    }
-
-    public String getSunatUrlPercepcionRetencion() {
-        return sunatUrlPercepcionRetencion;
-    }
-
-    public void setSunatUrlPercepcionRetencion(String sunatUrlPercepcionRetencion) {
-        this.sunatUrlPercepcionRetencion = sunatUrlPercepcionRetencion;
-    }
-
-    public static final class Builder {
-        private String sunatUrlFactura;
-        private String sunatUrlGuiaRemision;
-        private String sunatUrlPercepcionRetencion;
-
-        private Builder() {
-        }
-
-        public static Builder aSunatUrlsEntity() {
-            return new Builder();
-        }
-
-        public Builder withSunatUrlFactura(String sunatUrlFactura) {
-            this.sunatUrlFactura = sunatUrlFactura;
-            return this;
-        }
-
-        public Builder withSunatUrlGuiaRemision(String sunatUrlGuiaRemision) {
-            this.sunatUrlGuiaRemision = sunatUrlGuiaRemision;
-            return this;
-        }
-
-        public Builder withSunatUrlPercepcionRetencion(String sunatUrlPercepcionRetencion) {
-            this.sunatUrlPercepcionRetencion = sunatUrlPercepcionRetencion;
-            return this;
-        }
-
-        public SunatUrlsEntity build() {
-            SunatUrlsEntity sunatUrlsEntity = new SunatUrlsEntity();
-            sunatUrlsEntity.setSunatUrlFactura(sunatUrlFactura);
-            sunatUrlsEntity.setSunatUrlGuiaRemision(sunatUrlGuiaRemision);
-            sunatUrlsEntity.setSunatUrlPercepcionRetencion(sunatUrlPercepcionRetencion);
-            return sunatUrlsEntity;
-        }
-    }
 }
