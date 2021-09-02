@@ -20,9 +20,10 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
+          distribution: temurin
       - name: Maven
         run: mvn verify $MAVEN_ARGS
         env:
@@ -44,9 +45,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
+          distribution: temurin
       - name: Build with Maven
         run: mvn package -DskipTests -Dquarkus.package.type=fast-jar
       - name: Push to GitHub Packages
