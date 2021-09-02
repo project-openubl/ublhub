@@ -54,7 +54,7 @@ jobs:
         with:
           java-version: 11
       - name: Download Maven Repo
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2.0.10
         with:
           name: maven-repo
           path: .
@@ -87,7 +87,7 @@ jobs:
         with:
           java-version: 11
       - name: Download Maven Repo
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2.0.10
         with:
           name: maven-repo
           path: .
@@ -113,7 +113,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Download Java XML Sender Artifacts
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2.0.10
         with:
           name: ublhub-java-artifacts
           path: .
@@ -146,7 +146,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Download Java XML Sender Artifacts
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2.0.10
         with:
           name: ublhub-java-artifacts
           path: .
