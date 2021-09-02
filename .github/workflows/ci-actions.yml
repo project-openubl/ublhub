@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
-          distribution: adopt
+          distribution: temurin
       - name: Maven
         run: mvn verify $MAVEN_ARGS
         env:
