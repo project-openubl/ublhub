@@ -1,9 +1,9 @@
 ![CI](https://github.com/project-openubl/ublhub/workflows/CI/badge.svg)
 [![Docker Repository on Quay](https://quay.io/repository/projectopenubl/ublhub/status "Docker Repository on Quay")](https://quay.io/repository/projectopenubl/ublhub)
 
-# XSender server
+# UblHub
 
-Envía tus XMLs a la SUNAT de manera fácil.
+Crea, firma, y envía XMLs a la SUNAT.
 
 ## Iniciar el servidor en modo desarrollo
 
@@ -13,20 +13,8 @@ Clona el repositorio:
 git clone https://github.com/project-openubl/ublhub
 ```
 
-### Inicia las dependencias
-
-XSender server necesita:
-
-- [PostgreSQL](https://www.postgresql.org/)
-- [Keycloak](https://www.keycloak.org/)
-- [Amazon S3](https://aws.amazon.com/s3/) o [Minio](https://min.io/)
-- [ActiveMQ Artemis](https://activemq.apache.org/components/artemis/)
-
-Puedes iniciar los servicios requeridos utilizando `docker-compose.yml`:
-
-```shell
-docker-compose up
-```
+### Requisitos
+Necesitas tener instalado Docker.
 
 ### Inicia el servidor
 
