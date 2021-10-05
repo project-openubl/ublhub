@@ -14,24 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.files.health.impl;
+package io.github.project.openubl.xsender.keys;
 
-import io.github.project.openubl.xsender.files.health.StorageProvider;
-import io.github.project.openubl.xsender.files.health.StorageReadinessCheck;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import org.keycloak.crypto.KeyWrapper;
 
-import javax.enterprise.context.ApplicationScoped;
+import java.util.List;
 
-@ApplicationScoped
-@StorageProvider(StorageProvider.Type.FILESYSTEM)
-public class FilesystemReadinessCheck implements StorageReadinessCheck {
+@RegisterForReflection
+public interface KeyProvider {
 
-    @ConfigProperty(name = "openubl.storage.filesystem.folder")
-    String filesystemFolder;
-
-    @Override
-    public boolean isHealthy() {
-        return !filesystemFolder.isBlank();
-    }
+    List<KeyWrapper> getKeys();
 
 }

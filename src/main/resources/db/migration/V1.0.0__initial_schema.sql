@@ -52,14 +52,14 @@ create table ubl_document
 
 create table component
 (
-    ID            varchar(36) not null,
-    entity_id     varchar(255),
+    id            varchar(36) not null,
+    namespace_id  varchar(255),
     name          varchar(255),
     parent_id     varchar(255),
     provider_id   varchar(255),
     provider_type varchar(255),
     sub_type      varchar(255),
-    primary key (ID)
+    primary key (id)
 );
 
 create table component_config
@@ -99,6 +99,11 @@ alter table if exists company
     on
 delete
 cascade;
+
+alter table if exists component
+    add constraint FKegknd206umu3ad5to4ekp3aja
+    foreign key (namespace_id)
+    references namespace;
 
 alter table if exists component_config
     add constraint FK30o84r8uoxnh7wlbkw1a5mqje

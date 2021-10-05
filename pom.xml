@@ -39,7 +39,7 @@
         <!--Quarkus-->
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
-        <quarkus.platform.version>2.2.1.Final</quarkus.platform.version>
+        <quarkus.platform.version>2.2.3.Final</quarkus.platform.version>
 
         <!--plugings-->
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
@@ -49,7 +49,7 @@
         <xsender-lib.version>3.0.3.Final</xsender-lib.version>
         <testcontainers.version>1.15.3</testcontainers.version>
         <awaitility.version>4.1.0</awaitility.version>
-        <keycloak.version>14.0.0</keycloak.version>
+        <keycloak.version>15.0.2</keycloak.version>
         <postgresql.version>13.1</postgresql.version>
 
         <license.dir>${basedir}</license.dir>

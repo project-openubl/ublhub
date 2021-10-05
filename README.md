@@ -21,7 +21,7 @@ Necesitas tener instalado Docker.
 Puedes iniciar el servidor en modo desarrollo usando el comando:
 
 ```shell script
-./mvnw quarkus:dev
+./mvnw compile quarkus:dev
 ```
 
 ### Links

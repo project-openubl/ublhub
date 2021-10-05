@@ -16,10 +16,10 @@
  */
 package io.github.project.openubl.xsender.scheduler.vertx;
 
-import io.github.project.openubl.xsender.scheduler.commons.DocumentUniTicket;
-import io.github.project.openubl.xsender.scheduler.commons.EventManagerUtils;
 import io.github.project.openubl.xsender.exceptions.AbstractSendFileException;
 import io.github.project.openubl.xsender.scheduler.SchedulerManager;
+import io.github.project.openubl.xsender.scheduler.commons.DocumentUniTicket;
+import io.github.project.openubl.xsender.scheduler.commons.EventManagerUtils;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 

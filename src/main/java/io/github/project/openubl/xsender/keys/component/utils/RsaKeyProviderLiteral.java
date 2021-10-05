@@ -14,24 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.files.health.impl;
+package io.github.project.openubl.xsender.keys.component.utils;
 
-import io.github.project.openubl.xsender.files.health.StorageProvider;
-import io.github.project.openubl.xsender.files.health.StorageReadinessCheck;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import io.github.project.openubl.xsender.keys.qualifiers.RsaKeyProviderType;
+import io.github.project.openubl.xsender.keys.qualifiers.RsaKeyType;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.util.AnnotationLiteral;
 
-@ApplicationScoped
-@StorageProvider(StorageProvider.Type.FILESYSTEM)
-public class FilesystemReadinessCheck implements StorageReadinessCheck {
+public class RsaKeyProviderLiteral extends AnnotationLiteral<RsaKeyProviderType> implements RsaKeyProviderType {
 
-    @ConfigProperty(name = "openubl.storage.filesystem.folder")
-    String filesystemFolder;
+    private final RsaKeyType type;
+
+    public RsaKeyProviderLiteral(RsaKeyType type) {
+        this.type = type;
+    }
 
     @Override
-    public boolean isHealthy() {
-        return !filesystemFolder.isBlank();
+    public RsaKeyType type() {
+        return type;
     }
 
 }

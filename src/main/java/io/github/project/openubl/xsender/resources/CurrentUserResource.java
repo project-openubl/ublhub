@@ -18,6 +18,7 @@ package io.github.project.openubl.xsender.resources;
 
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
 import io.github.project.openubl.xsender.idm.PageRepresentation;
+import io.github.project.openubl.xsender.keys.DefaultKeyProviders;
 import io.github.project.openubl.xsender.models.PageBean;
 import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
@@ -54,6 +55,9 @@ public class CurrentUserResource {
     @Inject
     NamespaceRepository namespaceRepository;
 
+    @Inject
+    DefaultKeyProviders defaultKeyProviders;
+
     @POST
     @Path("/namespaces")
     public Uni<Response> createNameSpace(@NotNull @Valid NamespaceRepresentation rep) {
@@ -68,7 +72,9 @@ public class CurrentUserResource {
                             namespaceEntity.createdOn = new Date();
                             namespaceEntity.owner = userIdentity.getUsername();
 
-                            return namespaceRepository.persist(namespaceEntity).map(unused -> namespaceEntity);
+                            return namespaceRepository.persist(namespaceEntity)
+                                    .chain(namespace -> defaultKeyProviders.createProviders(namespace))
+                                    .map(unused -> namespaceEntity);
                         })
                         .map(namespaceEntity -> Response.ok()
                                 .entity(EntityToRepresentation.toRepresentation(namespaceEntity))

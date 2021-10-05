@@ -17,14 +17,9 @@
 package io.github.project.openubl.xsender.events;
 
 import io.github.project.openubl.xsender.idm.DocumentRepresentation;
-import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
-import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Event;
-import javax.enterprise.event.Observes;
-import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;

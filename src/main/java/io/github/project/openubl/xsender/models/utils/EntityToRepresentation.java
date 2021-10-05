@@ -17,9 +17,14 @@
 package io.github.project.openubl.xsender.models.utils;
 
 import io.github.project.openubl.xsender.idm.*;
+import io.github.project.openubl.xsender.keys.component.ComponentModel;
+import io.github.project.openubl.xsender.keys.component.utils.ComponentUtil;
+import io.github.project.openubl.xsender.keys.utils.StripSecretsUtils;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
+import org.keycloak.common.util.MultivaluedHashMap;
+import org.keycloak.representations.idm.ComponentRepresentation;
 
 import java.util.List;
 import java.util.function.Function;
@@ -102,26 +107,26 @@ public class EntityToRepresentation {
         return rep;
     }
 
-//    public static ComponentRepresentation toRepresentation(ComponentModel component, boolean internal, ComponentUtil componentUtil) {
-//        ComponentRepresentation rep = toRepresentationWithoutConfig(component);
-//        if (!internal) {
-//            rep = StripSecretsUtils.strip(componentUtil, rep);
-//        }
-//        return rep;
-//    }
-//
-//    public static ComponentRepresentation toRepresentationWithoutConfig(ComponentModel component) {
-//        ComponentRepresentation rep = new ComponentRepresentation();
-//        rep.setId(component.getId());
-//        rep.setName(component.getName());
-//        rep.setProviderId(component.getProviderId());
-//        rep.setProviderType(component.getProviderType());
-//        rep.setSubType(component.getSubType());
-//        rep.setParentId(component.getParentId());
-//        rep.setConfig(new MultivaluedHashMap<>(component.getConfig()));
-//        return rep;
-//    }
-//
+    public static ComponentRepresentation toRepresentation(ComponentModel component, boolean internal, ComponentUtil componentUtil) {
+        ComponentRepresentation rep = toRepresentationWithoutConfig(component);
+        if (!internal) {
+            rep = StripSecretsUtils.strip(componentUtil, rep);
+        }
+        return rep;
+    }
+
+    public static ComponentRepresentation toRepresentationWithoutConfig(ComponentModel component) {
+        ComponentRepresentation rep = new ComponentRepresentation();
+        rep.setId(component.getId());
+        rep.setName(component.getName());
+        rep.setProviderId(component.getProviderId());
+        rep.setProviderType(component.getProviderType());
+        rep.setSubType(component.getSubType());
+        rep.setParentId(component.getParentId());
+        rep.setConfig(new MultivaluedHashMap<>(component.getConfig()));
+        return rep;
+    }
+
 //    public static List<ConfigPropertyRepresentation> toRepresentation(List<ProviderConfigProperty> configProperties) {
 //        List<ConfigPropertyRepresentation> propertiesRep = new LinkedList<>();
 //        for (ProviderConfigProperty prop : configProperties) {

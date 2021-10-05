@@ -14,24 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.files.health.impl;
+package io.github.project.openubl.xsender.keys;
 
-import io.github.project.openubl.xsender.files.health.StorageProvider;
-import io.github.project.openubl.xsender.files.health.StorageReadinessCheck;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import java.security.PublicKey;
+import java.security.cert.Certificate;
 
-import javax.enterprise.context.ApplicationScoped;
+public class RsaKeyMetadata extends KeyMetadata {
 
-@ApplicationScoped
-@StorageProvider(StorageProvider.Type.FILESYSTEM)
-public class FilesystemReadinessCheck implements StorageReadinessCheck {
+    private PublicKey publicKey;
+    private Certificate certificate;
 
-    @ConfigProperty(name = "openubl.storage.filesystem.folder")
-    String filesystemFolder;
+    public PublicKey getPublicKey() {
+        return publicKey;
+    }
 
-    @Override
-    public boolean isHealthy() {
-        return !filesystemFolder.isBlank();
+    public void setPublicKey(PublicKey publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public Certificate getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(Certificate certificate) {
+        this.certificate = certificate;
     }
 
 }
