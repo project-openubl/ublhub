@@ -19,8 +19,6 @@ package io.github.project.openubl.xsender.websockets;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.project.openubl.xsender.idm.DocumentRepresentation;
-import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
-import io.github.project.openubl.xsender.websockets.keycloak.KeycloakAuthenticator;
 import io.vertx.core.impl.ConcurrentHashSet;
 import org.jboss.logging.Logger;
 

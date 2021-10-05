@@ -14,24 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.files.health.impl;
+package io.github.project.openubl.xsender.keys.component.utils;
 
-import io.github.project.openubl.xsender.files.health.StorageProvider;
-import io.github.project.openubl.xsender.files.health.StorageReadinessCheck;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import io.github.project.openubl.xsender.keys.qualifiers.ComponentProviderType;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.util.AnnotationLiteral;
 
-@ApplicationScoped
-@StorageProvider(StorageProvider.Type.FILESYSTEM)
-public class FilesystemReadinessCheck implements StorageReadinessCheck {
+public class ComponentProviderLiteral extends AnnotationLiteral<ComponentProviderType> implements ComponentProviderType {
 
-    @ConfigProperty(name = "openubl.storage.filesystem.folder")
-    String filesystemFolder;
+    private final Class<?> providerType;
 
-    @Override
-    public boolean isHealthy() {
-        return !filesystemFolder.isBlank();
+    public ComponentProviderLiteral(Class<?> providerType) {
+        this.providerType = providerType;
     }
 
+    @Override
+    public Class<?> providerType() {
+        return providerType;
+    }
 }

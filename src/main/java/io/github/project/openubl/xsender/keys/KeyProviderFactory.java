@@ -14,24 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.xsender.files.health.impl;
+package io.github.project.openubl.xsender.keys;
 
-import io.github.project.openubl.xsender.files.health.StorageProvider;
-import io.github.project.openubl.xsender.files.health.StorageReadinessCheck;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import io.github.project.openubl.xsender.keys.component.ComponentFactory;
+import io.github.project.openubl.xsender.keys.component.ComponentModel;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
+import io.smallrye.mutiny.Uni;
+import org.keycloak.crypto.KeyUse;
 
-import javax.enterprise.context.ApplicationScoped;
+public interface KeyProviderFactory<T extends KeyProvider> extends ComponentFactory<T, KeyProvider> {
 
-@ApplicationScoped
-@StorageProvider(StorageProvider.Type.FILESYSTEM)
-public class FilesystemReadinessCheck implements StorageReadinessCheck {
+    T create(NamespaceEntity namespace, ComponentModel model);
 
-    @ConfigProperty(name = "openubl.storage.filesystem.folder")
-    String filesystemFolder;
-
-    @Override
-    public boolean isHealthy() {
-        return !filesystemFolder.isBlank();
+    default Uni<Boolean> createFallbackKeys(NamespaceEntity namespace, KeyUse keyUse, String algorithm) {
+        return Uni.createFrom().item(false);
     }
-
 }
