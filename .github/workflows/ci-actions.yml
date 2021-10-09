@@ -26,7 +26,7 @@ jobs:
           distribution: temurin
           cache: maven
       - name: Maven
-        run: mvn verify -X $MAVEN_ARGS
+        run: mvn verify $MAVEN_ARGS
         env:
           MAVEN_ARGS: "-P${{ matrix.flavor }}"
       - name: Prepare failure archive (if maven failed)

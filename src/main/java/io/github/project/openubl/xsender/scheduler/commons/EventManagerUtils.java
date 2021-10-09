@@ -54,7 +54,10 @@ public class EventManagerUtils {
         return Panache
                 .withTransaction(() -> documentRepository
                         .findById(documentId)
-                        .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + documentId + " was not found"))
+                        .onItem().ifNull().failWith(() -> {
+                            System.out.println("Here is the problem:" + documentId);
+                            return new IllegalStateException("Document id=" + documentId + " was not found");
+                        })
                         .onItem().ifNotNull().transform(documentEntity -> DocumentUniSendBuilder.aDocumentUniSend()
                                 .withNamespaceId(documentEntity.namespace.id)
                                 .withId(documentEntity.id)
