@@ -308,19 +308,19 @@ public class DocumentResourceTest extends BaseAuthTest {
             return !watchResponse.isInProgress();
         });
 
-//        givenAuth("alice")
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("inProgress", is(false),
-//                        "error", is(nullValue()),
-//                        "fileContentValid", is(true),
-//                        "fileContent.ruc", is("12345678912"),
-//                        "fileContent.documentID", is("F001-1"),
-//                        "fileContent.documentType", is("Invoice")
-//                );
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents/" + response.getId())
+                .then()
+                .statusCode(200)
+                .body("inProgress", is(false),
+                        "error", is(nullValue()),
+                        "fileContentValid", is(true),
+                        "fileContent.ruc", is("12345678912"),
+                        "fileContent.documentID", is("F001-1"),
+                        "fileContent.documentType", is("Invoice")
+                );
     }
 
 //    @Test
