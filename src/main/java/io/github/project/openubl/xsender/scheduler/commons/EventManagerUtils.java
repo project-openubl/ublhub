@@ -63,9 +63,6 @@ public class EventManagerUtils {
                             logger.warn("Document was not found to be processed in the consumer for sendFile. It will be try.");
                             return new IllegalStateException("Document id=" + documentId + " was not found for being sent");
                         })
-                        .onFailure(throwable -> throwable instanceof IllegalStateException)
-                        .retry().withBackOff(Duration.ofMillis(1000), Duration.ofMillis(1000)).atMost(3)
-
                         .onItem().ifNotNull().transform(documentEntity -> DocumentUniSendBuilder.aDocumentUniSend()
                                 .withNamespaceId(documentEntity.namespace.id)
                                 .withId(documentEntity.id)
@@ -74,6 +71,9 @@ public class EventManagerUtils {
                                 .build()
                         )
                 )
+                .onFailure(throwable -> throwable instanceof IllegalStateException)
+                .retry().withBackOff(Duration.ofMillis(1000), Duration.ofMillis(1000)).atMost(3)
+
                 .invoke(documentUni -> {
                     documentUni.setError(null);
                     documentUni.setInProgress(false);
