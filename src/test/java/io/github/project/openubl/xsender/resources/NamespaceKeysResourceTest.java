@@ -94,7 +94,7 @@ public class NamespaceKeysResourceTest extends BaseAuthTest {
                 .get("/api/namespaces/" + namespace.getId() + "/components")
                 .then()
                 .statusCode(200)
-                .body("size", is(1),
+                .body("size()", is(1),
                         "[0].id", is(notNullValue()),
                         "[0].name", is("rsa-generated"),
                         "[0].providerId", is("rsa-generated"),
