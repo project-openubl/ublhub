@@ -149,6 +149,7 @@ public class DocumentResource {
                             return documentEntity.<UBLDocumentEntity>persistAndFlush().map(unused -> documentEntity);
                         })
                 )
+                .chain(documentEntity -> Panache.flush().map(unused -> documentEntity))
 
                 // Events
                 .chain(documentEntity -> schedulerManager
