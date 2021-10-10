@@ -39,6 +39,8 @@ public class SchedulerManager {
         SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
         Annotation annotation = new SchedulerProviderLiteral(providerType);
 
+        System.out.println("Sending to SUNAT:" + documentId);
+
         Scheduler scheduler = schedulers.select(annotation).get();
         return scheduler.sendDocumentToSUNAT(documentId);
     }
