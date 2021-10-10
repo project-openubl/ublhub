@@ -147,7 +147,6 @@ public class DocumentResource {
                     documentEntity.inProgress = true;
                     return documentEntity.<UBLDocumentEntity>persistAndFlush().map(unused -> documentEntity);
                 })
-                .chain(documentEntity -> Panache.flush().map(unused -> documentEntity))
 
                 // Events
                 .chain(documentEntity -> schedulerManager

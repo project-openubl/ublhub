@@ -38,8 +38,13 @@ public class AMQPScheduler implements Scheduler {
 
     @Override
     public Uni<Void> sendDocumentToSUNAT(String documentId) {
-        Message<String> message = Message.of(documentId);
+        OutgoingAmqpMetadata outgoingAmqpMetadata = OutgoingAmqpMetadata.builder()
+                .withMessageAnnotations("x-opt-delivery-delay", 2000)
+                .build();
+        Message<String> message = Message.of(documentId)
+                .withMetadata(Metadata.of(outgoingAmqpMetadata));
         documentEmitter.send(message);
+
         return Uni.createFrom().voidItem();
     }
 
