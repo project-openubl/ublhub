@@ -41,7 +41,8 @@ public class AMQPScheduler implements Scheduler {
         OutgoingAmqpMetadata outgoingAmqpMetadata = OutgoingAmqpMetadata.builder()
                 .withMessageAnnotations("x-opt-delivery-delay", 2000)
                 .build();
-        Message<String> message = Message.of(documentId)
+        Message<String> message = Message
+                .of(documentId)
                 .withMetadata(Metadata.of(outgoingAmqpMetadata));
         documentEmitter.send(message);
 

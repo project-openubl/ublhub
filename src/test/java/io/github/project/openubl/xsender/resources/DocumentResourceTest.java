@@ -295,19 +295,19 @@ public class DocumentResourceTest extends BaseAuthTest {
                 )
                 .extract().body().as(DocumentRepresentation.class);
 
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = givenAuth("alice")
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//
-//                    .get("/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isInProgress();
-//        });
-//
+        // Then
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            DocumentRepresentation watchResponse = givenAuth("alice")
+                    .contentType(ContentType.JSON)
+                    .when()
+
+                    .get("/" + nsId + "/documents/" + response.getId())
+                    .then()
+                    .statusCode(200)
+                    .extract().body().as(DocumentRepresentation.class);
+            return !watchResponse.isInProgress();
+        });
+
 //        givenAuth("alice")
 //                .contentType(ContentType.JSON)
 //                .when()
