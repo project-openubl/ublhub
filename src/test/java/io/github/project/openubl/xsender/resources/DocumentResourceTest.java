@@ -234,94 +234,94 @@ public class DocumentResourceTest extends BaseAuthTest {
         // Then
     }
 
-//    @Test
-//    public void createXMLWithDefaultSignAlgorithm() throws URISyntaxException {
-//        // Given
-//        String nsId = "1";
-//
-//        InvoiceInputModel input = InvoiceInputModel.Builder.anInvoiceInputModel()
-//                .withSerie("F001")
-//                .withNumero(1)
-//                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
-//                        .withRuc("12345678912")
-//                        .withRazonSocial("Softgreen S.A.C.")
-//                        .build()
-//                )
-//                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
-//                        .withNombre("Carlos Feria")
-//                        .withNumeroDocumentoIdentidad("12121212121")
-//                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
-//                        .build()
-//                )
-//                .withDetalle(Arrays.asList(
-//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-//                                .withDescripcion("Item1")
-//                                .withCantidad(new BigDecimal(10))
-//                                .withPrecioUnitario(new BigDecimal(100))
-//                                .withUnidadMedida("KGM")
-//                                .build(),
-//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-//                                .withDescripcion("Item2")
-//                                .withCantidad(new BigDecimal(10))
-//                                .withPrecioUnitario(new BigDecimal(100))
-//                                .withUnidadMedida("KGM")
-//                                .build())
-//                )
-//                .build();
-//
-//        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
-//                .withKind(KindRepresentation.Invoice)
-//                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
-//                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
-//                                .withName(IDGeneratorType.none)
-//                                .build()
-//                        )
-//                        .withDocument(JsonObject.mapFrom(input))
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        DocumentRepresentation response = givenAuth("alice")
-//                .contentType(ContentType.JSON)
-//                .body(template)
-//                .when()
-//                .post("/" + nsId + "/documents")
-//                .then()
-//                .statusCode(201)
-//                .body("id", is(notNullValue()),
-//                        "namespaceId", is("1"),
-//                        "inProgress", is(true)
-//                )
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = givenAuth("alice")
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//
-//                    .get("/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isInProgress();
-//        });
-//
-//        givenAuth("alice")
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("inProgress", is(false),
-//                        "error", is(nullValue()),
-//                        "fileContentValid", is(true),
-//                        "fileContent.ruc", is("12345678912"),
-//                        "fileContent.documentID", is("F001-1"),
-//                        "fileContent.documentType", is("Invoice")
-//                );
-//    }
+    @Test
+    public void createXMLWithDefaultSignAlgorithm() throws URISyntaxException {
+        // Given
+        String nsId = "1";
+
+        InvoiceInputModel input = InvoiceInputModel.Builder.anInvoiceInputModel()
+                .withSerie("F001")
+                .withNumero(1)
+                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
+                        .withRuc("12345678912")
+                        .withRazonSocial("Softgreen S.A.C.")
+                        .build()
+                )
+                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
+                        .withNombre("Carlos Feria")
+                        .withNumeroDocumentoIdentidad("12121212121")
+                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
+                        .build()
+                )
+                .withDetalle(Arrays.asList(
+                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
+                                .withDescripcion("Item1")
+                                .withCantidad(new BigDecimal(10))
+                                .withPrecioUnitario(new BigDecimal(100))
+                                .withUnidadMedida("KGM")
+                                .build(),
+                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
+                                .withDescripcion("Item2")
+                                .withCantidad(new BigDecimal(10))
+                                .withPrecioUnitario(new BigDecimal(100))
+                                .withUnidadMedida("KGM")
+                                .build())
+                )
+                .build();
+
+        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
+                .withKind(KindRepresentation.Invoice)
+                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
+                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
+                                .withName(IDGeneratorType.none)
+                                .build()
+                        )
+                        .withDocument(JsonObject.mapFrom(input))
+                        .build()
+                )
+                .build();
+
+        // When
+        DocumentRepresentation response = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(template)
+                .when()
+                .post("/" + nsId + "/documents")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()),
+                        "namespaceId", is("1"),
+                        "inProgress", is(true)
+                )
+                .extract().body().as(DocumentRepresentation.class);
+
+        // Then
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            DocumentRepresentation watchResponse = givenAuth("alice")
+                    .contentType(ContentType.JSON)
+                    .when()
+
+                    .get("/" + nsId + "/documents/" + response.getId())
+                    .then()
+                    .statusCode(200)
+                    .extract().body().as(DocumentRepresentation.class);
+            return !watchResponse.isInProgress();
+        });
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents/" + response.getId())
+                .then()
+                .statusCode(200)
+                .body("inProgress", is(false),
+                        "error", is(nullValue()),
+                        "fileContentValid", is(true),
+                        "fileContent.ruc", is("12345678912"),
+                        "fileContent.documentID", is("F001-1"),
+                        "fileContent.documentType", is("Invoice")
+                );
+    }
 
 //    @Test
 //    public void createXMLWithCustomSignAlgorithm() throws URISyntaxException {
