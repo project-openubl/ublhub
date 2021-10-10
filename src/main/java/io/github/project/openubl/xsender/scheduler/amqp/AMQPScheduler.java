@@ -24,8 +24,6 @@ import org.eclipse.microprofile.reactive.messaging.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Calendar;
-import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
 @SchedulerProvider(SchedulerProvider.Type.AMQP)

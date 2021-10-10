@@ -141,12 +141,14 @@ public class DocumentResource {
                 })
 
                 // Save entity
-                .chain(documentEntity -> {
-                    documentEntity.id = UUID.randomUUID().toString();
-                    documentEntity.createdOn = new Date();
-                    documentEntity.inProgress = true;
-                    return documentEntity.<UBLDocumentEntity>persistAndFlush().map(unused -> documentEntity);
-                })
+                .chain(documentEntity -> Panache
+                        .withTransaction(() -> {
+                            documentEntity.id = UUID.randomUUID().toString();
+                            documentEntity.createdOn = new Date();
+                            documentEntity.inProgress = true;
+                            return documentEntity.<UBLDocumentEntity>persistAndFlush().map(unused -> documentEntity);
+                        })
+                )
 
                 // Events
                 .chain(documentEntity -> schedulerManager
