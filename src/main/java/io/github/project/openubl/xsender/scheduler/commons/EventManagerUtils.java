@@ -32,6 +32,7 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Optional;
 
@@ -58,6 +59,9 @@ public class EventManagerUtils {
                             System.out.println("Here is the problem:" + documentId);
                             return new IllegalStateException("Document id=" + documentId + " was not found");
                         })
+                        .onFailure(throwable -> throwable instanceof IllegalStateException)
+                        .retry().withBackOff(Duration.ofMillis(100), Duration.ofMillis(100)).atMost(3)
+
                         .onItem().ifNotNull().transform(documentEntity -> DocumentUniSendBuilder.aDocumentUniSend()
                                 .withNamespaceId(documentEntity.namespace.id)
                                 .withId(documentEntity.id)
