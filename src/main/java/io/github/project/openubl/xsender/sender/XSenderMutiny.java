@@ -63,7 +63,7 @@ public class XSenderMutiny {
     }
 
     public Uni<XSenderConfig> getXSenderConfig(String namespaceId, String ruc) {
-        return Panache.withTransaction(() -> companyRepository.findByRuc(namespaceId, ruc))
+        return companyRepository.findByRuc(namespaceId, ruc)
                 .onItem().ifNotNull().transform(companyEntity -> XSenderConfigBuilder.aXSenderConfig()
                         .withFacturaUrl(companyEntity.sunatUrls.sunatUrlFactura)
                         .withGuiaUrl(companyEntity.sunatUrls.sunatUrlGuiaRemision)
