@@ -17,20 +17,22 @@ package io.github.project.openubl.xsender.resources;
  * limitations under the License.
  */
 
+import io.github.project.openubl.xmlbuilderlib.clock.SystemClock;
+import io.github.project.openubl.xmlbuilderlib.config.Config;
 import io.github.project.openubl.xmlbuilderlib.facade.DocumentManager;
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.invoice.InvoiceInputModel;
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.creditNote.CreditNoteInputModel;
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.debitNote.DebitNoteInputModel;
 import io.github.project.openubl.xmlbuilderlib.xml.XMLSigner;
 import io.github.project.openubl.xmlbuilderlib.xml.XmlSignatureHelper;
-import io.github.project.openubl.xsender.builder.UblHubXBuilderClock;
-import io.github.project.openubl.xsender.builder.UblHubXBuilderConfig;
 import io.github.project.openubl.xsender.events.BroadcasterEventManager;
 import io.github.project.openubl.xsender.exceptions.NoNamespaceException;
 import io.github.project.openubl.xsender.files.FilesMutiny;
 import io.github.project.openubl.xsender.idgenerator.IDGenerator;
 import io.github.project.openubl.xsender.idgenerator.IGGeneratorManager;
-import io.github.project.openubl.xsender.idm.input.*;
+import io.github.project.openubl.xsender.idm.input.InputTemplateRepresentation;
+import io.github.project.openubl.xsender.idm.input.KindRepresentation;
+import io.github.project.openubl.xsender.idm.input.SpecRepresentation;
 import io.github.project.openubl.xsender.keys.KeyManager;
 import io.github.project.openubl.xsender.models.DocumentFilterModel;
 import io.github.project.openubl.xsender.models.PageBean;
@@ -96,10 +98,10 @@ public class DocumentResource {
     IGGeneratorManager igGeneratorManager;
 
     @Inject
-    UblHubXBuilderConfig xBuilderConfig;
+    Config xBuilderConfig;
 
     @Inject
-    UblHubXBuilderClock xBuilderClock;
+    SystemClock xBuilderClock;
 
     @Inject
     KeyManager keystore;
