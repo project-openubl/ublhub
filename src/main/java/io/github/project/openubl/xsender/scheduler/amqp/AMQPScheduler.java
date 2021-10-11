@@ -37,12 +37,12 @@ public class AMQPScheduler implements Scheduler {
 
     @Override
     public Uni<Void> sendDocumentToSUNAT(String documentId) {
-        OutgoingAmqpMetadata outgoingAmqpMetadata = OutgoingAmqpMetadata.builder()
-                .withMessageAnnotations("x-opt-delivery-delay", 100)
-                .build();
+//        OutgoingAmqpMetadata outgoingAmqpMetadata = OutgoingAmqpMetadata.builder()
+//                .withMessageAnnotations("x-opt-delivery-delay", 100)
+//                .build();
         Message<String> scheduledMessage = Message
-                .of(documentId)
-                .withMetadata(Metadata.of(outgoingAmqpMetadata));
+                .of(documentId);
+//                .withMetadata(Metadata.of(outgoingAmqpMetadata));
         documentEmitter.send(scheduledMessage);
 
         return Uni.createFrom().voidItem();
