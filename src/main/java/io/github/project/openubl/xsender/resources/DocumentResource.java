@@ -146,7 +146,7 @@ public class DocumentResource {
                             documentEntity.id = UUID.randomUUID().toString();
                             documentEntity.createdOn = new Date();
                             documentEntity.inProgress = true;
-                            return documentEntity.<UBLDocumentEntity>persistAndFlush().map(unused -> documentEntity);
+                            return documentEntity.<UBLDocumentEntity>persist().map(unused -> documentEntity);
                         })
                 )
 
@@ -156,7 +156,6 @@ public class DocumentResource {
                         .map(unused -> documentEntity)
                 );
     }
-
 
     @POST
     @Path("/{namespaceId}/documents")
@@ -195,7 +194,6 @@ public class DocumentResource {
 
                                 // Response
                                 .map(documentEntity -> {
-                                            System.out.println(documentEntity);
                                             return Response
                                                     .status(Response.Status.CREATED)
                                                     .entity(EntityToRepresentation.toRepresentation(documentEntity))

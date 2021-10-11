@@ -24,6 +24,7 @@ import org.eclipse.microprofile.reactive.messaging.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Calendar;
 
 @ApplicationScoped
 @SchedulerProvider(SchedulerProvider.Type.AMQP)
@@ -36,7 +37,15 @@ public class AMQPScheduler implements Scheduler {
 
     @Override
     public Uni<Void> sendDocumentToSUNAT(String documentId) {
-        return Uni.createFrom().completionStage(documentEmitter.send(documentId));
+        OutgoingAmqpMetadata outgoingAmqpMetadata = OutgoingAmqpMetadata.builder()
+                .withMessageAnnotations("x-opt-delivery-delay", 100)
+                .build();
+        Message<String> scheduledMessage = Message
+                .of(documentId)
+                .withMetadata(Metadata.of(outgoingAmqpMetadata));
+        documentEmitter.send(scheduledMessage);
+
+        return Uni.createFrom().voidItem();
     }
 
     @Override
