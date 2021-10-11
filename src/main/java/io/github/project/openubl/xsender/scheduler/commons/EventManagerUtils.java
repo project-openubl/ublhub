@@ -20,6 +20,7 @@ import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceMo
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
 import io.github.project.openubl.xsender.exceptions.*;
 import io.github.project.openubl.xsender.files.FilesMutiny;
+import io.github.project.openubl.xsender.keys.DefaultKeyManager;
 import io.github.project.openubl.xsender.models.ErrorType;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
 import io.github.project.openubl.xsender.models.jpa.UBLDocumentRepository;
@@ -29,14 +30,18 @@ import io.github.project.openubl.xsender.sender.XSenderConfigBuilder;
 import io.github.project.openubl.xsender.sender.XSenderMutiny;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Optional;
 
 @ApplicationScoped
 public class EventManagerUtils {
+
+    private static final Logger logger = Logger.getLogger(DefaultKeyManager.class);
 
     @Inject
     FilesMutiny filesMutiny;
@@ -54,7 +59,13 @@ public class EventManagerUtils {
         return Panache
                 .withTransaction(() -> documentRepository
                         .findById(documentId)
-                        .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + documentId + " was not found"))
+                        .onItem().ifNull().failWith(() -> {
+                            logger.warn("Document was not found to be processed in the consumer for sendFile. It will be try.");
+                            return new IllegalStateException("Document id=" + documentId + " was not found for being sent");
+                        })
+                        .onFailure(throwable -> throwable instanceof IllegalStateException)
+                        .retry().withBackOff(Duration.ofMillis(200), Duration.ofMillis(200)).atMost(3)
+
                         .onItem().ifNotNull().transform(documentEntity -> DocumentUniSendBuilder.aDocumentUniSend()
                                 .withNamespaceId(documentEntity.namespace.id)
                                 .withId(documentEntity.id)
@@ -76,7 +87,13 @@ public class EventManagerUtils {
         return Panache
                 .withTransaction(() -> documentRepository
                         .findById(documentId)
-                        .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + documentId + " was not found"))
+                        .onItem().ifNull().failWith(() -> {
+                            logger.warn("Document was not found to be processed in the consumer for sendTicket. It will be try.");
+                            return new IllegalStateException("Document id=" + documentId + " was not found");
+                        })
+                        .onFailure(throwable -> throwable instanceof IllegalStateException)
+                        .retry().withBackOff(Duration.ofMillis(200), Duration.ofMillis(200)).atMost(3)
+
                         .onItem().ifNotNull().transform(documentEntity -> {
                                     XmlContentModel xmlContent = XmlContentModel.Builder.aXmlContentModel()
                                             .withRuc(documentEntity.ruc)

@@ -64,7 +64,11 @@ public class DefaultKeyManager implements KeyManager {
                     .map(keyProviderFactory -> (Uni<Boolean>) keyProviderFactory.createFallbackKeys(namespace, use, algorithm))
                     .collect(Collectors.toList());
 
-            return Uni.combine().any().of(collect)
+            return Uni.combine().all().unis(collect)
+                    .combinedWith(listOfResults -> {
+                        List<Boolean> results = (List<Boolean>) listOfResults;
+                        return results.stream().anyMatch(aBoolean -> Objects.equals(aBoolean, true));
+                    })
                     .chain(isPresent -> isPresent
                             ? getProviders(namespace).map(providers -> getActiveKey(providers, namespace, use, algorithm))
                             : Uni.createFrom().nullItem()

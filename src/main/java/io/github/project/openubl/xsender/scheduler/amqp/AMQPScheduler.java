@@ -19,9 +19,8 @@ package io.github.project.openubl.xsender.scheduler.amqp;
 import io.github.project.openubl.xsender.scheduler.Scheduler;
 import io.github.project.openubl.xsender.scheduler.SchedulerProvider;
 import io.smallrye.mutiny.Uni;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.eclipse.microprofile.reactive.messaging.OnOverflow;
+import io.smallrye.reactive.messaging.amqp.OutgoingAmqpMetadata;
+import org.eclipse.microprofile.reactive.messaging.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -37,11 +36,20 @@ public class AMQPScheduler implements Scheduler {
 
     @Override
     public Uni<Void> sendDocumentToSUNAT(String documentId) {
-        return Uni.createFrom().completionStage(documentEmitter.send(documentId));
+        OutgoingAmqpMetadata outgoingAmqpMetadata = OutgoingAmqpMetadata.builder()
+                .withMessageAnnotations("x-opt-delivery-delay", 200)
+                .build();
+        Message<String> scheduledMessage = Message
+                .of(documentId)
+                .withMetadata(Metadata.of(outgoingAmqpMetadata));
+        documentEmitter.send(scheduledMessage);
+
+        return Uni.createFrom().voidItem();
     }
 
     @Override
     public Uni<Void> sendVerifyTicketAtSUNAT(String documentId) {
+        // This is not used since the way is with the Consumer
         return Uni.createFrom().voidItem();
     }
 
