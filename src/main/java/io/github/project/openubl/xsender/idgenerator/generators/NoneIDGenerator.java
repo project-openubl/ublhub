@@ -19,6 +19,8 @@ package io.github.project.openubl.xsender.idgenerator.generators;
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.invoice.InvoiceInputModel;
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.creditNote.CreditNoteInputModel;
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.debitNote.DebitNoteInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.sunat.SummaryDocumentInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.sunat.VoidedDocumentInputModel;
 import io.github.project.openubl.xsender.idgenerator.IDGenerator;
 import io.github.project.openubl.xsender.idgenerator.IDGeneratorProvider;
 import io.github.project.openubl.xsender.idgenerator.IDGeneratorType;
@@ -43,6 +45,16 @@ public class NoneIDGenerator implements IDGenerator {
 
     @Override
     public void enrichWithID(DebitNoteInputModel debitNote, Map<String, String> config) {
+        // Nothing to do
+    }
+
+    @Override
+    public void enrichWithID(VoidedDocumentInputModel voidedDocument, Map<String, String> config) {
+        // Nothing to do
+    }
+
+    @Override
+    public void enrichWithID(SummaryDocumentInputModel summaryDocument, Map<String, String> config) {
         // Nothing to do
     }
 }

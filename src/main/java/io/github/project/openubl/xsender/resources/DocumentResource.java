@@ -23,6 +23,8 @@ import io.github.project.openubl.xmlbuilderlib.facade.DocumentManager;
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.invoice.InvoiceInputModel;
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.creditNote.CreditNoteInputModel;
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.debitNote.DebitNoteInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.sunat.SummaryDocumentInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.sunat.VoidedDocumentInputModel;
 import io.github.project.openubl.xmlbuilderlib.xml.XMLSigner;
 import io.github.project.openubl.xmlbuilderlib.xml.XmlSignatureHelper;
 import io.github.project.openubl.xsender.events.BroadcasterEventManager;
@@ -127,6 +129,16 @@ public class DocumentResource {
                 idGenerator.enrichWithID(debitNote, inputTemplate.getSpec().getIdGenerator().getConfig());
 
                 return DocumentManager.createXML(debitNote, xBuilderConfig, xBuilderClock).getXml();
+            case VoidedDocument:
+                VoidedDocumentInputModel voidedDocument = inputTemplate.getSpec().getDocument().mapTo(VoidedDocumentInputModel.class);
+                idGenerator.enrichWithID(voidedDocument, inputTemplate.getSpec().getIdGenerator().getConfig());
+
+                return DocumentManager.createXML(voidedDocument, xBuilderConfig, xBuilderClock).getXml();
+            case SummaryDocument:
+                SummaryDocumentInputModel summaryDocument = inputTemplate.getSpec().getDocument().mapTo(SummaryDocumentInputModel.class);
+                idGenerator.enrichWithID(summaryDocument, inputTemplate.getSpec().getIdGenerator().getConfig());
+
+                return DocumentManager.createXML(summaryDocument, xBuilderConfig, xBuilderClock).getXml();
             default:
                 throw new IllegalStateException("Kind:" + kind + " not supported");
         }

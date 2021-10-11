@@ -19,6 +19,8 @@ package io.github.project.openubl.xsender.idgenerator;
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.invoice.InvoiceInputModel;
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.creditNote.CreditNoteInputModel;
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.debitNote.DebitNoteInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.sunat.SummaryDocumentInputModel;
+import io.github.project.openubl.xmlbuilderlib.models.input.sunat.VoidedDocumentInputModel;
 
 import java.util.Map;
 
@@ -29,5 +31,9 @@ public interface IDGenerator {
     void enrichWithID(CreditNoteInputModel creditNote, Map<String, String> config);
 
     void enrichWithID(DebitNoteInputModel debitNote, Map<String, String> config);
+
+    void enrichWithID(VoidedDocumentInputModel voidedDocument, Map<String, String> config);
+
+    void enrichWithID(SummaryDocumentInputModel summaryDocument, Map<String, String> config);
 
 }
