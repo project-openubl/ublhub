@@ -71,7 +71,7 @@ create table component_config
     primary key (id)
 );
 
-gicreate table generated_id
+create table generated_id
 (
     id            varchar(255) not null,
     ruc           varchar(255) not null,
