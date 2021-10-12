@@ -56,13 +56,13 @@ public class EventManagerUtils {
     CompanyRepository companyRepository;
 
     public Uni<UBLDocumentEntity> findByIdWithRetry(String documentId) {
-        return documentRepository.findById(documentId)
+        return documentRepository
+                .findById(documentId)
                 .onItem().ifNull().failWith(() -> {
                     logger.warn("Document was not found. It will be try.");
                     return new IllegalStateException("Document id=" + documentId + " was not found for being sent");
                 })
-                .onFailure(throwable -> throwable instanceof IllegalStateException)
-                .retry().atMost(3);
+                .onFailure(throwable -> throwable instanceof IllegalStateException).retry().atMost(10);
     }
 
     public Uni<DocumentUniSend> initDocumentUniSend(String documentId) {
