@@ -25,9 +25,12 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.time.Duration;
 
 @ApplicationScoped
 public class VertxSchedulerConsumer {
+
+    static final int INITIAL_DELAY = 500;
 
     @Inject
     EventManagerUtils eventManagerUtils;
@@ -37,7 +40,12 @@ public class VertxSchedulerConsumer {
 
     @ConsumeEvent(VertxScheduler.VERTX_SEND_FILE_SCHEDULER_BUS_NAME)
     public Uni<Void> sendFile(String documentId) {
-        return eventManagerUtils.initDocumentUniSend(documentId)
+        return Uni.createFrom().item("Start")
+                .onItem().delayIt().by(Duration.ofMillis(INITIAL_DELAY))
+
+                // Fetch document from DB
+                .chain(() -> eventManagerUtils.initDocumentUniSend(documentId))
+
                 // Process file
                 .chain(documentUni -> eventManagerUtils.enrichWithFileAsBytes(documentUni)
                         .chain(fileBytes -> eventManagerUtils.enrichWithFileContent(documentUni, fileBytes))
@@ -70,7 +78,12 @@ public class VertxSchedulerConsumer {
 
     @ConsumeEvent(VertxScheduler.VERTX_CHECK_TICKET_SCHEDULER_BUS_NAME)
     public Uni<DocumentUniTicket> checkTicket(String documentId) {
-        return eventManagerUtils.initDocumentUniTicket(documentId)
+        return Uni.createFrom().item("Start")
+                .onItem().delayIt().by(Duration.ofMillis(INITIAL_DELAY))
+
+                // Fetch document from DB
+                .chain(() -> eventManagerUtils.initDocumentUniTicket(documentId))
+
                 // Process ticket
                 .chain(documentUniTicket -> eventManagerUtils.enrichWithWsConfig(documentUniTicket)
                         .chain(() -> eventManagerUtils.enrichWithCheckingTicket(documentUniTicket, 1))
