@@ -29,9 +29,13 @@ import io.github.project.openubl.xsender.models.jpa.entities.GeneratedIDEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
 import io.smallrye.mutiny.Uni;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -41,8 +45,19 @@ import java.util.UUID;
 @IDGeneratorProvider(IDGeneratorType.generated)
 public class GeneratedIDGenerator implements IDGenerator {
 
-    public static final String SERIE = "serie";
-    public static final String NUMERO = "numero";
+    public static final String SERIE_PROPERTY = "serie";
+    public static final String NUMERO_PROPERTY = "numero";
+
+    private static final String INVOICE_TYPE = "Invoice";
+    private static final String CREDIT_NOTE_FOR_FACTURA_TYPE = "CreditNote_Factura";
+    private static final String CREDIT_NOTE_FOR_BOLETA_TYPE = "CreditNote_Boleta";
+    private static final String DEBIT_NOTE_FOR_FACTURA_TYPE = "DebitNote_Factura";
+    private static final String DEBIT_NOTE_FOR_BOLETA_TYPE = "DebitNote_Boleta";
+    private static final String VOIDED_DOCUMENT_TYPE = "VoidedDocument";
+    private static final String SUMMARY_DOCUMENT_TYPE = "SummaryDocument";
+
+    @ConfigProperty(name = "openubl.xbuilder.timezone")
+    String timezone;
 
     @Inject
     GeneratedIDRepository generatedIDRepository;
@@ -51,7 +66,18 @@ public class GeneratedIDGenerator implements IDGenerator {
         Map<String, String> generatorConfig = Objects.requireNonNullElseGet(config, HashMap::new);
 
         return generatedIDRepository.getCurrentID(namespace, ruc, documentType)
-                .onItem().ifNull().continueWith(() -> generateFirstEntity(namespace, ruc, documentType, generatorConfig))
+                .onItem().ifNull().continueWith(() -> {
+                    GeneratedIDEntity entity = new GeneratedIDEntity();
+
+                    entity.id = UUID.randomUUID().toString();
+                    entity.namespace = namespace;
+                    entity.ruc = ruc;
+                    entity.documentType = documentType;
+                    entity.serie = 1;
+                    entity.numero = 0;
+
+                    return entity;
+                })
                 .chain(generatedIDEntity -> {
                     if (generatedIDEntity.numero > 99_999_999) {
                         generatedIDEntity.serie++;
@@ -60,29 +86,47 @@ public class GeneratedIDGenerator implements IDGenerator {
                         generatedIDEntity.numero++;
                     }
 
-                    generatedIDEntity.serie = Integer.parseInt(generatorConfig.getOrDefault(SERIE, String.valueOf(generatedIDEntity.serie)));
-                    generatedIDEntity.numero = Integer.parseInt(generatorConfig.getOrDefault(NUMERO, String.valueOf(generatedIDEntity.numero)));
+                    generatedIDEntity.serie = Integer.parseInt(generatorConfig.getOrDefault(SERIE_PROPERTY, String.valueOf(generatedIDEntity.serie)));
+                    generatedIDEntity.numero = Integer.parseInt(generatorConfig.getOrDefault(NUMERO_PROPERTY, String.valueOf(generatedIDEntity.numero)));
 
                     return generatedIDEntity.persist();
                 });
     }
 
-    private GeneratedIDEntity generateFirstEntity(NamespaceEntity namespace, String ruc, String documentType, Map<String, String> config) {
-        GeneratedIDEntity entity = new GeneratedIDEntity();
+    private Uni<GeneratedIDEntity> generateNextIDVoidedAndSummaryDocument(NamespaceEntity namespace, String ruc, String documentType, Map<String, String> config) {
+        return generatedIDRepository.getCurrentID(namespace, ruc, documentType)
+                .onItem().ifNull().continueWith(() -> {
+                    GeneratedIDEntity entity = new GeneratedIDEntity();
 
-        entity.id = UUID.randomUUID().toString();
-        entity.namespace = namespace;
-        entity.ruc = ruc;
-        entity.documentType = documentType;
-        entity.serie = 1;
-        entity.numero = 0;
+                    entity.id = UUID.randomUUID().toString();
+                    entity.namespace = namespace;
+                    entity.ruc = ruc;
+                    entity.documentType = documentType;
+                    entity.serie = Integer.parseInt(LocalDateTime
+                            .now(ZoneId.of(timezone))
+                            .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+                    );
+                    entity.numero = 0;
 
-        return entity;
+                    return entity;
+                })
+                .chain(generatedIDEntity -> {
+                    int yyyyMMdd = Integer.parseInt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+
+                    if (generatedIDEntity.serie == yyyyMMdd) {
+                        generatedIDEntity.numero++;
+                    } else {
+                        generatedIDEntity.serie = yyyyMMdd;
+                        generatedIDEntity.numero = 1;
+                    }
+
+                    return generatedIDEntity.persist();
+                });
     }
 
     @Override
     public Uni<InvoiceInputModel> enrichWithID(NamespaceEntity namespace, InvoiceInputModel invoice, Map<String, String> config) {
-        return generateNextID(namespace, invoice.getProveedor().getRuc(), "Invoice", config)
+        return generateNextID(namespace, invoice.getProveedor().getRuc(), INVOICE_TYPE, config)
                 .map(generatedIDEntity -> {
                     invoice.setSerie("F" + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 3, "0"));
                     invoice.setNumero(generatedIDEntity.numero);
@@ -96,10 +140,10 @@ public class GeneratedIDGenerator implements IDGenerator {
         String documentType;
         String idPrefix;
         if (creditNote.getSerieNumeroComprobanteAfectado().toUpperCase().startsWith("F")) {
-            documentType = "CreditNote_Factura";
+            documentType = CREDIT_NOTE_FOR_FACTURA_TYPE;
             idPrefix = "FC";
         } else {
-            documentType = "CreditNote_Boleta";
+            documentType = CREDIT_NOTE_FOR_BOLETA_TYPE;
             idPrefix = "BC";
         }
 
@@ -117,10 +161,10 @@ public class GeneratedIDGenerator implements IDGenerator {
         String documentType;
         String idPrefix;
         if (debitNote.getSerieNumeroComprobanteAfectado().toUpperCase().startsWith("F")) {
-            documentType = "DebitNote_Factura";
+            documentType = DEBIT_NOTE_FOR_FACTURA_TYPE;
             idPrefix = "FD";
         } else {
-            documentType = "DebitNote_Boleta";
+            documentType = DEBIT_NOTE_FOR_BOLETA_TYPE;
             idPrefix = "BD";
         }
 
@@ -136,11 +180,20 @@ public class GeneratedIDGenerator implements IDGenerator {
 
     @Override
     public Uni<VoidedDocumentInputModel> enrichWithID(NamespaceEntity namespace, VoidedDocumentInputModel voidedDocument, Map<String, String> config) {
-        return Uni.createFrom().item(voidedDocument);
+        return generateNextIDVoidedAndSummaryDocument(namespace, voidedDocument.getProveedor().getRuc(), VOIDED_DOCUMENT_TYPE, config)
+                .map(generatedIDEntity -> {
+                    voidedDocument.setNumero(generatedIDEntity.numero);
+                    return voidedDocument;
+                });
     }
 
     @Override
     public Uni<SummaryDocumentInputModel> enrichWithID(NamespaceEntity namespace, SummaryDocumentInputModel summaryDocument, Map<String, String> config) {
-        return Uni.createFrom().item(summaryDocument);
+        return generateNextIDVoidedAndSummaryDocument(namespace, summaryDocument.getProveedor().getRuc(), SUMMARY_DOCUMENT_TYPE, config)
+                .map(generatedIDEntity -> {
+                    summaryDocument.setNumero(generatedIDEntity.numero);
+                    return summaryDocument;
+                });
     }
+
 }

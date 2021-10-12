@@ -34,7 +34,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.keycloak.crypto.Algorithm;
 
@@ -550,8 +549,8 @@ public class DocumentResourceTest extends BaseAuthTest {
                         .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
                                 .withName(IDGeneratorType.generated)
                                 .withConfig(new HashMap<String, String>() {{
-                                    put(GeneratedIDGenerator.SERIE, "2");
-                                    put(GeneratedIDGenerator.NUMERO, "33");
+                                    put(GeneratedIDGenerator.SERIE_PROPERTY, "2");
+                                    put(GeneratedIDGenerator.NUMERO_PROPERTY, "33");
                                 }})
                                 .build()
                         )
