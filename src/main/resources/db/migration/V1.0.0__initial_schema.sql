@@ -71,6 +71,18 @@ create table component_config
     primary key (id)
 );
 
+gicreate table generated_id
+(
+    id            varchar(255) not null,
+    ruc           varchar(255) not null,
+    document_type varchar(255) not null,
+    serie         int4         not null,
+    numero        int4         not null,
+    version       int4,
+    namespace_id  varchar(255) not null,
+    primary key (id)
+);
+
 create table ubl_document_sunat_notes
 (
     ubl_document_id varchar(255) not null,
@@ -124,3 +136,11 @@ alter table if exists ubl_document_sunat_notes
     references ubl_document;
 
 
+alter table if exists generated_id
+    add constraint FKuln89tn2t5teiufir1dsq1ka
+    foreign key (namespace_id)
+    references namespace;
+
+alter table if exists generated_id
+    add constraint UK4hs3cb8j320vu5apl2fb06dde
+    unique (namespace_id, ruc, document_type);

@@ -24,6 +24,8 @@ import io.github.project.openubl.xmlbuilderlib.models.input.sunat.VoidedDocument
 import io.github.project.openubl.xsender.idgenerator.IDGenerator;
 import io.github.project.openubl.xsender.idgenerator.IDGeneratorProvider;
 import io.github.project.openubl.xsender.idgenerator.IDGeneratorType;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
+import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.Map;
@@ -32,29 +34,33 @@ import java.util.Map;
 @IDGeneratorProvider(IDGeneratorType.none)
 public class NoneIDGenerator implements IDGenerator {
 
-
     @Override
-    public void enrichWithID(InvoiceInputModel invoice, Map<String, String> config) {
+    public Uni<InvoiceInputModel> enrichWithID(NamespaceEntity namespace, InvoiceInputModel invoice, Map<String, String> config) {
         // Nothing to do
+        return Uni.createFrom().item(invoice);
     }
 
     @Override
-    public void enrichWithID(CreditNoteInputModel creditNote, Map<String, String> config) {
+    public Uni<CreditNoteInputModel> enrichWithID(NamespaceEntity namespace, CreditNoteInputModel creditNote, Map<String, String> config) {
         // Nothing to do
+        return Uni.createFrom().item(creditNote);
     }
 
     @Override
-    public void enrichWithID(DebitNoteInputModel debitNote, Map<String, String> config) {
+    public Uni<DebitNoteInputModel> enrichWithID(NamespaceEntity namespace, DebitNoteInputModel debitNote, Map<String, String> config) {
         // Nothing to do
+        return Uni.createFrom().item(debitNote);
     }
 
     @Override
-    public void enrichWithID(VoidedDocumentInputModel voidedDocument, Map<String, String> config) {
+    public Uni<VoidedDocumentInputModel> enrichWithID(NamespaceEntity namespace, VoidedDocumentInputModel voidedDocument, Map<String, String> config) {
         // Nothing to do
+        return Uni.createFrom().item(voidedDocument);
     }
 
     @Override
-    public void enrichWithID(SummaryDocumentInputModel summaryDocument, Map<String, String> config) {
+    public Uni<SummaryDocumentInputModel> enrichWithID(NamespaceEntity namespace, SummaryDocumentInputModel summaryDocument, Map<String, String> config) {
         // Nothing to do
+        return Uni.createFrom().item(summaryDocument);
     }
 }

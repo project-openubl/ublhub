@@ -24,14 +24,17 @@ import io.github.project.openubl.xmlbuilderlib.models.input.standard.invoice.Inv
 import io.github.project.openubl.xsender.BaseAuthTest;
 import io.github.project.openubl.xsender.ProfileManager;
 import io.github.project.openubl.xsender.idgenerator.IDGeneratorType;
+import io.github.project.openubl.xsender.idgenerator.generators.GeneratedIDGenerator;
 import io.github.project.openubl.xsender.idm.DocumentRepresentation;
 import io.github.project.openubl.xsender.idm.input.*;
 import io.github.project.openubl.xsender.models.ErrorType;
+import io.github.project.openubl.xsender.idm.input.KindRepresentation;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.keycloak.crypto.Algorithm;
 
@@ -40,6 +43,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
@@ -412,6 +416,188 @@ public class DocumentResourceTest extends BaseAuthTest {
                         "fileContentValid", is(true),
                         "fileContent.ruc", is("12345678912"),
                         "fileContent.documentID", is("F001-1"),
+                        "fileContent.documentType", is("Invoice")
+                );
+    }
+
+    @Test
+    public void createXMLWithAutoIDGenerator() throws URISyntaxException {
+        // Given
+        String nsId = "1";
+
+        InvoiceInputModel input = InvoiceInputModel.Builder.anInvoiceInputModel()
+                .withSerie("F001")
+                .withNumero(1)
+                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
+                        .withRuc("12345678912")
+                        .withRazonSocial("Softgreen S.A.C.")
+                        .build()
+                )
+                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
+                        .withNombre("Carlos Feria")
+                        .withNumeroDocumentoIdentidad("12121212121")
+                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
+                        .build()
+                )
+                .withDetalle(Arrays.asList(
+                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
+                                .withDescripcion("Item1")
+                                .withCantidad(new BigDecimal(10))
+                                .withPrecioUnitario(new BigDecimal(100))
+                                .withUnidadMedida("KGM")
+                                .build(),
+                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
+                                .withDescripcion("Item2")
+                                .withCantidad(new BigDecimal(10))
+                                .withPrecioUnitario(new BigDecimal(100))
+                                .withUnidadMedida("KGM")
+                                .build())
+                )
+                .build();
+
+        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
+                .withKind(KindRepresentation.Invoice)
+                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
+                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
+                                .withName(IDGeneratorType.generated)
+                                .build()
+                        )
+                        .withDocument(JsonObject.mapFrom(input))
+                        .build()
+                )
+                .build();
+
+        // When
+        DocumentRepresentation response = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(template)
+                .when()
+                .post("/" + nsId + "/documents")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()),
+                        "namespaceId", is("1"),
+                        "inProgress", is(true)
+                )
+                .extract().body().as(DocumentRepresentation.class);
+
+        // Then
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            DocumentRepresentation watchResponse = givenAuth("alice")
+                    .contentType(ContentType.JSON)
+                    .when()
+
+                    .get("/" + nsId + "/documents/" + response.getId())
+                    .then()
+                    .statusCode(200)
+                    .extract().body().as(DocumentRepresentation.class);
+            return !watchResponse.isInProgress();
+        });
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents/" + response.getId())
+                .then()
+                .statusCode(200)
+                .body("inProgress", is(false),
+                        "error", is(nullValue()),
+                        "fileContentValid", is(true),
+                        "fileContent.ruc", is("12345678912"),
+                        "fileContent.documentID", is("F001-1"),
+                        "fileContent.documentType", is("Invoice")
+                );
+    }
+
+    @Test
+    public void createXMLWithAutoIDGeneratorConfig() throws URISyntaxException {
+        // Given
+        String nsId = "1";
+
+        InvoiceInputModel input = InvoiceInputModel.Builder.anInvoiceInputModel()
+                .withSerie("F001")
+                .withNumero(1)
+                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
+                        .withRuc("12345678912")
+                        .withRazonSocial("Softgreen S.A.C.")
+                        .build()
+                )
+                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
+                        .withNombre("Carlos Feria")
+                        .withNumeroDocumentoIdentidad("12121212121")
+                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
+                        .build()
+                )
+                .withDetalle(Arrays.asList(
+                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
+                                .withDescripcion("Item1")
+                                .withCantidad(new BigDecimal(10))
+                                .withPrecioUnitario(new BigDecimal(100))
+                                .withUnidadMedida("KGM")
+                                .build(),
+                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
+                                .withDescripcion("Item2")
+                                .withCantidad(new BigDecimal(10))
+                                .withPrecioUnitario(new BigDecimal(100))
+                                .withUnidadMedida("KGM")
+                                .build())
+                )
+                .build();
+
+        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
+                .withKind(KindRepresentation.Invoice)
+                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
+                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
+                                .withName(IDGeneratorType.generated)
+                                .withConfig(new HashMap<String, String>() {{
+                                    put(GeneratedIDGenerator.SERIE, "2");
+                                    put(GeneratedIDGenerator.NUMERO, "33");
+                                }})
+                                .build()
+                        )
+                        .withDocument(JsonObject.mapFrom(input))
+                        .build()
+                )
+                .build();
+
+        // When
+        DocumentRepresentation response = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(template)
+                .when()
+                .post("/" + nsId + "/documents")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()),
+                        "namespaceId", is("1"),
+                        "inProgress", is(true)
+                )
+                .extract().body().as(DocumentRepresentation.class);
+
+        // Then
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            DocumentRepresentation watchResponse = givenAuth("alice")
+                    .contentType(ContentType.JSON)
+                    .when()
+
+                    .get("/" + nsId + "/documents/" + response.getId())
+                    .then()
+                    .statusCode(200)
+                    .extract().body().as(DocumentRepresentation.class);
+            return !watchResponse.isInProgress();
+        });
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId + "/documents/" + response.getId())
+                .then()
+                .statusCode(200)
+                .body("inProgress", is(false),
+                        "error", is(nullValue()),
+                        "fileContentValid", is(true),
+                        "fileContent.ruc", is("12345678912"),
+                        "fileContent.documentID", is("F002-33"),
                         "fileContent.documentType", is("Invoice")
                 );
     }
