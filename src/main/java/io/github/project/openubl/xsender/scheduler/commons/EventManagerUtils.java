@@ -55,18 +55,20 @@ public class EventManagerUtils {
     @Inject
     CompanyRepository companyRepository;
 
+    public Uni<UBLDocumentEntity> findByIdWithRetry(String documentId) {
+        return documentRepository.findById(documentId)
+                .onItem().ifNull().failWith(() -> {
+                    logger.warn("Document was not found. It will be try.");
+                    return new IllegalStateException("Document id=" + documentId + " was not found for being sent");
+                })
+                .onFailure(throwable -> throwable instanceof IllegalStateException)
+                .retry().atMost(3);
+    }
+
     public Uni<DocumentUniSend> initDocumentUniSend(String documentId) {
         return Panache
-                .withTransaction(() -> documentRepository
-                        .findById(documentId)
-                        .onItem().ifNull().failWith(() -> {
-                            logger.warn("Document was not found to be processed in the consumer for sendFile. It will be try.");
-                            return new IllegalStateException("Document id=" + documentId + " was not found for being sent");
-                        })
-                        .onFailure(throwable -> throwable instanceof IllegalStateException)
-                        .retry().withBackOff(Duration.ofMillis(200), Duration.ofMillis(200)).atMost(3)
-
-                        .onItem().ifNotNull().transform(documentEntity -> DocumentUniSendBuilder.aDocumentUniSend()
+                .withTransaction(() -> findByIdWithRetry(documentId)
+                        .map(documentEntity -> DocumentUniSendBuilder.aDocumentUniSend()
                                 .withNamespaceId(documentEntity.namespace.id)
                                 .withId(documentEntity.id)
                                 .withRetries(documentEntity.retries)
@@ -85,15 +87,7 @@ public class EventManagerUtils {
 
     public Uni<DocumentUniTicket> initDocumentUniTicket(String documentId) {
         return Panache
-                .withTransaction(() -> documentRepository
-                        .findById(documentId)
-                        .onItem().ifNull().failWith(() -> {
-                            logger.warn("Document was not found to be processed in the consumer for sendTicket. It will be try.");
-                            return new IllegalStateException("Document id=" + documentId + " was not found");
-                        })
-                        .onFailure(throwable -> throwable instanceof IllegalStateException)
-                        .retry().withBackOff(Duration.ofMillis(200), Duration.ofMillis(200)).atMost(3)
-
+                .withTransaction(() -> findByIdWithRetry(documentId)
                         .onItem().ifNotNull().transform(documentEntity -> {
                                     XmlContentModel xmlContent = XmlContentModel.Builder.aXmlContentModel()
                                             .withRuc(documentEntity.ruc)
