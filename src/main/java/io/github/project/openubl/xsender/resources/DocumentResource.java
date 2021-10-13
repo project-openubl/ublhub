@@ -57,7 +57,10 @@ import org.keycloak.crypto.KeyUse;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
+import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -66,6 +69,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Path("/namespaces")
@@ -116,6 +120,9 @@ public class DocumentResource {
         switch (kind) {
             case Invoice:
                 InvoiceInputModel invoice = inputTemplate.getSpec().getDocument().mapTo(InvoiceInputModel.class);
+                invoice.setSerie("F001");
+                invoice.setNumero(1);
+
                 return idGenerator
                         .enrichWithID(namespace, invoice, inputTemplate.getSpec().getIdGenerator().getConfig())
                         .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
@@ -206,17 +213,20 @@ public class DocumentResource {
                                 .chain(fileSavedId -> createDocumentFromFileID(namespaceEntity, fileSavedId))
 
                                 // Response
-                                .map(documentEntity -> {
-                                            return Response
-                                                    .status(Response.Status.CREATED)
-                                                    .entity(EntityToRepresentation.toRepresentation(documentEntity))
-                                                    .build();
-                                        }
+                                .map(documentEntity -> Response
+                                        .status(Response.Status.CREATED)
+                                        .entity(EntityToRepresentation.toRepresentation(documentEntity))
+                                        .build()
                                 )
                         )
 
                         .onItem().ifNull().continueWith(Response.ok()
                                 .status(Response.Status.NOT_FOUND)::build
+                        )
+
+                        .onFailure(throwable -> throwable instanceof ConstraintViolationException).recoverWithItem(throwable -> Response
+                                .status(Response.Status.BAD_REQUEST)
+                                .entity(throwable.getMessage()).build()
                         )
                 );
     }

@@ -33,13 +33,13 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validator;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @ApplicationScoped
 @IDGeneratorProvider(IDGeneratorType.generated)
@@ -48,19 +48,40 @@ public class GeneratedIDGenerator implements IDGenerator {
     public static final String SERIE_PROPERTY = "serie";
     public static final String NUMERO_PROPERTY = "numero";
 
-    private static final String INVOICE_TYPE = "Invoice";
-    private static final String CREDIT_NOTE_FOR_FACTURA_TYPE = "CreditNote_Factura";
-    private static final String CREDIT_NOTE_FOR_BOLETA_TYPE = "CreditNote_Boleta";
-    private static final String DEBIT_NOTE_FOR_FACTURA_TYPE = "DebitNote_Factura";
-    private static final String DEBIT_NOTE_FOR_BOLETA_TYPE = "DebitNote_Boleta";
-    private static final String VOIDED_DOCUMENT_TYPE = "VoidedDocument";
-    private static final String SUMMARY_DOCUMENT_TYPE = "SummaryDocument";
-
     @ConfigProperty(name = "openubl.xbuilder.timezone")
     String timezone;
 
     @Inject
+    Validator validator;
+
+    @Inject
     GeneratedIDRepository generatedIDRepository;
+
+    enum DocumentType {
+        INVOICE_TYPE("Invoice", "F"),
+        CREDIT_NOTE_FOR_FACTURA_TYPE("CreditNote_Factura", "FC"),
+        CREDIT_NOTE_FOR_BOLETA_TYPE("CreditNote_Boleta", "BC"),
+        DEBIT_NOTE_FOR_FACTURA_TYPE("DebitNote_Factura", "FD"),
+        DEBIT_NOTE_FOR_BOLETA_TYPE("DebitNote_Boleta", "BD"),
+        VOIDED_DOCUMENT_TYPE("VoidedDocument", ""),
+        SUMMARY_DOCUMENT_TYPE("SummaryDocument", "");
+
+        private final String name;
+        private final String prefix;
+
+        DocumentType(String name, String prefix) {
+            this.name = name;
+            this.prefix = prefix;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getPrefix() {
+            return prefix;
+        }
+    }
 
     private Uni<GeneratedIDEntity> generateNextID(NamespaceEntity namespace, String ruc, String documentType, Map<String, String> config) {
         Map<String, String> generatorConfig = Objects.requireNonNullElseGet(config, HashMap::new);
@@ -126,74 +147,157 @@ public class GeneratedIDGenerator implements IDGenerator {
 
     @Override
     public Uni<InvoiceInputModel> enrichWithID(NamespaceEntity namespace, InvoiceInputModel invoice, Map<String, String> config) {
-        return generateNextID(namespace, invoice.getProveedor().getRuc(), INVOICE_TYPE, config)
-                .map(generatedIDEntity -> {
-                    invoice.setSerie("F" + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 3, "0"));
-                    invoice.setNumero(generatedIDEntity.numero);
-
-                    return invoice;
-                });
+        return Uni.createFrom().item(invoice)
+                .map(input -> {
+                    input.setSerie("F001");
+                    input.setNumero(1);
+                    return input;
+                })
+                .chain(input -> Uni.createFrom().<InvoiceInputModel>emitter(uniEmitter -> {
+                    Set<ConstraintViolation<InvoiceInputModel>> violations = validator.validate(input);
+                    if (violations.isEmpty()) {
+                        uniEmitter.complete(input);
+                    } else {
+                        uniEmitter.fail(new ConstraintViolationException(violations));
+                    }
+                }))
+                .chain(input -> generateNextID(namespace, input.getProveedor().getRuc(), DocumentType.INVOICE_TYPE.name, config)
+                        .map(generatedIDEntity -> {
+                            input.setSerie(DocumentType.INVOICE_TYPE.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 3, "0"));
+                            input.setNumero(generatedIDEntity.numero);
+                            return input;
+                        })
+                );
     }
 
     @Override
     public Uni<CreditNoteInputModel> enrichWithID(NamespaceEntity namespace, CreditNoteInputModel creditNote, Map<String, String> config) {
-        String documentType;
-        String idPrefix;
-        if (creditNote.getSerieNumeroComprobanteAfectado().toUpperCase().startsWith("F")) {
-            documentType = CREDIT_NOTE_FOR_FACTURA_TYPE;
-            idPrefix = "FC";
-        } else {
-            documentType = CREDIT_NOTE_FOR_BOLETA_TYPE;
-            idPrefix = "BC";
-        }
+        return Uni.createFrom().<Void>emitter(uniEmitter -> {
+                    if (creditNote.getSerieNumeroComprobanteAfectado() != null &&
+                            creditNote.getProveedor() != null &&
+                            creditNote.getProveedor().getRuc() != null
+                    ) {
+                        uniEmitter.complete(null);
+                    } else {
+                        uniEmitter.fail(new ConstraintViolationException("ProveedorRUC or SerieNumeroComprobanteAfectado invalid", new HashSet<>()));
+                    }
+                })
+                .map(unused -> {
+                    if (creditNote.getSerieNumeroComprobanteAfectado().toUpperCase().startsWith("F")) {
+                        return DocumentType.CREDIT_NOTE_FOR_FACTURA_TYPE;
+                    } else {
+                        return DocumentType.CREDIT_NOTE_FOR_BOLETA_TYPE;
+                    }
+                })
+                .chain(documentType -> Uni
+                        .createFrom().<Void>emitter(uniEmitter -> {
+                            // Set fake serie-numero for verifying hibernate-validator
+                            creditNote.setSerie(documentType.prefix + "01");
+                            creditNote.setNumero(1);
 
-        return generateNextID(namespace, creditNote.getProveedor().getRuc(), documentType, config)
-                .map(generatedIDEntity -> {
-                    creditNote.setSerie(idPrefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 2));
-                    creditNote.setNumero(generatedIDEntity.numero);
-
-                    return creditNote;
-                });
+                            // Validate input
+                            Set<ConstraintViolation<CreditNoteInputModel>> violations = validator.validate(creditNote);
+                            if (violations.isEmpty()) {
+                                uniEmitter.complete(null);
+                            } else {
+                                uniEmitter.fail(new ConstraintViolationException(violations));
+                            }
+                        })
+                        .chain(unused -> generateNextID(namespace, creditNote.getProveedor().getRuc(), documentType.name, config))
+                        .map(generatedIDEntity -> {
+                            creditNote.setSerie(documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 2, "0"));
+                            creditNote.setNumero(generatedIDEntity.numero);
+                            return creditNote;
+                        })
+                );
     }
 
     @Override
     public Uni<DebitNoteInputModel> enrichWithID(NamespaceEntity namespace, DebitNoteInputModel debitNote, Map<String, String> config) {
-        String documentType;
-        String idPrefix;
-        if (debitNote.getSerieNumeroComprobanteAfectado().toUpperCase().startsWith("F")) {
-            documentType = DEBIT_NOTE_FOR_FACTURA_TYPE;
-            idPrefix = "FD";
-        } else {
-            documentType = DEBIT_NOTE_FOR_BOLETA_TYPE;
-            idPrefix = "BD";
-        }
+        return Uni.createFrom().<Void>emitter(uniEmitter -> {
+                    if (debitNote.getSerieNumeroComprobanteAfectado() != null &&
+                            debitNote.getProveedor() != null &&
+                            debitNote.getProveedor().getRuc() != null
+                    ) {
+                        uniEmitter.complete(null);
+                    } else {
+                        uniEmitter.fail(new ConstraintViolationException("ProveedorRUC or SerieNumeroComprobanteAfectado invalid", new HashSet<>()));
+                    }
+                })
+                .map(unused -> {
+                    if (debitNote.getSerieNumeroComprobanteAfectado().toUpperCase().startsWith("F")) {
+                        return DocumentType.DEBIT_NOTE_FOR_FACTURA_TYPE;
+                    } else {
+                        return DocumentType.DEBIT_NOTE_FOR_BOLETA_TYPE;
+                    }
+                })
+                .chain(documentType -> Uni
+                        .createFrom().<Void>emitter(uniEmitter -> {
+                            // Set fake serie-numero for verifying hibernate-validator
+                            debitNote.setSerie(documentType.prefix + "01");
+                            debitNote.setNumero(1);
 
-        return generateNextID(namespace, debitNote.getProveedor().getRuc(), documentType, config)
-                .map(generatedIDEntity -> {
-                    debitNote.setSerie(idPrefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 2));
-                    debitNote.setNumero(generatedIDEntity.numero);
-
-                    return debitNote;
-                });
+                            // Validate input
+                            Set<ConstraintViolation<DebitNoteInputModel>> violations = validator.validate(debitNote);
+                            if (violations.isEmpty()) {
+                                uniEmitter.complete(null);
+                            } else {
+                                uniEmitter.fail(new ConstraintViolationException(violations));
+                            }
+                        })
+                        .chain(unused -> generateNextID(namespace, debitNote.getProveedor().getRuc(), documentType.name, config))
+                        .map(generatedIDEntity -> {
+                            debitNote.setSerie(documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 2, "0"));
+                            debitNote.setNumero(generatedIDEntity.numero);
+                            return debitNote;
+                        })
+                );
     }
-
 
     @Override
     public Uni<VoidedDocumentInputModel> enrichWithID(NamespaceEntity namespace, VoidedDocumentInputModel voidedDocument, Map<String, String> config) {
-        return generateNextIDVoidedAndSummaryDocument(namespace, voidedDocument.getProveedor().getRuc(), VOIDED_DOCUMENT_TYPE, config)
-                .map(generatedIDEntity -> {
-                    voidedDocument.setNumero(generatedIDEntity.numero);
-                    return voidedDocument;
-                });
+        return Uni.createFrom().item(voidedDocument)
+                .map(input -> {
+                    input.setNumero(1);
+                    return input;
+                })
+                .chain(input -> Uni.createFrom().<VoidedDocumentInputModel>emitter(uniEmitter -> {
+                    Set<ConstraintViolation<VoidedDocumentInputModel>> violations = validator.validate(input);
+                    if (violations.isEmpty()) {
+                        uniEmitter.complete(input);
+                    } else {
+                        uniEmitter.fail(new ConstraintViolationException(violations));
+                    }
+                }))
+                .chain(input -> generateNextIDVoidedAndSummaryDocument(namespace, input.getProveedor().getRuc(), DocumentType.VOIDED_DOCUMENT_TYPE.name, config)
+                        .map(generatedIDEntity -> {
+                            input.setNumero(generatedIDEntity.numero);
+                            return input;
+                        })
+                );
     }
 
     @Override
     public Uni<SummaryDocumentInputModel> enrichWithID(NamespaceEntity namespace, SummaryDocumentInputModel summaryDocument, Map<String, String> config) {
-        return generateNextIDVoidedAndSummaryDocument(namespace, summaryDocument.getProveedor().getRuc(), SUMMARY_DOCUMENT_TYPE, config)
-                .map(generatedIDEntity -> {
-                    summaryDocument.setNumero(generatedIDEntity.numero);
-                    return summaryDocument;
-                });
+        return Uni.createFrom().item(summaryDocument)
+                .map(input -> {
+                    input.setNumero(1);
+                    return input;
+                })
+                .chain(input -> Uni.createFrom().<SummaryDocumentInputModel>emitter(uniEmitter -> {
+                    Set<ConstraintViolation<SummaryDocumentInputModel>> violations = validator.validate(input);
+                    if (violations.isEmpty()) {
+                        uniEmitter.complete(input);
+                    } else {
+                        uniEmitter.fail(new ConstraintViolationException(violations));
+                    }
+                }))
+                .chain(input -> generateNextIDVoidedAndSummaryDocument(namespace, input.getProveedor().getRuc(), DocumentType.SUMMARY_DOCUMENT_TYPE.name, config)
+                        .map(generatedIDEntity -> {
+                            input.setNumero(generatedIDEntity.numero);
+                            return input;
+                        })
+                );
     }
 
 }
