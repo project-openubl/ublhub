@@ -21,19 +21,21 @@ import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.credit
 import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.debitNote.DebitNoteInputModel;
 import io.github.project.openubl.xmlbuilderlib.models.input.sunat.SummaryDocumentInputModel;
 import io.github.project.openubl.xmlbuilderlib.models.input.sunat.VoidedDocumentInputModel;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
+import io.smallrye.mutiny.Uni;
 
 import java.util.Map;
 
 public interface IDGenerator {
 
-    void enrichWithID(InvoiceInputModel invoice, Map<String, String> config);
+    Uni<InvoiceInputModel> enrichWithID(NamespaceEntity namespace, InvoiceInputModel invoice, Map<String, String> config);
 
-    void enrichWithID(CreditNoteInputModel creditNote, Map<String, String> config);
+    Uni<CreditNoteInputModel> enrichWithID(NamespaceEntity namespace, CreditNoteInputModel creditNote, Map<String, String> config);
 
-    void enrichWithID(DebitNoteInputModel debitNote, Map<String, String> config);
+    Uni<DebitNoteInputModel> enrichWithID(NamespaceEntity namespace, DebitNoteInputModel debitNote, Map<String, String> config);
 
-    void enrichWithID(VoidedDocumentInputModel voidedDocument, Map<String, String> config);
+    Uni<VoidedDocumentInputModel> enrichWithID(NamespaceEntity namespace, VoidedDocumentInputModel voidedDocument, Map<String, String> config);
 
-    void enrichWithID(SummaryDocumentInputModel summaryDocument, Map<String, String> config);
+    Uni<SummaryDocumentInputModel> enrichWithID(NamespaceEntity namespace, SummaryDocumentInputModel summaryDocument, Map<String, String> config);
 
 }

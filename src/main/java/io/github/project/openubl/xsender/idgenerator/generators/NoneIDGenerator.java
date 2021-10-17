@@ -24,37 +24,86 @@ import io.github.project.openubl.xmlbuilderlib.models.input.sunat.VoidedDocument
 import io.github.project.openubl.xsender.idgenerator.IDGenerator;
 import io.github.project.openubl.xsender.idgenerator.IDGeneratorProvider;
 import io.github.project.openubl.xsender.idgenerator.IDGeneratorType;
+import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
+import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validator;
 import java.util.Map;
+import java.util.Set;
 
 @ApplicationScoped
 @IDGeneratorProvider(IDGeneratorType.none)
 public class NoneIDGenerator implements IDGenerator {
 
+    @Inject
+    Validator validator;
 
     @Override
-    public void enrichWithID(InvoiceInputModel invoice, Map<String, String> config) {
-        // Nothing to do
+    public Uni<InvoiceInputModel> enrichWithID(NamespaceEntity namespace, InvoiceInputModel invoice, Map<String, String> config) {
+        return Uni.createFrom().item(invoice)
+                .map(input -> {
+                    Set<ConstraintViolation<InvoiceInputModel>> violations = validator.validate(input);
+                    if (violations.isEmpty()) {
+                        return input;
+                    } else {
+                        throw new ConstraintViolationException(violations);
+                    }
+                });
     }
 
     @Override
-    public void enrichWithID(CreditNoteInputModel creditNote, Map<String, String> config) {
-        // Nothing to do
+    public Uni<CreditNoteInputModel> enrichWithID(NamespaceEntity namespace, CreditNoteInputModel creditNote, Map<String, String> config) {
+        return Uni.createFrom().item(creditNote)
+                .map(input -> {
+                    Set<ConstraintViolation<CreditNoteInputModel>> violations = validator.validate(input);
+                    if (violations.isEmpty()) {
+                        return input;
+                    } else {
+                        throw new ConstraintViolationException(violations);
+                    }
+                });
     }
 
     @Override
-    public void enrichWithID(DebitNoteInputModel debitNote, Map<String, String> config) {
-        // Nothing to do
+    public Uni<DebitNoteInputModel> enrichWithID(NamespaceEntity namespace, DebitNoteInputModel debitNote, Map<String, String> config) {
+        return Uni.createFrom().item(debitNote)
+                .map(input -> {
+                    Set<ConstraintViolation<DebitNoteInputModel>> violations = validator.validate(input);
+                    if (violations.isEmpty()) {
+                        return input;
+                    } else {
+                        throw new ConstraintViolationException(violations);
+                    }
+                });
     }
 
     @Override
-    public void enrichWithID(VoidedDocumentInputModel voidedDocument, Map<String, String> config) {
-        // Nothing to do
+    public Uni<VoidedDocumentInputModel> enrichWithID(NamespaceEntity namespace, VoidedDocumentInputModel voidedDocument, Map<String, String> config) {
+        return Uni.createFrom().item(voidedDocument)
+                .map(input -> {
+                    Set<ConstraintViolation<VoidedDocumentInputModel>> violations = validator.validate(input);
+                    if (violations.isEmpty()) {
+                        return input;
+                    } else {
+                        throw new ConstraintViolationException(violations);
+                    }
+                });
     }
 
     @Override
-    public void enrichWithID(SummaryDocumentInputModel summaryDocument, Map<String, String> config) {
-        // Nothing to do
+    public Uni<SummaryDocumentInputModel> enrichWithID(NamespaceEntity namespace, SummaryDocumentInputModel summaryDocument, Map<String, String> config) {
+        return Uni.createFrom().item(summaryDocument)
+                .map(input -> {
+                    Set<ConstraintViolation<SummaryDocumentInputModel>> violations = validator.validate(input);
+                    if (violations.isEmpty()) {
+                        return input;
+                    } else {
+                        throw new ConstraintViolationException(violations);
+                    }
+                });
     }
 }

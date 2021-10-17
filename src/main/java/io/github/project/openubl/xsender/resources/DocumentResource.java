@@ -57,7 +57,10 @@ import org.keycloak.crypto.KeyUse;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
+import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -66,6 +69,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Path("/namespaces")
@@ -108,7 +112,7 @@ public class DocumentResource {
     @Inject
     KeyManager keystore;
 
-    public String createXMLString(InputTemplateRepresentation inputTemplate) {
+    public Uni<String> createXMLString(NamespaceEntity namespace, InputTemplateRepresentation inputTemplate) {
         KindRepresentation kind = inputTemplate.getKind();
         SpecRepresentation spec = inputTemplate.getSpec();
 
@@ -116,29 +120,32 @@ public class DocumentResource {
         switch (kind) {
             case Invoice:
                 InvoiceInputModel invoice = inputTemplate.getSpec().getDocument().mapTo(InvoiceInputModel.class);
-                idGenerator.enrichWithID(invoice, inputTemplate.getSpec().getIdGenerator().getConfig());
+                invoice.setSerie("F001");
+                invoice.setNumero(1);
 
-                return DocumentManager.createXML(invoice, xBuilderConfig, xBuilderClock).getXml();
+                return idGenerator
+                        .enrichWithID(namespace, invoice, inputTemplate.getSpec().getIdGenerator().getConfig())
+                        .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             case CreditNote:
                 CreditNoteInputModel creditNote = inputTemplate.getSpec().getDocument().mapTo(CreditNoteInputModel.class);
-                idGenerator.enrichWithID(creditNote, inputTemplate.getSpec().getIdGenerator().getConfig());
-
-                return DocumentManager.createXML(creditNote, xBuilderConfig, xBuilderClock).getXml();
+                return idGenerator
+                        .enrichWithID(namespace, creditNote, inputTemplate.getSpec().getIdGenerator().getConfig())
+                        .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             case DebitNote:
                 DebitNoteInputModel debitNote = inputTemplate.getSpec().getDocument().mapTo(DebitNoteInputModel.class);
-                idGenerator.enrichWithID(debitNote, inputTemplate.getSpec().getIdGenerator().getConfig());
-
-                return DocumentManager.createXML(debitNote, xBuilderConfig, xBuilderClock).getXml();
+                return idGenerator
+                        .enrichWithID(namespace, debitNote, inputTemplate.getSpec().getIdGenerator().getConfig())
+                        .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             case VoidedDocument:
                 VoidedDocumentInputModel voidedDocument = inputTemplate.getSpec().getDocument().mapTo(VoidedDocumentInputModel.class);
-                idGenerator.enrichWithID(voidedDocument, inputTemplate.getSpec().getIdGenerator().getConfig());
-
-                return DocumentManager.createXML(voidedDocument, xBuilderConfig, xBuilderClock).getXml();
+                return idGenerator
+                        .enrichWithID(namespace, voidedDocument, inputTemplate.getSpec().getIdGenerator().getConfig())
+                        .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             case SummaryDocument:
                 SummaryDocumentInputModel summaryDocument = inputTemplate.getSpec().getDocument().mapTo(SummaryDocumentInputModel.class);
-                idGenerator.enrichWithID(summaryDocument, inputTemplate.getSpec().getIdGenerator().getConfig());
-
-                return DocumentManager.createXML(summaryDocument, xBuilderConfig, xBuilderClock).getXml();
+                return idGenerator
+                        .enrichWithID(namespace, summaryDocument, inputTemplate.getSpec().getIdGenerator().getConfig())
+                        .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             default:
                 throw new IllegalStateException("Kind:" + kind + " not supported");
         }
@@ -179,8 +186,7 @@ public class DocumentResource {
     ) {
         return Panache
                 .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
-                        .onItem().ifNotNull().transformToUni(namespaceEntity -> Uni.createFrom()
-                                .item(createXMLString(inputTemplate))
+                        .onItem().ifNotNull().transformToUni(namespaceEntity -> createXMLString(namespaceEntity, inputTemplate)
                                 .chain(xmlString -> keystore
                                         .getActiveKey(namespaceEntity, KeyUse.SIG, inputTemplate.getSpec().getSignature() != null ? inputTemplate.getSpec().getSignature().getAlgorithm() : Algorithm.RS256)
                                         .map(key -> {
@@ -207,17 +213,20 @@ public class DocumentResource {
                                 .chain(fileSavedId -> createDocumentFromFileID(namespaceEntity, fileSavedId))
 
                                 // Response
-                                .map(documentEntity -> {
-                                            return Response
-                                                    .status(Response.Status.CREATED)
-                                                    .entity(EntityToRepresentation.toRepresentation(documentEntity))
-                                                    .build();
-                                        }
+                                .map(documentEntity -> Response
+                                        .status(Response.Status.CREATED)
+                                        .entity(EntityToRepresentation.toRepresentation(documentEntity))
+                                        .build()
                                 )
                         )
 
                         .onItem().ifNull().continueWith(Response.ok()
                                 .status(Response.Status.NOT_FOUND)::build
+                        )
+
+                        .onFailure(throwable -> throwable instanceof ConstraintViolationException).recoverWithItem(throwable -> Response
+                                .status(Response.Status.BAD_REQUEST)
+                                .entity(throwable.getMessage()).build()
                         )
                 );
     }
