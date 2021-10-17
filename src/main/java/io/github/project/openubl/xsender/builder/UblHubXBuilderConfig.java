@@ -17,22 +17,43 @@
 package io.github.project.openubl.xsender.builder;
 
 import io.github.project.openubl.xmlbuilderlib.config.Config;
+import io.github.project.openubl.xmlbuilderlib.models.catalogs.Catalog;
 import io.github.project.openubl.xmlbuilderlib.models.catalogs.Catalog10;
 import io.github.project.openubl.xmlbuilderlib.models.catalogs.Catalog7;
 import io.github.project.openubl.xmlbuilderlib.models.catalogs.Catalog9;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Default;
 import java.math.BigDecimal;
 
+@Default
+@ApplicationScoped
 public class UblHubXBuilderConfig implements Config {
 
-    private BigDecimal igv;
-    private BigDecimal ivap;
-    private String defaultMoneda;
-    private String defaultUnidadMedida;
-    private Catalog9 defaultTipoNotaCredito;
-    private Catalog10 defaultTipoNotaDebito;
-    private BigDecimal defaultIcb;
-    private Catalog7 defaultTipoIgv;
+    @ConfigProperty(name = "openubl.xbuilder.igv")
+    BigDecimal igv;
+
+    @ConfigProperty(name = "openubl.xbuilder.ivap")
+    BigDecimal ivap;
+
+    @ConfigProperty(name = "openubl.xbuilder.defaultMoneda")
+    String defaultMoneda;
+
+    @ConfigProperty(name = "openubl.xbuilder.defaultUnidadMedida")
+    String defaultUnidadMedida;
+
+    @ConfigProperty(name = "openubl.xbuilder.defaultTipoNotaCredito")
+    String defaultTipoNotaCredito;
+
+    @ConfigProperty(name = "openubl.xbuilder.defaultTipoNotaDebito")
+    String defaultTipoNotaDebito;
+
+    @ConfigProperty(name = "openubl.xbuilder.defaultIcb")
+    BigDecimal defaultIcb;
+
+    @ConfigProperty(name = "openubl.xbuilder.defaultTipoIgv")
+    String defaultTipoIgv;
 
     @Override
     public BigDecimal getIgv() {
@@ -56,12 +77,15 @@ public class UblHubXBuilderConfig implements Config {
 
     @Override
     public Catalog9 getDefaultTipoNotaCredito() {
-        return defaultTipoNotaCredito;
+        return Catalog.valueOfCode(Catalog9.class, defaultTipoNotaCredito)
+                .orElseThrow(() -> new IllegalStateException("Invalid defaultTipoNotaCredito in config")
+                );
     }
 
     @Override
     public Catalog10 getDefaultTipoNotaDebito() {
-        return defaultTipoNotaDebito;
+        return Catalog.valueOfCode(Catalog10.class, defaultTipoNotaDebito)
+                .orElseThrow(() -> new IllegalStateException("Invalid defaultTipoNotaDebito in config"));
     }
 
     @Override
@@ -71,38 +95,8 @@ public class UblHubXBuilderConfig implements Config {
 
     @Override
     public Catalog7 getDefaultTipoIgv() {
-        return defaultTipoIgv;
+        return Catalog.valueOfCode(Catalog7.class, defaultTipoIgv)
+                .orElseThrow(() -> new IllegalStateException("Invalid defaultTipoIgv in config"));
     }
 
-    public void setIgv(BigDecimal igv) {
-        this.igv = igv;
-    }
-
-    public void setIvap(BigDecimal ivap) {
-        this.ivap = ivap;
-    }
-
-    public void setDefaultMoneda(String defaultMoneda) {
-        this.defaultMoneda = defaultMoneda;
-    }
-
-    public void setDefaultUnidadMedida(String defaultUnidadMedida) {
-        this.defaultUnidadMedida = defaultUnidadMedida;
-    }
-
-    public void setDefaultTipoNotaCredito(Catalog9 defaultTipoNotaCredito) {
-        this.defaultTipoNotaCredito = defaultTipoNotaCredito;
-    }
-
-    public void setDefaultTipoNotaDebito(Catalog10 defaultTipoNotaDebito) {
-        this.defaultTipoNotaDebito = defaultTipoNotaDebito;
-    }
-
-    public void setDefaultIcb(BigDecimal defaultIcb) {
-        this.defaultIcb = defaultIcb;
-    }
-
-    public void setDefaultTipoIgv(Catalog7 defaultTipoIgv) {
-        this.defaultTipoIgv = defaultTipoIgv;
-    }
 }

@@ -17,28 +17,38 @@
 package io.github.project.openubl.xsender.builder;
 
 import io.github.project.openubl.xmlbuilderlib.clock.SystemClock;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import javax.annotation.Priority;
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Default;
+import javax.enterprise.inject.Alternative;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-@Default
+@Alternative
+@Priority(1)
 @ApplicationScoped
-public class UblHubXBuilderClock implements SystemClock {
+public class UblHubXBuilderClockMock implements SystemClock {
 
-    @ConfigProperty(name = "openubl.xbuilder.timezone")
-    String timezone;
+    private final TimeZone timeZone;
+    private final Calendar calendar;
+
+    public UblHubXBuilderClockMock() {
+        this.timeZone = TimeZone.getTimeZone("America/Lima");
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(timeZone);
+        calendar.set(2019, Calendar.DECEMBER, 24, 20, 30, 59);
+        this.calendar = calendar;
+    }
 
     @Override
     public TimeZone getTimeZone() {
-        return TimeZone.getTimeZone(timezone);
+        return timeZone;
     }
 
     @Override
     public Calendar getCalendarInstance() {
-        return Calendar.getInstance();
+        return calendar;
     }
 
 }
