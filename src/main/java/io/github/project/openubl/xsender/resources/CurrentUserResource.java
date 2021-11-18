@@ -23,6 +23,7 @@ import io.github.project.openubl.xsender.models.PageBean;
 import io.github.project.openubl.xsender.models.SortBean;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.SunatEntity;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
 import io.github.project.openubl.xsender.resources.utils.ResourceUtils;
 import io.github.project.openubl.xsender.security.UserIdentity;
@@ -71,6 +72,13 @@ public class CurrentUserResource {
                             namespaceEntity.description = rep.getDescription();
                             namespaceEntity.createdOn = new Date();
                             namespaceEntity.owner = userIdentity.getUsername();
+
+                            namespaceEntity.sunat = new SunatEntity();
+                            namespaceEntity.sunat.sunatUsername = rep.getCredentials().getUsername();
+                            namespaceEntity.sunat.sunatPassword = rep.getCredentials().getPassword();
+                            namespaceEntity.sunat.sunatUrlFactura = rep.getWebServices().getFactura();
+                            namespaceEntity.sunat.sunatUrlGuiaRemision = rep.getWebServices().getGuia();
+                            namespaceEntity.sunat.sunatUrlPercepcionRetencion = rep.getWebServices().getRetenciones();
 
                             return namespaceRepository.persist(namespaceEntity)
                                     .chain(namespace -> defaultKeyProviders.createProviders(namespace))

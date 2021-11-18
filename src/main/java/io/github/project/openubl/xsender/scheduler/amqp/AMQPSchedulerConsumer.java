@@ -122,7 +122,6 @@ public class AMQPSchedulerConsumer {
                                 break;
                             case READ_FILE:
                             case UNSUPPORTED_DOCUMENT_TYPE:
-                            case COMPANY_NOT_FOUND:
                             case SEND_FILE:
                                 result = Uni.createFrom()
                                         .completionStage(inMessage.ack())
@@ -189,7 +188,6 @@ public class AMQPSchedulerConsumer {
                         switch (documentCache.getError()) {
                             case READ_FILE:
                             case UNSUPPORTED_DOCUMENT_TYPE:
-                            case COMPANY_NOT_FOUND:
                             case SEND_FILE:
                             case CHECK_TICKET:
                                 result = Uni.createFrom()

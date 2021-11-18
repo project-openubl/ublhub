@@ -18,6 +18,7 @@ package io.github.project.openubl.xsender.idm;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -31,6 +32,14 @@ public class NamespaceRepresentation {
 
     @Size(max = 250)
     private String description;
+
+    @NotNull
+    @Valid
+    private SunatUrlsRepresentation webServices;
+
+    @NotNull
+    @Valid
+    private SunatCredentialsRepresentation credentials;
 
     public String getId() {
         return id;
@@ -56,4 +65,19 @@ public class NamespaceRepresentation {
         this.description = description;
     }
 
+    public SunatUrlsRepresentation getWebServices() {
+        return webServices;
+    }
+
+    public void setWebServices(SunatUrlsRepresentation webServices) {
+        this.webServices = webServices;
+    }
+
+    public SunatCredentialsRepresentation getCredentials() {
+        return credentials;
+    }
+
+    public void setCredentials(SunatCredentialsRepresentation credentials) {
+        this.credentials = credentials;
+    }
 }

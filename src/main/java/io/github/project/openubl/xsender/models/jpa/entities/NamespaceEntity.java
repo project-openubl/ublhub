@@ -21,6 +21,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
@@ -54,16 +55,17 @@ public class NamespaceEntity extends PanacheEntityBase {
     @Column(name = "created_on")
     public Date createdOn;
 
-    @Version
-    @Column(name = "version")
-    public int version;
+    @NotNull
+    @Valid
+    @Embedded
+    public SunatEntity sunat;
 
     @OnDelete(action = OnDeleteAction.CASCADE)
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "namespace", orphanRemoval = true)
     public List<CompanyEntity> companies = new ArrayList<>();
 
-//    @OnDelete(action = OnDeleteAction.CASCADE)
-//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "namespace", orphanRemoval = true)
-//    public List<UBLDocumentEntity> documents = new ArrayList<>();
+    @Version
+    @Column(name = "version")
+    public int version;
 
 }

@@ -22,6 +22,7 @@ import io.github.project.openubl.xsender.keys.component.utils.ComponentUtil;
 import io.github.project.openubl.xsender.keys.utils.StripSecretsUtils;
 import io.github.project.openubl.xsender.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.xsender.models.jpa.entities.SunatEntity;
 import io.github.project.openubl.xsender.models.jpa.entities.UBLDocumentEntity;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.representations.idm.ComponentRepresentation;
@@ -42,6 +43,14 @@ public class EntityToRepresentation {
         rep.setName(entity.name);
         rep.setDescription(entity.description);
 
+        // URLs
+        SunatUrlsRepresentation sunatUrlsRep = toRepresentationUrls(entity.sunat);
+        rep.setWebServices(sunatUrlsRep);
+
+        // Credentials
+        SunatCredentialsRepresentation credentialsRep = toRepresentationCredentials(entity.sunat);
+        rep.setCredentials(credentialsRep);
+
         return rep;
     }
 
@@ -53,23 +62,33 @@ public class EntityToRepresentation {
         rep.setName(entity.name);
         rep.setDescription(entity.description);
 
-        if (entity.sunatUrls != null) {
-            SunatUrlsRepresentation sunatUrlsRep = new SunatUrlsRepresentation();
+        if (entity.sunat != null) {
+            // URLs
+            SunatUrlsRepresentation sunatUrlsRep = toRepresentationUrls(entity.sunat);
             rep.setWebServices(sunatUrlsRep);
 
-            sunatUrlsRep.setFactura(entity.sunatUrls.sunatUrlFactura);
-            sunatUrlsRep.setGuia(entity.sunatUrls.sunatUrlGuiaRemision);
-            sunatUrlsRep.setRetenciones(entity.sunatUrls.sunatUrlPercepcionRetencion);
-        }
-
-        if (entity.sunatCredentials != null) {
-            SunatCredentialsRepresentation credentialsRep = new SunatCredentialsRepresentation();
+            // Credentials
+            SunatCredentialsRepresentation credentialsRep = toRepresentationCredentials(entity.sunat);
             rep.setCredentials(credentialsRep);
-
-            credentialsRep.setUsername(entity.sunatCredentials.sunatUsername);
         }
 
         return rep;
+    }
+
+    private static SunatUrlsRepresentation toRepresentationUrls(SunatEntity entity) {
+        SunatUrlsRepresentation sunatUrlsRep = new SunatUrlsRepresentation();
+
+        sunatUrlsRep.setFactura(entity.sunatUrlFactura);
+        sunatUrlsRep.setGuia(entity.sunatUrlGuiaRemision);
+        sunatUrlsRep.setRetenciones(entity.sunatUrlPercepcionRetencion);
+
+        return sunatUrlsRep;
+    }
+
+    private static SunatCredentialsRepresentation toRepresentationCredentials(SunatEntity entity) {
+        SunatCredentialsRepresentation credentialsRep = new SunatCredentialsRepresentation();
+        credentialsRep.setUsername(entity.sunatUsername);
+        return credentialsRep;
     }
 
     public static DocumentRepresentation toRepresentation(UBLDocumentEntity entity) {
@@ -127,7 +146,7 @@ public class EntityToRepresentation {
         return rep;
     }
 
-//    public static List<ConfigPropertyRepresentation> toRepresentation(List<ProviderConfigProperty> configProperties) {
+    //    public static List<ConfigPropertyRepresentation> toRepresentation(List<ProviderConfigProperty> configProperties) {
 //        List<ConfigPropertyRepresentation> propertiesRep = new LinkedList<>();
 //        for (ProviderConfigProperty prop : configProperties) {
 //            ConfigPropertyRepresentation propRep = toRepresentation(prop);

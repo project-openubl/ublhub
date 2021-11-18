@@ -52,12 +52,7 @@ public class CompanyEntity extends PanacheEntityBase {
     @NotNull
     @Valid
     @Embedded
-    public SunatCredentialsEntity sunatCredentials;
-
-    @NotNull
-    @Valid
-    @Embedded
-    public SunatUrlsEntity sunatUrls;
+    public SunatEntity sunat;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)

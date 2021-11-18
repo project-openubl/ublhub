@@ -20,6 +20,8 @@ import io.github.project.openubl.xsender.ProfileManager;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentationBuilder;
 import io.github.project.openubl.xsender.BaseAuthTest;
+import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
+import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
@@ -27,6 +29,7 @@ import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 
 @QuarkusTest
 @TestProfile(ProfileManager.class)
@@ -46,7 +49,12 @@ public class NamespaceResourceTest extends BaseAuthTest {
                 .then()
                 .statusCode(200)
                 .body("name", is("my-namespace1"),
-                        "description", is("description1")
+                        "description", is("description1"),
+                        "webServices.factura", is("http://url1"),
+                        "webServices.guia", is("http://url11"),
+                        "webServices.retenciones", is("http://url111"),
+                        "credentials.username", is("username1"),
+                        "credentials.password", nullValue()
                 );
 
         givenAuth("alice")
@@ -81,10 +89,10 @@ public class NamespaceResourceTest extends BaseAuthTest {
     }
 
     @Test
-    public void updateNamespace() {
+    public void updateNamespace_NameAndDescription() {
         // Given
         String nsId = "1";
-        NamespaceRepresentation newNamespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
+        NamespaceRepresentation namespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
                 .withName("new name")
                 .withDescription("my description")
                 .build();
@@ -92,14 +100,14 @@ public class NamespaceResourceTest extends BaseAuthTest {
         // When
         givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .body(newNamespace)
+                .body(namespace)
                 .when()
                 .put("/" + nsId)
                 .then()
                 .statusCode(200)
                 .body("id", is(nsId),
-                        "name", is(newNamespace.getName()),
-                        "description", is(newNamespace.getDescription())
+                        "name", is(namespace.getName()),
+                        "description", is(namespace.getDescription())
                 );
 
         // Then
@@ -110,8 +118,87 @@ public class NamespaceResourceTest extends BaseAuthTest {
                 .then()
                 .statusCode(200)
                 .body("id", is(nsId),
-                        "name", is(newNamespace.getName()),
-                        "description", is(newNamespace.getDescription())
+                        "name", is(namespace.getName()),
+                        "description", is(namespace.getDescription())
+                );
+    }
+
+    @Test
+    public void updateNamespace_urls() {
+        // Given
+        String nsId = "1";
+        NamespaceRepresentation namespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
+                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
+                        .withFactura("http://url1Changed.com")
+                        .withGuia("http://url2Changed.com")
+                        .withRetenciones("http://url3Changed.com")
+                        .build()
+                )
+                .build();
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(namespace)
+                .when()
+                .put("/" + nsId)
+                .then()
+                .statusCode(200)
+                .body("id", is(nsId),
+                        "webServices.factura", is(namespace.getWebServices().getFactura()),
+                        "webServices.guia", is(namespace.getWebServices().getGuia()),
+                        "webServices.retenciones", is(namespace.getWebServices().getRetenciones())
+                );
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId)
+                .then()
+                .statusCode(200)
+                .body("id", is(nsId),
+                        "webServices.factura", is(namespace.getWebServices().getFactura()),
+                        "webServices.guia", is(namespace.getWebServices().getGuia()),
+                        "webServices.retenciones", is(namespace.getWebServices().getRetenciones())
+                );
+    }
+
+    @Test
+    public void updateNamespace_credentials() {
+        // Given
+        String nsId = "1";
+        NamespaceRepresentation namespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
+                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
+                        .withUsername("myNewUsername")
+                        .withPassword("myNewPassword")
+                        .build()
+                )
+                .build();
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(namespace)
+                .when()
+                .put("/" + nsId)
+                .then()
+                .statusCode(200)
+                .body("id", is(nsId),
+                        "credentials.username", is(namespace.getCredentials().getUsername()),
+                        "credentials.password", nullValue()
+                );
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + nsId)
+                .then()
+                .statusCode(200)
+                .body("id", is(nsId),
+                        "credentials.username", is(namespace.getCredentials().getUsername()),
+                        "credentials.password", nullValue()
                 );
     }
 
@@ -119,7 +206,7 @@ public class NamespaceResourceTest extends BaseAuthTest {
     public void updateNamespaceByNotOwner_shouldNotBeAllowed() {
         // Given
         String nsId = "3";
-        NamespaceRepresentation newNamespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
+        NamespaceRepresentation namespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
                 .withName("new name")
                 .withDescription("my description")
                 .build();
@@ -127,7 +214,7 @@ public class NamespaceResourceTest extends BaseAuthTest {
         // When
         givenAuth("alice")
                 .contentType(ContentType.JSON)
-                .body(newNamespace)
+                .body(namespace)
                 .when()
                 .put("/" + nsId)
                 .then()
@@ -136,7 +223,7 @@ public class NamespaceResourceTest extends BaseAuthTest {
         givenAuth("carlos")
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body(newNamespace)
+                .body(namespace)
                 .when()
                 .put("/" + nsId)
                 .then()
