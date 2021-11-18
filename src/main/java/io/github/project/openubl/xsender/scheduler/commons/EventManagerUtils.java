@@ -34,7 +34,6 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.Optional;
 
@@ -144,24 +143,12 @@ public class EventManagerUtils {
     public Uni<XSenderConfig> enrichWithWsConfig(DocumentUniSend documentUni, XmlContentModel xmlContentModel) {
         return xSenderMutiny
                 .getXSenderConfig(documentUni.getNamespaceId(), xmlContentModel.getRuc())
-                .onFailure(throwable -> throwable instanceof NoCompanyWithRucException).invoke(throwable -> {
-                    documentUni.setError(ErrorType.COMPANY_NOT_FOUND);
-                })
                 .invoke(documentUni::setWsConfig);
     }
 
     public Uni<XSenderConfig> enrichWithWsConfig(DocumentUniTicket documentUni) {
-        return companyRepository
-                .findByRuc(documentUni.getNamespaceId(), documentUni.getXmlContent().getRuc())
-                .onItem().ifNull().failWith(() -> new NoCompanyWithRucException("No company with ruc found"))
-                .onItem().ifNotNull().transform(companyEntity -> XSenderConfigBuilder.aXSenderConfig()
-                        .withFacturaUrl(companyEntity.sunatUrls.sunatUrlFactura)
-                        .withGuiaUrl(companyEntity.sunatUrls.sunatUrlGuiaRemision)
-                        .withPercepcionRetencionUrl(companyEntity.sunatUrls.sunatUrlPercepcionRetencion)
-                        .withUsername(companyEntity.sunatCredentials.sunatUsername)
-                        .withPassword(companyEntity.sunatCredentials.sunatPassword)
-                        .build()
-                )
+        return xSenderMutiny
+                .getXSenderConfig(documentUni.getNamespaceId(), documentUni.getXmlContent().getRuc())
                 .invoke(documentUni::setWsConfig);
     }
 

@@ -27,10 +27,10 @@ import io.github.project.openubl.xmlsenderws.webservices.xml.DocumentType;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentProvider;
 import io.github.project.openubl.xsender.exceptions.CheckTicketAtSUNATException;
-import io.github.project.openubl.xsender.exceptions.NoCompanyWithRucException;
 import io.github.project.openubl.xsender.exceptions.ReadFileException;
 import io.github.project.openubl.xsender.exceptions.SendFileToSUNATException;
 import io.github.project.openubl.xsender.models.jpa.CompanyRepository;
+import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 
@@ -45,6 +45,9 @@ public class XSenderMutiny {
 
     @Inject
     CompanyRepository companyRepository;
+
+    @Inject
+    NamespaceRepository namespaceRepository;
 
     public Uni<XmlContentModel> getFileContent(byte[] file) {
         return Uni.createFrom().emitter(uniEmitter -> {
@@ -63,16 +66,19 @@ public class XSenderMutiny {
     }
 
     public Uni<XSenderConfig> getXSenderConfig(String namespaceId, String ruc) {
-        return Panache.withTransaction(() -> companyRepository.findByRuc(namespaceId, ruc))
-                .onItem().ifNotNull().transform(companyEntity -> XSenderConfigBuilder.aXSenderConfig()
-                        .withFacturaUrl(companyEntity.sunatUrls.sunatUrlFactura)
-                        .withGuiaUrl(companyEntity.sunatUrls.sunatUrlGuiaRemision)
-                        .withPercepcionRetencionUrl(companyEntity.sunatUrls.sunatUrlPercepcionRetencion)
-                        .withUsername(companyEntity.sunatCredentials.sunatUsername)
-                        .withPassword(companyEntity.sunatCredentials.sunatPassword)
+        return Panache.withTransaction(() -> companyRepository.findByRuc(namespaceId, ruc)
+                        .onItem().ifNotNull().transform(companyEntity -> companyEntity.sunat)
+                        .onItem().ifNull().switchTo(() -> namespaceRepository.findById(namespaceId).map(namespaceEntity -> namespaceEntity.sunat))
+                )
+                .onItem().ifNotNull().transform(sunatEntity -> XSenderConfigBuilder.aXSenderConfig()
+                        .withFacturaUrl(sunatEntity.sunatUrlFactura)
+                        .withGuiaUrl(sunatEntity.sunatUrlGuiaRemision)
+                        .withPercepcionRetencionUrl(sunatEntity.sunatUrlPercepcionRetencion)
+                        .withUsername(sunatEntity.sunatUsername)
+                        .withPassword(sunatEntity.sunatPassword)
                         .build()
                 )
-                .onItem().ifNull().failWith(() -> new NoCompanyWithRucException("No company with ruc found"));
+                .onItem().ifNull().failWith(() -> new IllegalStateException("No sunat data found for ns=" + namespaceId + " and/or ruc=" + ruc));
     }
 
     public Uni<BillServiceModel> sendFile(byte[] file, XSenderConfig wsConfig) {

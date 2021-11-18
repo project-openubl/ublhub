@@ -20,14 +20,12 @@ public enum ErrorType {
     FETCH_FILE("No se pudo recuperar el archivo"),
     READ_FILE("Documento no pudo ser parseado"),
     UNSUPPORTED_DOCUMENT_TYPE("Tipo de documento no válido"),
-    COMPANY_NOT_FOUND("No se pudo encontrar una empresa para el archivo"),
     SEND_FILE("No se pudo enviar el archivo a la SUNAT"),
     CHECK_TICKET("No se pudo verificar el ticket en la SUNAT"),
     SAVE_CRD_FILE("No se pudo guardar el CDR"),
     AMQP_SCHEDULE("No se pudo programar envio"),
     RETRY_CONSUMED("Reenvios agotados"),
-    UNKNOWN("Reenvios agotados"),
-    ;
+    UNKNOWN("Reenvios agotados");
 
     private final String message;
 

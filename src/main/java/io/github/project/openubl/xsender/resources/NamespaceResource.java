@@ -23,6 +23,7 @@ import io.github.project.openubl.xsender.keys.component.utils.ComponentUtil;
 import io.github.project.openubl.xsender.models.jpa.ComponentRepository;
 import io.github.project.openubl.xsender.models.jpa.NamespaceRepository;
 import io.github.project.openubl.xsender.models.utils.EntityToRepresentation;
+import io.github.project.openubl.xsender.models.utils.RepresentationToEntity;
 import io.github.project.openubl.xsender.security.UserIdentity;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
@@ -81,10 +82,7 @@ public class NamespaceResource {
     ) {
         return Panache
                 .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
-                        .onItem().ifNotNull().invoke(namespaceEntity -> {
-                            namespaceEntity.name = rep.getName();
-                            namespaceEntity.description = rep.getDescription();
-                        })
+                        .onItem().ifNotNull().invoke(namespaceEntity -> RepresentationToEntity.assign(namespaceEntity, rep))
                 )
                 .onItem().ifNotNull().transform(entity -> Response.ok().entity(EntityToRepresentation.toRepresentation(entity)).build())
                 .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);

@@ -20,6 +20,8 @@ import io.github.project.openubl.xsender.BaseAuthTest;
 import io.github.project.openubl.xsender.ProfileManager;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentationBuilder;
+import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
+import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
 import io.github.project.openubl.xsender.keys.KeyProvider;
 import io.github.project.openubl.xsender.keys.component.ComponentModel;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
@@ -44,6 +46,17 @@ public class NamespaceKeysResourceTest extends BaseAuthTest {
 
         NamespaceRepresentation namespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
                 .withName(NAME)
+                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
+                        .withUsername("myUsername")
+                        .withPassword("myPassword")
+                        .build()
+                )
+                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
+                        .withFactura("http://url1.com")
+                        .withGuia("http://url2.com")
+                        .withRetenciones("http://url3.com")
+                        .build()
+                )
                 .build();
 
         // When

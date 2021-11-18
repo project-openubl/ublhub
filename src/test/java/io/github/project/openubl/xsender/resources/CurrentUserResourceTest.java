@@ -20,14 +20,15 @@ import io.github.project.openubl.xsender.ProfileManager;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentation;
 import io.github.project.openubl.xsender.idm.NamespaceRepresentationBuilder;
 import io.github.project.openubl.xsender.BaseAuthTest;
+import io.github.project.openubl.xsender.idm.SunatCredentialsRepresentation;
+import io.github.project.openubl.xsender.idm.SunatUrlsRepresentation;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
 @TestProfile(ProfileManager.class)
@@ -42,6 +43,17 @@ public class CurrentUserResourceTest extends BaseAuthTest {
         NamespaceRepresentation namespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
                 .withName(NAME)
                 .withDescription("my description")
+                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
+                        .withFactura("http://url1.com")
+                        .withGuia("http://url2.com")
+                        .withRetenciones("http://url3.com")
+                        .build()
+                )
+                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
+                        .withUsername("myUsername")
+                        .withPassword("myPassword")
+                        .build()
+                )
                 .build();
 
         // When
@@ -55,7 +67,12 @@ public class CurrentUserResourceTest extends BaseAuthTest {
                 .statusCode(200)
                 .body("id", is(notNullValue()),
                         "name", is(namespace.getName()),
-                        "description", is(namespace.getDescription())
+                        "description", is(namespace.getDescription()),
+                        "webServices.factura", is(namespace.getWebServices().getFactura()),
+                        "webServices.guia", is(namespace.getWebServices().getGuia()),
+                        "webServices.retenciones", is(namespace.getWebServices().getRetenciones()),
+                        "credentials.username", is(namespace.getCredentials().getUsername()),
+                        "credentials.password", nullValue()
                 );
 
         // Then
@@ -68,6 +85,17 @@ public class CurrentUserResourceTest extends BaseAuthTest {
 
         NamespaceRepresentation namespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
                 .withName(NAME)
+                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
+                        .withFactura("http://url1.com")
+                        .withGuia("http://url2.com")
+                        .withRetenciones("http://url3.com")
+                        .build()
+                )
+                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
+                        .withUsername("myUsername")
+                        .withPassword("myPassword")
+                        .build()
+                )
                 .build();
 
         // When
