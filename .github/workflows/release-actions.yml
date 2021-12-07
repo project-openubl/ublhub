@@ -151,7 +151,7 @@ jobs:
           name: ublhub-java-artifacts
           path: .
       - name: changelog
-        uses: heinrichreimer/github-changelog-generator-action@v2.2
+        uses: heinrichreimer/github-changelog-generator-action@v2.3
         id: Changelog
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
