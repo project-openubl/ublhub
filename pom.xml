@@ -48,7 +48,7 @@
         <!--libs-->
         <xbuilder-lib.version>1.2.1.Final</xbuilder-lib.version>
         <xsender-lib.version>3.0.3.Final</xsender-lib.version>
-        <testcontainers.version>1.15.3</testcontainers.version>
+        <testcontainers.version>1.16.2</testcontainers.version>
         <awaitility.version>4.1.1</awaitility.version>
         <keycloak.version>15.0.2</keycloak.version>
         <postgresql.version>13.1</postgresql.version>
