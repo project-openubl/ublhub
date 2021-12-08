@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test snapshot 1`] = `
+<Fragment>
+  <Page
+    defaultManagedSidebarIsOpen={true}
+    header={<HeaderApp />}
+    isBreadcrumbWidthLimited={false}
+    isManagedSidebar={true}
+    isNotificationDrawerExpanded={false}
+    mainContainerId="main-content-page-layout-horizontal-nav"
+    mainTabIndex={-1}
+    onNotificationDrawerExpand={[Function]}
+    onPageResize={[Function]}
+    sidebar={<SidebarApp />}
+    skipToContent={
+      <SkipToContent
+        href="#main-content-page-layout-horizontal-nav"
+        show={false}
+      >
+        Skip to content
+      </SkipToContent>
+    }
+  />
+</Fragment>
+`;

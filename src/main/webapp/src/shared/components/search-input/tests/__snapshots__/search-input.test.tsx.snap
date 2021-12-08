@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SearchInput Renders without crashing 1`] = `
+<InputGroup>
+  <TextInput
+    aria-label="search input"
+    autoComplete="off"
+    name="filterText"
+    onChange={[Function]}
+    onKeyDown={[Function]}
+    type="search"
+    value=""
+  />
+  <Button
+    aria-label="search button"
+    onClick={[Function]}
+    variant="control"
+  >
+    <SearchIcon
+      color="currentColor"
+      noVerticalAlign={false}
+      size="sm"
+    />
+  </Button>
+</InputGroup>
+`;
