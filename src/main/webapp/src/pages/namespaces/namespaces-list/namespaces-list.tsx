@@ -97,7 +97,7 @@ export const filterByText = (filterText: string, item: Version) => {
   );
 };
 
-export const VersionList: React.FC = () => {
+export const NamespacesList: React.FC = () => {
   const dispatch = useDispatch();
 
   const versions = useVersionsQuery();

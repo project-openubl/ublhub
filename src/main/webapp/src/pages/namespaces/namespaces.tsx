@@ -4,18 +4,14 @@ import { Switch, Route } from "react-router-dom";
 import { SimplePlaceholder } from "@project-openubl/lib-ui";
 import { Paths } from "Paths";
 
-const ContribuyenteList = lazy(() => import("./contribuyente-list"));
+const NamespacesList = lazy(() => import("./namespaces-list"));
 
-export const Contribuyentes: React.FC = () => {
+export const Namespaces: React.FC = () => {
   return (
     <>
       <Suspense fallback={<SimplePlaceholder />}>
         <Switch>
-          <Route
-            path={Paths.contribuyenteList}
-            component={ContribuyenteList}
-            exact
-          />
+          <Route path={Paths.namespaces} component={NamespacesList} exact />
         </Switch>
       </Suspense>
     </>

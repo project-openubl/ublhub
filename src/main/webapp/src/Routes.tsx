@@ -1,43 +1,18 @@
 import React, { lazy, Suspense } from "react";
-import { Switch, Redirect } from "react-router-dom";
+import { Route, Switch, Redirect, RouteProps } from "react-router-dom";
 
 import { SimplePlaceholder } from "@project-openubl/lib-ui";
 
-import { IProtectedRouteProps, ProtectedRoute } from "ProtectedRoute";
-import { Permission } from "Constants";
-
 import { Paths } from "./Paths";
 
-const ConsultaRuc = lazy(() => import("./pages/consulta-ruc"));
-const Contribuyentes = lazy(() => import("./pages/contribuyentes"));
-const Versions = lazy(() => import("./pages/versions"));
-const Settings = lazy(() => import("./pages/settings"));
+const Namespaces = lazy(() => import("./pages/namespaces"));
 
 export const AppRoutes = () => {
-  const routes: IProtectedRouteProps[] = [
+  const routes: RouteProps[] = [
     {
-      component: ConsultaRuc,
-      path: Paths.consultaRuc,
+      component: Namespaces,
+      path: Paths.namespaces,
       exact: false,
-      hasAny: [Permission.admin],
-    },
-    {
-      component: Contribuyentes,
-      path: Paths.contribuyenteList,
-      exact: false,
-      hasAny: [Permission.admin],
-    },
-    {
-      component: Versions,
-      path: Paths.versionList,
-      exact: false,
-      hasAny: [Permission.admin],
-    },
-    {
-      component: Settings,
-      path: Paths.settings,
-      exact: false,
-      hasAny: [Permission.admin],
     },
   ];
 
@@ -45,14 +20,9 @@ export const AppRoutes = () => {
     <Suspense fallback={<SimplePlaceholder />}>
       <Switch>
         {routes.map(({ path, component, ...rest }, index) => (
-          <ProtectedRoute
-            key={index}
-            path={path}
-            component={component}
-            {...rest}
-          />
+          <Route key={index} path={path} component={component} {...rest} />
         ))}
-        <Redirect from={Paths.base} to={Paths.consultaRuc} exact />
+        <Redirect from={Paths.base} to={Paths.namespaces} exact />
       </Switch>
     </Suspense>
   );

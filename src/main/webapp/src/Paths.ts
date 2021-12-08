@@ -12,10 +12,5 @@ export enum Paths {
   base = "/",
   notFound = "/not-found",
 
-  consultaRuc = "/consulta-numero-documento",
-  contribuyenteList = "/contribuyentes",
-  versionList = "/versiones",
-
-  settings = "/settings",
-  settings_userList = "/settings/users",
+  namespaces = "/namespaces",
 }

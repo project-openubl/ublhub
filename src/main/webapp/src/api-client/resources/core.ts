@@ -42,27 +42,6 @@ export class AdminClusterResource extends ClusterResource {
   }
 }
 
-export class CurrentUserClusterResource extends ClusterResource {
-  private _gvk: IGroupVersionKindPlural;
-
-  constructor(kind: CurrentUserClusterResourceKind) {
-    super();
-    this._gvk = {
-      group: "",
-      version: "",
-      kindPlural: kind,
-    };
-  }
-
-  gvk(): IGroupVersionKindPlural {
-    return this._gvk;
-  }
-
-  public listPath(): string {
-    return ["/current-user", this.gvk().kindPlural].join("/");
-  }
-}
-
 export enum CoreClusterResourceKind {
   Version = "versions",
   Contribuyente = "contribuyentes",
@@ -70,8 +49,4 @@ export enum CoreClusterResourceKind {
 
 export enum AdminClusterResourceKind {
   User = "users",
-}
-
-export enum CurrentUserClusterResourceKind {
-  WhoAmI = "whoami",
 }
