@@ -4,7 +4,7 @@ import { Switch, Redirect } from "react-router-dom";
 import { SimplePlaceholder } from "@project-openubl/lib-ui";
 
 import { IProtectedRouteProps, ProtectedRoute } from "ProtectedRoute";
-import { isElasticsearchEnabled, Permission } from "Constants";
+import { Permission } from "Constants";
 
 import { Paths } from "./Paths";
 
@@ -19,25 +19,25 @@ export const AppRoutes = () => {
       component: ConsultaRuc,
       path: Paths.consultaRuc,
       exact: false,
-      hasAny: [Permission.admin, Permission.search],
+      hasAny: [Permission.admin],
     },
     {
       component: Contribuyentes,
       path: Paths.contribuyenteList,
       exact: false,
-      hasAny: [Permission.admin, Permission.search],
+      hasAny: [Permission.admin],
     },
     {
       component: Versions,
       path: Paths.versionList,
       exact: false,
-      hasAny: [Permission.admin, Permission.version_write],
+      hasAny: [Permission.admin],
     },
     {
       component: Settings,
       path: Paths.settings,
       exact: false,
-      hasAny: [Permission.admin, Permission.user_write],
+      hasAny: [Permission.admin],
     },
   ];
 
@@ -52,15 +52,7 @@ export const AppRoutes = () => {
             {...rest}
           />
         ))}
-        <Redirect
-          from={Paths.base}
-          to={
-            isElasticsearchEnabled()
-              ? Paths.contribuyenteList
-              : Paths.consultaRuc
-          }
-          exact
-        />
+        <Redirect from={Paths.base} to={Paths.consultaRuc} exact />
       </Switch>
     </Suspense>
   );

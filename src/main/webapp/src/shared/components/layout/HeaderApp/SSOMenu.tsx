@@ -1,16 +1,11 @@
 import React, { useState } from "react";
 import {
   Dropdown,
-  DropdownGroup,
   DropdownToggle,
   PageHeaderToolsItem,
 } from "@patternfly/react-core";
 
 import { useCurrentUserQuery } from "queries/currentUser";
-import { isBasicAuthEnabled, isOidcAuthEnabled } from "Constants";
-
-import { BasicMenuDropdownItems } from "./BasicMenuDropdownItems";
-import { OidcMenuDropdownItems } from "./OidcMenuDropdownItems";
 
 export const SSOMenu: React.FC = () => {
   const currentUser = useCurrentUserQuery();
@@ -22,13 +17,6 @@ export const SSOMenu: React.FC = () => {
   const onDropdownToggle = (isOpen: boolean) => {
     setIsDropdownOpen(isOpen);
   };
-
-  let authDropdownItems;
-  if (isBasicAuthEnabled()) {
-    authDropdownItems = <BasicMenuDropdownItems />;
-  } else if (isOidcAuthEnabled()) {
-    authDropdownItems = <OidcMenuDropdownItems />;
-  }
 
   return (
     <PageHeaderToolsItem
@@ -51,11 +39,11 @@ export const SSOMenu: React.FC = () => {
             {currentUser.data?.username}
           </DropdownToggle>
         }
-        dropdownItems={[
-          <DropdownGroup key="user-management">
-            {authDropdownItems}
-          </DropdownGroup>,
-        ]}
+        // dropdownItems={[
+        //   <DropdownGroup key="user-management">
+        //     {components}
+        //   </DropdownGroup>,
+        // ]}
       />
     </PageHeaderToolsItem>
   );
