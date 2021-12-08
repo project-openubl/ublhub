@@ -1,36 +1,41 @@
 ![CI](https://github.com/project-openubl/ublhub/workflows/CI/badge.svg)
-[![Docker Repository on Quay](https://quay.io/repository/projectopenubl/ublhub/status "Docker Repository on Quay")](https://quay.io/repository/projectopenubl/ublhub)
+[![License](https://img.shields.io/badge/Apache-2.0-green.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-# UblHub
+[![Project Chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg?style=for-the-badge&logo=zulip)](https://projectopenubl.zulipchat.com/)
 
-Crea, firma, y envía XMLs a la SUNAT.
+# Ublhub
 
-## Iniciar el servidor en modo desarrollo
+Microservicio que expone los datos provenientes del `padrón reducido` de la SUNAT.
 
-Clona el repositorio:
+## Ejecutar en modo desarrollo
 
-```shell
-git clone https://github.com/project-openubl/ublhub
-```
+### Iniciar servidor
 
-### Requisitos
-Necesitas tener instalado Docker.
-
-### Inicia el servidor
-
-Puedes iniciar el servidor en modo desarrollo usando el comando:
+Puedes ejecutar la aplicación en modo desarrollo con:
 
 ```shell script
 ./mvnw compile quarkus:dev
 ```
 
-### Links
+### Iniciar UI
 
-Una vez iniciado el servidor de desarrollo puedes acceder a los siguientes links:
+Instala las dependencias npm:
 
-- http://localhost:8080/
-- http://localhost:8080/q/swagger-ui/
+```shell
+yarn --cwd src/main/webapp install
+```
 
-# License
+Inicia la UI en modo desarrollo:
 
-- [Eclipse Public License - v 2.0](./LICENSE)
+```shell
+yarn --cwd src/main/webapp run start
+```
+
+## Links
+
+- [Documentación](https://project-openubl.github.io)
+- [Discusiones](https://github.com/project-openubl/ublhub/discussions)
+
+## License
+
+- [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0)

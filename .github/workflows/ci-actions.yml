@@ -3,39 +3,70 @@ name: CI
 on:
   push:
     branches-ignore:
-      - 'dependabot/**'
+      - "dependabot/**"
     paths-ignore:
-      - 'README.md'
+      - "README.md"
   pull_request:
     paths-ignore:
-      - 'README.md'
+      - "README.md"
 
 jobs:
-  linux-jvm-tests:
-    name: Tests
+  jvm-tests:
+    name: JVM Tests
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        flavor: [ "standalone", "enterprise" ]
-      fail-fast: false
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-java@v2.3.1
+      - uses: actions/setup-java@v2
         with:
           java-version: 11
           distribution: temurin
           cache: maven
       - name: Maven
-        run: mvn verify $MAVEN_ARGS
-        env:
-          MAVEN_ARGS: "-P${{ matrix.flavor }}"
+        run: mvn test -Pui
       - name: Prepare failure archive (if maven failed)
         if: failure()
         shell: bash
         run: find . -name '*-reports' -type d | tar -czvf test-reports.tgz -T -
       - name: Upload failure archive (if maven failed)
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: test-reports-${{ matrix.flavor }}
-          path: 'test-reports.tgz'
+          name: test-reports-jvm
+          path: "test-reports.tgz"
+
+  native-tests:
+    name: Native Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-java@v2
+        with:
+          java-version: 11
+          distribution: temurin
+          cache: maven
+      - name: Build with Maven
+        run: mvn verify -Dquarkus.native.container-build=true -P native,ui
+
+  ui-tests:
+    name: UI Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 12.x, 14.x ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2.5.0
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Build
+        working-directory: src/main/webapp
+        run: |
+          yarn install
+          yarn build
+      - name: Test
+        working-directory: src/main/webapp
+        run: yarn test --coverage --watchAll=false
+      - uses: codecov/codecov-action@v2.1.0
+        with:
+          flags: unitests

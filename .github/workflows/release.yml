@@ -1,0 +1,210 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version"
+        required: true
+      next:
+        description: "Next version"
+        required: false
+
+jobs:
+  version:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: 11
+          distribution: temurin
+          cache: maven
+      - name: Set release version
+        id: version
+        run: |
+          RELEASE_VERSION=${{ github.event.inputs.version }}
+          NEXT_VERSION=${{ github.event.inputs.next }}
+          PLAIN_VERSION=`echo ${RELEASE_VERSION} | awk 'match($0, /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)/) { print substr($0, RSTART, RLENGTH); }'`
+          COMPUTED_NEXT_VERSION="${PLAIN_VERSION}-SNAPSHOT"
+          if [ -z $NEXT_VERSION ]
+          then
+            NEXT_VERSION=$COMPUTED_NEXT_VERSION
+          fi
+          ./mvnw -B versions:set versions:commit -DnewVersion=$RELEASE_VERSION
+          git config --global user.email "project.openubl.preview.bot@gmail.com"
+          git config --global user.name "Project-Openubl Bot"
+          git commit -a -m "🏁 Releasing version $RELEASE_VERSION"
+          git push origin HEAD:master
+          git rev-parse HEAD > HEAD
+          echo $RELEASE_VERSION > RELEASE_VERSION
+          echo $PLAIN_VERSION > PLAIN_VERSION
+          echo $NEXT_VERSION > NEXT_VERSION
+
+      - name: Upload version files
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts
+          path: |
+            HEAD
+            *_VERSION
+
+  build-jvm:
+    needs: [ version ]
+    name: Build JVM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifacts
+          path: artifacts
+      - name: Read HEAD ref
+        id: head
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: artifacts/HEAD
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ steps.head.outputs.content }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: 11
+          distribution: temurin
+          cache: maven
+
+      - name: Build and Create distribution
+        run: ./mvnw -B --file pom.xml package -DskipTests -P ui,distribution
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts
+          path: |
+            target/distributions/*.zip
+            target/distributions/*.tar.gz
+
+  build-container:
+    needs: [ version ]
+    name: Build Container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifacts
+          path: artifacts
+      - name: Read HEAD ref
+        id: head
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: artifacts/HEAD
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ steps.head.outputs.content }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: 11
+          distribution: temurin
+          cache: maven
+
+      - name: Build container image
+        run: |
+          mvn -U -B package --file pom.xml -DskipTests \
+          -Dquarkus.native.container-build=true \
+          -Dquarkus.container-image.push=false \
+          -Dquarkus.container-image.build=true \
+          -Dquarkus.container-image.registry=quay.io \
+          -Dquarkus.container-image.group=projectopenubl \
+          -Dquarkus.container-image.name=ublhub \
+          -Dquarkus.container-image.tag=latest \
+          -P native,ui
+      - name: Save container image
+        run: docker save -o ublhub-container-image.tar quay.io/projectopenubl/ublhub:latest
+      - name: Upload container image
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts
+          path: ublhub-container-image.tar
+
+  release:
+    needs: [ build-jvm, build-container ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v2
+      - name: Read HEAD ref
+        id: head
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: artifacts/HEAD
+
+      - name: Read versions
+        id: version
+        run: |
+          RELEASE_VERSION=`cat artifacts/RELEASE_VERSION`
+          PLAIN_VERSION=`cat artifacts/PLAIN_VERSION`
+          NEXT_VERSION=`cat artifacts/NEXT_VERSION`
+          echo "RELEASE_VERSION = $RELEASE_VERSION"
+          echo "PLAIN_VERSION   = $PLAIN_VERSION"
+          echo "NEXT_VERSION    = $NEXT_VERSION"
+          echo "::set-output name=RELEASE_VERSION::$RELEASE_VERSION"
+          echo "::set-output name=PLAIN_VERSION::$PLAIN_VERSION"
+          echo "::set-output name=NEXT_VERSION::$NEXT_VERSION"
+      - name: Check out repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ steps.head.outputs.content }}
+          fetch-depth: 0
+
+      # checkout will clobber downloaded artifacts
+      # we have to download them again
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Load and config images
+        run: |
+          # Load images from .tar
+          docker load -i artifacts/ublhub-container-image.tar
+
+          # Tag images
+          docker tag quay.io/projectopenubl/ublhub:latest quay.io/projectopenubl/ublhub:${{ steps.version.outputs.RELEASE_VERSION }}
+
+      - name: Login to Quay.io
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAYIO_USERNAME }}
+          password: ${{ secrets.QUAYIO_PASSWORD }}
+
+      - name: Push to images to registry
+        run: |
+          docker push quay.io/projectopenubl/ublhub:latest
+          docker push quay.io/projectopenubl/ublhub:${{ steps.version.outputs.RELEASE_VERSION }}
+
+      - name: Release with JReleaser
+        uses: jreleaser/release-action@v1
+        env:
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JRELEASER_PROJECT_VERSION: ${{ steps.version.outputs.RELEASE_VERSION }}
+          JRELEASER_ZULIP_API_KEY: ${{ secrets.JRELEASER_ZULIP_API_KEY }}
+          JRELEASER_TWITTER_CONSUMER_KEY: ${{ secrets.JRELEASER_TWITTER_CONSUMER_KEY }}
+          JRELEASER_TWITTER_CONSUMER_SECRET: ${{ secrets.JRELEASER_TWITTER_CONSUMER_SECRET }}
+          JRELEASER_TWITTER_ACCESS_TOKEN: ${{ secrets.JRELEASER_TWITTER_ACCESS_TOKEN }}
+          JRELEASER_TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.JRELEASER_TWITTER_ACCESS_TOKEN_SECRET }}
+
+      - name: Set next version
+        env:
+          NEXT_VERSION: ${{ steps.version.outputs.NEXT_VERSION }}
+        run: |
+          ./mvnw -B versions:set versions:commit -DnewVersion=$NEXT_VERSION
+          git config --global user.email "project.openubl.preview.bot@gmail.com"
+          git config --global user.name "Project-Openubl Bot"
+          git commit -a -m "⬆️  Next version $NEXT_VERSION"
+          git push origin HEAD:master

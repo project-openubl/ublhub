@@ -14,18 +14,22 @@ jobs:
           java-version: 11
           distribution: temurin
           cache: maven
+
       - name: Extract branch name
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
-      - name: Build and Push to GitHub Packages
+
+      - name: Build container image
         run: |
-          mvn package \
-          -Pnative -Dquarkus.container-image.build=true -DskipTests \
+          mvn -U -B package --file pom.xml -DskipTests \
+          -Dquarkus.container-image.build=true \
           -Dquarkus.container-image.push=true \
+          -Dquarkus.container-image.build=true \
+          -Dquarkus.container-image.registry=ghcr.io \
           -Dquarkus.container-image.group=${{ github.repository_owner }} \
           -Dquarkus.container-image.name=${{ github.event.repository.name }}/ublhub \
           -Dquarkus.container-image.tag=${{ steps.extract_branch.outputs.branch }} \
-          -Dquarkus.container-image.registry=ghcr.io \
           -Dquarkus.container-image.username=${{ github.actor }} \
-          -Dquarkus.container-image.password=${{ secrets.GITHUB_TOKEN }}
+          -Dquarkus.container-image.password=${{ secrets.GITHUB_TOKEN }} \
+          -P native,ui
