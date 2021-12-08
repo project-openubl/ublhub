@@ -1,0 +1,5 @@
+openapi: 3.0.1
+info:
+  x-logo:
+    url: 'https://raw.githubusercontent.com/project-openubl/ublhub/master/src/main/resources/META-INF/resources/assets/images/logo-2-lines.svg'
+    altText: Ublhub logo

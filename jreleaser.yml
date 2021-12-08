@@ -1,0 +1,40 @@
+project:
+  name: ublhub
+  description: Facturador SUNAT
+  longDescription: Facturador SUNAT para desarrolladores
+  website: https://project-openubl.github.io/
+  authors:
+    - Carlos E. Feria Vila
+  license: Apache-2
+  java:
+    groupId: io.github.project.openubl.ublhub
+    version: 11
+  extraProperties:
+    inceptionYear: 2021
+
+distributions:
+  jvm:
+    artifacts:
+      - path: artifacts/ublhub-{{projectVersion}}-jvm.tar.gz
+      - path: artifacts/ublhub-{{projectVersion}}-jvm.zip
+
+release:
+  github:
+    owner: project-openubl
+    name: ublhub
+    branch: master
+    overwrite: true
+    discussionCategoryName: Announcements
+
+announce:
+  zulip:
+    active: RELEASE
+    account: carlosthe19916@gmail.com
+    apiHost: https://projectopenubl.zulipchat.com/api/v1
+    channel: announcements
+    subject: '{{projectNameCapitalized}} {{projectVersion}} released!'
+    message: '🚀 {{projectNameCapitalized}} {{projectVersion}} has been released! {{releaseNotesUrl}}'
+  twitter:
+    active: RELEASE
+    status: '🚀 {{projectNameCapitalized}} {{projectVersion}} has been released! {{releaseNotesUrl}}'
+

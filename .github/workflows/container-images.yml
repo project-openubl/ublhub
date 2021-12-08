@@ -2,8 +2,8 @@ name: Container images generator
 
 on:
   push:
-    branches-ignore:
-      - 'dependabot/**'
+    branches:
+      - master
 
 jobs:
   container-images:
@@ -12,43 +12,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-java@v2.4.0
+      - uses: actions/setup-java@v2
         with:
           java-version: 11
           distribution: temurin
           cache: maven
-      - name: Build with Maven
-        run: mvn package -DskipTests -Dquarkus.package.type=fast-jar
-      - name: Extract branch name
-        shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: extract_branch
-      - name: Push to GitHub Packages
-        uses: elgohr/Publish-Docker-Github-Action@master
-        with:
-          registry: docker.pkg.github.com
-          name: project-openubl/ublhub/ublhub
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          dockerfile: src/main/docker/Dockerfile.fast-jar
-          snapshot: false
-          tags: ${{ steps.extract_branch.outputs.branch }}
-      - name: Push to Docker Hub
-        uses: elgohr/Publish-Docker-Github-Action@master
-        with:
-          name: projectopenubl/ublhub
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          dockerfile: src/main/docker/Dockerfile.fast-jar
-          snapshot: false
-          tags: ${{ steps.extract_branch.outputs.branch }}
-      - name: Push to Quay.io
-        uses: elgohr/Publish-Docker-Github-Action@master
-        with:
-          registry: quay.io
-          name: projectopenubl/ublhub
-          username: ${{ secrets.QUAYIO_USERNAME }}
-          password: ${{ secrets.QUAYIO_PASSWORD }}
-          dockerfile: src/main/docker/Dockerfile.fast-jar
-          snapshot: false
-          tags: ${{ steps.extract_branch.outputs.branch }}
+      - name: Build container image
+        run: |
+          mvn -U -B package --file pom.xml -DskipTests \
+          -Dquarkus.native.container-build=true \
+          -Dquarkus.container-image.push=true \
+          -Dquarkus.container-image.build=true \
+          -Dquarkus.container-image.registry=quay.io \
+          -Dquarkus.container-image.group=projectopenubl \
+          -Dquarkus.container-image.name=ublhub \
+          -Dquarkus.container-image.tag=early-access \
+          -Dquarkus.container-image.username=${{ secrets.QUAYIO_USERNAME }} \
+          -Dquarkus.container-image.password=${{ secrets.QUAYIO_PASSWORD }} \
+          -P native,ui

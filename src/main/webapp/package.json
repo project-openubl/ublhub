@@ -1,0 +1,103 @@
+{
+  "name": "ublhub",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@patternfly/react-core": "^4.168.8",
+    "@patternfly/react-table": "^4.44.4",
+    "@project-openubl/lib-ui": "1.5.0",
+    "@redhat-cloud-services/frontend-components-notifications": "^3.2.4",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
+    "@types/jest": "^26.0.15",
+    "@types/node": "^12.0.0",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "axios": "^0.24.0",
+    "formik": "^2.2.9",
+    "moment": "^2.29.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-moment": "^1.1.1",
+    "react-query": "^3.33.5",
+    "react-redux": "^7.2.6",
+    "react-router-dom": "5.3.0",
+    "react-scripts": "4.0.3",
+    "redux": "^4.1.2",
+    "redux-logger": "^3.0.6",
+    "redux-thunk": "^2.4.0",
+    "typesafe-actions": "^5.1.0",
+    "typescript": "^4.1.2",
+    "web-vitals": "^1.0.1",
+    "yup": "^0.32.11"
+  },
+  "scripts": {
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "start": "react-scripts -r @cypress/instrument-cra start",
+    "build": "react-scripts build",
+    "build:instrumentation": "CYPRESS_INSTRUMENT_PRODUCTION=true react-scripts -r @cypress/instrument-cra build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "prod": "react-scripts build --dest && rsync -a build/* ../resources/META-INF/resources",
+    "ui:start": "node server.js"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@cypress/code-coverage": "^3.9.12",
+    "@cypress/instrument-cra": "^1.4.0",
+    "@testing-library/react-hooks": "^7.0.2",
+    "@types/enzyme": "^3.10.10",
+    "@types/react-redux": "^7.1.20",
+    "@types/react-router-dom": "^5.3.2",
+    "@types/redux-logger": "^3.0.9",
+    "@types/yup": "^0.29.13",
+    "@wojtekmaj/enzyme-adapter-react-17": "^0.6.5",
+    "axios-mock-adapter": "^1.20.0",
+    "cypress": "^9.1.1",
+    "enzyme": "^3.11.0",
+    "http-proxy-middleware": "^2.0.1",
+    "husky": "^7.0.4",
+    "jest-enzyme": "^7.1.2",
+    "lint-staged": "^11.2.6",
+    "node-sass": "^6.0.1",
+    "prettier": "^2.4.1",
+    "redux-devtools-extension": "^2.13.9",
+    "source-map-explorer": "^2.5.2"
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!<rootDir>/node_modules/"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write"
+    ]
+  }
+}

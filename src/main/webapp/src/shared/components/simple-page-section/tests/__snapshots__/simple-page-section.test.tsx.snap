@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SimplePageSection Renders without crashing 1`] = `
+<PageSection
+  variant="light"
+>
+  <TextContent>
+    <Text
+      component="h1"
+    >
+      myTitle
+    </Text>
+  </TextContent>
+</PageSection>
+`;
