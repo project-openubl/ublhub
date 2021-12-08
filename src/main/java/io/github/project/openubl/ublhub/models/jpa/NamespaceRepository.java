@@ -38,34 +38,26 @@ public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntit
         return find("name", name).firstResult();
     }
 
-    public Uni<NamespaceEntity> findByIdAndOwner(String id, String owner) {
-        return find("id = ?1 and owner = ?2", id, owner).firstResult();
-    }
-
-    public UniAndGroup2<List<NamespaceEntity>, Long> list(String owner, PageBean pageBean, List<SortBean> sortBy) {
+    public UniAndGroup2<List<NamespaceEntity>, Long> list(PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
         PanacheQuery<NamespaceEntity> query = NamespaceEntity
-                .find(
-                        "From NamespaceEntity as o where o.owner =:owner",
-                        sort,
-                        Parameters.with("owner", owner)
-                )
+                .find("From NamespaceEntity as o", sort)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
         return Uni.combine().all().unis(query.list(), query.count());
     }
 
-    public UniAndGroup2<List<NamespaceEntity>, Long> list(String owner, String filterText, PageBean pageBean, List<SortBean> sortBy) {
+    public UniAndGroup2<List<NamespaceEntity>, Long> list(String filterText, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
         PanacheQuery<NamespaceEntity> query = NamespaceEntity
                 .find(
-                        "From NamespaceEntity as o where o.owner =:owner and lower(o.name) like :filterText",
+                        "From NamespaceEntity as o where lower(o.name) like :filterText",
                         sort,
-                        Parameters.with("owner", owner).and("filterText", "%" + filterText.toLowerCase() + "%")
+                        Parameters.with("filterText", "%" + filterText.toLowerCase() + "%")
                 )
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 

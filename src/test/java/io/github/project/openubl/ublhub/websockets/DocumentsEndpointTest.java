@@ -36,14 +36,14 @@ import java.net.URI;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
+import static io.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @QuarkusTest
 @TestProfile(ProfileManager.class)
-@TestHTTPEndpoint(DocumentResource.class)
 public class DocumentsEndpointTest extends AbstractBaseTest {
 
     static final int TIMEOUT = 60;
@@ -88,11 +88,11 @@ public class DocumentsEndpointTest extends AbstractBaseTest {
             File file = new File(fileURI);
 
             // When
-            DocumentRepresentation response = givenAuth("alice")
+            DocumentRepresentation response = given()
                     .accept(ContentType.JSON)
                     .multiPart("file", file, "application/xml")
                     .when()
-                    .post("/" + nsId + "/documents/upload")
+                    .post("/api/namespaces/" + nsId + "/documents/upload")
                     .then()
                     .statusCode(200)
                     .body("inProgress", is(true))
@@ -100,11 +100,11 @@ public class DocumentsEndpointTest extends AbstractBaseTest {
 
             // Then
             await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-                DocumentRepresentation watchResponse = givenAuth("alice")
+                DocumentRepresentation watchResponse = given()
                         .contentType(ContentType.JSON)
                         .when()
 
-                        .get("/" + nsId + "/documents/" + response.getId())
+                        .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                         .then()
                         .statusCode(200)
                         .extract().body().as(DocumentRepresentation.class);

@@ -26,7 +26,6 @@ import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.SunatEntity;
 import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
-import io.github.project.openubl.ublhub.security.UserIdentity;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
@@ -51,9 +50,6 @@ public class CurrentUserResource {
     private static final Logger LOG = Logger.getLogger(CurrentUserResource.class);
 
     @Inject
-    UserIdentity userIdentity;
-
-    @Inject
     NamespaceRepository namespaceRepository;
 
     @Inject
@@ -71,7 +67,6 @@ public class CurrentUserResource {
                             namespaceEntity.name = rep.getName();
                             namespaceEntity.description = rep.getDescription();
                             namespaceEntity.createdOn = new Date();
-                            namespaceEntity.owner = userIdentity.getUsername();
 
                             namespaceEntity.sunat = new SunatEntity();
                             namespaceEntity.sunat.sunatUsername = rep.getCredentials().getUsername();
@@ -104,13 +99,13 @@ public class CurrentUserResource {
 
         if (filterText != null && !filterText.trim().isEmpty()) {
             return Panache.withTransaction(() -> namespaceRepository
-                    .list(userIdentity.getUsername(), filterText, pageBean, sortBeans)
+                    .list(filterText, pageBean, sortBeans)
                     .asTuple()
                     .map(tuple2 -> EntityToRepresentation.toRepresentation(tuple2.getItem1(), tuple2.getItem2(), EntityToRepresentation::toRepresentation))
             );
         } else {
             return Panache.withTransaction(() -> namespaceRepository
-                    .list(userIdentity.getUsername(), pageBean, sortBeans)
+                    .list(pageBean, sortBeans)
                     .asTuple()
                     .map(tuple2 -> EntityToRepresentation.toRepresentation(tuple2.getItem1(), tuple2.getItem2(), EntityToRepresentation::toRepresentation))
             );

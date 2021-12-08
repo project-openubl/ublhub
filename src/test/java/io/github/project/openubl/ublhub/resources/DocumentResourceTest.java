@@ -51,12 +51,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
+import static io.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
 @TestProfile(ProfileManager.class)
-@TestHTTPEndpoint(DocumentResource.class)
 public class DocumentResourceTest extends AbstractBaseTest {
 
     final int TIMEOUT = 60;
@@ -73,10 +73,10 @@ public class DocumentResourceTest extends AbstractBaseTest {
         String documentId = "11";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + documentId)
+                .get("/api/namespaces/" + nsId + "/documents/" + documentId)
                 .then()
                 .statusCode(200)
                 .body("id", is("11"),
@@ -91,30 +91,6 @@ public class DocumentResourceTest extends AbstractBaseTest {
     }
 
     @Test
-    public void getDocumentByNotOwner_shouldNotBeAllowed() {
-        // Given
-        String nsId = "3";
-        String documentId = "44";
-
-        // When
-        givenAuth("alice")
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/" + nsId + "/documents/" + documentId)
-                .then()
-                .statusCode(404);
-
-        givenAuth("carlos")
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .when()
-                .get("/" + nsId + "/documents/" + documentId)
-                .then()
-                .statusCode(200);
-        // Then
-    }
-
-    @Test
     public void getDocumentThatBelongsToOtherNamespace_shouldNotBeAllowed() {
         // Given
         String nsOwnerId = "1";
@@ -123,17 +99,17 @@ public class DocumentResourceTest extends AbstractBaseTest {
         String documentId = "11";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsOwnerId + "/documents/" + documentId)
+                .get("/api/namespaces/" + nsOwnerId + "/documents/" + documentId)
                 .then()
                 .statusCode(200);
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsToTestId + "/documents/" + documentId)
+                .get("/api/namespaces/" + nsToTestId + "/documents/" + documentId)
                 .then()
                 .statusCode(404);
         // Then
@@ -145,10 +121,10 @@ public class DocumentResourceTest extends AbstractBaseTest {
         String nsId = "1";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents")
+                .get("/api/namespaces/" + nsId + "/documents")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(2),
@@ -157,10 +133,10 @@ public class DocumentResourceTest extends AbstractBaseTest {
                         "data[1].id", is("11")
                 );
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents?sort_by=createdOn:asc")
+                .get("/api/namespaces/" + nsId + "/documents?sort_by=createdOn:asc")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(2),
@@ -177,74 +153,16 @@ public class DocumentResourceTest extends AbstractBaseTest {
         String nsId = "1";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents?filterText=11")
+                .get("/api/namespaces/" + nsId + "/documents?filterText=11")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(1),
                         "data.size()", is(1),
                         "data[0].fileContent.documentID", is("F-11")
                 );
-        // Then
-    }
-
-    @Test
-    public void createInvoice_byNotNsOwnerShouldNotBeAllowed() {
-        // Given
-        String nsId = "3";
-
-        InvoiceInputModel input = InvoiceInputModel.Builder.anInvoiceInputModel()
-                .withSerie("F001")
-                .withNumero(1)
-                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
-                        .withRuc("12345678912")
-                        .withRazonSocial("Softgreen S.A.C.")
-                        .build()
-                )
-                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
-                        .withNombre("Carlos Feria")
-                        .withNumeroDocumentoIdentidad("12121212121")
-                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
-                        .build()
-                )
-                .withDetalle(Arrays.asList(
-                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-                                .withDescripcion("Item1")
-                                .withCantidad(new BigDecimal(10))
-                                .withPrecioUnitario(new BigDecimal(100))
-                                .withUnidadMedida("KGM")
-                                .build(),
-                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-                                .withDescripcion("Item2")
-                                .withCantidad(new BigDecimal(10))
-                                .withPrecioUnitario(new BigDecimal(100))
-                                .withUnidadMedida("KGM")
-                                .build())
-                )
-                .build();
-
-        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
-                .withKind(KindRepresentation.Invoice)
-                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
-                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
-                                .withName(IDGeneratorType.none)
-                                .build()
-                        )
-                        .withDocument(JsonObject.mapFrom(input))
-                        .build()
-                )
-                .build();
-
-        // When
-        givenAuth("alice")
-                .contentType(ContentType.JSON)
-                .body(template)
-                .when()
-                .post("/" + nsId + "/documents")
-                .then()
-                .statusCode(404);
         // Then
     }
 
@@ -296,11 +214,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
                 .body(template)
                 .when()
-                .post("/" + nsId + "/documents")
+                .post("/api/namespaces/" + nsId + "/documents")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
@@ -311,21 +229,21 @@ public class DocumentResourceTest extends AbstractBaseTest {
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return !watchResponse.isInProgress();
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
@@ -389,11 +307,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
                 .body(template)
                 .when()
-                .post("/" + nsId + "/documents")
+                .post("/api/namespaces/" + nsId + "/documents")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
@@ -404,21 +322,21 @@ public class DocumentResourceTest extends AbstractBaseTest {
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return !watchResponse.isInProgress();
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
@@ -478,11 +396,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
                 .body(template)
                 .when()
-                .post("/" + nsId + "/documents")
+                .post("/api/namespaces/" + nsId + "/documents")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
@@ -493,21 +411,21 @@ public class DocumentResourceTest extends AbstractBaseTest {
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return !watchResponse.isInProgress();
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
@@ -571,11 +489,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
                 .body(template)
                 .when()
-                .post("/" + nsId + "/documents")
+                .post("/api/namespaces/" + nsId + "/documents")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
@@ -586,21 +504,21 @@ public class DocumentResourceTest extends AbstractBaseTest {
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return !watchResponse.isInProgress();
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
@@ -660,11 +578,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
                 .body(template)
                 .when()
-                .post("/" + nsId + "/documents")
+                .post("/api/namespaces/" + nsId + "/documents")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
@@ -675,21 +593,21 @@ public class DocumentResourceTest extends AbstractBaseTest {
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return !watchResponse.isInProgress();
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
@@ -749,11 +667,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
                 .body(template)
                 .when()
-                .post("/" + nsId + "/documents")
+                .post("/api/namespaces/" + nsId + "/documents")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
@@ -764,21 +682,21 @@ public class DocumentResourceTest extends AbstractBaseTest {
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return !watchResponse.isInProgress();
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
@@ -827,11 +745,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
                 .body(template)
                 .when()
-                .post("/" + nsId + "/documents")
+                .post("/api/namespaces/" + nsId + "/documents")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
@@ -842,21 +760,21 @@ public class DocumentResourceTest extends AbstractBaseTest {
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return !watchResponse.isInProgress();
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
@@ -924,11 +842,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
                 .body(template)
                 .when()
-                .post("/" + nsId + "/documents")
+                .post("/api/namespaces/" + nsId + "/documents")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
@@ -939,21 +857,21 @@ public class DocumentResourceTest extends AbstractBaseTest {
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return !watchResponse.isInProgress();
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
@@ -965,25 +883,6 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 );
     }
 
-    @Test
-    public void uploadXML_byNotNsOwnerShouldNotBeAllowed() throws URISyntaxException {
-        // Given
-        String nsId = "3";
-
-        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_alterado_12345678912.xml").toURI();
-        File file = new File(fileURI);
-
-        // When
-        givenAuth("alice")
-                .accept(ContentType.JSON)
-                .multiPart("file", file, "application/xml")
-                .when()
-                .post("/" + nsId + "/documents/upload")
-                .then()
-                .statusCode(404);
-        // Then
-    }
-
 //    @Test
 //    public void uploadInvalidImageFile_shouldSetErrorStatus() throws URISyntaxException {
 //        // Given
@@ -993,7 +892,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
 //        File file = new File(fileURI);
 //
 //        // When
-//        DocumentRepresentation response = givenAuth("alice")
+//        DocumentRepresentation response = given()
 //                .accept(ContentType.JSON)
 //                .multiPart("file", file, "application/xml")
 //                .when()
@@ -1004,7 +903,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
 //
 //        // Then
 //        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = givenAuth("alice")
+//            DocumentRepresentation watchResponse = given()
 //                    .contentType(ContentType.JSON)
 //                    .when()
 //                    .get("/" + nsId + "/documents/" + response.getId())
@@ -1014,7 +913,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
 //            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.READ_FILE);
 //        });
 //
-//        givenAuth("alice")
+//        given()
 //                .contentType(ContentType.JSON)
 //                .when()
 //                .get("/" + nsId + "/documents/" + response.getId())
@@ -1040,32 +939,32 @@ public class DocumentResourceTest extends AbstractBaseTest {
         File file = new File(fileURI);
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .accept(ContentType.JSON)
                 .multiPart("file", file, "application/xml")
                 .when()
-                .post("/" + nsId + "/documents/upload")
+                .post("/api/namespaces/" + nsId + "/documents/upload")
                 .then()
                 .statusCode(200)
                 .extract().body().as(DocumentRepresentation.class);
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.UNSUPPORTED_DOCUMENT_TYPE);
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
@@ -1088,7 +987,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
 //        File file = new File(fileURI);
 //
 //        // When
-//        DocumentRepresentation response = givenAuth("alice")
+//        DocumentRepresentation response = given()
 //                .accept(ContentType.JSON)
 //                .multiPart("file", file, "application/xml")
 //                .when()
@@ -1099,7 +998,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
 //
 //        // Then
 //        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = givenAuth("alice")
+//            DocumentRepresentation watchResponse = given()
 //                    .contentType(ContentType.JSON)
 //                    .when()
 //
@@ -1110,7 +1009,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
 //            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.COMPANY_NOT_FOUND);
 //        });
 //
-//        givenAuth("alice")
+//        given()
 //                .contentType(ContentType.JSON)
 //                .when()
 //                .get("/" + nsId + "/documents/" + response.getId())
@@ -1136,32 +1035,32 @@ public class DocumentResourceTest extends AbstractBaseTest {
         File file = new File(fileURI);
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .accept(ContentType.JSON)
                 .multiPart("file", file, "application/xml")
                 .when()
-                .post("/" + nsId + "/documents/upload")
+                .post("/api/namespaces/" + nsId + "/documents/upload")
                 .then()
                 .statusCode(200)
                 .extract().body().as(DocumentRepresentation.class);
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.SEND_FILE);
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
@@ -1184,11 +1083,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
         File file = new File(fileURI);
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .accept(ContentType.JSON)
                 .multiPart("file", file, "application/xml")
                 .when()
-                .post("/" + nsId + "/documents/upload")
+                .post("/api/namespaces/" + nsId + "/documents/upload")
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(true))
@@ -1196,21 +1095,21 @@ public class DocumentResourceTest extends AbstractBaseTest {
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return !watchResponse.isInProgress();
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
@@ -1238,11 +1137,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
         File file = new File(fileURI);
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .accept(ContentType.JSON)
                 .multiPart("file", file, "application/xml")
                 .when()
-                .post("/" + nsId + "/documents/upload")
+                .post("/api/namespaces/" + nsId + "/documents/upload")
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(true))
@@ -1250,21 +1149,21 @@ public class DocumentResourceTest extends AbstractBaseTest {
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return !watchResponse.isInProgress();
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
@@ -1292,11 +1191,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
         File file = new File(fileURI);
 
         // When
-        DocumentRepresentation response = givenAuth("alice")
+        DocumentRepresentation response = given()
                 .accept(ContentType.JSON)
                 .multiPart("file", file, "application/xml")
                 .when()
-                .post("/" + nsId + "/documents/upload")
+                .post("/api/namespaces/" + nsId + "/documents/upload")
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(true))
@@ -1304,21 +1203,21 @@ public class DocumentResourceTest extends AbstractBaseTest {
 
         // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = givenAuth("alice")
+            DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
 
-                    .get("/" + nsId + "/documents/" + response.getId())
+                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
             return !watchResponse.isInProgress();
         });
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/documents/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),

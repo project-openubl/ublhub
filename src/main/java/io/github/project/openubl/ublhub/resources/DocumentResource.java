@@ -46,7 +46,6 @@ import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
 import io.github.project.openubl.ublhub.scheduler.SchedulerManager;
-import io.github.project.openubl.ublhub.security.UserIdentity;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniAndGroup2;
@@ -76,9 +75,6 @@ import java.util.UUID;
 public class DocumentResource {
 
     private static final Logger LOG = Logger.getLogger(DocumentResource.class);
-
-    @Inject
-    UserIdentity userIdentity;
 
     @Inject
     FilesMutiny filesMutiny;
@@ -182,7 +178,7 @@ public class DocumentResource {
             @NotNull @Valid InputTemplateRepresentation inputTemplate
     ) {
         return Panache
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespaceEntity -> createXMLString(namespaceEntity, inputTemplate)
                                 .chain(xmlString -> keystore
                                         .getActiveKey(namespaceEntity, KeyUse.SIG, inputTemplate.getSpec().getSignature() != null ? inputTemplate.getSpec().getSignature().getAlgorithm() : Algorithm.RS256)
@@ -238,7 +234,7 @@ public class DocumentResource {
     ) {
         return Panache
                 // Verify namespace
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()))
+                .withTransaction(() -> namespaceRepository.findById(namespaceId))
                 .onItem().ifNull().failWith(NoNamespaceException::new)
 
                 .chain(namespaceEntity -> filesMutiny
@@ -277,7 +273,7 @@ public class DocumentResource {
                 .build();
 
         return Panache
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespaceEntity -> {
                             UniAndGroup2<List<UBLDocumentEntity>, Long> searchResult;
                             if (filterText != null && !filterText.trim().isEmpty()) {
@@ -306,7 +302,7 @@ public class DocumentResource {
             @PathParam("documentId") @NotNull String documentId
     ) {
         return Panache
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespaceEntity -> documentRepository.findById(namespaceEntity, documentId))
                 )
                 .onItem().ifNotNull().transform(documentEntity -> Response.ok()

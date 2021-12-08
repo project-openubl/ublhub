@@ -4,7 +4,6 @@ create table namespace
     created_on  timestamp,
     description varchar(255),
     name        varchar(255),
-    owner       varchar(255),
     sunat_password                 varchar(255),
     sunat_username                 varchar(255),
     sunat_url_factura              varchar(255),

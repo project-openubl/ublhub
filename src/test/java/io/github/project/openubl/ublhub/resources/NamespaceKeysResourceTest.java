@@ -29,6 +29,7 @@ import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 import org.keycloak.representations.idm.KeysMetadataRepresentation;
 
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
@@ -61,7 +62,7 @@ public class NamespaceKeysResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        namespace = givenAuth("alice")
+        namespace = given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(namespace)
@@ -76,7 +77,7 @@ public class NamespaceKeysResourceTest extends AbstractBaseTest {
                 .body().as(NamespaceRepresentation.class);
 
         // Then
-        KeysMetadataRepresentation keys = givenAuth("alice")
+        KeysMetadataRepresentation keys = given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(namespace)
@@ -100,7 +101,7 @@ public class NamespaceKeysResourceTest extends AbstractBaseTest {
                 .body()
                 .as(KeysMetadataRepresentation.class);
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(namespace)

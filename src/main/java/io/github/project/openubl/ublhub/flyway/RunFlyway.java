@@ -21,7 +21,13 @@ public class RunFlyway {
     Optional<String> datasourcePassword;
 
     public void runFlywayMigration(@Observes StartupEvent event) {
-        Flyway flyway = Flyway.configure().dataSource("jdbc:" + datasourceUrl, datasourceUsername.get(), datasourcePassword.get()).load();
+        Flyway flyway = Flyway.configure()
+                .dataSource(
+                        datasourceUrl.orElse("").replace("vertx-reactive", "jdbc"),
+                        datasourceUsername.orElse(""),
+                        datasourcePassword.orElse("")
+                )
+                .load();
         flyway.migrate();
     }
 

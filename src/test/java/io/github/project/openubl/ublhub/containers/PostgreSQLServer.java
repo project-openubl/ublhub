@@ -27,9 +27,9 @@ public class PostgreSQLServer implements QuarkusTestResourceLifecycleManager {
 
     public static final int CONTAINER_PORT = 5432;
 
-    public static final String DB_NAME = "xsender_db";
-    public static final String DB_USERNAME = "xsender_username";
-    public static final String DB_PASSWORD = "xsender_password";
+    public static final String DB_NAME = "unlhub_db";
+    public static final String DB_USERNAME = "ublhub_username";
+    public static final String DB_PASSWORD = "ublhub_password";
 
     private GenericContainer<?> postgreSQL;
 

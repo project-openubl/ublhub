@@ -28,12 +28,12 @@ import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 
 @QuarkusTest
 @TestProfile(ProfileManager.class)
-@TestHTTPEndpoint(NamespaceResource.class)
 public class NamespaceResourceTest extends AbstractBaseTest {
 
     @Override
@@ -47,10 +47,10 @@ public class NamespaceResourceTest extends AbstractBaseTest {
         String nsId = "1";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId)
+                .get("/api/namespaces/" + nsId)
                 .then()
                 .statusCode(200)
                 .body("name", is("my-namespace1"),
@@ -62,34 +62,12 @@ public class NamespaceResourceTest extends AbstractBaseTest {
                         "credentials.password", nullValue()
                 );
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + 10)
+                .get("/api/namespaces/" + 10)
                 .then()
                 .statusCode(404);
-        // Then
-    }
-
-    @Test
-    public void getNamespaceByNotOwner_shouldReturnNotFound() {
-        // Given
-        String nsId = "3";
-
-        // When
-        givenAuth("alice")
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/" + nsId)
-                .then()
-                .statusCode(404);
-
-        givenAuth("carlos")
-                .header("Content-Type", "application/json")
-                .when()
-                .get("/" + nsId)
-                .then()
-                .statusCode(200);
         // Then
     }
 
@@ -103,11 +81,11 @@ public class NamespaceResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .body(namespace)
                 .when()
-                .put("/" + nsId)
+                .put("/api/namespaces/" + nsId)
                 .then()
                 .statusCode(200)
                 .body("id", is(nsId),
@@ -116,10 +94,10 @@ public class NamespaceResourceTest extends AbstractBaseTest {
                 );
 
         // Then
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId)
+                .get("/api/namespaces/" + nsId)
                 .then()
                 .statusCode(200)
                 .body("id", is(nsId),
@@ -142,11 +120,11 @@ public class NamespaceResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .body(namespace)
                 .when()
-                .put("/" + nsId)
+                .put("/api/namespaces/" + nsId)
                 .then()
                 .statusCode(200)
                 .body("id", is(nsId),
@@ -156,10 +134,10 @@ public class NamespaceResourceTest extends AbstractBaseTest {
                 );
 
         // Then
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId)
+                .get("/api/namespaces/" + nsId)
                 .then()
                 .statusCode(200)
                 .body("id", is(nsId),
@@ -182,11 +160,11 @@ public class NamespaceResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .body(namespace)
                 .when()
-                .put("/" + nsId)
+                .put("/api/namespaces/" + nsId)
                 .then()
                 .statusCode(200)
                 .body("id", is(nsId),
@@ -195,45 +173,16 @@ public class NamespaceResourceTest extends AbstractBaseTest {
                 );
 
         // Then
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId)
+                .get("/api/namespaces/" + nsId)
                 .then()
                 .statusCode(200)
                 .body("id", is(nsId),
                         "credentials.username", is(namespace.getCredentials().getUsername()),
                         "credentials.password", nullValue()
                 );
-    }
-
-    @Test
-    public void updateNamespaceByNotOwner_shouldNotBeAllowed() {
-        // Given
-        String nsId = "3";
-        NamespaceRepresentation namespace = NamespaceRepresentationBuilder.aNamespaceRepresentation()
-                .withName("new name")
-                .withDescription("my description")
-                .build();
-
-        // When
-        givenAuth("alice")
-                .contentType(ContentType.JSON)
-                .body(namespace)
-                .when()
-                .put("/" + nsId)
-                .then()
-                .statusCode(404);
-
-        givenAuth("carlos")
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(namespace)
-                .when()
-                .put("/" + nsId)
-                .then()
-                .statusCode(200);
-        // Then
     }
 
     @Test
@@ -242,42 +191,20 @@ public class NamespaceResourceTest extends AbstractBaseTest {
         String nsId = "1";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/" + nsId)
+                .delete("/api/namespaces/" + nsId)
                 .then()
                 .statusCode(204);
 
         // Then
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId)
+                .get("/api/namespaces/" + nsId)
                 .then()
                 .statusCode(404);
-    }
-
-    @Test
-    public void deleteNamespaceByNotOwner_shouldNotBeAllowed() {
-        // Given
-        String nsId = "3";
-
-        // When
-        givenAuth("alice")
-                .contentType(ContentType.JSON)
-                .when()
-                .delete("/" + nsId)
-                .then()
-                .statusCode(404);
-
-        givenAuth("carlos")
-                .contentType(ContentType.JSON)
-                .when()
-                .delete("/" + nsId)
-                .then()
-                .statusCode(204);
-        // Then
     }
 
 }

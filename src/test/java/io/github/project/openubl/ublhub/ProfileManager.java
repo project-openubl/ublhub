@@ -17,6 +17,7 @@
 package io.github.project.openubl.ublhub;
 
 import io.github.project.openubl.ublhub.containers.MinioServer;
+import io.github.project.openubl.ublhub.containers.PostgreSQLServer;
 import io.quarkus.test.junit.QuarkusTestProfile;
 
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ public class ProfileManager implements QuarkusTestProfile {
     List<TestResourceEntry> testResources = new ArrayList<>();
 
     public ProfileManager() {
+        testResources.add(new TestResourceEntry(PostgreSQLServer.class));
         testResources.add(new TestResourceEntry(MinioServer.class));
     }
 

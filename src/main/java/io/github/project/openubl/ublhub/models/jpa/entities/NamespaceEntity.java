@@ -40,10 +40,6 @@ public class NamespaceEntity extends PanacheEntityBase {
     public String id;
 
     @NotNull
-    @Column(name = "owner")
-    public String owner;
-
-    @NotNull
     @Column(name = "name")
     public String name;
 

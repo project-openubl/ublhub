@@ -16,23 +16,22 @@
  */
 package io.github.project.openubl.ublhub.resources;
 
+import io.github.project.openubl.ublhub.AbstractBaseTest;
 import io.github.project.openubl.ublhub.ProfileManager;
 import io.github.project.openubl.ublhub.idm.NamespaceRepresentation;
 import io.github.project.openubl.ublhub.idm.NamespaceRepresentationBuilder;
-import io.github.project.openubl.ublhub.AbstractBaseTest;
 import io.github.project.openubl.ublhub.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.ublhub.idm.SunatUrlsRepresentation;
-import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
 @TestProfile(ProfileManager.class)
-@TestHTTPEndpoint(CurrentUserResource.class)
 public class CurrentUserResourceTest extends AbstractBaseTest {
 
     @Override
@@ -62,12 +61,12 @@ public class CurrentUserResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(namespace)
                 .when()
-                .post("/namespaces")
+                .post("/api/user/namespaces")
                 .then()
                 .statusCode(200)
                 .body("id", is(notNullValue()),
@@ -104,21 +103,21 @@ public class CurrentUserResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .body(namespace)
                 .when()
-                .post("/namespaces")
+                .post("/api/user/namespaces")
                 .then()
                 .statusCode(200)
                 .body("name", is(namespace.getName()));
 
         // Then
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .body(namespace)
                 .when()
-                .post("/namespaces")
+                .post("/api/user/namespaces")
                 .then()
                 .statusCode(409);
     }
@@ -127,16 +126,17 @@ public class CurrentUserResourceTest extends AbstractBaseTest {
     public void getNamespaces() {
         // Given
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/namespaces")
+                .get("/api/user/namespaces")
                 .then()
                 .statusCode(200)
-                .body("meta.count", is(2),
-                        "data.size()", is(2),
-                        "data[0].name", is("my-namespace2"),
-                        "data[1].name", is("my-namespace1")
+                .body("meta.count", is(3),
+                        "data.size()", is(3),
+                        "data[0].name", is("my-namespace3"),
+                        "data[1].name", is("my-namespace2"),
+                        "data[2].name", is("my-namespace1")
                 );
         // Then
     }
@@ -145,10 +145,10 @@ public class CurrentUserResourceTest extends AbstractBaseTest {
     public void getNamespaces_filterText() {
         // Given
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/namespaces?filterText=namespace1")
+                .get("/api/user/namespaces?filterText=namespace1")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(1),

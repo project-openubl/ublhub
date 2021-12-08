@@ -16,24 +16,23 @@
  */
 package io.github.project.openubl.ublhub.resources;
 
+import io.github.project.openubl.ublhub.AbstractBaseTest;
 import io.github.project.openubl.ublhub.ProfileManager;
 import io.github.project.openubl.ublhub.idm.CompanyRepresentation;
 import io.github.project.openubl.ublhub.idm.CompanyRepresentationBuilder;
 import io.github.project.openubl.ublhub.idm.SunatCredentialsRepresentation;
 import io.github.project.openubl.ublhub.idm.SunatUrlsRepresentation;
-import io.github.project.openubl.ublhub.AbstractBaseTest;
-import io.github.project.openubl.ublhub.websockets.DocumentsEndpointTest;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
 @TestProfile(ProfileManager.class)
-@TestHTTPEndpoint(CompanyResource.class)
 public class CompanyResourceTest extends AbstractBaseTest {
 
     @Override
@@ -48,10 +47,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
         String companyId = "11";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/companies/" + companyId)
+                .get("/api/namespaces/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(200)
                 .body("id", is(notNullValue()),
@@ -65,30 +64,6 @@ public class CompanyResourceTest extends AbstractBaseTest {
     }
 
     @Test
-    public void getCompanyByNotOwner_shouldNotBeAllowed() {
-        // Given
-        String nsId = "3";
-        String companyId = "44";
-
-        // When
-        givenAuth("alice")
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/" + nsId + "/companies/" + companyId)
-                .then()
-                .statusCode(404);
-
-        givenAuth("carlos")
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .when()
-                .get("/" + nsId + "/companies/" + companyId)
-                .then()
-                .statusCode(200);
-        // Then
-    }
-
-    @Test
     public void getCompanyThatBelongsToOtherNamespace_shouldNotBeAllowed() {
         // Given
         String nsOwnerId = "1";
@@ -97,17 +72,17 @@ public class CompanyResourceTest extends AbstractBaseTest {
         String companyId = "11";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsOwnerId + "/companies/" + companyId)
+                .get("/api/namespaces/" + nsOwnerId + "/companies/" + companyId)
                 .then()
                 .statusCode(200);
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsToTestId + "/companies/" + companyId)
+                .get("/api/namespaces/" + nsToTestId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
         // Then
@@ -135,11 +110,11 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        CompanyRepresentation response = givenAuth("alice")
+        CompanyRepresentation response = given()
                 .contentType(ContentType.JSON)
                 .body(company)
                 .when()
-                .post("/" + nsId + "/companies")
+                .post("/api/namespaces/" + nsId + "/companies")
                 .then()
                 .statusCode(200)
                 .body("id", is(notNullValue()),
@@ -152,10 +127,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 ).extract().body().as(CompanyRepresentation.class);
 
         // Then
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/companies/" + response.getId())
+                .get("/api/namespaces/" + nsId + "/companies/" + response.getId())
                 .then()
                 .statusCode(200)
                 .body("id", is(response.getId()),
@@ -166,38 +141,6 @@ public class CompanyResourceTest extends AbstractBaseTest {
                         "credentials.username", is(company.getCredentials().getUsername()),
                         "credentials.password", nullValue()
                 );
-    }
-
-    @Test
-    public void createCompanyByNotNsOwner_shouldNotBeAllowed() {
-        // Given
-        String nsId = "3";
-
-        CompanyRepresentation company = CompanyRepresentationBuilder.aCompanyRepresentation()
-                .withName("My company")
-                .withRuc("12345678910")
-                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
-                        .withFactura("http://url1.com")
-                        .withGuia("http://url2.com")
-                        .withRetenciones("http://url3.com")
-                        .build()
-                )
-                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
-                        .withUsername("myUsername")
-                        .withPassword("myPassword")
-                        .build()
-                )
-                .build();
-
-        // When
-        givenAuth("alice")
-                .contentType(ContentType.JSON)
-                .body(company)
-                .when()
-                .post("/" + nsId + "/companies")
-                .then()
-                .statusCode(404);
-        // Then
     }
 
     @Test
@@ -222,11 +165,11 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .body(company)
                 .when()
-                .post("/" + nsId + "/companies")
+                .post("/api/namespaces/" + nsId + "/companies")
                 .then()
                 .statusCode(409);
         // Then
@@ -256,11 +199,11 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .body(companyRepresentation)
                 .when()
-                .put("/" + nsId + "/companies/" + companyId)
+                .put("/api/namespaces/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(200)
                 .body("ruc", is(companyRepresentation.getRuc()),
@@ -274,10 +217,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 );
 
         // Then
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/companies/" + companyId)
+                .get("/api/namespaces/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(200)
                 .body("id", is(companyId),
@@ -290,48 +233,6 @@ public class CompanyResourceTest extends AbstractBaseTest {
                         "credentials.username", is(companyRepresentation.getCredentials().getUsername()),
                         "credentials.password", is(nullValue())
                 );
-    }
-
-    @Test
-    public void updateCompanyByNotOwner_shouldNotBeAllowed() {
-        String nsId = "3";
-        String companyId = "44";
-
-        // Given
-        CompanyRepresentation companyRepresentation = CompanyRepresentationBuilder.aCompanyRepresentation()
-                .withRuc("99999999999")
-                .withName("new name")
-                .withDescription("new description")
-                .withWebServices(SunatUrlsRepresentation.Builder.aSunatUrlsRepresentation()
-                        .withFactura("http://newUrl1.com")
-                        .withRetenciones("http://newUrl2.com")
-                        .withGuia("http://newUrl3.com")
-                        .build()
-                )
-                .withCredentials(SunatCredentialsRepresentation.Builder.aSunatCredentialsRepresentation()
-                        .withUsername("new username")
-                        .withPassword("new password")
-                        .build()
-                )
-                .build();
-
-        // When
-        givenAuth("alice")
-                .contentType(ContentType.JSON)
-                .body(companyRepresentation)
-                .when()
-                .put("/" + nsId + "/companies/" + companyId)
-                .then()
-                .statusCode(404);
-
-        givenAuth("carlos")
-                .contentType(ContentType.JSON)
-                .body(companyRepresentation)
-                .when()
-                .put("/" + nsId + "/companies/" + companyId)
-                .then()
-                .statusCode(200);
-        // Then
     }
 
     @Test
@@ -358,11 +259,11 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .body(companyRepresentation)
                 .when()
-                .put("/" + nsId + "/companies/" + companyId)
+                .put("/api/namespaces/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
         // Then
@@ -375,44 +276,20 @@ public class CompanyResourceTest extends AbstractBaseTest {
         String companyId = "11";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/" + nsId + "/companies/" + companyId)
+                .delete("/api/namespaces/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(204);
 
         // Then
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/companies/" + companyId)
+                .get("/api/namespaces/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
-    }
-
-    @Test
-    public void deleteCompanyByNotOwner_shouldNotBeAllowed() {
-        // Given
-        String nsId = "3";
-        String companyId = "44";
-
-        // When
-        givenAuth("alice")
-                .contentType(ContentType.JSON)
-                .when()
-                .delete("/" + nsId + "/companies/" + companyId)
-                .then()
-                .statusCode(404);
-
-        givenAuth("carlos")
-                .contentType(ContentType.JSON)
-                .when()
-                .delete("/" + nsId + "/companies/" + companyId)
-                .then()
-                .statusCode(204);
-
-        // Then
     }
 
     @Test
@@ -422,10 +299,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
         String companyId = "33";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/" + nsId + "/companies/" + companyId)
+                .delete("/api/namespaces/" + nsId + "/companies/" + companyId)
                 .then()
                 .statusCode(404);
         // Then
@@ -437,10 +314,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
         String nsId = "1";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/companies")
+                .get("/api/namespaces/" + nsId + "/companies")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(2),
@@ -449,10 +326,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
                         "data[1].name", is("company1")
                 );
 
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/companies?sort_by=createdOn:asc")
+                .get("/api/namespaces/" + nsId + "/companies?sort_by=createdOn:asc")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(2),
@@ -469,10 +346,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
         String nsId = "1";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/companies?filterText=company1")
+                .get("/api/namespaces/" + nsId + "/companies?filterText=company1")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(1),
@@ -488,10 +365,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
         String nsId = "1";
 
         // When
-        givenAuth("alice")
+        given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + nsId + "/companies?filterText=222222")
+                .get("/api/namespaces/" + nsId + "/companies?filterText=222222")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(1),

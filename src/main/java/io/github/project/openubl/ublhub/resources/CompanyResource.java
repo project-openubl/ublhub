@@ -26,7 +26,6 @@ import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.models.utils.RepresentationToEntity;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
-import io.github.project.openubl.ublhub.security.UserIdentity;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.smallrye.mutiny.Uni;
@@ -56,9 +55,6 @@ public class CompanyResource {
     @Context
     UriInfo uriInfo;
 
-    @Inject
-    UserIdentity userIdentity;
-
 //    @Inject
 //    KeyManager keystore;
 //
@@ -84,7 +80,7 @@ public class CompanyResource {
             @PathParam("companyId") @NotNull String companyId
     ) {
         return Panache
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespaceEntity -> companyRepository.findById(namespaceEntity, companyId))
                 )
                 .onItem().ifNotNull().transform(companyEntity -> Response.ok()
@@ -101,7 +97,7 @@ public class CompanyResource {
             @NotNull @Valid CompanyRepresentation rep
     ) {
         return Panache
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespaceEntity -> companyRepository.findByRuc(namespaceEntity, rep.getRuc())
                                 .onItem().ifNotNull().transform(companyEntity -> Response.ok()
                                         .status(Response.Status.CONFLICT)
@@ -133,7 +129,7 @@ public class CompanyResource {
             @NotNull CompanyRepresentation rep
     ) {
         return Panache
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespaceEntity -> companyRepository.findById(namespaceEntity, companyId)
                                 .onItem().ifNotNull().invoke(companyEntity -> RepresentationToEntity.assign(companyEntity, rep))
                         )
@@ -152,7 +148,7 @@ public class CompanyResource {
             @PathParam("companyId") @NotNull String companyId
     ) {
         return Panache
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespaceEntity -> companyRepository.findById(namespaceEntity, companyId)
                                 .onItem().ifNotNull().call(PanacheEntityBase::delete)
                         )
@@ -174,7 +170,7 @@ public class CompanyResource {
         List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, CompanyRepository.SORT_BY_FIELDS);
 
         return Panache
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespaceEntity -> {
                             UniAndGroup2<List<CompanyEntity>, Long> searchResult;
                             if (filterText != null && !filterText.trim().isEmpty()) {

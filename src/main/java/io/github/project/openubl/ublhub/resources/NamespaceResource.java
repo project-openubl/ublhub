@@ -24,7 +24,6 @@ import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
 import io.github.project.openubl.ublhub.models.jpa.NamespaceRepository;
 import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.models.utils.RepresentationToEntity;
-import io.github.project.openubl.ublhub.security.UserIdentity;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.smallrye.mutiny.Uni;
@@ -52,9 +51,6 @@ public class NamespaceResource {
     private static final Logger LOG = Logger.getLogger(NamespaceResource.class);
 
     @Inject
-    UserIdentity userIdentity;
-
-    @Inject
     NamespaceRepository namespaceRepository;
 
     @Inject
@@ -69,7 +65,7 @@ public class NamespaceResource {
     @GET
     @Path("/{namespaceId}")
     public Uni<Response> getNamespace(@PathParam("namespaceId") @NotNull String namespaceId) {
-        return Panache.withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()))
+        return Panache.withTransaction(() -> namespaceRepository.findById(namespaceId))
                 .onItem().ifNotNull().transform(entity -> Response.ok().entity(EntityToRepresentation.toRepresentation(entity)).build())
                 .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
     }
@@ -81,7 +77,7 @@ public class NamespaceResource {
             @NotNull NamespaceRepresentation rep
     ) {
         return Panache
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().invoke(namespaceEntity -> RepresentationToEntity.assign(namespaceEntity, rep))
                 )
                 .onItem().ifNotNull().transform(entity -> Response.ok().entity(EntityToRepresentation.toRepresentation(entity)).build())
@@ -92,7 +88,7 @@ public class NamespaceResource {
     @Path("/{namespaceId}")
     public Uni<Response> deleteNamespace(@PathParam("namespaceId") @NotNull String namespaceId) {
         return Panache
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().call(PanacheEntityBase::delete)
                 )
                 .onItem().ifNotNull().transform(entity -> Response.status(Response.Status.NO_CONTENT).build())
@@ -104,7 +100,7 @@ public class NamespaceResource {
     @Path("/{namespaceId}/keys")
     public Uni<Response> getKeyMetadata(@PathParam("namespaceId") @NotNull String namespaceId) {
         return Panache
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespace -> keyManager.getKeys(namespace)
                                 .map(keyWrappers -> {
                                     KeysMetadataRepresentation keys = new KeysMetadataRepresentation();
@@ -153,7 +149,7 @@ public class NamespaceResource {
             @QueryParam("name") String name
     ) {
         return Panache
-                .withTransaction(() -> namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername())
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespace -> {
                             if (parent == null && type == null) {
                                 return componentRepository.getComponents(namespace);

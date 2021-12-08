@@ -25,10 +25,8 @@ import org.keycloak.crypto.KeyUse;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import java.util.Objects;
 
-@Transactional
 @ApplicationScoped
 public class DefaultKeyProviders {
 
