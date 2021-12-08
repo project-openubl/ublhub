@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: tar -czvf maven-repo.tgz -C ~ .m2/repository
       - name: Persist Maven Repo
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v2.3.0
         with:
           name: maven-repo
           path: maven-repo.tgz
@@ -69,7 +69,7 @@ jobs:
         run: |
           find api/target -name 'lib' -o -name 'ublhub-api-*-runner.jar' | tar -czvf ublhub-java-artifacts.tgz -T -
       - name: Upload Archive XML Sender
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v2.3.0
         with:
           name: ublhub-java-artifacts
           path: 'ublhub-java-artifacts.tgz'
