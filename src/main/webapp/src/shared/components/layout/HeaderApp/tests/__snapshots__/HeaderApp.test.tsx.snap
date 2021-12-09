@@ -28,7 +28,6 @@ exports[`Test snapshot 1`] = `
         >
           <MobileDropdown />
         </PageHeaderToolsItem>
-        <SSOMenu />
       </PageHeaderToolsGroup>
       <Avatar
         alt="Avatar image"

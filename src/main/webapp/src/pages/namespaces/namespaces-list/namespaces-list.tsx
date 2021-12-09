@@ -1,111 +1,81 @@
-import React, { useState } from "react";
-import Moment from "react-moment";
+import React, { useEffect, useState } from "react";
 
 import {
-  useTable,
   useTableControls,
   SimpleTableWithToolbar,
 } from "@project-openubl/lib-ui";
 
-import {
-  Button,
-  ButtonVariant,
-  PageSection,
-  ToolbarGroup,
-  ToolbarItem,
-} from "@patternfly/react-core";
+import { PageSection, ToolbarGroup, ToolbarItem } from "@patternfly/react-core";
 import {
   cellWidth,
-  IAction,
+  IActions,
   ICell,
   IExtraData,
   IRow,
   IRowData,
-  ISeparator,
   sortable,
 } from "@patternfly/react-table";
 
+// import { useDispatch } from "react-redux";
+
 import {
-  useCreateVersionMutation,
-  useDeleteVersionMutation,
-  useVersionsQuery,
-} from "queries/versions";
-import {
-  SearchInput,
-  SimplePageSection,
-  VersionStatusIcon,
-} from "shared/components";
+  INamespaceParams,
+  INamespaceParamsBuilder,
+  NamespaceSortByKey,
+  useNamespacesQuery,
+} from "queries/namespaces";
 
-import { useDispatch } from "react-redux";
-import { deleteDialogActions } from "store/deleteDialog";
-import { alertActions } from "store/alert";
+import { SearchInput, SimplePageSection } from "shared/components";
 
-import { Version } from "api/models";
-import { formatNumber, getAxiosErrorMessage } from "utils/modelUtils";
+import { Namespace, SortByQuery } from "api/models";
 
-const columns: ICell[] = [
-  { title: "Id", transforms: [sortable, cellWidth(10)] },
-  { title: "Creado", transforms: [sortable, cellWidth(30)] },
-  { title: "Records", transforms: [cellWidth(30)] },
-  { title: "Estado", transforms: [cellWidth(30)] },
-];
+const ROW_FIELD = "row_field";
+const getRow = (rowData: IRowData): Namespace => {
+  return rowData[ROW_FIELD];
+};
 
-const VERSION_FIELD = "version";
-
-const itemsToRow = (items: Version[]) => {
+const itemsToRow = (items: Namespace[]) => {
   return items.map((item) => ({
-    [VERSION_FIELD]: item,
+    [ROW_FIELD]: item,
     cells: [
       {
-        title: `#${item.id}`,
+        title: item.name,
       },
       {
-        title: <Moment fromNow>{item.createdAt}</Moment>,
-      },
-      {
-        title: formatNumber(item.records, 0),
-      },
-      {
-        title: <VersionStatusIcon value={item.status} />,
+        title: item.description,
       },
     ],
   }));
 };
 
-const getRow = (rowData: IRowData): Version => {
-  return rowData[VERSION_FIELD];
-};
-
-export const compareByColumnIndex = (
-  a: Version,
-  b: Version,
-  columnIndex?: number
-) => {
-  switch (columnIndex) {
-    case 0: // id
-      return a.id - b.id;
-    case 1: // createdAt
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    default:
-      return 0;
+const toSortByQuery = (sortBy?: {
+  index: number;
+  direction: "asc" | "desc";
+}): SortByQuery | undefined => {
+  if (!sortBy) {
+    return undefined;
   }
-};
 
-export const filterByText = (filterText: string, item: Version) => {
-  return (
-    item.id.toString().toLowerCase().indexOf(filterText.toLowerCase()) !== -1
-  );
+  let field: string;
+  switch (sortBy.index) {
+    case 0:
+      field = NamespaceSortByKey.name;
+      break;
+    default:
+      return undefined;
+  }
+
+  return {
+    orderBy: field,
+    orderDirection: sortBy.direction,
+  };
 };
 
 export const NamespacesList: React.FC = () => {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
-  const versions = useVersionsQuery();
-  const versionMutation = useCreateVersionMutation();
-  const deleleteVersionMutation = useDeleteVersionMutation();
-
+  //
   const [filterText, setFilterText] = useState("");
-
   const {
     page: currentPage,
     sortBy: currentSortBy,
@@ -113,90 +83,62 @@ export const NamespacesList: React.FC = () => {
     changeSortBy: onChangeSortBy,
   } = useTableControls();
 
-  const { pageItems, filteredItems } = useTable<Version>({
-    items: versions.data || [],
-    currentPage: currentPage,
-    currentSortBy: currentSortBy,
-    compareToByColumn: compareByColumnIndex,
-    filterItem: (item) => filterByText(filterText, item),
-  });
+  //
+  const [queryParams, setQueryParams] = useState<INamespaceParams>(
+    new INamespaceParamsBuilder()
+      .withFilterText(filterText)
+      .withPagination(currentPage)
+      .withSorting(toSortByQuery(currentSortBy))
+      .build()
+  );
+  const namespaces = useNamespacesQuery(queryParams);
 
-  const actionResolver = (rowData: IRowData): (IAction | ISeparator)[] => {
-    const row: Version = getRow(rowData);
+  //
+  useEffect(() => {
+    const params = new INamespaceParamsBuilder()
+      .withFilterText(filterText)
+      .withPagination(currentPage)
+      .withSorting(toSortByQuery(currentSortBy))
+      .build();
+    setQueryParams(params);
+  }, [filterText, currentPage, currentSortBy]);
 
-    const actions: (IAction | ISeparator)[] = [];
+  //
+  const columns: ICell[] = [
+    { title: "Nombre", transforms: [sortable, cellWidth(40)] },
+    { title: "descripcion", transforms: [cellWidth(60)] },
+  ];
 
-    if (row.status !== "COMPLETED" && row.status !== "ERROR") {
-      // actions.push({
-      //   title: "Cancel",
-      //   onClick: (_, rowIndex: number, rowData: IRowData) => {
-      //   },
-      // });
-    } else {
-      actions.push({
-        title: "Delete",
-        onClick: (
-          event: React.MouseEvent,
-          rowIndex: number,
-          rowData: IRowData,
-          extraData: IExtraData
-        ) => {
-          const row: Version = getRow(rowData);
-          dispatch(
-            deleteDialogActions.openModal({
-              name: `version #${row.id}`,
-              type: "version",
-              onDelete: () => {
-                dispatch(deleteDialogActions.processing());
-                deleleteVersionMutation
-                  .mutateAsync(row)
-                  .catch((error) => {
-                    dispatch(
-                      alertActions.addAlert(
-                        "danger",
-                        "Error",
-                        getAxiosErrorMessage(error)
-                      )
-                    );
-                  })
-                  .finally(() => {
-                    dispatch(deleteDialogActions.closeModal());
-                  });
-              },
-            })
-          );
-        },
-      });
-    }
+  const rows: IRow[] = itemsToRow(namespaces.data?.data || []);
 
-    return actions;
-  };
+  const actions: IActions = [
+    {
+      title: "Eliminar",
+      onClick: (
+        event: React.MouseEvent,
+        rowIndex: number,
+        rowData: IRowData,
+        extraData: IExtraData
+      ) => {
+        const row: Namespace = getRow(rowData);
+        console.log("Write code to delete the row", row);
+      },
+    },
+  ];
 
-  const areActionsDisabled = (): boolean => {
-    return false;
-  };
-
-  const rows: IRow[] = itemsToRow(pageItems || []);
-
-  const onNewVersion = () => {
-    versionMutation.mutateAsync().catch((error) => {
-      dispatch(
-        alertActions.addAlert("danger", "Error", getAxiosErrorMessage(error))
-      );
-    });
-  };
+  //
 
   return (
     <>
       <SimplePageSection
-        title="Versiones"
-        description="Las Versiones representan una versión específica del 'padrón reducido' de la SUNAT."
+        title="Namespaces"
+        description="Crea multiples empresas dentro de un namespace."
       />
       <PageSection>
         <SimpleTableWithToolbar
           hasTopPagination
           hasBottomPagination
-          totalCount={filteredItems.length}
+          totalCount={namespaces.data?.meta.count || 0}
           // Sorting
           sortBy={currentSortBy}
           onSort={onChangeSortBy}
@@ -206,12 +148,11 @@ export const NamespacesList: React.FC = () => {
           // Table
           rows={rows}
           cells={columns}
-          actionResolver={actionResolver}
-          areActionsDisabled={areActionsDisabled}
+          actions={actions}
           // Fech data
-          isLoading={versions.isFetching}
-          loadingVariant="none"
-          fetchError={versions.isError}
+          isLoading={namespaces.isLoading}
+          loadingVariant="skeleton"
+          fetchError={namespaces.isError}
           // Toolbar filters
           filtersApplied={filterText.trim().length > 0}
           toolbarToggle={
@@ -221,20 +162,20 @@ export const NamespacesList: React.FC = () => {
               </ToolbarItem>
             </ToolbarGroup>
           }
-          toolbarActions={
-            <ToolbarGroup variant="button-group">
-              <ToolbarItem>
-                <Button
-                  type="button"
-                  aria-label="new-version"
-                  variant={ButtonVariant.primary}
-                  onClick={onNewVersion}
-                >
-                  Nueva versión
-                </Button>
-              </ToolbarItem>
-            </ToolbarGroup>
-          }
+          // toolbarActions={
+          //   <ToolbarGroup variant="button-group">
+          //     <ToolbarItem>
+          //       <Button
+          //         type="button"
+          //         aria-label="new-namespace"
+          //         variant={ButtonVariant.primary}
+          //         // onClick={onNewVersion}
+          //       >
+          //         Nuevo Namespace
+          //       </Button>
+          //     </ToolbarItem>
+          //   </ToolbarGroup>
+          // }
         />
       </PageSection>
     </>
