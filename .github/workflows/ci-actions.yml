@@ -22,7 +22,7 @@ jobs:
           distribution: temurin
           cache: maven
       - name: Maven
-        run: mvn test -Pui
+        run: mvn test
       - name: Prepare failure archive (if maven failed)
         if: failure()
         shell: bash
