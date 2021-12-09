@@ -67,7 +67,7 @@ public class NamespaceKeysResourceTest extends AbstractBaseTest {
                 .accept(ContentType.JSON)
                 .body(namespace)
                 .when()
-                .post("/api/user/namespaces")
+                .post("/api/namespaces")
                 .then()
                 .statusCode(200)
                 .body("id", is(notNullValue()),

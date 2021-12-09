@@ -10,6 +10,8 @@ import { ReactQueryDevtools } from "react-query/devtools";
 import { Provider } from "react-redux";
 import configureStore from "./store";
 
+import { PollingContextProvider } from "shared/context";
+
 const queryCache = new QueryCache();
 const queryClient = new QueryClient({
   queryCache,
@@ -24,10 +26,12 @@ const queryClient = new QueryClient({
 ReactDOM.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <Provider store={configureStore()}>
-        <App />
-      </Provider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      <PollingContextProvider>
+        <Provider store={configureStore()}>
+          <App />
+        </Provider>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </PollingContextProvider>
     </QueryClientProvider>
   </React.StrictMode>,
   document.getElementById("root")

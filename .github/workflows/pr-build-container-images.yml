@@ -20,7 +20,20 @@ jobs:
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
 
-      - name: Build container image
+#      - name: Build native container image
+#        run: |
+#          mvn -U -B package --file pom.xml -DskipTests \
+#          -Dquarkus.container-image.build=true \
+#          -Dquarkus.container-image.push=true \
+#          -Dquarkus.container-image.build=true \
+#          -Dquarkus.container-image.registry=ghcr.io \
+#          -Dquarkus.container-image.group=${{ github.repository_owner }} \
+#          -Dquarkus.container-image.name=${{ github.event.repository.name }}/ublhub \
+#          -Dquarkus.container-image.tag=${{ steps.extract_branch.outputs.branch }} \
+#          -Dquarkus.container-image.username=${{ github.actor }} \
+#          -Dquarkus.container-image.password=${{ secrets.GITHUB_TOKEN }} \
+#          -P native,ui
+      - name: Build jvm container image
         run: |
           mvn -U -B package --file pom.xml -DskipTests \
           -Dquarkus.container-image.build=true \
@@ -32,4 +45,4 @@ jobs:
           -Dquarkus.container-image.tag=${{ steps.extract_branch.outputs.branch }} \
           -Dquarkus.container-image.username=${{ github.actor }} \
           -Dquarkus.container-image.password=${{ secrets.GITHUB_TOKEN }} \
-          -P native,ui
+          -P ui

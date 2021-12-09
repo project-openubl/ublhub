@@ -44,23 +44,8 @@ export interface Version {
   records: number;
 }
 
-export interface Contribuyente {
-  tipoPersona: TipoContribuyente;
-  numeroDocumento: string;
-  nombre: string;
-  estado: string;
-  ubigeo: string;
-  condicionDomicilio: string;
-  tipoVia: string;
-  nombreVia: string;
-  codigoZona: string;
-  tipoZona: string;
-  numero: string;
-  interior: string;
-  lote: string;
-  departamento: string;
-  manzana: string;
-  kilometro: string;
+export interface Namespace {
+  id?: string;
+  name: string;
+  description?: string;
 }
-
-export type TipoContribuyente = "NATURAL" | "JURIDICA";
