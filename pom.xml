@@ -54,7 +54,7 @@
         <xbuilder-lib.version>1.2.1.Final</xbuilder-lib.version>
         <xsender-lib.version>3.0.3.Final</xsender-lib.version>
 
-        <keycloak.version>15.0.2</keycloak.version>
+        <keycloak.version>16.0.0</keycloak.version>
 
         <license.dir>${basedir}</license.dir>
         <executable-suffix/>
