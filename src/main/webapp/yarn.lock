@@ -1801,6 +1801,15 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
+"@konveyor/lib-ui@^5.2.0":
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/@konveyor/lib-ui/-/lib-ui-5.2.0.tgz#02009aa07ccbdc82ced675fd60c4820e4e5c2ebe"
+  integrity sha512-XRGnbCwsgkohM5uai0iYCL0Veo8QRnU7N4ycZ5b4E2H/aBqQAbrehR6JCtYHPeI1x1zoJvRwNqg6y23buhspIw==
+  dependencies:
+    fast-deep-equal "^3.1.3"
+    react-query "^3.26.0"
+    yup "^0.32.9"
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -1890,10 +1899,10 @@
     schema-utils "^2.6.5"
     source-map "^0.7.3"
 
-"@project-openubl/lib-ui@1.5.0":
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/@project-openubl/lib-ui/-/lib-ui-1.5.0.tgz#0396872427b761af8322849e1d0f4b71a6b1248c"
-  integrity sha512-riUxZYidi3nncY8hHgonyTyds3JDjEQIH9g+mPHLjtPbS7fPrjcF9WwbanKT3DjbkUs6AImcl5Obec6wtzTSjQ==
+"@project-openubl/lib-ui@1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@project-openubl/lib-ui/-/lib-ui-1.6.0.tgz#b3b6e140eead1d1d4ac597142f5d83e1a8a12081"
+  integrity sha512-xNgp8j9sUXu0Kv5PVX5xJy8M4z6rGJEW26mxO+3i1JmzaPrEvRd3jVyS+nqsOeqWrDNibTXlh208N25hEXFMjQ==
   dependencies:
     fast-deep-equal "^3.1.3"
     react-query "^3.26.0"

@@ -14,7 +14,7 @@ Microservicio que expone los datos provenientes del `padrón reducido` de la SUN
 Puedes ejecutar la aplicación en modo desarrollo con:
 
 ```shell script
-./mvnw compile quarkus:dev
+./mvnw compile quarkus:dev -Pdev
 ```
 
 ### Iniciar UI

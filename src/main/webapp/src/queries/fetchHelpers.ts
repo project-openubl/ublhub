@@ -3,7 +3,7 @@ import { ClusterResource } from "api-client";
 import { AxiosResponse } from "axios";
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const useSearchpeClient = () => {
+export const useUblhubClient = () => {
   const client = useClientInstance();
   /* eslint-disable @typescript-eslint/ban-types */
   return {

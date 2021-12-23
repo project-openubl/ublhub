@@ -1,3 +1,4 @@
+export * from "./add-namespace-wizard";
 export * from "./formik-select";
 export * from "./layout";
 export * from "./search-input";

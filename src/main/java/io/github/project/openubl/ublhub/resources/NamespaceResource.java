@@ -33,6 +33,7 @@ import io.github.project.openubl.ublhub.models.utils.RepresentationToEntity;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
+import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 import org.keycloak.common.util.PemUtils;
@@ -47,6 +48,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Path("/namespaces")
 @Produces("application/json")
@@ -95,7 +97,7 @@ public class NamespaceResource {
                                     .chain(namespace -> defaultKeyProviders.createProviders(namespace))
                                     .map(unused -> namespaceEntity);
                         })
-                        .map(namespaceEntity -> Response.ok()
+                        .map(namespaceEntity -> Response.status(Response.Status.CREATED)
                                 .entity(EntityToRepresentation.toRepresentation(namespaceEntity))
                                 .build()
                         )
@@ -104,28 +106,15 @@ public class NamespaceResource {
 
     @GET
     @Path("/")
-    public Uni<PageRepresentation<NamespaceRepresentation>> getNamespaces(
-            @QueryParam("filterText") String filterText,
-            @QueryParam("offset") @DefaultValue("0") Integer offset,
-            @QueryParam("limit") @DefaultValue("10") Integer limit,
-            @QueryParam("sort_by") @DefaultValue("createdOn:desc") List<String> sortBy
-    ) {
-        PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
-        List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, NamespaceRepository.SORT_BY_FIELDS);
-
-        if (filterText != null && !filterText.trim().isEmpty()) {
-            return Panache.withTransaction(() -> namespaceRepository
-                    .list(filterText, pageBean, sortBeans)
-                    .asTuple()
-                    .map(tuple2 -> EntityToRepresentation.toRepresentation(tuple2.getItem1(), tuple2.getItem2(), EntityToRepresentation::toRepresentation))
-            );
-        } else {
-            return Panache.withTransaction(() -> namespaceRepository
-                    .list(pageBean, sortBeans)
-                    .asTuple()
-                    .map(tuple2 -> EntityToRepresentation.toRepresentation(tuple2.getItem1(), tuple2.getItem2(), EntityToRepresentation::toRepresentation))
-            );
-        }
+    public Uni<List<NamespaceRepresentation>> getNamespaces() {
+        Sort sort = Sort.by(NamespaceRepository.SortByField.createdOn.toString(), Sort.Direction.Descending);
+        return Panache.withTransaction(() -> namespaceRepository
+                .listAll(sort)
+                .map(entities -> entities.stream()
+                        .map(EntityToRepresentation::toRepresentation)
+                        .collect(Collectors.toList())
+                )
+        );
     }
 
     @GET

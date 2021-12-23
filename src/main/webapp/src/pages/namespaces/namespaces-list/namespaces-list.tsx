@@ -3,9 +3,17 @@ import React, { useEffect, useState } from "react";
 import {
   useTableControls,
   SimpleTableWithToolbar,
+  useTable,
+  useModal,
 } from "@project-openubl/lib-ui";
 
-import { PageSection, ToolbarGroup, ToolbarItem } from "@patternfly/react-core";
+import {
+  Button,
+  ButtonVariant,
+  PageSection,
+  ToolbarGroup,
+  ToolbarItem,
+} from "@patternfly/react-core";
 import {
   cellWidth,
   IActions,
@@ -16,18 +24,15 @@ import {
   sortable,
 } from "@patternfly/react-table";
 
-// import { useDispatch } from "react-redux";
+import { useNamespacesQuery } from "queries/namespaces";
 
 import {
-  INamespaceParams,
-  INamespaceParamsBuilder,
-  NamespaceSortByKey,
-  useNamespacesQuery,
-} from "queries/namespaces";
+  SearchInput,
+  SimplePageSection,
+  AddNamespaceWizard,
+} from "shared/components";
 
-import { SearchInput, SimplePageSection } from "shared/components";
-
-import { Namespace, SortByQuery } from "api/models";
+import { Namespace } from "api/models";
 
 const ROW_FIELD = "row_field";
 const getRow = (rowData: IRowData): Namespace => {
@@ -48,31 +53,27 @@ const itemsToRow = (items: Namespace[]) => {
   }));
 };
 
-const toSortByQuery = (sortBy?: {
-  index: number;
-  direction: "asc" | "desc";
-}): SortByQuery | undefined => {
-  if (!sortBy) {
-    return undefined;
-  }
-
-  let field: string;
-  switch (sortBy.index) {
-    case 0:
-      field = NamespaceSortByKey.name;
-      break;
+export const compareByColumnIndex = (
+  a: Namespace,
+  b: Namespace,
+  columnIndex?: number
+) => {
+  switch (columnIndex) {
+    case 0: // name
+      return a.name.localeCompare(b.name);
     default:
-      return undefined;
+      return 0;
   }
+};
 
-  return {
-    orderBy: field,
-    orderDirection: sortBy.direction,
-  };
+export const filterByText = (filterText: string, item: Namespace) => {
+  return (
+    item.name.toString().toLowerCase().indexOf(filterText.toLowerCase()) !== -1
+  );
 };
 
 export const NamespacesList: React.FC = () => {
-  // const dispatch = useDispatch();
+  const namespaceModal = useModal<Namespace>();
 
   //
   const [filterText, setFilterText] = useState("");
@@ -81,27 +82,22 @@ export const NamespacesList: React.FC = () => {
     sortBy: currentSortBy,
     changePage: onPageChange,
     changeSortBy: onChangeSortBy,
-  } = useTableControls();
+  } = useTableControls({ sortBy: { index: 0, direction: "asc" } });
 
   //
-  const [queryParams, setQueryParams] = useState<INamespaceParams>(
-    new INamespaceParamsBuilder()
-      .withFilterText(filterText)
-      .withPagination(currentPage)
-      .withSorting(toSortByQuery(currentSortBy))
-      .build()
-  );
-  const namespaces = useNamespacesQuery(queryParams);
+  const namespaces = useNamespacesQuery();
 
-  //
   useEffect(() => {
-    const params = new INamespaceParamsBuilder()
-      .withFilterText(filterText)
-      .withPagination(currentPage)
-      .withSorting(toSortByQuery(currentSortBy))
-      .build();
-    setQueryParams(params);
-  }, [filterText, currentPage, currentSortBy]);
+    console.log(namespaces);
+  }, [namespaces]);
+
+  const { pageItems, filteredItems } = useTable<Namespace>({
+    items: namespaces.data || [],
+    currentPage: currentPage,
+    currentSortBy: currentSortBy,
+    compareToByColumn: compareByColumnIndex,
+    filterItem: (item) => filterByText(filterText, item),
+  });
 
   //
   const columns: ICell[] = [
@@ -109,7 +105,7 @@ export const NamespacesList: React.FC = () => {
     { title: "descripcion", transforms: [cellWidth(60)] },
   ];
 
-  const rows: IRow[] = itemsToRow(namespaces.data?.data || []);
+  const rows: IRow[] = itemsToRow(pageItems || []);
 
   const actions: IActions = [
     {
@@ -138,7 +134,7 @@ export const NamespacesList: React.FC = () => {
         <SimpleTableWithToolbar
           hasTopPagination
           hasBottomPagination
-          totalCount={namespaces.data?.meta.count || 0}
+          totalCount={filteredItems.length}
           // Sorting
           sortBy={currentSortBy}
           onSort={onChangeSortBy}
@@ -162,22 +158,26 @@ export const NamespacesList: React.FC = () => {
               </ToolbarItem>
             </ToolbarGroup>
           }
-          // toolbarActions={
-          //   <ToolbarGroup variant="button-group">
-          //     <ToolbarItem>
-          //       <Button
-          //         type="button"
-          //         aria-label="new-namespace"
-          //         variant={ButtonVariant.primary}
-          //         // onClick={onNewVersion}
-          //       >
-          //         Nuevo Namespace
-          //       </Button>
-          //     </ToolbarItem>
-          //   </ToolbarGroup>
-          // }
+          toolbarActions={
+            <ToolbarGroup variant="button-group">
+              <ToolbarItem>
+                <Button
+                  type="button"
+                  aria-label="new-namespace"
+                  variant={ButtonVariant.primary}
+                  onClick={() => namespaceModal.open("add")}
+                >
+                  Nuevo Namespace
+                </Button>
+              </ToolbarItem>
+            </ToolbarGroup>
+          }
         />
       </PageSection>
+
+      {namespaceModal.isOpen && namespaceModal.actionKey === "add" && (
+        <AddNamespaceWizard onClose={namespaceModal.close} />
+      )}
     </>
   );
 };

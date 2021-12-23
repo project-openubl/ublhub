@@ -69,7 +69,7 @@ public class NamespaceKeysResourceTest extends AbstractBaseTest {
                 .when()
                 .post("/api/namespaces")
                 .then()
-                .statusCode(200)
+                .statusCode(201)
                 .body("id", is(notNullValue()),
                         "name", is(namespace.getName())
                 )
