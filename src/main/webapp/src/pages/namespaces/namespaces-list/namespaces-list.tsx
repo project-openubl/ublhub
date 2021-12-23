@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import {
   useTableControls,
   SimpleTableWithToolbar,
   useTable,
   useModal,
+  useConfirmationContext,
 } from "@project-openubl/lib-ui";
 
 import {
@@ -24,7 +25,13 @@ import {
   sortable,
 } from "@patternfly/react-table";
 
-import { useNamespacesQuery } from "queries/namespaces";
+import { useDispatch } from "react-redux";
+import { alertActions } from "store/alert";
+
+import {
+  useNamespacesQuery,
+  useDeleteNamespaceMutation,
+} from "queries/namespaces";
 
 import {
   SearchInput,
@@ -33,6 +40,7 @@ import {
 } from "shared/components";
 
 import { Namespace } from "api/models";
+import { getAxiosErrorMessage } from "utils/modelUtils";
 
 const ROW_FIELD = "row_field";
 const getRow = (rowData: IRowData): Namespace => {
@@ -73,6 +81,10 @@ export const filterByText = (filterText: string, item: Namespace) => {
 };
 
 export const NamespacesList: React.FC = () => {
+  const dispatch = useDispatch();
+  const confirmationModal = useConfirmationContext();
+
+  //
   const namespaceModal = useModal<Namespace>();
 
   //
@@ -86,10 +98,7 @@ export const NamespacesList: React.FC = () => {
 
   //
   const namespaces = useNamespacesQuery();
-
-  useEffect(() => {
-    console.log(namespaces);
-  }, [namespaces]);
+  const deleteNamespace = useDeleteNamespaceMutation();
 
   const { pageItems, filteredItems } = useTable<Namespace>({
     items: namespaces.data || [],
@@ -117,7 +126,37 @@ export const NamespacesList: React.FC = () => {
         extraData: IExtraData
       ) => {
         const row: Namespace = getRow(rowData);
-        console.log("Write code to delete the row", row);
+
+        confirmationModal.open({
+          title: `Eliminar ${row.name}`,
+          titleIconVariant: "warning",
+          message: (
+            <span>
+              ¿Estas seguro de querer eliminar este namespace? Esta acción
+              eliminará el namespace <b>{row.name}</b> permanentemente.`
+            </span>
+          ),
+          confirmBtnVariant: ButtonVariant.danger,
+          confirmBtnLabel: "Eliminar",
+          cancelBtnLabel: "Cancelar",
+          onConfirm: () => {
+            confirmationModal.enableProcessing();
+            deleteNamespace
+              .mutateAsync(row)
+              .catch((error) => {
+                dispatch(
+                  alertActions.addAlert(
+                    "danger",
+                    "Error",
+                    getAxiosErrorMessage(error)
+                  )
+                );
+              })
+              .finally(() => {
+                confirmationModal.close();
+              });
+          },
+        });
       },
     },
   ];
@@ -167,7 +206,7 @@ export const NamespacesList: React.FC = () => {
                   variant={ButtonVariant.primary}
                   onClick={() => namespaceModal.open("add")}
                 >
-                  Nuevo Namespace
+                  Crear nuevo
                 </Button>
               </ToolbarItem>
             </ToolbarGroup>
