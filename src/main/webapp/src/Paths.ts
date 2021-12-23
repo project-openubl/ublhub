@@ -13,4 +13,5 @@ export enum Paths {
   notFound = "/not-found",
 
   namespaces = "/namespaces",
+  namespaces_create = "/namespaces/~new",
 }

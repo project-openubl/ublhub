@@ -32,7 +32,12 @@ import java.util.List;
 @ApplicationScoped
 public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntity, String> {
 
-    public static final String[] SORT_BY_FIELDS = {"name", "createdOn"};
+    public enum SortByField {
+        name,
+        createdOn
+    }
+
+    public static final String[] SORT_BY_FIELDS = {SortByField.name.toString(), SortByField.createdOn.toString()};
 
     public Uni<NamespaceEntity> findByName(String name) {
         return find("name", name).firstResult();

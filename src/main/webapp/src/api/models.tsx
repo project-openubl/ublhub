@@ -11,7 +11,7 @@ export interface SortByQuery {
 export interface PageRepresentation<T> {
   meta: Meta;
   links: Links;
-  data: T[];
+  items: T[];
 }
 
 export interface Meta {
@@ -48,4 +48,13 @@ export interface Namespace {
   id?: string;
   name: string;
   description?: string;
+  webServices: {
+    factura: string;
+    guia: string;
+    retenciones: string;
+  };
+  credentials: {
+    username: string;
+    password: string;
+  };
 }

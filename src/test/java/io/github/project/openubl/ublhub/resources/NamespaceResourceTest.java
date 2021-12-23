@@ -68,7 +68,7 @@ public class NamespaceResourceTest extends AbstractBaseTest {
                 .when()
                 .post("/api/namespaces")
                 .then()
-                .statusCode(200)
+                .statusCode(201)
                 .body("id", is(notNullValue()),
                         "name", is(namespace.getName()),
                         "description", is(namespace.getDescription()),
@@ -109,7 +109,7 @@ public class NamespaceResourceTest extends AbstractBaseTest {
                 .when()
                 .post("/api/namespaces")
                 .then()
-                .statusCode(200)
+                .statusCode(201)
                 .body("name", is(namespace.getName()));
 
         // Then
@@ -132,30 +132,12 @@ public class NamespaceResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces")
                 .then()
                 .statusCode(200)
-                .body("meta.count", is(3),
-                        "data.size()", is(3),
-                        "data[0].name", is("my-namespace3"),
-                        "data[1].name", is("my-namespace2"),
-                        "data[2].name", is("my-namespace1")
+                .body("size()", is(3),
+                        "[0].name", is("my-namespace3"),
+                        "[1].name", is("my-namespace2"),
+                        "[2].name", is("my-namespace1")
                 );
         // Then
-    }
-
-    @Test
-    public void getNamespaces_filterText() {
-        // Given
-        // When
-        given()
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/api/namespaces?filterText=namespace1")
-                .then()
-                .statusCode(200)
-                .body("meta.count", is(1),
-                        "data.size()", is(1),
-                        "data[0].name", is("my-namespace1")
-                );
-        //then
     }
 
     @Test
