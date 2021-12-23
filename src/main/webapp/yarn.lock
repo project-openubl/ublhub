@@ -1899,10 +1899,10 @@
     schema-utils "^2.6.5"
     source-map "^0.7.3"
 
-"@project-openubl/lib-ui@1.6.0":
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@project-openubl/lib-ui/-/lib-ui-1.6.0.tgz#b3b6e140eead1d1d4ac597142f5d83e1a8a12081"
-  integrity sha512-xNgp8j9sUXu0Kv5PVX5xJy8M4z6rGJEW26mxO+3i1JmzaPrEvRd3jVyS+nqsOeqWrDNibTXlh208N25hEXFMjQ==
+"@project-openubl/lib-ui@1.7.0":
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/@project-openubl/lib-ui/-/lib-ui-1.7.0.tgz#98ce09f1faae1b368984ee77547f1d12e07027ea"
+  integrity sha512-j6Evud62TDKhSY+5UZXkivGezKlTaGaWPWCR/OTXZv8apF8j2bER0uPgz0d4wAuaWiyrxhSoUA/Q/dxUiwe4lw==
   dependencies:
     fast-deep-equal "^3.1.3"
     react-query "^3.26.0"

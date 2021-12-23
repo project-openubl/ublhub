@@ -60,6 +60,10 @@ public class NamespaceEntity extends PanacheEntityBase {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "namespace", orphanRemoval = true)
     public List<CompanyEntity> companies = new ArrayList<>();
 
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "namespace", orphanRemoval = true)
+    public List<ComponentEntity> components = new ArrayList<>();
+
     @Version
     @Column(name = "version")
     public int version;
