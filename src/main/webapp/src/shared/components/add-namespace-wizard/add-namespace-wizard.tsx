@@ -50,9 +50,9 @@ const useNamespaceWizardFormState = (
     credentials: useFormState({
       sunatUsername: useFormField<string>(
         "",
-        yup.string().trim().min(1).max(250)
+        yup.string().trim().min(3).max(250)
       ),
-      sunatPassword: useFormField<string>("", yup.string().min(1).max(250)),
+      sunatPassword: useFormField<string>("", yup.string().min(3).max(250)),
     }),
   };
 

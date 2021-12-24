@@ -12,6 +12,9 @@ import configureStore from "./store";
 
 import { PollingContextProvider } from "shared/context";
 
+import i18n from "./i18n";
+i18n.init();
+
 const queryCache = new QueryCache();
 const queryClient = new QueryClient({
   queryCache,
