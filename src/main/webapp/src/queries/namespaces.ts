@@ -18,6 +18,22 @@ import { useCallback } from "react";
 
 const resource = new CoreClusterResource(CoreClusterResourceKind.Namespace);
 
+export const useNamespaceQuery = (
+  id: string | null
+): UseQueryResult<Namespace, ApiClientError> => {
+  const client = useUblhubClient();
+  const result = useQuery<Namespace, ApiClientError>({
+    queryKey: ["namespace", id],
+    queryFn: async (): Promise<Namespace> => {
+      return (await client.get<Namespace>(resource, id || "")).data;
+    },
+    enabled: !!id,
+    retry: false,
+    refetchOnMount: true,
+  });
+  return result;
+};
+
 export const useNamespacesQuery = (): UseQueryResult<
   Namespace[],
   ApiClientError

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation, Trans } from "react-i18next";
 
 import {
   useTableControls,
@@ -41,6 +42,8 @@ import {
 
 import { Namespace } from "api/models";
 import { getAxiosErrorMessage } from "utils/modelUtils";
+import { Link } from "react-router-dom";
+import { formatPath, Paths } from "Paths";
 
 const ROW_FIELD = "row_field";
 const getRow = (rowData: IRowData): Namespace => {
@@ -52,7 +55,13 @@ const itemsToRow = (items: Namespace[]) => {
     [ROW_FIELD]: item,
     cells: [
       {
-        title: item.name,
+        title: (
+          <Link
+            to={formatPath(Paths.namespaces_edit, { namespaceId: item.id })}
+          >
+            {item.name}
+          </Link>
+        ),
       },
       {
         title: item.description,
@@ -81,6 +90,8 @@ export const filterByText = (filterText: string, item: Namespace) => {
 };
 
 export const NamespacesList: React.FC = () => {
+  const { t } = useTranslation();
+
   const dispatch = useDispatch();
   const confirmationModal = useConfirmationContext();
 
@@ -128,13 +139,18 @@ export const NamespacesList: React.FC = () => {
         const row: Namespace = getRow(rowData);
 
         confirmationModal.open({
-          title: `Eliminar ${row.name}`,
+          title: t("modal.confirm-delete.title", {
+            what: "namespace",
+          }),
           titleIconVariant: "warning",
           message: (
-            <span>
-              ¿Estas seguro de querer eliminar este namespace? Esta acción
-              eliminará el namespace <b>{row.name}</b> permanentemente.`
-            </span>
+            <Trans
+              i18nKey="modal.confirm-delete.body"
+              values={{ type: "namespace", name: row.name }}
+            >
+              ¿Estas seguro de querer eliminar este(a) <b>type</b>? Esta acción
+              eliminará <b>name</b> permanentemente.
+            </Trans>
           ),
           confirmBtnVariant: ButtonVariant.danger,
           confirmBtnLabel: "Eliminar",

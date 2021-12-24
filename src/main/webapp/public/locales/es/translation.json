@@ -1,0 +1,12 @@
+{
+    "actions": {
+        "cancel": "Cancelar",
+        "delete": "Eliminar"
+    },
+    "modal": {
+        "confirm-delete": {
+            "body": "¿Estas seguro de querer eliminar este(a) <1>{{type}}</1>? Esta acción eliminará <3>{{name}}</3> permanentemente.",
+            "title": "Eliminar {{what}}"
+        }
+    }
+}

@@ -13,5 +13,8 @@ export enum Paths {
   notFound = "/not-found",
 
   namespaces = "/namespaces",
-  namespaces_create = "/namespaces/~new",
+  namespaces_edit = "/namespaces/:namespaceId",
+  namespaces_edit_companies = "/namespaces/:namespaceId/commpanies",
+  namespaces_edit_sunat = "/namespaces/:namespaceId/sunat",
+  namespaces_edit_keys = "/namespaces/:namespaceId/keys",
 }
