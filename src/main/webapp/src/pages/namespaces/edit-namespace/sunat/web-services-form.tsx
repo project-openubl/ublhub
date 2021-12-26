@@ -16,8 +16,9 @@ import {
   useFormState,
   ValidatedTextInput,
 } from "@konveyor/lib-ui";
+import { SimplePlaceholder } from "@project-openubl/lib-ui";
 
-import { ResolvedQueries } from "shared/components";
+import { QuerySpinnerMode, ResolvedQueries } from "shared/components";
 
 import {
   useNamespacesQuery,
@@ -26,7 +27,6 @@ import {
 import { LONG_LOADING_MESSAGE } from "queries/constants";
 
 import { Namespace } from "api/models";
-import { SimplePlaceholder } from "@project-openubl/lib-ui";
 
 const useWebServicesFormState = () => {
   const form = useFormState({
@@ -102,6 +102,9 @@ export const WebServicesForm: React.FunctionComponent<IWebServicesFormProps> =
       namespaceBeingPrefilled
     );
 
+    const allMutationResults = [mutateNamespace];
+    const allMutationErrorTitles = ["Can not update namespace"];
+
     const onSave = () => {
       mutateNamespace.mutate({
         ...namespaceBeingPrefilled!,
@@ -147,6 +150,11 @@ export const WebServicesForm: React.FunctionComponent<IWebServicesFormProps> =
                   fieldId="urlPercepcionRetencion"
                 />
 
+                <ResolvedQueries
+                  results={allMutationResults}
+                  errorTitles={allMutationErrorTitles}
+                  spinnerMode={QuerySpinnerMode.Inline}
+                />
                 <ActionGroup>
                   <Button
                     variant="primary"

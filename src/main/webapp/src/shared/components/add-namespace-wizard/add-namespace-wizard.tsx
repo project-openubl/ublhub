@@ -1,6 +1,7 @@
 import React from "react";
 import * as yup from "yup";
 import { UseQueryResult } from "react-query";
+import { useTranslation } from "react-i18next";
 import { useFormField, useFormState } from "@konveyor/lib-ui";
 import {
   Button,
@@ -24,6 +25,8 @@ import { GeneralForm } from "./general-form";
 import { WebServicesForm } from "./web-services-form";
 import { CredentialsForm } from "./credentials-form";
 import { Review } from "./review";
+import { useHistory } from "react-router-dom";
+import { formatPath, Paths } from "Paths";
 
 const useNamespaceWizardFormState = (
   namespacesQuery: UseQueryResult<Namespace[]>
@@ -82,7 +85,13 @@ interface IAddNamespaceWizardProps {
 export const AddNamespaceWizard: React.FC<IAddNamespaceWizardProps> = ({
   onClose,
 }) => {
-  const createPlanMutation = useCreateNamespaceMutation(onClose);
+  const { t } = useTranslation();
+  const history = useHistory();
+
+  const createNamespaceMutation = useCreateNamespaceMutation((ns) => {
+    history.push(formatPath(Paths.namespaces_edit, { namespaceId: ns.id }));
+    onClose();
+  });
 
   // Form
   const namespacesQuery = useNamespacesQuery();
@@ -93,63 +102,70 @@ export const AddNamespaceWizard: React.FC<IAddNamespaceWizardProps> = ({
   const stepIdReached: StepId =
     firstInvalidFormIndex === -1 ? StepId.Review : firstInvalidFormIndex;
 
+  const allMutationResults = [createNamespaceMutation];
+  const allMutationErrorTitles = ["Can not create namespace"];
+
   const steps: WizardStep[] = [
     {
       id: StepId.General,
-      name: "General",
+      name: t("terms.general"),
       component: (
-        <WizardStepContainer title="Configuración general">
+        <WizardStepContainer title={t("terms.general")}>
           <GeneralForm form={forms.general} />
         </WizardStepContainer>
       ),
-      enableNext: forms.general.isValid && !createPlanMutation.isLoading,
-      canJumpTo: !createPlanMutation.isLoading,
+      enableNext: forms.general.isValid && !createNamespaceMutation.isLoading,
+      canJumpTo: !createNamespaceMutation.isLoading,
     },
     {
       name: "SUNAT",
       steps: [
         {
           id: StepId.WebServices,
-          name: "Servicios web",
+          name: t("terms.webServices"),
           component: (
-            <WizardStepContainer title="Servicios web">
+            <WizardStepContainer title={t("terms.webServices")}>
               <WebServicesForm form={forms.webServices} />
             </WizardStepContainer>
           ),
           enableNext:
-            forms.webServices.isValid && !createPlanMutation.isLoading,
+            forms.webServices.isValid && !createNamespaceMutation.isLoading,
           canJumpTo:
             stepIdReached >= StepId.WebServices &&
-            !createPlanMutation.isLoading,
+            !createNamespaceMutation.isLoading,
         },
         {
           id: StepId.Credentials,
-          name: "Credenciales",
+          name: t("terms.credentials"),
           component: (
-            <WizardStepContainer title="Credenciales">
+            <WizardStepContainer title={t("terms.credentials")}>
               <CredentialsForm form={forms.credentials} />
             </WizardStepContainer>
           ),
           enableNext:
-            forms.credentials.isValid && !createPlanMutation.isLoading,
+            forms.credentials.isValid && !createNamespaceMutation.isLoading,
           canJumpTo:
             stepIdReached >= StepId.Credentials &&
-            !createPlanMutation.isLoading,
+            !createNamespaceMutation.isLoading,
         },
       ],
     },
     {
       id: StepId.Review,
-      name: "Revisión",
+      name: t("terms.review"),
       component: (
-        <WizardStepContainer title="Revisión del namespace">
-          <Review forms={forms} />
+        <WizardStepContainer title={t("terms.review")}>
+          <Review
+            forms={forms}
+            allMutationResults={allMutationResults}
+            allMutationErrorTitles={allMutationErrorTitles}
+          />
         </WizardStepContainer>
       ),
-      nextButtonText: "Finalizar",
-      enableNext: !createPlanMutation.isLoading,
+      nextButtonText: t("actions.create"),
+      enableNext: !createNamespaceMutation.isLoading,
       canJumpTo:
-        stepIdReached >= StepId.Review && !createPlanMutation.isLoading,
+        stepIdReached >= StepId.Review && !createNamespaceMutation.isLoading,
     },
   ];
 
@@ -164,10 +180,10 @@ export const AddNamespaceWizard: React.FC<IAddNamespaceWizardProps> = ({
                 type="button"
                 onClick={onNext}
                 isDisabled={
-                  !activeStep.enableNext || createPlanMutation.isLoading
+                  !activeStep.enableNext || createNamespaceMutation.isLoading
                 }
               >
-                {activeStep.nextButtonText || "Siguiente"}
+                {activeStep.nextButtonText || t("actions.next")}
               </Button>
               <Button
                 variant="secondary"
@@ -175,16 +191,16 @@ export const AddNamespaceWizard: React.FC<IAddNamespaceWizardProps> = ({
                 className={
                   activeStep.id === StepId.General ? "pf-m-disabled" : ""
                 }
-                isDisabled={createPlanMutation.isLoading}
+                isDisabled={createNamespaceMutation.isLoading}
               >
-                Atrás
+                {t("actions.back")}
               </Button>
               <Button
                 variant="link"
                 onClick={onClose}
-                isDisabled={createPlanMutation.isLoading}
+                isDisabled={createNamespaceMutation.isLoading}
               >
-                Cancelar
+                {t("actions.cancel")}
               </Button>
             </>
           );
@@ -194,7 +210,7 @@ export const AddNamespaceWizard: React.FC<IAddNamespaceWizardProps> = ({
   );
 
   const onSave = () => {
-    createPlanMutation.mutate({
+    createNamespaceMutation.mutate({
       name: forms.general.values.name,
       description: forms.general.values.description,
       webServices: {
@@ -212,7 +228,7 @@ export const AddNamespaceWizard: React.FC<IAddNamespaceWizardProps> = ({
   return (
     <Wizard
       isOpen
-      title="Crear namespace"
+      title={t("actions.create-object", { what: "namespace" })}
       steps={steps}
       onSubmit={(event) => event.preventDefault()}
       onSave={onSave}

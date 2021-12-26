@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dropdown, DropdownItem, DropdownToggle } from "@patternfly/react-core";
 import { CaretDownIcon } from "@patternfly/react-icons";
 
@@ -7,6 +8,7 @@ export interface MenuActionsProps {
 }
 
 export const MenuActions: React.FC<MenuActionsProps> = ({ actions }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -22,7 +24,7 @@ export const MenuActions: React.FC<MenuActionsProps> = ({ actions }) => {
           }}
           toggleIndicator={CaretDownIcon}
         >
-          Actions
+          {t("terms.actions")}
         </DropdownToggle>
       }
       dropdownItems={actions.map((element, index) => (

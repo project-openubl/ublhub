@@ -14,7 +14,7 @@ import { PageHeader } from "shared/components";
 
 import {
   useDeleteNamespaceMutation,
-  useNamespaceQuery,
+  useNamespacesQuery,
 } from "queries/namespaces";
 
 import { formatPath, Paths } from "Paths";
@@ -38,11 +38,16 @@ export const EditNamespace: React.FC = () => {
   const routeParams = useParams<INamespaceParams>();
   const confirmationModal = useConfirmationContext();
 
-  const namespace = useNamespaceQuery(routeParams.namespaceId);
+  const namespacesQuery = useNamespacesQuery();
+
+  const prefillNamespaceId = routeParams.namespaceId;
+  const namespaceBeingPrefilled =
+    namespacesQuery.data?.find((ns) => ns.id === prefillNamespaceId) || null;
+
   const deleteNamespace = useDeleteNamespaceMutation();
 
   const onDeleteNs = () => {
-    if (!namespace.data) {
+    if (!namespaceBeingPrefilled) {
       console.log("Can not delete null");
       return;
     }
@@ -55,7 +60,7 @@ export const EditNamespace: React.FC = () => {
       message: (
         <Trans
           i18nKey="modal.confirm-delete.body"
-          values={{ type: "namespace", name: namespace.data.name }}
+          values={{ type: "namespace", name: namespaceBeingPrefilled.name }}
         >
           ¿Estas seguro de querer eliminar este(a) <b>type</b>? Esta acción
           eliminará <b>name</b> permanentemente.
@@ -67,7 +72,7 @@ export const EditNamespace: React.FC = () => {
       onConfirm: () => {
         confirmationModal.enableProcessing();
         deleteNamespace
-          .mutateAsync(namespace.data)
+          .mutateAsync(namespaceBeingPrefilled)
           .catch((error) => {
             dispatch(
               alertActions.addAlert(
@@ -89,41 +94,41 @@ export const EditNamespace: React.FC = () => {
     <>
       <PageSection variant="light" type="breadcrumb">
         <PageHeader
-          title={namespace.data?.name || ""}
+          title={namespaceBeingPrefilled?.name || ""}
           breadcrumbs={[
             {
               title: "Namespaces",
               path: Paths.namespaces,
             },
             {
-              title: "editar",
+              title: t("actions.edit"),
               path: "",
             },
           ]}
-          menuActions={[{ label: "Eliminar", callback: onDeleteNs }]}
+          menuActions={[{ label: t("actions.delete"), callback: onDeleteNs }]}
           navItems={[
             {
-              title: "General",
+              title: t("terms.general"),
               path: formatPath(Paths.namespaces_edit, {
-                namespaceId: namespace.data?.id,
+                namespaceId: namespaceBeingPrefilled?.id,
               }),
             },
             {
               title: "SUNAT",
               path: formatPath(Paths.namespaces_edit_sunat, {
-                namespaceId: namespace.data?.id,
+                namespaceId: namespaceBeingPrefilled?.id,
               }),
             },
             {
-              title: "Certificados",
+              title: t("terms.keys"),
               path: formatPath(Paths.namespaces_edit_keys, {
-                namespaceId: namespace.data?.id,
+                namespaceId: namespaceBeingPrefilled?.id,
               }),
             },
             {
-              title: "Empresas",
+              title: t("terms.companies"),
               path: formatPath(Paths.namespaces_edit_companies, {
-                namespaceId: namespace.data?.id,
+                namespaceId: namespaceBeingPrefilled?.id,
               }),
             },
           ]}
