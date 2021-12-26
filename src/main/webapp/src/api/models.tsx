@@ -1,3 +1,10 @@
+import { UseQueryResult } from "react-query";
+
+export type UnknownResult = Pick<
+  UseQueryResult<unknown>,
+  "isError" | "isLoading" | "isIdle" | "error"
+>;
+
 export interface PageQuery {
   page: number;
   perPage: number;
