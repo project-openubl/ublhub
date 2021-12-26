@@ -73,6 +73,24 @@ export const useCreateNamespaceMutation = (
   );
 };
 
+export const useUpdateNamespaceMutation = (
+  onSuccess?: (namespace: Namespace) => void
+): UseMutationResult<Namespace, ApiClientError, Namespace> => {
+  const client = useUblhubClient();
+  const queryClient = useQueryClient();
+  return useMutation<Namespace, ApiClientError, Namespace>(
+    async (form) => {
+      return (await client.put<Namespace>(resource, form.id || "", form)).data;
+    },
+    {
+      onSuccess: (response) => {
+        queryClient.invalidateQueries("namespaces");
+        onSuccess && onSuccess(response);
+      },
+    }
+  );
+};
+
 export const useDeleteNamespaceMutation = (
   onSuccess?: () => void
 ): UseMutationResult<void, ApiClientError, Namespace, unknown> => {

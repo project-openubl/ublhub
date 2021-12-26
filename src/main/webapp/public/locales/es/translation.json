@@ -1,7 +1,8 @@
 {
     "actions": {
         "cancel": "Cancelar",
-        "delete": "Eliminar"
+        "delete": "Eliminar",
+        "save": "Guardar"
     },
     "modal": {
         "confirm-delete": {
