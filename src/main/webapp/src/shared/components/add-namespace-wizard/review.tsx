@@ -9,15 +9,22 @@ import {
   DescriptionListDescription,
 } from "@patternfly/react-core";
 
+import { ResolvedQueries, QuerySpinnerMode } from "shared/components";
 import { usePausedPollingEffect } from "shared/context";
+
+import { UnknownResult } from "api/models";
 import { NamespaceWizardFormState } from "./add-namespace-wizard";
 
 interface IReviewProps {
   forms: NamespaceWizardFormState;
+  allMutationResults: UnknownResult[];
+  allMutationErrorTitles: string[];
 }
 
 export const Review: React.FunctionComponent<IReviewProps> = ({
   forms,
+  allMutationResults,
+  allMutationErrorTitles,
 }: IReviewProps) => {
   usePausedPollingEffect();
 
@@ -76,6 +83,12 @@ export const Review: React.FunctionComponent<IReviewProps> = ({
           <DescriptionListTerm>SUNAT contraseña</DescriptionListTerm>
           <DescriptionListDescription>******</DescriptionListDescription>
         </DescriptionListGroup>
+
+        <ResolvedQueries
+          results={allMutationResults}
+          errorTitles={allMutationErrorTitles}
+          spinnerMode={QuerySpinnerMode.Inline}
+        />
       </DescriptionList>
     </Form>
   );

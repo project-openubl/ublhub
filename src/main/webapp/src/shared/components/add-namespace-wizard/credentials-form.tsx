@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Form } from "@patternfly/react-core";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 import { ValidatedTextInput } from "@konveyor/lib-ui";
@@ -12,19 +13,21 @@ interface ICredentialsFormProps {
 
 export const CredentialsForm: React.FunctionComponent<ICredentialsFormProps> =
   ({ form }: ICredentialsFormProps) => {
+    const { t } = useTranslation();
+
     usePausedPollingEffect();
 
     return (
       <Form className={spacing.pbXl}>
         <ValidatedTextInput
           field={form.fields.sunatUsername}
-          label="Usuario"
+          label={t("terms.username")}
           isRequired
           fieldId="sunatUsername"
         />
         <ValidatedTextInput
           field={form.fields.sunatPassword}
-          label="Contraseña"
+          label={t("terms.password")}
           isRequired
           fieldId="sunatPassword"
           type="password"

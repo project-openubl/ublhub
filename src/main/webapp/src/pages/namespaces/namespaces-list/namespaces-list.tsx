@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation, Trans } from "react-i18next";
 
 import {
@@ -42,7 +43,6 @@ import {
 
 import { Namespace } from "api/models";
 import { getAxiosErrorMessage } from "utils/modelUtils";
-import { Link } from "react-router-dom";
 import { formatPath, Paths } from "Paths";
 
 const ROW_FIELD = "row_field";
@@ -121,15 +121,15 @@ export const NamespacesList: React.FC = () => {
 
   //
   const columns: ICell[] = [
-    { title: "Nombre", transforms: [sortable, cellWidth(40)] },
-    { title: "descripcion", transforms: [cellWidth(60)] },
+    { title: t("terms.name"), transforms: [sortable, cellWidth(40)] },
+    { title: t("terms.description"), transforms: [cellWidth(60)] },
   ];
 
   const rows: IRow[] = itemsToRow(pageItems || []);
 
   const actions: IActions = [
     {
-      title: "Eliminar",
+      title: t("actions.delete"),
       onClick: (
         event: React.MouseEvent,
         rowIndex: number,
@@ -153,8 +153,8 @@ export const NamespacesList: React.FC = () => {
             </Trans>
           ),
           confirmBtnVariant: ButtonVariant.danger,
-          confirmBtnLabel: "Eliminar",
-          cancelBtnLabel: "Cancelar",
+          confirmBtnLabel: t("actions.delete"),
+          cancelBtnLabel: t("actions.cancel"),
           onConfirm: () => {
             confirmationModal.enableProcessing();
             deleteNamespace
@@ -181,10 +181,7 @@ export const NamespacesList: React.FC = () => {
 
   return (
     <>
-      <SimplePageSection
-        title="Namespaces"
-        description="Crea multiples empresas dentro de un namespace."
-      />
+      <SimplePageSection title="Namespaces" />
       <PageSection>
         <SimpleTableWithToolbar
           hasTopPagination
@@ -222,7 +219,7 @@ export const NamespacesList: React.FC = () => {
                   variant={ButtonVariant.primary}
                   onClick={() => namespaceModal.open("add")}
                 >
-                  Crear nuevo
+                  {t("actions.create-object", { what: "namespace" })}
                 </Button>
               </ToolbarItem>
             </ToolbarGroup>

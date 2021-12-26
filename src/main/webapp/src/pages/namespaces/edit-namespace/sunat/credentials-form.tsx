@@ -16,8 +16,9 @@ import {
   useFormState,
   ValidatedTextInput,
 } from "@konveyor/lib-ui";
+import { SimplePlaceholder } from "@project-openubl/lib-ui";
 
-import { ResolvedQueries } from "shared/components";
+import { QuerySpinnerMode, ResolvedQueries } from "shared/components";
 
 import {
   useNamespacesQuery,
@@ -26,7 +27,6 @@ import {
 import { LONG_LOADING_MESSAGE } from "queries/constants";
 
 import { Namespace } from "api/models";
-import { SimplePlaceholder } from "@project-openubl/lib-ui";
 
 const useCredentialsFormState = () => {
   const form = useFormState({
@@ -89,6 +89,9 @@ export const CredentialsForm: React.FunctionComponent<ICredentialsFormProps> =
       namespaceBeingPrefilled
     );
 
+    const allMutationResults = [mutateNamespace];
+    const allMutationErrorTitles = ["Can not update namespace"];
+
     const onSave = () => {
       mutateNamespace.mutate({
         ...namespaceBeingPrefilled!,
@@ -128,6 +131,11 @@ export const CredentialsForm: React.FunctionComponent<ICredentialsFormProps> =
                   type="password"
                 />
 
+                <ResolvedQueries
+                  results={allMutationResults}
+                  errorTitles={allMutationErrorTitles}
+                  spinnerMode={QuerySpinnerMode.Inline}
+                />
                 <ActionGroup>
                   <Button
                     variant="primary"

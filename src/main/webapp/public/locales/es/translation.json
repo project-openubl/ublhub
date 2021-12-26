@@ -1,7 +1,12 @@
 {
     "actions": {
+        "back": "Atrás",
         "cancel": "Cancelar",
+        "create": "Crear",
+        "create-object": "Crear {{what}}",
         "delete": "Eliminar",
+        "edit": "Editar",
+        "next": "Siguiente",
         "save": "Guardar"
     },
     "modal": {
@@ -9,5 +14,18 @@
             "body": "¿Estas seguro de querer eliminar este(a) <1>{{type}}</1>? Esta acción eliminará <3>{{name}}</3> permanentemente.",
             "title": "Eliminar {{what}}"
         }
+    },
+    "terms": {
+        "actions": "Acciones",
+        "companies": "Empresas",
+        "credentials": "Credenciales",
+        "description": "Descripción",
+        "general": "General",
+        "keys": "Llaves",
+        "name": "Nombre",
+        "password": "Contraseña",
+        "review": "Revisión",
+        "username": "Usuario",
+        "webServices": "Servicios web"
     }
 }
