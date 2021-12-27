@@ -8,8 +8,8 @@ import {
   DescriptionListTerm,
   DescriptionListDescription,
 } from "@patternfly/react-core";
+import { ResolvedQueries } from "@konveyor/lib-ui";
 
-import { ResolvedQueries, QuerySpinnerMode } from "shared/components";
 import { usePausedPollingEffect } from "shared/context";
 
 import { UnknownResult } from "api/models";
@@ -17,14 +17,15 @@ import { NamespaceWizardFormState } from "./add-namespace-wizard";
 
 interface IReviewProps {
   forms: NamespaceWizardFormState;
-  allMutationResults: UnknownResult[];
-  allMutationErrorTitles: string[];
+  allMutationResultsWithErrorTitles: {
+    result: UnknownResult;
+    errorTitle: string;
+  }[];
 }
 
 export const Review: React.FunctionComponent<IReviewProps> = ({
   forms,
-  allMutationResults,
-  allMutationErrorTitles,
+  allMutationResultsWithErrorTitles,
 }: IReviewProps) => {
   usePausedPollingEffect();
 
@@ -85,9 +86,8 @@ export const Review: React.FunctionComponent<IReviewProps> = ({
         </DescriptionListGroup>
 
         <ResolvedQueries
-          results={allMutationResults}
-          errorTitles={allMutationErrorTitles}
-          spinnerMode={QuerySpinnerMode.Inline}
+          resultsWithErrorTitles={allMutationResultsWithErrorTitles}
+          spinnerMode="inline"
         />
       </DescriptionList>
     </Form>
