@@ -102,9 +102,6 @@ export const AddNamespaceWizard: React.FC<IAddNamespaceWizardProps> = ({
   const stepIdReached: StepId =
     firstInvalidFormIndex === -1 ? StepId.Review : firstInvalidFormIndex;
 
-  const allMutationResults = [createNamespaceMutation];
-  const allMutationErrorTitles = ["Can not create namespace"];
-
   const steps: WizardStep[] = [
     {
       id: StepId.General,
@@ -157,8 +154,12 @@ export const AddNamespaceWizard: React.FC<IAddNamespaceWizardProps> = ({
         <WizardStepContainer title={t("terms.review")}>
           <Review
             forms={forms}
-            allMutationResults={allMutationResults}
-            allMutationErrorTitles={allMutationErrorTitles}
+            allMutationResultsWithErrorTitles={[
+              {
+                result: createNamespaceMutation,
+                errorTitle: "Can not create namespace",
+              },
+            ]}
           />
         </WizardStepContainer>
       ),

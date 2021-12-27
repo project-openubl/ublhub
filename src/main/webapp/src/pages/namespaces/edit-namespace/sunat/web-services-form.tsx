@@ -15,10 +15,9 @@ import {
   useFormField,
   useFormState,
   ValidatedTextInput,
+  ResolvedQueries,
 } from "@konveyor/lib-ui";
 import { SimplePlaceholder } from "@project-openubl/lib-ui";
-
-import { QuerySpinnerMode, ResolvedQueries } from "shared/components";
 
 import {
   useNamespacesQuery,
@@ -102,9 +101,6 @@ export const WebServicesForm: React.FunctionComponent<IWebServicesFormProps> =
       namespaceBeingPrefilled
     );
 
-    const allMutationResults = [mutateNamespace];
-    const allMutationErrorTitles = ["Can not update namespace"];
-
     const onSave = () => {
       mutateNamespace.mutate({
         ...namespaceBeingPrefilled!,
@@ -118,8 +114,9 @@ export const WebServicesForm: React.FunctionComponent<IWebServicesFormProps> =
 
     return (
       <ResolvedQueries
-        results={[namespacesQuery]}
-        errorTitles={["Cannot load namespaces"]}
+        resultsWithErrorTitles={[
+          { result: namespacesQuery, errorTitle: "Cannot load namespaces" },
+        ]}
         errorsInline={false}
         className={spacing.mMd}
         emptyStateBody={LONG_LOADING_MESSAGE}
@@ -151,9 +148,13 @@ export const WebServicesForm: React.FunctionComponent<IWebServicesFormProps> =
                 />
 
                 <ResolvedQueries
-                  results={allMutationResults}
-                  errorTitles={allMutationErrorTitles}
-                  spinnerMode={QuerySpinnerMode.Inline}
+                  resultsWithErrorTitles={[
+                    {
+                      result: mutateNamespace,
+                      errorTitle: "Can not update namespace",
+                    },
+                  ]}
+                  spinnerMode="inline"
                 />
                 <ActionGroup>
                   <Button

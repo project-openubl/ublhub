@@ -10,7 +10,7 @@ import {
 } from "@patternfly/react-core";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
-import { ResolvedQueries } from "shared/components";
+import { ResolvedQueries } from "@konveyor/lib-ui";
 
 import { useNamespacesQuery } from "queries/namespaces";
 import { LONG_LOADING_MESSAGE } from "queries/constants";
@@ -27,8 +27,9 @@ export const Overview: React.FC = () => {
 
   return (
     <ResolvedQueries
-      results={[namespacesQuery]}
-      errorTitles={["Cannot load namespaces"]}
+      resultsWithErrorTitles={[
+        { result: namespacesQuery, errorTitle: "Cannot load namespaces" },
+      ]}
       errorsInline={false}
       className={spacing.mMd}
       emptyStateBody={LONG_LOADING_MESSAGE}
