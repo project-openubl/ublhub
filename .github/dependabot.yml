@@ -16,3 +16,15 @@ updates:
     commit-message:
       prefix: "Maven pom.xml"
       include: "scope"
+  # Maintain dependencies from package.json
+  - package-ecosystem: "npm"
+    directory: "/src/main/webapp"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-name: "@patternfly/*"
+        dependency-type: "direct"
+      - dependency-name: "@cypress/*"
+        dependency-type: "direct"
+      - dependency-name: "cypress*"
+        dependency-type: "direct"
