@@ -121,7 +121,7 @@ export const getNamespaceNameSchema = (
     .max(250)
     .test(
       "unique-name",
-      "Un namespace con el mismo nombre ya existe",
+      "A namespace with this name already exists",
       (value) => {
         if (namespaceBeingPrefilled?.name === value) {
           return true;

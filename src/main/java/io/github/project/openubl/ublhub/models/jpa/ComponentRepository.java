@@ -160,8 +160,12 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                 );
     }
 
-    public Uni<ComponentModel> getComponent(String id) {
-        return ComponentEntity.<ComponentEntity>findById(id)
+    public Uni<ComponentModel> getComponent(NamespaceEntity namespace, String id) {
+        return ComponentEntity
+                .<ComponentEntity>find("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs WHERE c.namespace.id = :namespaceId and c.id = :id",
+                        Parameters.with("namespaceId", namespace.id).and("id", id)
+                )
+                .singleResult()
                 .map(entity -> entity != null ? entityToModel(entity) : null);
     }
 
