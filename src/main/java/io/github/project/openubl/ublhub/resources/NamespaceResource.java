@@ -21,6 +21,7 @@ import io.github.project.openubl.ublhub.idm.NamespaceRepresentation;
 import io.github.project.openubl.ublhub.idm.PageRepresentation;
 import io.github.project.openubl.ublhub.keys.DefaultKeyProviders;
 import io.github.project.openubl.ublhub.keys.KeyManager;
+import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.component.utils.ComponentUtil;
 import io.github.project.openubl.ublhub.models.PageBean;
 import io.github.project.openubl.ublhub.models.SortBean;
@@ -30,6 +31,7 @@ import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.SunatEntity;
 import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.models.utils.RepresentationToEntity;
+import io.github.project.openubl.ublhub.models.utils.RepresentationToModel;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
@@ -38,6 +40,7 @@ import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 import org.keycloak.common.util.PemUtils;
 import org.keycloak.crypto.KeyWrapper;
+import org.keycloak.representations.idm.ComponentRepresentation;
 import org.keycloak.representations.idm.KeysMetadataRepresentation;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -233,6 +236,75 @@ public class NamespaceResource {
                 .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
     }
 
+    @POST
+    @Path("/{namespaceId}/components")
+    public Uni<Response> createComponent(
+            @PathParam("namespaceId") @NotNull String namespaceId,
+            ComponentRepresentation rep
+    ) {
+        return Panache
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
+                        .onItem().ifNotNull().transformToUni(namespace -> {
+                            ComponentModel model = RepresentationToModel.toModel(rep);
+                            model.setId(null);
+                            return componentRepository.addComponentModel(namespace, model);
+                        })
+                        .map(entity -> Response.status(Response.Status.CREATED).build())
+                )
+                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
+    }
+
+    @GET
+    @Path("/{namespaceId}/components/{componentId}")
+    public Uni<Response> getComponent(
+            @PathParam("namespaceId") @NotNull String namespaceId,
+            @PathParam("componentId") String componentId
+    ) {
+        return Panache
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
+                        .onItem().ifNotNull().transformToUni(namespace -> componentRepository.getComponent(namespace, componentId))
+                )
+                .onItem().ifNotNull().transform(componentModel -> Response.ok().entity(EntityToRepresentation.toRepresentation(componentModel, false, componentUtil)).build())
+                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
+    }
+
+    @PUT
+    @Path("/{namespaceId}/components/{componentId}")
+    public Uni<Response> updateComponent(
+            @PathParam("namespaceId") @NotNull String namespaceId,
+            @PathParam("componentId") String componentId,
+            ComponentRepresentation rep
+    ) {
+        return Panache
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
+                        .onItem().ifNotNull().transformToUni(namespace -> componentRepository.getComponent(namespace, componentId)
+                                .chain(componentModel -> {
+                                    RepresentationToModel.updateComponent(rep, componentModel, false, componentUtil);
+                                    return componentRepository
+                                            .updateComponent(namespace, componentModel)
+                                            .chain(() -> componentRepository.getComponent(namespace, componentId));
+                                })
+                        )
+                        .map(componentModel -> Response.ok().entity(EntityToRepresentation.toRepresentation(componentModel, false, componentUtil)).build())
+                )
+                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
+    }
+
+    @DELETE
+    @Path("/{namespaceId}/components/{componentId}")
+    public Uni<Response> removeComponent(
+            @PathParam("namespaceId") @NotNull String namespaceId,
+            @PathParam("componentId") String componentId
+    ) {
+        return Panache
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
+                        .onItem().ifNotNull().transformToUni(namespace -> componentRepository.getComponent(namespace, componentId)
+                                .chain(componentModel -> componentRepository.removeComponent(componentModel))
+                        )
+                        .map((result) -> Response.ok().build())
+                )
+                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
+    }
 }
 
 

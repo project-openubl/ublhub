@@ -108,11 +108,11 @@ export const NamespacesList: React.FC = () => {
   } = useTableControls({ sortBy: { index: 0, direction: "asc" } });
 
   //
-  const namespaces = useNamespacesQuery();
-  const deleteNamespace = useDeleteNamespaceMutation();
+  const namespacesQuery = useNamespacesQuery();
+  const deleteNamespaceMutation = useDeleteNamespaceMutation();
 
   const { pageItems, filteredItems } = useTable<Namespace>({
-    items: namespaces.data || [],
+    items: namespacesQuery.data || [],
     currentPage: currentPage,
     currentSortBy: currentSortBy,
     compareToByColumn: compareByColumnIndex,
@@ -157,7 +157,7 @@ export const NamespacesList: React.FC = () => {
           cancelBtnLabel: t("actions.cancel"),
           onConfirm: () => {
             confirmationModal.enableProcessing();
-            deleteNamespace
+            deleteNamespaceMutation
               .mutateAsync(row)
               .catch((error) => {
                 dispatch(
@@ -198,9 +198,9 @@ export const NamespacesList: React.FC = () => {
           cells={columns}
           actions={actions}
           // Fech data
-          isLoading={namespaces.isLoading}
+          isLoading={namespacesQuery.isLoading}
           loadingVariant="skeleton"
-          fetchError={namespaces.isError}
+          fetchError={namespacesQuery.isError}
           // Toolbar filters
           filtersApplied={filterText.trim().length > 0}
           toolbarToggle={
@@ -216,7 +216,7 @@ export const NamespacesList: React.FC = () => {
                 <Button
                   type="button"
                   aria-label="new-namespace"
-                  variant={ButtonVariant.primary}
+                  variant={ButtonVariant.secondary}
                   onClick={() => namespaceModal.open("add")}
                 >
                   {t("actions.create-object", { what: "namespace" })}

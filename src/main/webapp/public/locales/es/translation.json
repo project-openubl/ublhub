@@ -6,6 +6,7 @@
         "create-object": "Crear {{what}}",
         "delete": "Eliminar",
         "edit": "Editar",
+        "edit-object": "Editar {{what}}",
         "next": "Siguiente",
         "save": "Guardar"
     },
@@ -17,14 +18,20 @@
     },
     "terms": {
         "actions": "Acciones",
+        "algorithm": "Algoritmo",
         "companies": "Empresas",
         "credentials": "Credenciales",
         "description": "Descripción",
         "general": "General",
         "keys": "Llaves",
+        "kid": "Kid",
         "name": "Nombre",
         "password": "Contraseña",
+        "priority": "Prioridad",
+        "provider": "Proveedor",
         "review": "Revisión",
+        "status": "Estado",
+        "type": "Tipo",
         "username": "Usuario",
         "webServices": "Servicios web"
     }
