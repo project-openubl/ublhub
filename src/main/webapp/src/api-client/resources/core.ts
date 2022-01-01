@@ -60,4 +60,5 @@ export enum CoreClusterResourceKind {
 export enum CoreNamespacedResourceKind {
   Key = "keys",
   Component = "components",
+  DocumentPreview = "documents/preview",
 }

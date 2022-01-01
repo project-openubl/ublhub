@@ -1,6 +1,7 @@
 export * from "./add-namespace-wizard";
 export * from "./formik-select";
 export * from "./layout";
+export * from "./namespace-context-selector";
 export * from "./page-header";
 export * from "./search-input";
 export * from "./simple-page-section";

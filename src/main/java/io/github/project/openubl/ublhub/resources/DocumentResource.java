@@ -17,6 +17,7 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
+import io.github.project.openubl.ublhub.idgenerator.IDGeneratorType;
 import io.github.project.openubl.xmlbuilderlib.clock.SystemClock;
 import io.github.project.openubl.xmlbuilderlib.config.Config;
 import io.github.project.openubl.xmlbuilderlib.facade.DocumentManager;
@@ -49,6 +50,7 @@ import io.github.project.openubl.ublhub.scheduler.SchedulerManager;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniAndGroup2;
+import io.vertx.core.json.JsonObject;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.MultipartForm;
 import org.keycloak.crypto.Algorithm;
@@ -64,9 +66,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Path("/namespaces")
 @Produces("application/json")
@@ -105,39 +105,46 @@ public class DocumentResource {
     @Inject
     KeyManager keystore;
 
-    public Uni<String> createXMLString(NamespaceEntity namespace, InputTemplateRepresentation inputTemplate) {
+    public Uni<String> createXMLString(NamespaceEntity namespace, InputTemplateRepresentation inputTemplate, JsonObject document) {
         KindRepresentation kind = inputTemplate.getKind();
         SpecRepresentation spec = inputTemplate.getSpec();
 
-        IDGenerator idGenerator = igGeneratorManager.selectIDGenerator(spec.getIdGenerator().getName());
+        IDGeneratorType idGeneratorType = IDGeneratorType.none;
+        Map<String, String> idGeneratorConfig = Collections.emptyMap();
+        if (spec.getIdGenerator() != null) {
+            idGeneratorType = spec.getIdGenerator().getName();
+            idGeneratorConfig = spec.getIdGenerator().getConfig();
+        }
+        
+        IDGenerator idGenerator = igGeneratorManager.selectIDGenerator(idGeneratorType);
         switch (kind) {
             case Invoice:
-                InvoiceInputModel invoice = inputTemplate.getSpec().getDocument().mapTo(InvoiceInputModel.class);
+                InvoiceInputModel invoice = document.mapTo(InvoiceInputModel.class);
                 invoice.setSerie("F001");
                 invoice.setNumero(1);
 
                 return idGenerator
-                        .enrichWithID(namespace, invoice, inputTemplate.getSpec().getIdGenerator().getConfig())
+                        .enrichWithID(namespace, invoice, idGeneratorConfig)
                         .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             case CreditNote:
-                CreditNoteInputModel creditNote = inputTemplate.getSpec().getDocument().mapTo(CreditNoteInputModel.class);
+                CreditNoteInputModel creditNote = document.mapTo(CreditNoteInputModel.class);
                 return idGenerator
-                        .enrichWithID(namespace, creditNote, inputTemplate.getSpec().getIdGenerator().getConfig())
+                        .enrichWithID(namespace, creditNote, idGeneratorConfig)
                         .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             case DebitNote:
-                DebitNoteInputModel debitNote = inputTemplate.getSpec().getDocument().mapTo(DebitNoteInputModel.class);
+                DebitNoteInputModel debitNote = document.mapTo(DebitNoteInputModel.class);
                 return idGenerator
-                        .enrichWithID(namespace, debitNote, inputTemplate.getSpec().getIdGenerator().getConfig())
+                        .enrichWithID(namespace, debitNote, idGeneratorConfig)
                         .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             case VoidedDocument:
-                VoidedDocumentInputModel voidedDocument = inputTemplate.getSpec().getDocument().mapTo(VoidedDocumentInputModel.class);
+                VoidedDocumentInputModel voidedDocument = document.mapTo(VoidedDocumentInputModel.class);
                 return idGenerator
-                        .enrichWithID(namespace, voidedDocument, inputTemplate.getSpec().getIdGenerator().getConfig())
+                        .enrichWithID(namespace, voidedDocument, idGeneratorConfig)
                         .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             case SummaryDocument:
-                SummaryDocumentInputModel summaryDocument = inputTemplate.getSpec().getDocument().mapTo(SummaryDocumentInputModel.class);
+                SummaryDocumentInputModel summaryDocument = document.mapTo(SummaryDocumentInputModel.class);
                 return idGenerator
-                        .enrichWithID(namespace, summaryDocument, inputTemplate.getSpec().getIdGenerator().getConfig())
+                        .enrichWithID(namespace, summaryDocument, idGeneratorConfig)
                         .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             default:
                 throw new IllegalStateException("Kind:" + kind + " not supported");
@@ -175,11 +182,13 @@ public class DocumentResource {
     @Path("/{namespaceId}/documents")
     public Uni<Response> createDocument(
             @PathParam("namespaceId") @NotNull String namespaceId,
-            @NotNull @Valid InputTemplateRepresentation inputTemplate
+            @NotNull JsonObject jsonObject
     ) {
+        InputTemplateRepresentation inputTemplate = jsonObject.mapTo(InputTemplateRepresentation.class);
+        JsonObject documentJsonObject = jsonObject.getJsonObject("spec").getJsonObject("document");
         return Panache
                 .withTransaction(() -> namespaceRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespaceEntity -> createXMLString(namespaceEntity, inputTemplate)
+                        .onItem().ifNotNull().transformToUni(namespaceEntity -> createXMLString(namespaceEntity, inputTemplate, documentJsonObject)
                                 .chain(xmlString -> keystore
                                         .getActiveKey(namespaceEntity, KeyUse.SIG, inputTemplate.getSpec().getSignature() != null ? inputTemplate.getSpec().getSignature().getAlgorithm() : Algorithm.RS256)
                                         .map(key -> {
@@ -224,6 +233,61 @@ public class DocumentResource {
                 );
     }
 
+    @POST
+    @Path("/{namespaceId}/documents/preview")
+    public Uni<Response> createDocumentPreview(
+            @PathParam("namespaceId") @NotNull String namespaceId,
+            @NotNull JsonObject jsonObject
+    ) {
+        InputTemplateRepresentation inputTemplate = jsonObject.mapTo(InputTemplateRepresentation.class);
+        JsonObject documentJsonObject = jsonObject.getJsonObject("spec").getJsonObject("document");
+        return Panache
+                .withTransaction(() -> namespaceRepository.findById(namespaceId)
+                        .onItem().ifNotNull().transformToUni(namespaceEntity -> createXMLString(namespaceEntity, inputTemplate, documentJsonObject)
+                                .chain(xmlString -> keystore
+                                        .getActiveKey(namespaceEntity, KeyUse.SIG, inputTemplate.getSpec().getSignature() != null ? inputTemplate.getSpec().getSignature().getAlgorithm() : Algorithm.RS256)
+                                        .map(key -> {
+                                            KeyManager.ActiveRsaKey activeRsaKey = new KeyManager.ActiveRsaKey(key.getKid(), (PrivateKey) key.getPrivateKey(), (PublicKey) key.getPublicKey(), key.getCertificate());
+                                            try {
+                                                return XMLSigner.signXML(xmlString, "OPENUBL", activeRsaKey.getCertificate(), activeRsaKey.getPrivateKey());
+                                            } catch (Exception e) {
+                                                throw new IllegalStateException(e);
+                                            }
+                                        })
+                                )
+
+                                // Save file
+                                .chain(document -> {
+                                    try {
+                                        byte[] bytes = XmlSignatureHelper.getBytesFromDocument(document);
+                                        return filesMutiny.createFile(bytes, true);
+                                    } catch (Exception e) {
+                                        throw new IllegalStateException(e);
+                                    }
+                                })
+
+                                // Link the file Entity
+                                .chain(fileSavedId -> createDocumentFromFileID(namespaceEntity, fileSavedId))
+
+                                // Response
+                                .map(documentEntity -> Response
+                                        .status(Response.Status.CREATED)
+                                        .entity(EntityToRepresentation.toRepresentation(documentEntity))
+                                        .build()
+                                )
+                        )
+
+                        .onItem().ifNull().continueWith(Response.ok()
+                                .status(Response.Status.NOT_FOUND)::build
+                        )
+
+                        .onFailure(throwable -> throwable instanceof ConstraintViolationException).recoverWithItem(throwable -> Response
+                                .status(Response.Status.BAD_REQUEST)
+                                .entity(throwable.getMessage()).build()
+                        )
+                );
+    }
+    
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
