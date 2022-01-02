@@ -32,9 +32,6 @@ export const InputData: InputTemplate[] = [
     input: {
       kind: "Invoice",
       spec: {
-        signature: {
-          algorithm: "RSA256",
-        },
         document: {
           serie: "F001",
           numero: 1,
@@ -45,7 +42,7 @@ export const InputData: InputTemplate[] = [
           cliente: {
             nombre: "Nombre de mi cliente",
             numeroDocumentoIdentidad: "12121212121",
-            tipoDocumentoIdentidad: "ruc",
+            tipoDocumentoIdentidad: "RUC",
           },
           detalle: [
             {
@@ -72,14 +69,11 @@ export const InputData: InputTemplate[] = [
     input: {
       kind: "CreditNote",
       spec: {
-        signature: {
-          algorithm: "RSA256",
-        },
         document: {
           serie: "FC01",
           numero: 1,
           serieNumeroComprobanteAfectado: "F001-1",
-          descripcionSustento: "Sustento de nota",
+          descripcionSustentoDeNota: "Sustento de nota",
           proveedor: {
             ruc: "12345678912",
             razonSocial: "Mi razón social S.A.C.",
@@ -87,7 +81,7 @@ export const InputData: InputTemplate[] = [
           cliente: {
             nombre: "Nombre de mi cliente",
             numeroDocumentoIdentidad: "12121212121",
-            tipoDocumentoIdentidad: "ruc",
+            tipoDocumentoIdentidad: "RUC",
           },
           detalle: [
             {
@@ -114,14 +108,11 @@ export const InputData: InputTemplate[] = [
     input: {
       kind: "DebitNote",
       spec: {
-        signature: {
-          algorithm: "RSA256",
-        },
         document: {
           serie: "FD01",
           numero: 1,
           serieNumeroComprobanteAfectado: "F001-1",
-          descripcionSustento: "Sustento de nota",
+          descripcionSustentoDeNota: "Sustento de nota",
           proveedor: {
             ruc: "12345678912",
             razonSocial: "Mi razón social S.A.C.",
@@ -129,7 +120,7 @@ export const InputData: InputTemplate[] = [
           cliente: {
             nombre: "Nombre de mi cliente",
             numeroDocumentoIdentidad: "12121212121",
-            tipoDocumentoIdentidad: "ruc",
+            tipoDocumentoIdentidad: "RUC",
           },
           detalle: [
             {

@@ -1,7 +1,8 @@
 import React, { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import Measure from "react-measure";
 import { dump, load } from "js-yaml";
+import * as prettier from "prettier/standalone";
+import * as prettierXmlPlugin from "@prettier/plugin-xml";
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
 
 import {
@@ -21,21 +22,22 @@ import {
   TabTitleText,
 } from "@patternfly/react-core";
 import { CodeIcon, EyeIcon } from "@patternfly/react-icons";
-import { CodeEditor, Language } from "@patternfly/react-code-editor";
+import { Language } from "@patternfly/react-code-editor";
 
 import {
   BreadCrumbPath,
   NamespaceContextSelector,
   SimplePageSection,
   useNamespaceContext,
+  YAMLEditor,
 } from "shared/components";
 
 import { documentsPath, INamespaceParams } from "Paths";
 import { Templates } from "./templates";
-import { PreviewXML } from "./preview-xml";
 import { usePreviewDocumentMutation } from "queries/documents";
 import { useParams } from "react-router-dom";
 import { Input } from "api/ublhub";
+import { ResolvedQuery } from "@konveyor/lib-ui";
 
 enum MainTab {
   EditFile,
@@ -53,12 +55,11 @@ export const CreateDocument: React.FC = () => {
   const { t } = useTranslation();
 
   const routeParams = useParams<INamespaceParams>();
-  const prefillNamespaceId = routeParams.namespaceId;
+  const namespaceId = routeParams.namespaceId;
 
-  const previewDocumentMutation =
-    usePreviewDocumentMutation(prefillNamespaceId);
+  const previewDocumentMutation = usePreviewDocumentMutation(namespaceId);
 
-  //
+  // Context
   const namespaceContext = useNamespaceContext();
 
   // Editor
@@ -68,16 +69,10 @@ export const CreateDocument: React.FC = () => {
   const [initialEditorValue, setInitialEditorValue] =
     useState(defaultEditorValue);
 
-  const onEditorDidMount = (
-    editor: monacoEditor.editor.IStandaloneCodeEditor,
-    monaco: typeof monacoEditor
+  const onEditorDidMountAndSetup = (
+    editor: monacoEditor.editor.IStandaloneCodeEditor
   ) => {
     editorRef.current = editor;
-
-    editor.layout();
-    editor.focus();
-
-    monaco.editor.getModels()[0].updateOptions({ tabSize: 2 });
   };
 
   const getEditorValue = useCallback(() => {
@@ -86,9 +81,18 @@ export const CreateDocument: React.FC = () => {
 
   // Tabs
   const [activeMainTab, setActiveMainTab] = useState(MainTab.EditFile);
+  const onTabChange = (
+    event: React.MouseEvent<HTMLElement, MouseEvent>,
+    eventKey: number | string
+  ) => {
+    const newTab = eventKey as MainTab;
+    setActiveMainTab(newTab);
+    if (newTab !== MainTab.EditFile) {
+      createPreview();
+    }
+  };
 
   // Input
-
   const createPreview = () => {
     const object = load(getEditorValue() || "");
     previewDocumentMutation.mutate(object as Input);
@@ -107,118 +111,108 @@ export const CreateDocument: React.FC = () => {
           ]}
         />
       </PageSection>
-      <SimplePageSection
-        title="Crear documento"
-        description="Create by manually entering YAML or JSON definitions, or  by dragging and dropping a file into the editor."
-      />
+      <SimplePageSection title="Crear documento" />
       <PageSection>
-        <Grid style={{ height: "100%" }}>
-          <GridItem md={8}>
-            <Card isFullHeight isCompact>
-              <Measure bounds>
-                {({ measureRef, contentRect }) => {
-                  return (
-                    <div className="pf-c-card__body" ref={measureRef}>
-                      <Stack hasGutter>
-                        <StackItem isFilled>
-                          <Tabs
-                            activeKey={activeMainTab}
-                            onSelect={(_, tabIndex) => {
-                              setActiveMainTab(tabIndex as MainTab);
-                              createPreview();
-                            }}
+        <Stack hasGutter>
+          <StackItem isFilled>
+            <Grid style={{ height: "100%" }}>
+              <GridItem md={8}>
+                <Card isFullHeight isCompact>
+                  <CardBody>
+                    <Tabs activeKey={activeMainTab} onSelect={onTabChange}>
+                      <Tab
+                        eventKey={MainTab.EditFile}
+                        title={
+                          <>
+                            <TabTitleIcon>
+                              <CodeIcon />
+                            </TabTitleIcon>{" "}
+                            <TabTitleText>Editar archivo</TabTitleText>{" "}
+                          </>
+                        }
+                        className="yaml-wrapper"
+                      >
+                        <TabContentBody className="yaml-editor">
+                          <YAMLEditor
+                            value={initialEditorValue}
+                            onEditorDidMountAndSetup={onEditorDidMountAndSetup}
+                          />
+                        </TabContentBody>
+                      </Tab>
+                      <Tab
+                        eventKey={MainTab.PreviewChanges}
+                        title={
+                          <>
+                            <TabTitleIcon>
+                              <EyeIcon />
+                            </TabTitleIcon>{" "}
+                            <TabTitleText>Previsualizar cambios</TabTitleText>{" "}
+                          </>
+                        }
+                        className="yaml-wrapper"
+                      >
+                        <TabContentBody className="yaml-editor">
+                          <ResolvedQuery
+                            result={previewDocumentMutation}
+                            errorTitle="Could not create preview"
                           >
-                            <Tab
-                              eventKey={MainTab.EditFile}
-                              title={
-                                <>
-                                  <TabTitleIcon>
-                                    <CodeIcon />
-                                  </TabTitleIcon>{" "}
-                                  <TabTitleText>Edit file</TabTitleText>{" "}
-                                </>
-                              }
-                            >
-                              <br />
-                              <CodeEditor
-                                isDarkTheme
-                                isMinimapVisible
-                                isLineNumbersVisible
-                                isLanguageLabelVisible
-                                isUploadEnabled
-                                isDownloadEnabled
-                                isCopyEnabled
-                                code={initialEditorValue}
-                                language={Language.yaml}
-                                onEditorDidMount={onEditorDidMount}
-                                // Height is equal to Card heigth - (padding applied to content)
-                                height={
-                                  (contentRect.bounds?.height || 0) - 200 + "px"
-                                }
-                                customControls={[]}
-                              />
-                            </Tab>
-                            <Tab
-                              eventKey={MainTab.PreviewChanges}
-                              title={
-                                <>
-                                  <TabTitleIcon>
-                                    <EyeIcon />
-                                  </TabTitleIcon>{" "}
-                                  <TabTitleText>Preview changes</TabTitleText>{" "}
-                                </>
-                              }
-                            >
-                              <PreviewXML
-                                value={previewDocumentMutation.data}
-                              />
-                            </Tab>
-                          </Tabs>
-                        </StackItem>
-                        <StackItem>
-                          <ActionGroup>
-                            <Button
-                              variant="primary"
-                              onClick={() => {
-                                console.log(
-                                  (editorRef.current as any).getValue()
-                                );
+                            <YAMLEditor
+                              value={prettier.format(
+                                previewDocumentMutation.data || "",
+                                {
+                                  parser: "xml",
+                                  plugins: [prettierXmlPlugin],
+                                  xmlWhitespaceSensitivity: "ignore",
+                                } as any
+                              )}
+                              codeEditorProps={{
+                                isReadOnly: true,
+                                language: Language.xml,
+                                isUploadEnabled: false,
                               }}
-                            >
-                              {t("actions.save")}
-                            </Button>
-                            <Button variant="link">
-                              {t("actions.cancel")}
-                            </Button>
-                          </ActionGroup>
-                        </StackItem>
-                      </Stack>
-                    </div>
-                  );
-                }}
-              </Measure>
-            </Card>
-          </GridItem>
+                            />
+                          </ResolvedQuery>
+                        </TabContentBody>
+                      </Tab>
+                    </Tabs>
+                  </CardBody>
+                </Card>
+              </GridItem>
 
-          <GridItem md={4}>
-            <Card isFullHeight isCompact>
-              <CardBody>
-                <Tabs defaultActiveKey={0}>
-                  <Tab eventKey={0} title="Marketplace">
-                    <TabContentBody>
-                      <Templates
-                        onSelect={(input) => {
-                          const yaml = dump(input);
-                          setInitialEditorValue(yaml);
-                        }}
-                      />
-                    </TabContentBody>
-                  </Tab>
-                </Tabs>
-              </CardBody>
-            </Card>
-          </GridItem>
-        </Grid>
+              <GridItem md={4}>
+                <Card isFullHeight isCompact>
+                  <CardBody>
+                    <Tabs defaultActiveKey={0}>
+                      <Tab eventKey={0} title="Marketplace">
+                        <TabContentBody>
+                          <Templates
+                            onSelect={(input) => {
+                              const yaml = dump(input);
+                              setInitialEditorValue(yaml);
+                            }}
+                          />
+                        </TabContentBody>
+                      </Tab>
+                    </Tabs>
+                  </CardBody>
+                </Card>
+              </GridItem>
+            </Grid>
+          </StackItem>
+          <StackItem>
+            <ActionGroup>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  console.log((editorRef.current as any).getValue());
+                }}
+              >
+                {t("actions.save")}
+              </Button>
+              <Button variant="link">{t("actions.cancel")}</Button>
+            </ActionGroup>
+          </StackItem>
+        </Stack>
       </PageSection>
     </NamespaceContextSelector>
   );

@@ -244,35 +244,10 @@ public class DocumentResource {
         return Panache
                 .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespaceEntity -> createXMLString(namespaceEntity, inputTemplate, documentJsonObject)
-                                .chain(xmlString -> keystore
-                                        .getActiveKey(namespaceEntity, KeyUse.SIG, inputTemplate.getSpec().getSignature() != null ? inputTemplate.getSpec().getSignature().getAlgorithm() : Algorithm.RS256)
-                                        .map(key -> {
-                                            KeyManager.ActiveRsaKey activeRsaKey = new KeyManager.ActiveRsaKey(key.getKid(), (PrivateKey) key.getPrivateKey(), (PublicKey) key.getPublicKey(), key.getCertificate());
-                                            try {
-                                                return XMLSigner.signXML(xmlString, "OPENUBL", activeRsaKey.getCertificate(), activeRsaKey.getPrivateKey());
-                                            } catch (Exception e) {
-                                                throw new IllegalStateException(e);
-                                            }
-                                        })
-                                )
-
-                                // Save file
-                                .chain(document -> {
-                                    try {
-                                        byte[] bytes = XmlSignatureHelper.getBytesFromDocument(document);
-                                        return filesMutiny.createFile(bytes, true);
-                                    } catch (Exception e) {
-                                        throw new IllegalStateException(e);
-                                    }
-                                })
-
-                                // Link the file Entity
-                                .chain(fileSavedId -> createDocumentFromFileID(namespaceEntity, fileSavedId))
-
                                 // Response
-                                .map(documentEntity -> Response
-                                        .status(Response.Status.CREATED)
-                                        .entity(EntityToRepresentation.toRepresentation(documentEntity))
+                                .map(xmlString -> Response
+                                        .status(Response.Status.OK)
+                                        .entity(xmlString)
                                         .build()
                                 )
                         )

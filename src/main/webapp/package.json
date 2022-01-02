@@ -75,6 +75,7 @@
   "devDependencies": {
     "@cypress/code-coverage": "^3.9.12",
     "@cypress/instrument-cra": "^1.4.0",
+    "@prettier/plugin-xml": "^1.2.0",
     "@testing-library/react-hooks": "^7.0.2",
     "@types/enzyme": "^3.10.10",
     "@types/js-yaml": "^4.0.5",

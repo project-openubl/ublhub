@@ -7,3 +7,4 @@ export * from "./search-input";
 export * from "./simple-page-section";
 export * from "./version-status";
 export * from "./welcome";
+export * from "./yaml-editor";
