@@ -11,7 +11,7 @@ exports[`AppAboutModal 1`] = `
   noAboutModalBoxContentContainer={false}
   onClose={[MockFunction]}
   productName="Searchpe"
-  trademark="COPYRIGHT © 2021"
+  trademark="COPYRIGHT © 2022"
 >
   <Stack
     hasGutter={true}
