@@ -3,9 +3,10 @@ import { NavLink } from "react-router-dom";
 
 import { Nav, NavItem, PageSidebar, NavList } from "@patternfly/react-core";
 
+import { useNamespaceContext } from "shared/components";
+
 import { documentsPath, Paths } from "Paths";
 import { LayoutTheme } from "../LayoutUtils";
-import { useNamespaceContext } from "shared/components";
 
 export const SidebarApp: React.FC = () => {
   const namespaceContext = useNamespaceContext();
