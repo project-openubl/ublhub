@@ -105,7 +105,7 @@ public class DocumentResource {
     @Inject
     KeyManager keystore;
 
-    public Uni<String> createXMLString(NamespaceEntity namespace, InputTemplateRepresentation inputTemplate, JsonObject document) {
+    public Uni<String> createXMLString(NamespaceEntity namespace, InputTemplateRepresentation inputTemplate, JsonObject document, boolean isPreview) {
         KindRepresentation kind = inputTemplate.getKind();
         SpecRepresentation spec = inputTemplate.getSpec();
 
@@ -120,31 +120,29 @@ public class DocumentResource {
         switch (kind) {
             case Invoice:
                 InvoiceInputModel invoice = document.mapTo(InvoiceInputModel.class);
-                invoice.setSerie("F001");
-                invoice.setNumero(1);
 
                 return idGenerator
-                        .enrichWithID(namespace, invoice, idGeneratorConfig)
+                        .enrichWithID(namespace, invoice, idGeneratorConfig, isPreview)
                         .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             case CreditNote:
                 CreditNoteInputModel creditNote = document.mapTo(CreditNoteInputModel.class);
                 return idGenerator
-                        .enrichWithID(namespace, creditNote, idGeneratorConfig)
+                        .enrichWithID(namespace, creditNote, idGeneratorConfig, isPreview)
                         .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             case DebitNote:
                 DebitNoteInputModel debitNote = document.mapTo(DebitNoteInputModel.class);
                 return idGenerator
-                        .enrichWithID(namespace, debitNote, idGeneratorConfig)
+                        .enrichWithID(namespace, debitNote, idGeneratorConfig, isPreview)
                         .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             case VoidedDocument:
                 VoidedDocumentInputModel voidedDocument = document.mapTo(VoidedDocumentInputModel.class);
                 return idGenerator
-                        .enrichWithID(namespace, voidedDocument, idGeneratorConfig)
+                        .enrichWithID(namespace, voidedDocument, idGeneratorConfig, isPreview)
                         .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             case SummaryDocument:
                 SummaryDocumentInputModel summaryDocument = document.mapTo(SummaryDocumentInputModel.class);
                 return idGenerator
-                        .enrichWithID(namespace, summaryDocument, idGeneratorConfig)
+                        .enrichWithID(namespace, summaryDocument, idGeneratorConfig, isPreview)
                         .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
             default:
                 throw new IllegalStateException("Kind:" + kind + " not supported");
@@ -188,7 +186,7 @@ public class DocumentResource {
         JsonObject documentJsonObject = jsonObject.getJsonObject("spec").getJsonObject("document");
         return Panache
                 .withTransaction(() -> namespaceRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespaceEntity -> createXMLString(namespaceEntity, inputTemplate, documentJsonObject)
+                        .onItem().ifNotNull().transformToUni(namespaceEntity -> createXMLString(namespaceEntity, inputTemplate, documentJsonObject, false)
                                 .chain(xmlString -> keystore
                                         .getActiveKey(namespaceEntity, KeyUse.SIG, inputTemplate.getSpec().getSignature() != null ? inputTemplate.getSpec().getSignature().getAlgorithm() : Algorithm.RS256)
                                         .map(key -> {
@@ -243,7 +241,7 @@ public class DocumentResource {
         JsonObject documentJsonObject = jsonObject.getJsonObject("spec").getJsonObject("document");
         return Panache
                 .withTransaction(() -> namespaceRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespaceEntity -> createXMLString(namespaceEntity, inputTemplate, documentJsonObject)
+                        .onItem().ifNotNull().transformToUni(namespaceEntity -> createXMLString(namespaceEntity, inputTemplate, documentJsonObject, true)
                                 // Response
                                 .map(xmlString -> Response
                                         .status(Response.Status.OK)

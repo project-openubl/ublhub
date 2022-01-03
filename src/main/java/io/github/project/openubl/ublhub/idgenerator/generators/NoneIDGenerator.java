@@ -43,7 +43,7 @@ public class NoneIDGenerator implements IDGenerator {
     Validator validator;
 
     @Override
-    public Uni<InvoiceInputModel> enrichWithID(NamespaceEntity namespace, InvoiceInputModel invoice, Map<String, String> config) {
+    public Uni<InvoiceInputModel> enrichWithID(NamespaceEntity namespace, InvoiceInputModel invoice, Map<String, String> config, boolean isPreview) {
         return Uni.createFrom().item(invoice)
                 .map(input -> {
                     Set<ConstraintViolation<InvoiceInputModel>> violations = validator.validate(input);
@@ -56,7 +56,7 @@ public class NoneIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<CreditNoteInputModel> enrichWithID(NamespaceEntity namespace, CreditNoteInputModel creditNote, Map<String, String> config) {
+    public Uni<CreditNoteInputModel> enrichWithID(NamespaceEntity namespace, CreditNoteInputModel creditNote, Map<String, String> config, boolean isPreview) {
         return Uni.createFrom().item(creditNote)
                 .map(input -> {
                     Set<ConstraintViolation<CreditNoteInputModel>> violations = validator.validate(input);
@@ -69,7 +69,7 @@ public class NoneIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<DebitNoteInputModel> enrichWithID(NamespaceEntity namespace, DebitNoteInputModel debitNote, Map<String, String> config) {
+    public Uni<DebitNoteInputModel> enrichWithID(NamespaceEntity namespace, DebitNoteInputModel debitNote, Map<String, String> config, boolean isPreview) {
         return Uni.createFrom().item(debitNote)
                 .map(input -> {
                     Set<ConstraintViolation<DebitNoteInputModel>> violations = validator.validate(input);
@@ -82,7 +82,7 @@ public class NoneIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<VoidedDocumentInputModel> enrichWithID(NamespaceEntity namespace, VoidedDocumentInputModel voidedDocument, Map<String, String> config) {
+    public Uni<VoidedDocumentInputModel> enrichWithID(NamespaceEntity namespace, VoidedDocumentInputModel voidedDocument, Map<String, String> config, boolean isPreview) {
         return Uni.createFrom().item(voidedDocument)
                 .map(input -> {
                     Set<ConstraintViolation<VoidedDocumentInputModel>> violations = validator.validate(input);
@@ -95,7 +95,7 @@ public class NoneIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<SummaryDocumentInputModel> enrichWithID(NamespaceEntity namespace, SummaryDocumentInputModel summaryDocument, Map<String, String> config) {
+    public Uni<SummaryDocumentInputModel> enrichWithID(NamespaceEntity namespace, SummaryDocumentInputModel summaryDocument, Map<String, String> config, boolean isPreview) {
         return Uni.createFrom().item(summaryDocument)
                 .map(input -> {
                     Set<ConstraintViolation<SummaryDocumentInputModel>> violations = validator.validate(input);

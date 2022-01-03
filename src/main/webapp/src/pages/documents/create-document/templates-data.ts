@@ -33,7 +33,7 @@ export const InputData: InputTemplate[] = [
       kind: "Invoice",
       spec: {
         idGenerator: {
-          name: "generated",
+          name: "none",
         },
         document: {
           serie: "F001",
