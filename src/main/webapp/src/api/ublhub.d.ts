@@ -54,7 +54,7 @@ export interface InputSpec {
 
 export interface IDGenerator {
   name: "none" | "generated";
-  config: { [key: string]: string[] };
+  config?: { [key: string]: string[] };
 }
 
 export interface SignatureGenerator {

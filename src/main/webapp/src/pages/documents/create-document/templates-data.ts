@@ -32,6 +32,9 @@ export const InputData: InputTemplate[] = [
     input: {
       kind: "Invoice",
       spec: {
+        idGenerator: {
+          name: "generated",
+        },
         document: {
           serie: "F001",
           numero: 1,
@@ -69,6 +72,9 @@ export const InputData: InputTemplate[] = [
     input: {
       kind: "CreditNote",
       spec: {
+        idGenerator: {
+          name: "none",
+        },
         document: {
           serie: "FC01",
           numero: 1,
@@ -108,6 +114,9 @@ export const InputData: InputTemplate[] = [
     input: {
       kind: "DebitNote",
       spec: {
+        idGenerator: {
+          name: "none",
+        },
         document: {
           serie: "FD01",
           numero: 1,
