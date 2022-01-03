@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useHistory, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { dump, load } from "js-yaml";
 import * as prettier from "prettier/standalone";
@@ -24,6 +25,8 @@ import {
 import { CodeIcon, EyeIcon } from "@patternfly/react-icons";
 import { Language } from "@patternfly/react-code-editor";
 
+import { ResolvedQuery } from "@konveyor/lib-ui";
+
 import {
   BreadCrumbPath,
   NamespaceContextSelector,
@@ -32,12 +35,14 @@ import {
   YAMLEditor,
 } from "shared/components";
 
+import {
+  useCreateDocumentMutation,
+  usePreviewDocumentMutation,
+} from "queries/documents";
+
+import { Input } from "api/ublhub";
 import { documentsPath, INamespaceParams } from "Paths";
 import { Templates } from "./templates";
-import { usePreviewDocumentMutation } from "queries/documents";
-import { useParams } from "react-router-dom";
-import { Input } from "api/ublhub";
-import { ResolvedQuery } from "@konveyor/lib-ui";
 
 enum MainTab {
   EditFile,
@@ -54,10 +59,14 @@ const defaultEditorValue: string = dump({
 export const CreateDocument: React.FC = () => {
   const { t } = useTranslation();
 
+  const history = useHistory();
   const routeParams = useParams<INamespaceParams>();
   const namespaceId = routeParams.namespaceId;
 
   const previewDocumentMutation = usePreviewDocumentMutation(namespaceId);
+  const createDocumentMutation = useCreateDocumentMutation(namespaceId, () => {
+    history.push(documentsPath(namespaceId));
+  });
 
   // Context
   const namespaceContext = useNamespaceContext();
@@ -88,24 +97,38 @@ export const CreateDocument: React.FC = () => {
     const newTab = eventKey as MainTab;
     setActiveMainTab(newTab);
     if (newTab !== MainTab.EditFile) {
-      createPreview();
+      onCreatePreview();
     }
   };
 
   // Input
-  const createPreview = () => {
+  const getInput = () => {
     const object = load(getEditorValue() || "");
-    previewDocumentMutation.mutate(object as Input);
+    return object as Input;
+  };
+
+  const onCreatePreview = () => {
+    previewDocumentMutation.mutate(getInput());
+  };
+
+  const onSave = () => {
+    createDocumentMutation.mutate(getInput());
+  };
+
+  const onCancel = () => {
+    history.push(documentsPath(namespaceId));
   };
 
   return (
-    <NamespaceContextSelector redirect={documentsPath}>
+    <NamespaceContextSelector redirect={(ns) => documentsPath(ns.id)}>
       <PageSection variant="light" type="breadcrumb">
         <BreadCrumbPath
           breadcrumbs={[
             {
               title: "Documents",
-              path: namespaceContext ? documentsPath(namespaceContext) : "/",
+              path: namespaceContext
+                ? documentsPath(namespaceContext.id!)
+                : "/",
             },
             { title: t("actions.create"), path: "/" },
           ]}
@@ -200,16 +223,18 @@ export const CreateDocument: React.FC = () => {
             </Grid>
           </StackItem>
           <StackItem>
+            <ResolvedQuery
+              result={createDocumentMutation}
+              errorTitle="Could not create document"
+              spinnerMode="inline"
+            />
             <ActionGroup>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  console.log((editorRef.current as any).getValue());
-                }}
-              >
+              <Button variant="primary" onClick={onSave}>
                 {t("actions.save")}
               </Button>
-              <Button variant="link">{t("actions.cancel")}</Button>
+              <Button variant="link" onClick={onCancel}>
+                {t("actions.cancel")}
+              </Button>
             </ActionGroup>
           </StackItem>
         </Stack>

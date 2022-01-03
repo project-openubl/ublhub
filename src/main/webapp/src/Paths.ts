@@ -1,5 +1,3 @@
-import { Namespace } from "api/models";
-
 export const formatPath = (path: Paths, data: any) => {
   let url = path as string;
 
@@ -29,6 +27,6 @@ export interface INamespaceParams {
   namespaceId: string;
 }
 
-export const documentsPath = (namespace: Namespace) => {
-  return formatPath(Paths.documents_ns, { namespaceId: namespace.id });
+export const documentsPath = (namespaceId?: string) => {
+  return formatPath(Paths.documents_ns, { namespaceId });
 };

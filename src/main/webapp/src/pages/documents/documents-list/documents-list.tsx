@@ -41,9 +41,9 @@ export const DocumentsList: React.FC = () => {
   return (
     <>
       {documentsRouteMatch?.isExact && namespaceContext ? (
-        <Redirect to={documentsPath(namespaceContext)} />
+        <Redirect to={documentsPath(namespaceContext.id)} />
       ) : (
-        <NamespaceContextSelector redirect={documentsPath}>
+        <NamespaceContextSelector redirect={(ns) => documentsPath(ns.id)}>
           <SimplePageSection title="Documents" />
           <PageSection>
             <Card>

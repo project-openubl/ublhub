@@ -145,7 +145,7 @@ export const NamespaceContextSelector: React.FC<INamespaceContextSelectorProps> 
           <AddNamespaceWizard
             onSave={(ns) => {
               modal.close();
-              history.push(documentsPath(ns));
+              history.push(documentsPath(ns.id));
             }}
             onClose={modal.close}
           />

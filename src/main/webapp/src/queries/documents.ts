@@ -32,7 +32,7 @@ export const useCreateDocumentMutation = (
   onSuccess?: (document: UBLDocument) => void
 ): UseMutationResult<UBLDocument, ApiClientError, Input> => {
   const resource = new CoreNamespacedResource(
-    CoreNamespacedResourceKind.Component,
+    CoreNamespacedResourceKind.Document,
     namespaceId || ""
   );
 

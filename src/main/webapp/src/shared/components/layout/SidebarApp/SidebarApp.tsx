@@ -25,7 +25,7 @@ export const SidebarApp: React.FC = () => {
               to={
                 !namespaceContext
                   ? Paths.documents
-                  : documentsPath(namespaceContext)
+                  : documentsPath(namespaceContext.id)
               }
               activeClassName="pf-m-current"
             >
