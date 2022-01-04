@@ -51,7 +51,7 @@
         <awaitility.version>4.1.1</awaitility.version>
         <testcontainers.version>1.16.2</testcontainers.version>
 
-        <xbuilder-lib.version>1.2.1.Final</xbuilder-lib.version>
+        <xbuilder-lib.version>1.2.2.Final</xbuilder-lib.version>
         <xsender-lib.version>3.0.3.Final</xsender-lib.version>
 
         <keycloak.version>15.0.2</keycloak.version>
@@ -261,7 +261,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>5.7.2</version>
+            <version>5.8.2</version>
             <scope>test</scope>
         </dependency>
 
@@ -538,7 +538,7 @@
                     <plugin>
                         <groupId>io.fabric8</groupId>
                         <artifactId>docker-maven-plugin</artifactId>
-                        <version>0.38.0</version>
+                        <version>0.38.1</version>
                         <configuration>
                             <skip>${skipTests}</skip>
                             <images>
