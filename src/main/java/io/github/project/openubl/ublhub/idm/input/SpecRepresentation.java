@@ -30,7 +30,6 @@ public class SpecRepresentation {
     @Valid
     private SignatureGeneratorRepresentation signature;
 
-    @NotNull
     private JsonObject document;
 
     public IDGeneratorRepresentation getIdGenerator() {

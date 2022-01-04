@@ -17,4 +17,16 @@ export enum Paths {
   namespaces_edit_companies = "/namespaces/:namespaceId/commpanies",
   namespaces_edit_sunat = "/namespaces/:namespaceId/sunat",
   namespaces_edit_keys = "/namespaces/:namespaceId/keys",
+
+  documents = "/documents",
+  documents_ns = "/documents/ns/:namespaceId",
+  documents_ns_create = "/documents/ns/:namespaceId/~new",
 }
+
+export interface INamespaceParams {
+  namespaceId: string;
+}
+
+export const documentsPath = (namespaceId?: string) => {
+  return formatPath(Paths.documents_ns, { namespaceId });
+};

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { useTranslation, Trans } from "react-i18next";
 
 import {
@@ -92,11 +92,16 @@ export const filterByText = (filterText: string, item: Namespace) => {
 export const NamespacesList: React.FC = () => {
   const { t } = useTranslation();
 
+  const history = useHistory();
+
   const dispatch = useDispatch();
   const confirmationModal = useConfirmationContext();
 
   //
-  const namespaceModal = useModal<Namespace>();
+  enum ModalAction {
+    ADD,
+  }
+  const modal = useModal<ModalAction, Namespace>();
 
   //
   const [filterText, setFilterText] = useState("");
@@ -217,7 +222,7 @@ export const NamespacesList: React.FC = () => {
                   type="button"
                   aria-label="new-namespace"
                   variant={ButtonVariant.secondary}
-                  onClick={() => namespaceModal.open("add")}
+                  onClick={() => modal.open(ModalAction.ADD)}
                 >
                   {t("actions.create-object", { what: "namespace" })}
                 </Button>
@@ -227,8 +232,16 @@ export const NamespacesList: React.FC = () => {
         />
       </PageSection>
 
-      {namespaceModal.isOpen && namespaceModal.actionKey === "add" && (
-        <AddNamespaceWizard onClose={namespaceModal.close} />
+      {modal.isOpen && modal.isAction(ModalAction.ADD) && (
+        <AddNamespaceWizard
+          onSave={(ns) => {
+            modal.close();
+            history.push(
+              formatPath(Paths.namespaces_edit, { namespaceId: ns.id })
+            );
+          }}
+          onClose={modal.close}
+        />
       )}
     </>
   );

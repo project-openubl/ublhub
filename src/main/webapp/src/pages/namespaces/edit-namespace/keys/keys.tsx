@@ -145,7 +145,10 @@ export const Keys: React.FC = () => {
   const prefillNamespaceId = routeParams.namespaceId;
 
   //
-  const keyModal = useModal<ComponentRepresentation>();
+  enum ModalAction {
+    ADD_EDIT,
+  }
+  const modal = useModal<ModalAction, ComponentRepresentation>();
 
   //
   const [filterText, setFilterText] = useState("");
@@ -215,7 +218,7 @@ export const Keys: React.FC = () => {
         extraData: IExtraData
       ) => {
         const row: ComponentRepresentation = getRow(rowData);
-        keyModal.open("add-edit", row);
+        modal.open(ModalAction.ADD_EDIT, row);
       },
     },
     {
@@ -313,7 +316,7 @@ export const Keys: React.FC = () => {
                     type="button"
                     aria-label="new-namespace"
                     variant={ButtonVariant.secondary}
-                    onClick={() => keyModal.open("add-edit")}
+                    onClick={() => modal.open(ModalAction.ADD_EDIT)}
                   >
                     {t("actions.create-object", { what: "key" })}
                   </Button>
@@ -323,11 +326,11 @@ export const Keys: React.FC = () => {
           />
         </ResolvedQueries>
 
-        {keyModal.isOpen && keyModal.actionKey === "add-edit" && (
+        {modal.isOpen && modal.isAction(ModalAction.ADD_EDIT) && (
           <AddEditComponentModal
             namespaceId={prefillNamespaceId}
-            componentBeingEdited={keyModal.data}
-            onClose={keyModal.close}
+            componentBeingEdited={modal.data}
+            onClose={modal.close}
           />
         )}
       </CardBody>

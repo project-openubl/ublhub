@@ -1,2 +1,30 @@
 @import "~@patternfly/react-core/dist/styles/base.css";
 @import "~@patternfly/react-core/dist/styles/base-no-reset.css";
+
+.ocs-yaml-editor {
+  &__root {
+    flex: 1;
+    position: relative;
+  }
+
+  &__wrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+  }
+}
+
+.yaml-wrapper {
+  height: 100%;
+  padding-top: 20px;
+}
+
+.yaml-editor {  
+  position: relative;
+  display: flex;
+  height: calc(100% - 54px);
+  flex: 1;
+  flex-direction: column;
+}

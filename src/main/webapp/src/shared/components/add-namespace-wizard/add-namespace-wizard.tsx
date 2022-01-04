@@ -25,8 +25,6 @@ import { GeneralForm } from "./general-form";
 import { WebServicesForm } from "./web-services-form";
 import { CredentialsForm } from "./credentials-form";
 import { Review } from "./review";
-import { useHistory } from "react-router-dom";
-import { formatPath, Paths } from "Paths";
 
 const useNamespaceWizardFormState = (
   namespacesQuery: UseQueryResult<Namespace[]>
@@ -79,18 +77,18 @@ enum StepId {
 }
 
 interface IAddNamespaceWizardProps {
+  onSave: (instance: Namespace) => void;
   onClose: () => void;
 }
 
 export const AddNamespaceWizard: React.FC<IAddNamespaceWizardProps> = ({
+  onSave,
   onClose,
 }) => {
   const { t } = useTranslation();
-  const history = useHistory();
 
   const createNamespaceMutation = useCreateNamespaceMutation((ns) => {
-    history.push(formatPath(Paths.namespaces_edit, { namespaceId: ns.id }));
-    onClose();
+    onSave(ns);
   });
 
   // Form
@@ -210,7 +208,7 @@ export const AddNamespaceWizard: React.FC<IAddNamespaceWizardProps> = ({
     </WizardFooter>
   );
 
-  const onSave = () => {
+  const onSaveForm = () => {
     createNamespaceMutation.mutate({
       name: forms.general.values.name,
       description: forms.general.values.description,
@@ -232,7 +230,7 @@ export const AddNamespaceWizard: React.FC<IAddNamespaceWizardProps> = ({
       title={t("actions.create-object", { what: "namespace" })}
       steps={steps}
       onSubmit={(event) => event.preventDefault()}
-      onSave={onSave}
+      onSave={onSaveForm}
       onClose={onClose}
       footer={footer}
     />

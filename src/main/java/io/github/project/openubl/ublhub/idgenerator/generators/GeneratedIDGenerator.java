@@ -83,7 +83,7 @@ public class GeneratedIDGenerator implements IDGenerator {
         }
     }
 
-    private Uni<GeneratedIDEntity> generateNextID(NamespaceEntity namespace, String ruc, String documentType, Map<String, String> config) {
+    private Uni<GeneratedIDEntity> generateNextID(NamespaceEntity namespace, String ruc, String documentType, Map<String, String> config, boolean isPreview) {
         Map<String, String> generatorConfig = Objects.requireNonNullElseGet(config, HashMap::new);
 
         return generatedIDRepository.getCurrentID(namespace, ruc, documentType)
@@ -110,11 +110,16 @@ public class GeneratedIDGenerator implements IDGenerator {
                     generatedIDEntity.serie = Integer.parseInt(generatorConfig.getOrDefault(SERIE_PROPERTY, String.valueOf(generatedIDEntity.serie)));
                     generatedIDEntity.numero = Integer.parseInt(generatorConfig.getOrDefault(NUMERO_PROPERTY, String.valueOf(generatedIDEntity.numero)));
 
-                    return generatedIDEntity.persist();
+                    // If is preview then no need to persist the data
+                    if (isPreview) {
+                        return Uni.createFrom().item(generatedIDEntity);
+                    } else {
+                        return generatedIDEntity.persist();
+                    }
                 });
     }
 
-    private Uni<GeneratedIDEntity> generateNextIDVoidedAndSummaryDocument(NamespaceEntity namespace, String ruc, String documentType, Map<String, String> config) {
+    private Uni<GeneratedIDEntity> generateNextIDVoidedAndSummaryDocument(NamespaceEntity namespace, String ruc, String documentType, Map<String, String> config, boolean isPreview) {
         return generatedIDRepository.getCurrentID(namespace, ruc, documentType)
                 .onItem().ifNull().continueWith(() -> {
                     GeneratedIDEntity entity = new GeneratedIDEntity();
@@ -141,12 +146,17 @@ public class GeneratedIDGenerator implements IDGenerator {
                         generatedIDEntity.numero = 1;
                     }
 
-                    return generatedIDEntity.persist();
+                    // If is preview then no need to persist the data
+                    if (isPreview) {
+                        return Uni.createFrom().item(generatedIDEntity);
+                    } else {
+                        return generatedIDEntity.persist();
+                    }
                 });
     }
 
     @Override
-    public Uni<InvoiceInputModel> enrichWithID(NamespaceEntity namespace, InvoiceInputModel invoice, Map<String, String> config) {
+    public Uni<InvoiceInputModel> enrichWithID(NamespaceEntity namespace, InvoiceInputModel invoice, Map<String, String> config, boolean isPreview) {
         return Uni.createFrom().item(invoice)
                 .map(input -> {
                     input.setSerie("F001");
@@ -161,7 +171,7 @@ public class GeneratedIDGenerator implements IDGenerator {
                         uniEmitter.fail(new ConstraintViolationException(violations));
                     }
                 }))
-                .chain(input -> generateNextID(namespace, input.getProveedor().getRuc(), DocumentType.INVOICE_TYPE.name, config)
+                .chain(input -> generateNextID(namespace, input.getProveedor().getRuc(), DocumentType.INVOICE_TYPE.name, config, isPreview)
                         .map(generatedIDEntity -> {
                             input.setSerie(DocumentType.INVOICE_TYPE.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 3, "0"));
                             input.setNumero(generatedIDEntity.numero);
@@ -171,7 +181,7 @@ public class GeneratedIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<CreditNoteInputModel> enrichWithID(NamespaceEntity namespace, CreditNoteInputModel creditNote, Map<String, String> config) {
+    public Uni<CreditNoteInputModel> enrichWithID(NamespaceEntity namespace, CreditNoteInputModel creditNote, Map<String, String> config, boolean isPreview) {
         return Uni.createFrom().<Void>emitter(uniEmitter -> {
                     if (creditNote.getSerieNumeroComprobanteAfectado() != null &&
                             creditNote.getProveedor() != null &&
@@ -203,7 +213,7 @@ public class GeneratedIDGenerator implements IDGenerator {
                                 uniEmitter.fail(new ConstraintViolationException(violations));
                             }
                         })
-                        .chain(unused -> generateNextID(namespace, creditNote.getProveedor().getRuc(), documentType.name, config))
+                        .chain(unused -> generateNextID(namespace, creditNote.getProveedor().getRuc(), documentType.name, config, isPreview))
                         .map(generatedIDEntity -> {
                             creditNote.setSerie(documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 2, "0"));
                             creditNote.setNumero(generatedIDEntity.numero);
@@ -213,7 +223,7 @@ public class GeneratedIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<DebitNoteInputModel> enrichWithID(NamespaceEntity namespace, DebitNoteInputModel debitNote, Map<String, String> config) {
+    public Uni<DebitNoteInputModel> enrichWithID(NamespaceEntity namespace, DebitNoteInputModel debitNote, Map<String, String> config, boolean isPreview) {
         return Uni.createFrom().<Void>emitter(uniEmitter -> {
                     if (debitNote.getSerieNumeroComprobanteAfectado() != null &&
                             debitNote.getProveedor() != null &&
@@ -245,7 +255,7 @@ public class GeneratedIDGenerator implements IDGenerator {
                                 uniEmitter.fail(new ConstraintViolationException(violations));
                             }
                         })
-                        .chain(unused -> generateNextID(namespace, debitNote.getProveedor().getRuc(), documentType.name, config))
+                        .chain(unused -> generateNextID(namespace, debitNote.getProveedor().getRuc(), documentType.name, config, isPreview))
                         .map(generatedIDEntity -> {
                             debitNote.setSerie(documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 2, "0"));
                             debitNote.setNumero(generatedIDEntity.numero);
@@ -255,7 +265,7 @@ public class GeneratedIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<VoidedDocumentInputModel> enrichWithID(NamespaceEntity namespace, VoidedDocumentInputModel voidedDocument, Map<String, String> config) {
+    public Uni<VoidedDocumentInputModel> enrichWithID(NamespaceEntity namespace, VoidedDocumentInputModel voidedDocument, Map<String, String> config, boolean isPreview) {
         return Uni.createFrom().item(voidedDocument)
                 .map(input -> {
                     input.setNumero(1);
@@ -269,7 +279,7 @@ public class GeneratedIDGenerator implements IDGenerator {
                         uniEmitter.fail(new ConstraintViolationException(violations));
                     }
                 }))
-                .chain(input -> generateNextIDVoidedAndSummaryDocument(namespace, input.getProveedor().getRuc(), DocumentType.VOIDED_DOCUMENT_TYPE.name, config)
+                .chain(input -> generateNextIDVoidedAndSummaryDocument(namespace, input.getProveedor().getRuc(), DocumentType.VOIDED_DOCUMENT_TYPE.name, config, isPreview)
                         .map(generatedIDEntity -> {
                             input.setNumero(generatedIDEntity.numero);
                             return input;
@@ -278,7 +288,7 @@ public class GeneratedIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<SummaryDocumentInputModel> enrichWithID(NamespaceEntity namespace, SummaryDocumentInputModel summaryDocument, Map<String, String> config) {
+    public Uni<SummaryDocumentInputModel> enrichWithID(NamespaceEntity namespace, SummaryDocumentInputModel summaryDocument, Map<String, String> config, boolean isPreview) {
         return Uni.createFrom().item(summaryDocument)
                 .map(input -> {
                     input.setNumero(1);
@@ -292,7 +302,7 @@ public class GeneratedIDGenerator implements IDGenerator {
                         uniEmitter.fail(new ConstraintViolationException(violations));
                     }
                 }))
-                .chain(input -> generateNextIDVoidedAndSummaryDocument(namespace, input.getProveedor().getRuc(), DocumentType.SUMMARY_DOCUMENT_TYPE.name, config)
+                .chain(input -> generateNextIDVoidedAndSummaryDocument(namespace, input.getProveedor().getRuc(), DocumentType.SUMMARY_DOCUMENT_TYPE.name, config, isPreview)
                         .map(generatedIDEntity -> {
                             input.setNumero(generatedIDEntity.numero);
                             return input;

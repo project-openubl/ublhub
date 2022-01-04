@@ -216,7 +216,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         // When
         DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
-                .body(template)
+                .body(JsonObject.mapFrom(template).toString())
                 .when()
                 .post("/api/namespaces/" + nsId + "/documents")
                 .then()
@@ -309,7 +309,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         // When
         DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
-                .body(template)
+                .body(JsonObject.mapFrom(template).toString())
                 .when()
                 .post("/api/namespaces/" + nsId + "/documents")
                 .then()
@@ -398,7 +398,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         // When
         DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
-                .body(template)
+                .body(JsonObject.mapFrom(template).toString())
                 .when()
                 .post("/api/namespaces/" + nsId + "/documents")
                 .then()
@@ -491,7 +491,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         // When
         DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
-                .body(template)
+                .body(JsonObject.mapFrom(template).toString())
                 .when()
                 .post("/api/namespaces/" + nsId + "/documents")
                 .then()
@@ -580,7 +580,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         // When
         DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
-                .body(template)
+                .body(JsonObject.mapFrom(template).toString())
                 .when()
                 .post("/api/namespaces/" + nsId + "/documents")
                 .then()
@@ -669,7 +669,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         // When
         DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
-                .body(template)
+                .body(JsonObject.mapFrom(template).toString())
                 .when()
                 .post("/api/namespaces/" + nsId + "/documents")
                 .then()
@@ -747,7 +747,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         // When
         DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
-                .body(template)
+                .body(JsonObject.mapFrom(template).toString())
                 .when()
                 .post("/api/namespaces/" + nsId + "/documents")
                 .then()
@@ -844,7 +844,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         // When
         DocumentRepresentation response = given()
                 .contentType(ContentType.JSON)
-                .body(template)
+                .body(JsonObject.mapFrom(template).toString())
                 .when()
                 .post("/api/namespaces/" + nsId + "/documents")
                 .then()
