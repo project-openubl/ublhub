@@ -321,9 +321,9 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(2),
-                        "data.size()", is(2),
-                        "data[0].name", is("company2"),
-                        "data[1].name", is("company1")
+                        "items.size()", is(2),
+                        "items[0].name", is("company2"),
+                        "items[1].name", is("company1")
                 );
 
         given()
@@ -333,9 +333,9 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(2),
-                        "data.size()", is(2),
-                        "data[0].name", is("company1"),
-                        "data[1].name", is("company2")
+                        "items.size()", is(2),
+                        "items[0].name", is("company1"),
+                        "items[1].name", is("company2")
                 );
         // Then
     }
@@ -353,8 +353,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(1),
-                        "data.size()", is(1),
-                        "data[0].name", is("company1")
+                        "items.size()", is(1),
+                        "items[0].name", is("company1")
                 );
         // Then
     }
@@ -372,8 +372,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(1),
-                        "data.size()", is(1),
-                        "data[0].name", is("company2")
+                        "items.size()", is(1),
+                        "items[0].name", is("company2")
                 );
         // Then
     }

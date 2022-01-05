@@ -128,9 +128,9 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(2),
-                        "data.size()", is(2),
-                        "data[0].id", is("22"),
-                        "data[1].id", is("11")
+                        "items.size()", is(2),
+                        "items[0].id", is("22"),
+                        "items[1].id", is("11")
                 );
 
         given()
@@ -140,9 +140,9 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(2),
-                        "data.size()", is(2),
-                        "data[0].id", is("11"),
-                        "data[1].id", is("22")
+                        "items.size()", is(2),
+                        "items[0].id", is("11"),
+                        "items[1].id", is("22")
                 );
         // Then
     }
@@ -160,8 +160,8 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(1),
-                        "data.size()", is(1),
-                        "data[0].fileContent.documentID", is("F-11")
+                        "items.size()", is(1),
+                        "items[0].fileContent.documentID", is("F-11")
                 );
         // Then
     }
