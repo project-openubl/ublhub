@@ -96,7 +96,7 @@ export const NamespaceContextSelector: React.FC<INamespaceContextSelectorProps> 
           result={namespacesQuery}
           errorTitle="Can not load namespaces"
         >
-          <PageSection isWidthLimited padding={{ default: "noPadding" }}>
+          <PageSection padding={{ default: "noPadding" }}>
             <Toolbar>
               <ToolbarContent>
                 <ToolbarItem>Namespace:</ToolbarItem>

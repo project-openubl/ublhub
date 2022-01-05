@@ -84,17 +84,17 @@ export interface DebitNoteInputModel extends NoteInputModel {
 
 export interface SummaryDocumentInputModel {
   numero: number;
-  fechaEmision: number;
+  fechaEmision?: number;
   fechaEmisionDeComprobantesAsociados: number;
-  firmante: FirmanteInputModel;
+  firmante?: FirmanteInputModel;
   proveedor: ProveedorInputModel;
   detalle: SummaryDocumentLineInputModel[];
 }
 
 export interface VoidedDocumentInputModel {
   numero: number;
-  fechaEmision: number;
-  firmante: FirmanteInputModel;
+  fechaEmision?: number;
+  firmante?: FirmanteInputModel;
   proveedor: ProveedorInputModel;
   descripcionSustento: string;
   comprobante: VoidedDocumentLineInputModel;
@@ -175,7 +175,7 @@ export interface DocTribRelacionadoInputModel_DebitNote
 export interface SummaryDocumentLineInputModel {
   tipoOperacion: string;
   comprobante: SummaryDocumentComprobanteInputModel;
-  comprobanteAfectado: SummaryDocumentComprobanteAfectadoInputModel;
+  comprobanteAfectado?: SummaryDocumentComprobanteAfectadoInputModel;
 }
 
 export interface VoidedDocumentLineInputModel {
@@ -220,14 +220,14 @@ export interface SummaryDocumentComprobanteAfectadoInputModel {
 
 export interface SummaryDocumentComprobanteValorVentaInputModel {
   importeTotal: number;
-  otrosCargos: number;
-  gravado: number;
-  exonerado: number;
-  inafecto: number;
-  gratuito: number;
+  otrosCargos?: number;
+  gravado?: number;
+  exonerado?: number;
+  inafecto?: number;
+  gratuito?: number;
 }
 
 export interface SummaryDocumentImpuestosInputModel {
-  igv: number;
-  icb: number;
+  igv?: number;
+  icb?: number;
 }

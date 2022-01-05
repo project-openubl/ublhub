@@ -31,7 +31,6 @@ import {
   BreadCrumbPath,
   NamespaceContextSelector,
   SimplePageSection,
-  useNamespaceContext,
   YAMLEditor,
 } from "shared/components";
 
@@ -67,9 +66,6 @@ export const CreateDocument: React.FC = () => {
   const createDocumentMutation = useCreateDocumentMutation(namespaceId, () => {
     history.push(documentsPath(namespaceId));
   });
-
-  // Context
-  const namespaceContext = useNamespaceContext();
 
   // Editor
   const editorRef = useRef<monacoEditor.editor.IStandaloneCodeEditor | null>(
@@ -126,9 +122,7 @@ export const CreateDocument: React.FC = () => {
           breadcrumbs={[
             {
               title: "Documents",
-              path: namespaceContext
-                ? documentsPath(namespaceContext.id!)
-                : "/",
+              path: documentsPath(namespaceId),
             },
             { title: t("actions.create"), path: "/" },
           ]}

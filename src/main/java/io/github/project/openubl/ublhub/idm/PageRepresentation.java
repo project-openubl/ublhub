@@ -24,7 +24,7 @@ import java.util.List;
 public class PageRepresentation<T> {
 
     private Meta meta;
-    private List<T> data;
+    private List<T> items;
 
     public Meta getMeta() {
         return meta;
@@ -34,12 +34,12 @@ public class PageRepresentation<T> {
         this.meta = meta;
     }
 
-    public List<T> getData() {
-        return data;
+    public List<T> getItems() {
+        return items;
     }
 
-    public void setData(List<T> data) {
-        this.data = data;
+    public void setItems(List<T> items) {
+        this.items = items;
     }
 
     @RegisterForReflection

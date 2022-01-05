@@ -147,4 +147,99 @@ export const InputData: InputTemplate[] = [
       },
     },
   },
+  {
+    category: "VoidedDocument",
+    metadata: {
+      title: "Basic voided document",
+      description: "Create a basic voided document with minimal data",
+    },
+    input: {
+      kind: "VoidedDocument",
+      spec: {
+        idGenerator: {
+          name: "none",
+        },
+        document: {
+          numero: 1,
+          proveedor: {
+            ruc: "12345678912",
+            razonSocial: "Mi razón social S.A.C.",
+          },
+          descripcionSustento: "mi razon de baja",
+          comprobante: {
+            serieNumero: "F001-1",
+            tipoComprobante: "factura",
+            fechaEmision: 1641394054167,
+          },
+        },
+      },
+    },
+  },
+  {
+    category: "SummaryDocument",
+    metadata: {
+      title: "Basic summary document",
+      description: "Create a basic summary document with minimal data",
+    },
+    input: {
+      kind: "SummaryDocument",
+      spec: {
+        idGenerator: {
+          name: "none",
+        },
+        document: {
+          numero: 1,
+          fechaEmisionDeComprobantesAsociados: 1641394054167,
+          proveedor: {
+            ruc: "12345678912",
+            razonSocial: "Mi razón social S.A.C.",
+          },
+          detalle: [
+            {
+              tipoOperacion: "ADICIONAR",
+              comprobante: {
+                tipo: "BOLETA",
+                serieNumero: "B001-1",
+                cliente: {
+                  nombre: "nombre de mi cliente",
+                  numeroDocumentoIdentidad: "12345678",
+                  tipoDocumentoIdentidad: "DNI",
+                },
+                impuestos: {
+                  igv: 100,
+                },
+                valorVenta: {
+                  importeTotal: 118,
+                  gravado: 100,
+                },
+              },
+            },
+            {
+              tipoOperacion: "ADICIONAR",
+              comprobante: {
+                tipo: "NOTA_CREDITO",
+                serieNumero: "BC01-1",
+                cliente: {
+                  nombre: "nombre de mi cliente",
+                  numeroDocumentoIdentidad: "12345678",
+                  tipoDocumentoIdentidad: "DNI",
+                },
+                impuestos: {
+                  igv: 100,
+                },
+                valorVenta: {
+                  importeTotal: 118,
+                  gravado: 100,
+                },
+              },
+              comprobanteAfectado: {
+                tipo: "BOLETA",
+                serieNumero: "B001-1",
+              },
+            },
+          ],
+        },
+      },
+    },
+  },
 ];

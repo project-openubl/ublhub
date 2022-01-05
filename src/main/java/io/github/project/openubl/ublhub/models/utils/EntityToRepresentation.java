@@ -180,7 +180,7 @@ public class EntityToRepresentation {
         repMeta.setCount(totalElements);
 
         // Data
-        rep.setData(pageElements.stream()
+        rep.setItems(pageElements.stream()
                 .map(mapper)
                 .collect(Collectors.toList())
         );
