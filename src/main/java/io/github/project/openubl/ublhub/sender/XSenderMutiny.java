@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.sender;
 
+import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.xmlsenderws.webservices.exceptions.InvalidXMLFileException;
 import io.github.project.openubl.xmlsenderws.webservices.exceptions.UnsupportedDocumentTypeException;
 import io.github.project.openubl.xmlsenderws.webservices.exceptions.ValidationWebServiceException;
@@ -68,7 +69,7 @@ public class XSenderMutiny {
     public Uni<XSenderConfig> getXSenderConfig(String namespaceId, String ruc) {
         return Panache.withTransaction(() -> companyRepository.findByRuc(namespaceId, ruc)
                         .onItem().ifNotNull().transform(companyEntity -> companyEntity.sunat)
-                        .onItem().ifNull().switchTo(() -> namespaceRepository.findById(namespaceId).map(namespaceEntity -> namespaceEntity.sunat))
+                        .onItem().ifNull().switchTo(() -> namespaceRepository.find("id", namespaceId).singleResult().map(namespaceEntity -> namespaceEntity.sunat))
                 )
                 .onItem().ifNotNull().transform(sunatEntity -> XSenderConfigBuilder.aXSenderConfig()
                         .withFacturaUrl(sunatEntity.sunatUrlFactura)
