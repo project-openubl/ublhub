@@ -61,5 +61,6 @@ export enum CoreNamespacedResourceKind {
   Key = "keys",
   Component = "components",
   Document = "documents",
-  DocumentPreview = "documents/preview",
+  DocumentPreview = "document-preview",
+  DocumentFiles = "document-files",
 }

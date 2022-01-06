@@ -25,6 +25,9 @@ import {
   Stack,
   StackItem,
   Bullseye,
+  ProgressStepProps,
+  Flex,
+  FlexItem,
 } from "@patternfly/react-core";
 import {
   cellWidth,
@@ -34,6 +37,7 @@ import {
   IRow,
   IRowData,
   ISeparator,
+  truncate,
 } from "@patternfly/react-table";
 import { CheckCircleIcon, SpinnerAltIcon } from "@patternfly/react-icons";
 
@@ -41,6 +45,7 @@ import { useSelectionState } from "@konveyor/lib-ui";
 import {
   ConditionalRender,
   SimpleTableWithToolbar,
+  useModal,
   useTableControls,
 } from "@project-openubl/lib-ui";
 
@@ -62,8 +67,8 @@ import { UBLDocument } from "api/ublhub";
 import { documentsPath, formatPath, INamespaceParams, Paths } from "Paths";
 import { formatTimestamp } from "utils/dateUtils";
 
-import "./documents-list.css";
 import sunatImage from "images/sunat.png";
+import { PreviewFile } from "./preview-file";
 
 const toSortByQuery = (sortBy?: {
   index: number;
@@ -94,17 +99,87 @@ const getRow = (rowData: IRowData): UBLDocument => {
   return rowData[ROW_FIELD];
 };
 
+const StepXML: React.FC<Partial<Omit<ProgressStepProps, "ref">>> = ({
+  children,
+  ...props
+}) => (
+  <ProgressStep
+    id="xml"
+    variant="success"
+    titleId="xml-created"
+    aria-label="xml status"
+    description="XML creado y firmado"
+    {...props}
+  >
+    {children}
+  </ProgressStep>
+);
+
+const StepTicket: React.FC<
+  Partial<Omit<ProgressStepProps, "ref">> & { ticket?: string }
+> = ({ ticket, children, ...props }) => (
+  <>
+    {ticket && (
+      <ProgressStep
+        id="ticket"
+        variant="success"
+        titleId="ticket"
+        aria-label="ticket status"
+        description={ticket}
+        {...props}
+      >
+        {children}
+      </ProgressStep>
+    )}
+  </>
+);
+
+const StepSUNAT: React.FC<
+  Partial<Omit<ProgressStepProps, "ref">> & {
+    inProgress: boolean;
+    sunatStatus?:
+      | "ACEPTADO"
+      | "RECHAZADO"
+      | "EXCEPCION"
+      | "BAJA"
+      | "EN_PROCESO";
+    sunatDescripcion?: string;
+  }
+> = ({ inProgress, sunatStatus, sunatDescripcion, children, ...props }) => (
+  <>
+    <ProgressStep
+      id="sunat"
+      isCurrent
+      variant={
+        inProgress === true
+          ? "info"
+          : sunatStatus === "ACEPTADO"
+          ? "success"
+          : sunatStatus === "RECHAZADO"
+          ? "danger"
+          : "warning"
+      }
+      titleId="sunat"
+      aria-label="sunat status"
+      description={sunatDescripcion}
+      {...props}
+    >
+      {children}
+    </ProgressStep>
+  </>
+);
+
 const itemsToRow = (
   items: UBLDocument[],
   isRowCollapsed: (item: UBLDocument) => boolean
 ) => {
-  const result: IRow[] = [];
+  const rows: IRow[] = [];
 
   items.forEach((item) => {
     const isCollapsed = isRowCollapsed(item);
 
     // Main Row
-    result.push({
+    rows.push({
       [ROW_FIELD]: item,
       isOpen: isCollapsed,
       cells: [
@@ -149,35 +224,13 @@ const itemsToRow = (
         {
           title: (
             <ProgressStepper isCompact>
-              <ProgressStep
-                id="xml"
-                variant="success"
-                titleId="xml-created"
-                aria-label="xml status"
-              ></ProgressStep>
-              {item.sunat?.ticket && (
-                <ProgressStep
-                  id="ticket"
-                  variant="success"
-                  titleId="ticket"
-                  aria-label="ticket status"
-                ></ProgressStep>
-              )}
-              <ProgressStep
-                id="sunat"
-                isCurrent
-                variant={
-                  item.inProgress === true
-                    ? "info"
-                    : item.sunat?.status === "ACEPTADO"
-                    ? "success"
-                    : item.sunat?.status === "RECHAZADO"
-                    ? "danger"
-                    : "warning"
-                }
-                titleId="sunat"
-                aria-label="sunat status"
-              ></ProgressStep>
+              <StepXML />
+              <StepTicket ticket={item.sunat?.ticket} />
+              <StepSUNAT
+                inProgress={item.inProgress}
+                sunatStatus={item.sunat?.status}
+                sunatDescripcion={item.sunat?.description}
+              />
             </ProgressStepper>
           ),
         },
@@ -193,15 +246,15 @@ const itemsToRow = (
           ),
         },
         {
-          title: <>{formatTimestamp(item.createdOn)}</>,
+          title: formatTimestamp(item.createdOn),
         },
       ],
     });
 
     // Expanded areas
     if (isCollapsed) {
-      result.push({
-        parent: result.length - 1,
+      rows.push({
+        parent: rows.length - 1,
         fullWidth: true,
         cells: [
           {
@@ -211,56 +264,17 @@ const itemsToRow = (
                   <StackItem>
                     <Bullseye>
                       <ProgressStepper isCenterAligned>
-                        <ProgressStep
-                          id="xml"
-                          variant="success"
-                          titleId="xml-created"
-                          aria-label="xml status"
-                          description="XML creado y firmado"
+                        <StepXML>XML</StepXML>
+                        <StepTicket ticket={item.sunat?.ticket}>
+                          Ticket
+                        </StepTicket>
+                        <StepSUNAT
+                          inProgress={item.inProgress}
+                          sunatStatus={item.sunat?.status}
+                          sunatDescripcion={item.sunat?.description}
                         >
-                          XML
-                        </ProgressStep>
-                        {item.sunat?.ticket && (
-                          <ProgressStep
-                            id="ticket"
-                            variant="success"
-                            titleId="ticket"
-                            aria-label="ticket status"
-                            description={item.sunat?.ticket}
-                          >
-                            <img
-                              src={sunatImage}
-                              height={20}
-                              width={20}
-                              alt="SUNAT logo"
-                            />{" "}
-                            Ticket
-                          </ProgressStep>
-                        )}
-                        <ProgressStep
-                          id="sunat"
-                          isCurrent
-                          variant={
-                            item.inProgress === true
-                              ? "info"
-                              : item.sunat?.status === "ACEPTADO"
-                              ? "success"
-                              : item.sunat?.status === "RECHAZADO"
-                              ? "danger"
-                              : "warning"
-                          }
-                          titleId="sunat"
-                          aria-label="sunat status"
-                          description={item.sunat?.description}
-                        >
-                          <img
-                            src={sunatImage}
-                            height={20}
-                            width={20}
-                            alt="SUNAT logo"
-                          />{" "}
                           {item.sunat?.status || "Loading..."}
-                        </ProgressStep>
+                        </StepSUNAT>
                       </ProgressStepper>
                     </Bullseye>
                   </StackItem>
@@ -291,7 +305,7 @@ const itemsToRow = (
     }
   });
 
-  return result;
+  return rows;
 };
 
 export const DocumentsList: React.FC = () => {
@@ -307,6 +321,13 @@ export const DocumentsList: React.FC = () => {
   });
 
   const namespaceContext = useNamespaceContext();
+
+  //
+  enum ModalAction {
+    VIEW_UBL_FILE,
+    VIEW_CDR_FILE,
+  }
+  const modal = useModal<ModalAction, UBLDocument>();
 
   //
   const [filterText, setFilterText] = useState("");
@@ -366,14 +387,17 @@ export const DocumentsList: React.FC = () => {
     {
       title: "RUC",
       transforms: [cellWidth(15)],
+      cellTransforms: [truncate],
     },
     {
       title: t("terms.type"),
       transforms: [cellWidth(15)],
+      cellTransforms: [truncate],
     },
     {
       title: t("terms.document"),
       transforms: [cellWidth(15)],
+      cellTransforms: [truncate],
     },
     {
       title: t("terms.progress"),
@@ -409,9 +433,23 @@ export const DocumentsList: React.FC = () => {
         rowData: IRowData
       ) => {
         const row: UBLDocument = getRow(rowData);
-        console.log(row);
+        modal.open(ModalAction.VIEW_UBL_FILE, row);
       },
     });
+
+    if (row.sunat?.hasCdr) {
+      actions.push({
+        title: "Ver CDR",
+        onClick: (
+          event: React.MouseEvent,
+          rowIndex: number,
+          rowData: IRowData
+        ) => {
+          const row: UBLDocument = getRow(rowData);
+          modal.open(ModalAction.VIEW_CDR_FILE, row);
+        },
+      });
+    }
 
     return actions;
   };
@@ -483,6 +521,18 @@ export const DocumentsList: React.FC = () => {
           </PageSection>
         </NamespaceContextSelector>
       )}
+
+      {modal.isOpen &&
+        modal.data &&
+        (modal.isAction(ModalAction.VIEW_UBL_FILE) ||
+          modal.isAction(ModalAction.VIEW_CDR_FILE)) && (
+          <PreviewFile
+            namespaceId={namespaceId}
+            documentBeingEdited={modal.data}
+            onClose={modal.close}
+            variant={modal.isAction(ModalAction.VIEW_UBL_FILE) ? "ubl" : "cdr"}
+          />
+        )}
     </>
   );
 };

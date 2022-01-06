@@ -2,11 +2,11 @@
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
- * Licensed under the Eclipse Public License - v 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * https://www.eclipse.org/legal/epl-2.0/
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,7 +41,7 @@ public class MinioServer implements QuarkusTestResourceLifecycleManager {
         Integer port = minio.getMappedPort(9000);
 
         Map<String, String> properties = new HashMap<>();
-        properties.put("openubl.storage.type=s3", "s3");
+        properties.put("openubl.storage.type", "s3");
         properties.put("openubl.storage.s3.host", "http://" + host + ":" + port);
         properties.put("openubl.storage.s3.health.url", "http://" + host + ":" + port + "/minio/health/live");
         properties.put("openubl.storage.s3.access_key_id", "BQA2GEXO711FVBVXDWKM");

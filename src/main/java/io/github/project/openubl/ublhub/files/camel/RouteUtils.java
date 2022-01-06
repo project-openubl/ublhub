@@ -14,24 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.files.health.impl;
+package io.github.project.openubl.ublhub.files.camel;
 
-import io.github.project.openubl.ublhub.files.health.StorageProvider;
-import io.github.project.openubl.ublhub.files.health.StorageReadinessCheck;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.apache.camel.dataformat.zipfile.ZipFileDataFormat;
 
-import javax.enterprise.context.ApplicationScoped;
+public class RouteUtils {
 
-@ApplicationScoped
-@StorageProvider(StorageProvider.Type.FILESYSTEM)
-public class FilesystemReadinessCheck implements StorageReadinessCheck {
-
-    @ConfigProperty(name = "openubl.storage.filesystem.folder")
-    String filesystemFolder;
-
-    @Override
-    public boolean isHealthy() {
-        return !filesystemFolder.isBlank();
+    public static ZipFileDataFormat getZipFileDataFormat() {
+        ZipFileDataFormat zipFile = new ZipFileDataFormat();
+        zipFile.setUsingIterator(true);
+        return zipFile;
     }
 
 }

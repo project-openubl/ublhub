@@ -2,11 +2,11 @@
  * Copyright 2019 Project OpenUBL, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
- * Licensed under the Eclipse Public License - v 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * https://www.eclipse.org/legal/epl-2.0/
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,9 +21,11 @@ import org.apache.camel.builder.RouteBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -57,11 +59,15 @@ public class FilesystemRoute extends RouteBuilder {
                 .process(exchange -> {
                     String filename = exchange.getIn().getBody(String.class);
                     byte[] bytes = Files.readAllBytes(Paths.get(filename));
-                    exchange.getIn().setBody(bytes);
+                    exchange.getIn().setBody(new ByteArrayInputStream(bytes));
                 })
                 .choice()
                     .when(header("shouldUnzip").isEqualTo(true))
-                        .unmarshal().zipFile()
+                        .unmarshal(RouteUtils.getZipFileDataFormat())
+                        .split(bodyAs(Iterator.class), (oldExchange, newExchange) -> newExchange)
+                            .streaming()
+                            .convertBodyTo(byte[].class)
+                        .end()
                     .endChoice()
                 .end();
 
