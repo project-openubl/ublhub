@@ -26,8 +26,6 @@ import {
   StackItem,
   Bullseye,
   ProgressStepProps,
-  Flex,
-  FlexItem,
 } from "@patternfly/react-core";
 import {
   cellWidth,
