@@ -59,7 +59,7 @@ public class FilesystemRoute extends RouteBuilder {
                 .process(exchange -> {
                     String filename = exchange.getIn().getBody(String.class);
                     byte[] bytes = Files.readAllBytes(Paths.get(filename));
-                    exchange.getIn().setBody(new ByteArrayInputStream(bytes));
+                    exchange.getIn().setBody(bytes);
                 })
                 .choice()
                     .when(header("shouldUnzip").isEqualTo(true))
