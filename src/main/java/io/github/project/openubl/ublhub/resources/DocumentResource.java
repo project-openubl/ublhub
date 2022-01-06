@@ -33,25 +33,11 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
-import io.github.project.openubl.ublhub.idgenerator.IDGeneratorType;
-import io.github.project.openubl.xmlbuilderlib.clock.SystemClock;
-import io.github.project.openubl.xmlbuilderlib.config.Config;
-import io.github.project.openubl.xmlbuilderlib.facade.DocumentManager;
-import io.github.project.openubl.xmlbuilderlib.models.input.standard.invoice.InvoiceInputModel;
-import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.creditNote.CreditNoteInputModel;
-import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.debitNote.DebitNoteInputModel;
-import io.github.project.openubl.xmlbuilderlib.models.input.sunat.SummaryDocumentInputModel;
-import io.github.project.openubl.xmlbuilderlib.models.input.sunat.VoidedDocumentInputModel;
-import io.github.project.openubl.xmlbuilderlib.xml.XMLSigner;
-import io.github.project.openubl.xmlbuilderlib.xml.XmlSignatureHelper;
+import io.github.project.openubl.ublhub.builder.XMLBuilderManager;
 import io.github.project.openubl.ublhub.events.BroadcasterEventManager;
 import io.github.project.openubl.ublhub.exceptions.NoNamespaceException;
 import io.github.project.openubl.ublhub.files.FilesMutiny;
-import io.github.project.openubl.ublhub.idgenerator.IDGenerator;
-import io.github.project.openubl.ublhub.idgenerator.IGGeneratorManager;
 import io.github.project.openubl.ublhub.idm.input.InputTemplateRepresentation;
-import io.github.project.openubl.ublhub.idm.input.KindRepresentation;
-import io.github.project.openubl.ublhub.idm.input.SpecRepresentation;
 import io.github.project.openubl.ublhub.keys.KeyManager;
 import io.github.project.openubl.ublhub.models.DocumentFilterModel;
 import io.github.project.openubl.ublhub.models.PageBean;
@@ -63,6 +49,8 @@ import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
 import io.github.project.openubl.ublhub.scheduler.SchedulerManager;
+import io.github.project.openubl.xmlbuilderlib.xml.XMLSigner;
+import io.github.project.openubl.xmlbuilderlib.xml.XmlSignatureHelper;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniAndGroup2;
@@ -75,14 +63,15 @@ import org.keycloak.crypto.KeyUse;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 @Path("/namespaces")
 @Produces("application/json")
@@ -110,60 +99,10 @@ public class DocumentResource {
     UBLDocumentRepository documentRepository;
 
     @Inject
-    IGGeneratorManager igGeneratorManager;
-
-    @Inject
-    Config xBuilderConfig;
-
-    @Inject
-    SystemClock xBuilderClock;
+    XMLBuilderManager xmlBuilderManager;
 
     @Inject
     KeyManager keystore;
-
-    public Uni<String> createXMLString(NamespaceEntity namespace, InputTemplateRepresentation inputTemplate, JsonObject document, boolean isPreview) {
-        KindRepresentation kind = inputTemplate.getKind();
-        SpecRepresentation spec = inputTemplate.getSpec();
-
-        IDGeneratorType idGeneratorType = IDGeneratorType.none;
-        Map<String, String> idGeneratorConfig = Collections.emptyMap();
-        if (spec.getIdGenerator() != null) {
-            idGeneratorType = spec.getIdGenerator().getName();
-            idGeneratorConfig = spec.getIdGenerator().getConfig();
-        }
-        
-        IDGenerator idGenerator = igGeneratorManager.selectIDGenerator(idGeneratorType);
-        switch (kind) {
-            case Invoice:
-                InvoiceInputModel invoice = document.mapTo(InvoiceInputModel.class);
-
-                return idGenerator
-                        .enrichWithID(namespace, invoice, idGeneratorConfig, isPreview)
-                        .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
-            case CreditNote:
-                CreditNoteInputModel creditNote = document.mapTo(CreditNoteInputModel.class);
-                return idGenerator
-                        .enrichWithID(namespace, creditNote, idGeneratorConfig, isPreview)
-                        .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
-            case DebitNote:
-                DebitNoteInputModel debitNote = document.mapTo(DebitNoteInputModel.class);
-                return idGenerator
-                        .enrichWithID(namespace, debitNote, idGeneratorConfig, isPreview)
-                        .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
-            case VoidedDocument:
-                VoidedDocumentInputModel voidedDocument = document.mapTo(VoidedDocumentInputModel.class);
-                return idGenerator
-                        .enrichWithID(namespace, voidedDocument, idGeneratorConfig, isPreview)
-                        .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
-            case SummaryDocument:
-                SummaryDocumentInputModel summaryDocument = document.mapTo(SummaryDocumentInputModel.class);
-                return idGenerator
-                        .enrichWithID(namespace, summaryDocument, idGeneratorConfig, isPreview)
-                        .map(input -> DocumentManager.createXML(input, xBuilderConfig, xBuilderClock).getXml());
-            default:
-                throw new IllegalStateException("Kind:" + kind + " not supported");
-        }
-    }
 
     public Uni<UBLDocumentEntity> createDocumentFromFileID(NamespaceEntity namespaceEntity, String fileSavedId) {
         // Wait for file to be saved
@@ -202,7 +141,7 @@ public class DocumentResource {
         JsonObject documentJsonObject = jsonObject.getJsonObject("spec").getJsonObject("document");
         return Panache
                 .withTransaction(() -> namespaceRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespaceEntity -> createXMLString(namespaceEntity, inputTemplate, documentJsonObject, false)
+                        .onItem().ifNotNull().transformToUni(namespaceEntity -> xmlBuilderManager.createXMLString(namespaceEntity, inputTemplate, documentJsonObject, false)
                                 .chain(xmlString -> keystore
                                         .getActiveKey(namespaceEntity, KeyUse.SIG, inputTemplate.getSpec().getSignature() != null ? inputTemplate.getSpec().getSignature().getAlgorithm() : Algorithm.RS256)
                                         .map(key -> {
@@ -247,36 +186,6 @@ public class DocumentResource {
                 );
     }
 
-    @POST
-    @Path("/{namespaceId}/documents/preview")
-    public Uni<Response> createDocumentPreview(
-            @PathParam("namespaceId") @NotNull String namespaceId,
-            @NotNull JsonObject jsonObject
-    ) {
-        InputTemplateRepresentation inputTemplate = jsonObject.mapTo(InputTemplateRepresentation.class);
-        JsonObject documentJsonObject = jsonObject.getJsonObject("spec").getJsonObject("document");
-        return Panache
-                .withTransaction(() -> namespaceRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespaceEntity -> createXMLString(namespaceEntity, inputTemplate, documentJsonObject, true)
-                                // Response
-                                .map(xmlString -> Response
-                                        .status(Response.Status.OK)
-                                        .entity(xmlString)
-                                        .build()
-                                )
-                        )
-
-                        .onItem().ifNull().continueWith(Response.ok()
-                                .status(Response.Status.NOT_FOUND)::build
-                        )
-
-                        .onFailure(throwable -> throwable instanceof ConstraintViolationException).recoverWithItem(throwable -> Response
-                                .status(Response.Status.BAD_REQUEST)
-                                .entity(throwable.getMessage()).build()
-                        )
-                );
-    }
-    
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -404,78 +313,6 @@ public class DocumentResource {
 //        messageSenderManager.sendToDocumentQueue(message);
 //
 //        return Response.status(Response.Status.OK)
-//                .build();
-//    }
-
-//    @GET
-//    @Path("/{documentId}/file")
-//    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
-//    public Response getDocumentFile(
-//            @PathParam("namespaceId") @NotNull String namespaceId,
-//            @PathParam("documentId") @NotNull String documentId
-//    ) {
-//        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-//        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
-//
-//        byte[] file = filesManager.getFileAsBytesAfterUnzip(documentEntity.getStorageFile());
-//        return Response.ok(file, MediaType.APPLICATION_XML)
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".xml" + "\"")
-//                .build();
-//    }
-//
-//    @GET
-//    @Path("/{documentId}/file-link")
-//    @Produces(MediaType.TEXT_PLAIN)
-//    public Response getDocumentFileLink(
-//            @PathParam("namespaceId") @NotNull String namespaceId,
-//            @PathParam("documentId") @NotNull String documentId
-//    ) {
-//        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-//        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
-//
-//        String fileLink = filesManager.getFileLink(documentEntity.getStorageFile());
-//        return Response.ok(fileLink)
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".xml" + "\"")
-//                .build();
-//    }
-//
-//    @GET
-//    @Path("/{documentId}/cdr")
-//    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-//    public Response getDocumentCdr(
-//            @PathParam("namespaceId") @NotNull String namespaceId,
-//            @PathParam("documentId") @NotNull String documentId
-//    ) {
-//        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-//        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
-//
-//        if (documentEntity.getStorageCdr() == null) {
-//            return Response.status(Response.Status.NOT_FOUND).build();
-//        }
-//
-//        byte[] file = filesManager.getFileAsBytesWithoutUnzipping(documentEntity.getStorageCdr());
-//        return Response.ok(file, "application/zip")
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".zip" + "\"")
-//                .build();
-//    }
-//
-//    @GET
-//    @Path("/{documentId}/cdr-link")
-//    @Produces(MediaType.TEXT_PLAIN)
-//    public Response getDocumentCdrLink(
-//            @PathParam("namespaceId") @NotNull String namespaceId,
-//            @PathParam("documentId") @NotNull String documentId
-//    ) {
-//        NamespaceEntity namespaceEntity = namespaceRepository.findByIdAndOwner(namespaceId, userIdentity.getUsername()).orElseThrow(NotFoundException::new);
-//        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceEntity, documentId).orElseThrow(NotFoundException::new);
-//
-//        if (documentEntity.getStorageCdr() == null) {
-//            return Response.status(Response.Status.NOT_FOUND).build();
-//        }
-//
-//        String fileLink = filesManager.getFileLink(documentEntity.getStorageCdr());
-//        return Response.ok(fileLink)
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.getDocumentID() + ".zip" + "\"")
 //                .build();
 //    }
 

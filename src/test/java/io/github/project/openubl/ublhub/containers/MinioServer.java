@@ -41,7 +41,7 @@ public class MinioServer implements QuarkusTestResourceLifecycleManager {
         Integer port = minio.getMappedPort(9000);
 
         Map<String, String> properties = new HashMap<>();
-        properties.put("openubl.storage.type=s3", "s3");
+        properties.put("openubl.storage.type", "s3");
         properties.put("openubl.storage.s3.host", "http://" + host + ":" + port);
         properties.put("openubl.storage.s3.health.url", "http://" + host + ":" + port + "/minio/health/live");
         properties.put("openubl.storage.s3.access_key_id", "BQA2GEXO711FVBVXDWKM");

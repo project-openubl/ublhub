@@ -21,9 +21,11 @@ import org.apache.camel.builder.RouteBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -61,7 +63,11 @@ public class FilesystemRoute extends RouteBuilder {
                 })
                 .choice()
                     .when(header("shouldUnzip").isEqualTo(true))
-                        .unmarshal().zipFile()
+                        .unmarshal(RouteUtils.getZipFileDataFormat())
+                        .split(bodyAs(Iterator.class), (oldExchange, newExchange) -> newExchange)
+                            .streaming()
+                            .convertBodyTo(byte[].class)
+                        .end()
                     .endChoice()
                 .end();
 

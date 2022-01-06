@@ -2,8 +2,6 @@ import React, { useCallback, useRef, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { dump, load } from "js-yaml";
-import * as prettier from "prettier/standalone";
-import * as prettierXmlPlugin from "@prettier/plugin-xml";
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
 
 import {
@@ -41,6 +39,7 @@ import {
 
 import { Input } from "api/ublhub";
 import { documentsPath, INamespaceParams } from "Paths";
+import { prettifyXML } from "utils/modelUtils";
 import { Templates } from "./templates";
 
 enum MainTab {
@@ -174,13 +173,8 @@ export const CreateDocument: React.FC = () => {
                             errorTitle="Could not create preview"
                           >
                             <YAMLEditor
-                              value={prettier.format(
-                                previewDocumentMutation.data || "",
-                                {
-                                  parser: "xml",
-                                  plugins: [prettierXmlPlugin],
-                                  xmlWhitespaceSensitivity: "ignore",
-                                } as any
+                              value={prettifyXML(
+                                previewDocumentMutation.data || ""
                               )}
                               codeEditorProps={{
                                 isReadOnly: true,

@@ -31,6 +31,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.net.URI;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -111,7 +112,11 @@ public class S3FilesRoute extends RouteBuilder {
                         .pollEnrich().simple("aws2-s3://" + s3Bucket + "?amazonS3Client=#s3client&deleteAfterRead=false&fileName=${body}")
                         .setHeader("Content-Disposition", simple("$header.CamelAwsS3ContentDisposition"))
                         .setHeader(Exchange.CONTENT_TYPE, simple("$header.CamelAwsS3ContentType"))
-                        .unmarshal().zipFile()
+                        .unmarshal(RouteUtils.getZipFileDataFormat())
+                            .split(bodyAs(Iterator.class), (oldExchange, newExchange) -> newExchange)
+                            .streaming()
+                            .convertBodyTo(byte[].class)
+                        .end()
                     .endChoice()
                     .otherwise()
                         .pollEnrich().simple("aws2-s3://" + s3Bucket + "?amazonS3Client=#s3client&deleteAfterRead=false&fileName=${body}")

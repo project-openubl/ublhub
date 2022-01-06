@@ -127,3 +127,32 @@ export const useCreateDocumentMutation = (
     }
   );
 };
+
+export const useDocumentUBLFileQuery = (
+  namespaceId: string | null,
+  documentId: string | null,
+  requestedFile: "ubl" | "cdr",
+  requestedFormat: "zip" | "xml"
+): UseQueryResult<string, ApiClientError> => {
+  const resource = new CoreNamespacedResource(
+    CoreNamespacedResourceKind.DocumentFiles,
+    namespaceId || ""
+  );
+
+  const client = useUblhubClient();
+  const result = useQuery<string, ApiClientError>({
+    queryKey: ["document-files", documentId],
+    queryFn: async (): Promise<string> => {
+      return (
+        await client.get<string>(resource, documentId || "", {
+          requestedFile,
+          requestedFormat,
+        })
+      ).data;
+    },
+    enabled: !!documentId,
+    retry: false,
+    refetchOnMount: true,
+  });
+  return result;
+};
