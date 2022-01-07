@@ -21,31 +21,37 @@ import org.hibernate.validator.constraints.URL;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Embeddable
 public class SunatEntity {
 
     @NotNull
+    @Size(max = 255)
+    @Column(name = "sunat_username")
+    public String sunatUsername;
+
+    @NotNull
+    @Size(max = 255)
+    @Column(name = "sunat_password")
+    public String sunatPassword;
+
+    @NotNull
     @URL
+    @Size(max = 255)
     @Column(name = "sunat_url_factura")
     public String sunatUrlFactura;
 
     @NotNull
     @URL
+    @Size(max = 255)
     @Column(name = "sunat_url_guia_remision")
     public String sunatUrlGuiaRemision;
 
     @NotNull
     @URL
+    @Size(max = 255)
     @Column(name = "sunat_url_percepcion_retencion")
     public String sunatUrlPercepcionRetencion;
-
-    @NotNull
-    @Column(name = "sunat_username")
-    public String sunatUsername;
-
-    @NotNull
-    @Column(name = "sunat_password")
-    public String sunatPassword;
 
 }

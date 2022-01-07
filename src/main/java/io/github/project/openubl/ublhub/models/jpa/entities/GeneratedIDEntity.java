@@ -16,16 +16,16 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-
 import javax.persistence.*;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "generated_id", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"namespace_id", "ruc", "document_type"})
 })
-public class GeneratedIDEntity extends PanacheEntityBase {
+public class GeneratedIDEntity extends BaseEntity {
 
     @Id
     @Column(name = "id")
@@ -33,18 +33,22 @@ public class GeneratedIDEntity extends PanacheEntityBase {
     public String id;
 
     @NotNull
+    @Size(max = 11)
     @Column(name = "ruc")
     public String ruc;
 
     @NotNull
+    @Size(max = 50)
     @Column(name = "document_type")
     public String documentType;
 
     @NotNull
+    @Min(1)
     @Column(name = "serie")
     public int serie;
 
     @NotNull
+    @Min(1)
     @Column(name = "numero")
     public int numero;
 

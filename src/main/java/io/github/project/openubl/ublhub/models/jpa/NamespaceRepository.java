@@ -19,6 +19,7 @@ package io.github.project.openubl.ublhub.models.jpa;
 import io.github.project.openubl.ublhub.models.PageBean;
 import io.github.project.openubl.ublhub.models.SortBean;
 import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
@@ -34,10 +35,10 @@ public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntit
 
     public enum SortByField {
         name,
-        createdOn
+        created
     }
 
-    public static final String[] SORT_BY_FIELDS = {SortByField.name.toString(), SortByField.createdOn.toString()};
+    public static final String[] SORT_BY_FIELDS = {SortByField.name.toString(), SortByField.created.toString()};
 
     public Uni<NamespaceEntity> findByName(String name) {
         return find("name", name).firstResult();
@@ -69,4 +70,10 @@ public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntit
         return Uni.combine().all().unis(query.list(), query.count());
     }
 
+    @Override
+    public Uni<Boolean> deleteById(String id) {
+        return NamespaceEntity
+                .delete("id", id)
+                .map(rowCount -> rowCount > 0);
+    }
 }

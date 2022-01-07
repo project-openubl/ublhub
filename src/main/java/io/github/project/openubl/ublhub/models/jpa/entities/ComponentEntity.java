@@ -19,6 +19,8 @@ package io.github.project.openubl.ublhub.models.jpa.entities;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,25 +31,31 @@ public class ComponentEntity extends PanacheEntityBase {
     @Id
     @Column(name = "id", length = 36)
     @Access(AccessType.PROPERTY)
-    // we do this because relationships often fetch id, but not entity.  This avoids an extra SQL
     public String id;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
     public NamespaceEntity namespace;
 
+    @NotNull
+    @Size(max = 255)
     @Column(name = "name")
     public String name;
 
+    @Size(max = 255)
     @Column(name = "provider_type")
     public String providerType;
 
+    @Size(max = 255)
     @Column(name = "provider_id")
     public String providerId;
 
+    @Size(max = 255)
     @Column(name = "parent_id")
     public String parentId;
 
+    @Size(max = 255)
     @Column(name = "sub_type")
     public String subType;
 

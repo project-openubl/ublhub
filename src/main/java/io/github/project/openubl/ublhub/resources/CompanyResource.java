@@ -123,7 +123,7 @@ public class CompanyResource {
                                     CompanyEntity companyEntity = new CompanyEntity();
                                     companyEntity.id = UUID.randomUUID().toString();
                                     companyEntity.namespace = namespaceEntity;
-                                    companyEntity.createdOn = new Date();
+                                    companyEntity.created = new Date();
 
                                     RepresentationToEntity.assign(companyEntity, rep);
                                     return companyEntity.persist().map(unused -> Response.ok()
@@ -180,7 +180,7 @@ public class CompanyResource {
             @QueryParam("filterText") String filterText,
             @QueryParam("offset") @DefaultValue("0") Integer offset,
             @QueryParam("limit") @DefaultValue("10") Integer limit,
-            @QueryParam("sort_by") @DefaultValue("createdOn:desc") List<String> sortBy
+            @QueryParam("sort_by") @DefaultValue("created:desc") List<String> sortBy
     ) {
         PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
         List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, CompanyRepository.SORT_BY_FIELDS);

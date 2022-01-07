@@ -118,7 +118,7 @@ public class DocumentResource {
                 .chain(documentEntity -> Panache
                         .withTransaction(() -> {
                             documentEntity.id = UUID.randomUUID().toString();
-                            documentEntity.createdOn = new Date();
+                            documentEntity.created = new Date();
                             documentEntity.inProgress = true;
                             return documentEntity.<UBLDocumentEntity>persist().map(unused -> documentEntity);
                         })
@@ -224,7 +224,7 @@ public class DocumentResource {
             @QueryParam("filterText") String filterText,
             @QueryParam("offset") @DefaultValue("0") Integer offset,
             @QueryParam("limit") @DefaultValue("10") Integer limit,
-            @QueryParam("sort_by") @DefaultValue("createdOn:desc") List<String> sortBy
+            @QueryParam("sort_by") @DefaultValue("created:desc") List<String> sortBy
     ) {
         PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
         List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, UBLDocumentRepository.SORT_BY_FIELDS);

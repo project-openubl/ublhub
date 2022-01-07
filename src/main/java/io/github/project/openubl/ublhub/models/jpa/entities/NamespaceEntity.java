@@ -16,23 +16,18 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Entity
 @Table(name = "namespace", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"name"})
 })
-public class NamespaceEntity extends PanacheEntityBase {
+public class NamespaceEntity extends BaseEntity {
 
     @Id
     @Column(name = "id")
@@ -40,32 +35,22 @@ public class NamespaceEntity extends PanacheEntityBase {
     public String id;
 
     @NotNull
+    @Size(max = 255)
     @Column(name = "name")
     public String name;
 
-    @Size(max = 250)
+    @Size(max = 255)
     public String description;
-
-    @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "created_on")
-    public Date createdOn;
 
     @NotNull
     @Valid
     @Embedded
     public SunatEntity sunat;
 
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "namespace", orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "namespace", orphanRemoval = true, cascade = CascadeType.REMOVE)
     public List<CompanyEntity> companies = new ArrayList<>();
 
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "namespace", orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "namespace", orphanRemoval = true, cascade = CascadeType.REMOVE)
     public List<ComponentEntity> components = new ArrayList<>();
-
-    @Version
-    @Column(name = "version")
-    public int version;
 
 }

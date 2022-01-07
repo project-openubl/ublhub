@@ -33,7 +33,7 @@ import java.util.List;
 @ApplicationScoped
 public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, String> {
 
-    public static final String[] SORT_BY_FIELDS = {"name", "createdOn"};
+    public static final String[] SORT_BY_FIELDS = {"name", "created"};
 
     public Uni<CompanyEntity> findById(NamespaceEntity namespace, String companyId) {
         return find(

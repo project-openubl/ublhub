@@ -1,68 +1,46 @@
 create table namespace
 (
-    id          varchar(255) not null,
-    created_on  timestamp,
-    description varchar(255),
-    name        varchar(255),
-    sunat_password                 varchar(255),
-    sunat_username                 varchar(255),
-    sunat_url_factura              varchar(255),
-    sunat_url_guia_remision        varchar(255),
-    sunat_url_percepcion_retencion varchar(255),
-    version     int4,
+    id                             varchar(255) not null,
+    name                           varchar(255) not null,
+    description                    varchar(255),
+    sunat_username                 varchar(255) not null,
+    sunat_password                 varchar(255) not null,
+    sunat_url_factura              varchar(255) not null,
+    sunat_url_guia_remision        varchar(255) not null,
+    sunat_url_percepcion_retencion varchar(255) not null,
+    created                        timestamp    not null,
+    updated                        timestamp,
+    version                        int4         not null,
     primary key (id)
 );
 
 create table company
 (
     id                             varchar(255) not null,
-    created_on                     timestamp,
+    ruc                            varchar(11)  not null,
+    name                           varchar(255) not null,
     description                    varchar(255),
-    name                           varchar(255),
-    ruc                            varchar(255),
-    sunat_password                 varchar(255),
-    sunat_username                 varchar(255),
-    sunat_url_factura              varchar(255),
-    sunat_url_guia_remision        varchar(255),
-    sunat_url_percepcion_retencion varchar(255),
-    namespace_id                   varchar(255),
-    version                        int4,
-    primary key (id)
-);
-
-create table ubl_document
-(
-    id                             varchar(255) not null,
-    created_on                     timestamp,
-    document_id                    varchar(255),
-    document_type                  varchar(255),
-    error                          varchar(255),
-    file_valid                     char(1),
-    in_progress                    char(1),
-    retries                        int4,
-    ruc                            varchar(255),
-    scheduled_delivery             timestamp,
-    storage_cdr                    varchar(255),
-    storage_file                   varchar(255),
-    sunat_code                     int4,
-    sunat_description              varchar(255),
-    sunat_status                   varchar(255),
-    sunat_ticket                   varchar(255),
-    voided_line_document_type_code varchar(255),
-    namespace_id                   varchar(255),
-    version                        int4,
+    sunat_username                 varchar(255) not null,
+    sunat_password                 varchar(255) not null,
+    sunat_url_factura              varchar(255) not null,
+    sunat_url_guia_remision        varchar(255) not null,
+    sunat_url_percepcion_retencion varchar(255) not null,
+    namespace_id                   varchar(255) not null,
+    created                        timestamp    not null,
+    updated                        timestamp,
+    version                        int4         not null,
     primary key (id)
 );
 
 create table component
 (
-    id            varchar(36) not null,
-    namespace_id  varchar(255),
-    name          varchar(255),
+    id            varchar(36)  not null,
+    name          varchar(255) not null,
     parent_id     varchar(255),
     provider_id   varchar(255),
     provider_type varchar(255),
     sub_type      varchar(255),
+    namespace_id  varchar(255) not null,
     primary key (id)
 );
 
@@ -71,19 +49,37 @@ create table component_config
     id           varchar(36) not null,
     name         varchar(255),
     value        varchar(4000),
-    component_id varchar(36),
+    component_id varchar(36) not null,
     primary key (id)
 );
 
-create table generated_id
+create table ubl_document
 (
-    id            varchar(255) not null,
-    ruc           varchar(255) not null,
-    document_type varchar(255) not null,
-    serie         int4         not null,
-    numero        int4         not null,
-    version       int4,
-    namespace_id  varchar(255) not null,
+    id                             varchar(255) not null,
+
+    in_progress                    char(1)      not null,
+    scheduled_delivery             timestamp,
+    file_valid                     char(1),
+    error                          varchar(255),
+    retries                        int4,
+
+    ruc                            varchar(11),
+    document_id                    varchar(50),
+    document_type                  varchar(50),
+    voided_line_document_type_code varchar(50),
+
+    storage_file                   varchar(255),
+    storage_cdr                    varchar(255),
+
+    sunat_ticket                   varchar(50),
+    sunat_status                   varchar(50),
+    sunat_code                     int4,
+    sunat_description              varchar(255),
+
+    namespace_id                   varchar(255) not null,
+    created                        timestamp    not null,
+    updated                        timestamp,
+    version                        int4         not null,
     primary key (id)
 );
 
@@ -93,12 +89,36 @@ create table ubl_document_sunat_notes
     value           varchar(255)
 );
 
+create table generated_id
+(
+    id            varchar(255) not null,
+    ruc           varchar(11)  not null,
+    document_type varchar(50)  not null,
+    serie         int4         not null,
+    numero        int4         not null,
+    namespace_id  varchar(255) not null,
+    created       timestamp    not null,
+    updated       timestamp,
+    version       int4         not null,
+    primary key (id)
+);
+
 alter table if exists namespace
 drop
 constraint if exists UKeq2y9mghytirkcofquanv5frf;
 
 alter table if exists namespace
     add constraint UKeq2y9mghytirkcofquanv5frf unique (name);
+
+alter table if exists component
+    add constraint FKegknd206umu3ad5to4ekp3aja
+    foreign key (namespace_id)
+    references namespace;
+
+alter table if exists component_config
+    add constraint FK30o84r8uoxnh7wlbkw1a5mqje
+    foreign key (component_id)
+    references component;
 
 alter table if exists company
 drop
@@ -115,16 +135,6 @@ alter table if exists company
     on
 delete
 cascade;
-
-alter table if exists component
-    add constraint FKegknd206umu3ad5to4ekp3aja
-    foreign key (namespace_id)
-    references namespace;
-
-alter table if exists component_config
-    add constraint FK30o84r8uoxnh7wlbkw1a5mqje
-    foreign key (component_id)
-    references component;
 
 alter table if exists ubl_document
     add constraint FK8lebpqiju4ech6ftq0h1ur0jq

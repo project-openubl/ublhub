@@ -34,7 +34,7 @@ import java.util.List;
 @ApplicationScoped
 public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentEntity, String> {
 
-    public static final String[] SORT_BY_FIELDS = {"createdOn"};
+    public static final String[] SORT_BY_FIELDS = {"created"};
 
     public Uni<UBLDocumentEntity> findById(NamespaceEntity namespace, String id) {
         Parameters queryParameters = Parameters.with("namespaceId", namespace.id)

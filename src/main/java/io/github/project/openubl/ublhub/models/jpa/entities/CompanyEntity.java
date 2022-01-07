@@ -16,18 +16,16 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-
 import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "company", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"namespace_id", "ruc"})
 })
-public class CompanyEntity extends PanacheEntityBase {
+public class CompanyEntity extends BaseEntity {
 
     @Id
     @Column(name = "id")
@@ -35,19 +33,17 @@ public class CompanyEntity extends PanacheEntityBase {
     public String id;
 
     @NotNull
+    @Size(max = 11)
     @Column(name = "ruc")
     public String ruc;
 
     @NotNull
+    @Size(max = 255)
     @Column(name = "name")
     public String name;
 
+    @Size(max = 255)
     public String description;
-
-    @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "created_on")
-    public Date createdOn;
 
     @NotNull
     @Valid
@@ -55,12 +51,8 @@ public class CompanyEntity extends PanacheEntityBase {
     public SunatEntity sunat;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
     public NamespaceEntity namespace;
-
-    @Version
-    @Column(name = "version")
-    public int version;
 
 }
