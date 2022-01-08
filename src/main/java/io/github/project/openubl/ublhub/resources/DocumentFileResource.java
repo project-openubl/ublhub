@@ -72,9 +72,7 @@ public class DocumentFileResource {
             @QueryParam("requestedFormat") @DefaultValue("zip") String requestedFormat
     ) {
         return Panache
-                .withTransaction(() -> namespaceRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespaceEntity -> documentRepository.findById(namespaceEntity, documentId))
-                )
+                .withTransaction(() -> documentRepository.findById(namespaceId, documentId))
                 .onItem().ifNotNull().transformToUni(documentEntity -> {
                             String fileId;
                             if (requestedFile.equals("ubl")) {
@@ -92,8 +90,11 @@ public class DocumentFileResource {
                                 bytesUni = filesMutiny.getFileAsBytesAfterUnzip(fileId);
                             }
 
-                            return bytesUni.map(bytes -> Response.ok(bytes, isZipFormatRequested ? "application/zip" : MediaType.APPLICATION_XML)
-                                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentEntity.documentID + (isZipFormatRequested ? ".zip" : ".xml") + "\"")
+                            String filename = documentEntity.documentID + (isZipFormatRequested ? ".zip" : ".xml");
+                            String mediaType = isZipFormatRequested ? "application/zip" : MediaType.APPLICATION_XML;
+
+                            return bytesUni.map(bytes -> Response.ok(bytes, mediaType)
+                                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                                     .build()
                             );
                         }

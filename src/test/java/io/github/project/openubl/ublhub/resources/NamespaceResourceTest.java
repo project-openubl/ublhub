@@ -160,11 +160,19 @@ public class NamespaceResourceTest extends AbstractBaseTest {
                         "credentials.username", is("username1"),
                         "credentials.password", nullValue()
                 );
+        // Then
+    }
 
+    @Test
+    public void getNamespace_notFound() {
+        // Given
+        String nsId = "10";
+
+        // When
         given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + 10)
+                .get("/api/namespaces/" + nsId)
                 .then()
                 .statusCode(404);
         // Then

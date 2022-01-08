@@ -36,32 +36,31 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
     public static final String[] SORT_BY_FIELDS = {"name", "created"};
 
     public Uni<CompanyEntity> findById(NamespaceEntity namespace, String companyId) {
-        return find(
-                "id = :companyId and namespace.id = :namespaceId",
-                Parameters.with("namespaceId", namespace.id).and("companyId", companyId).map()
-        ).firstResult();
+        return findById(namespace.id, companyId);
     }
 
-    public Uni<CompanyEntity> findByRuc(String namespaceId, String ruc) {
-        return find("ruc = :ruc and namespace.id = :namespaceId",
-                Parameters.with("namespaceId", namespaceId).and("ruc", ruc).map()
-        ).firstResult();
+    public Uni<CompanyEntity> findById(String namespaceId, String companyId) {
+        Parameters params = Parameters.with("namespaceId", namespaceId).and("companyId", companyId);
+        return find("id = :companyId and namespace.id = :namespaceId", params).firstResult();
     }
 
     public Uni<CompanyEntity> findByRuc(NamespaceEntity namespace, String ruc) {
         return findByRuc(namespace.id, ruc);
     }
 
+    public Uni<CompanyEntity> findByRuc(String namespaceId, String ruc) {
+        Parameters params = Parameters.with("namespaceId", namespaceId).and("ruc", ruc);
+        return find("ruc = :ruc and namespace.id = :namespaceId", params).firstResult();
+    }
+
     public UniAndGroup2<List<CompanyEntity>, Long> list(NamespaceEntity namespace, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
+        Parameters params = Parameters.with("namespaceId", namespace.id);
+
         PanacheQuery<CompanyEntity> query = CompanyEntity
-                .find(
-                        "From CompanyEntity as c where c.namespace.id = :namespaceId",
-                        sort,
-                        Parameters.with("namespaceId", namespace.id)
-                )
+                .find("From CompanyEntity as c where c.namespace.id = :namespaceId", sort, params)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
         return Uni.combine().all().unis(query.list(), query.count());
@@ -71,15 +70,19 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
+        Parameters params = Parameters.with("namespaceId", namespace.id).and("filterText", "%" + filterText.toLowerCase() + "%");
+
         PanacheQuery<CompanyEntity> query = CompanyEntity
-                .find(
-                        "From CompanyEntity as c where c.namespace.id = :namespaceId and (lower(c.name) like :filterText or c.ruc like :filterText)",
-                        sort,
-                        Parameters.with("namespaceId", namespace.id).and("filterText", "%" + filterText.toLowerCase() + "%")
-                )
+                .find("From CompanyEntity as c where c.namespace.id = :namespaceId and (lower(c.name) like :filterText or c.ruc like :filterText)", sort, params)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
         return Uni.combine().all().unis(query.list(), query.count());
     }
 
+    public Uni<Boolean> deleteByNamespaceIdAndId(String namespaceId, String id) {
+        Parameters params = Parameters.with("namespaceId", namespaceId).and("id", id);
+        return CompanyEntity
+                .delete("namespace.id = :namespaceId and id = :id", params)
+                .map(rowCount -> rowCount > 0);
+    }
 }

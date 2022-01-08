@@ -19,7 +19,6 @@ package io.github.project.openubl.ublhub.models.jpa;
 import io.github.project.openubl.ublhub.models.PageBean;
 import io.github.project.openubl.ublhub.models.SortBean;
 import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
@@ -49,7 +48,7 @@ public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntit
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
         PanacheQuery<NamespaceEntity> query = NamespaceEntity
-                .find("From NamespaceEntity as o", sort)
+                .find("From NamespaceEntity as n", sort)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
         return Uni.combine().all().unis(query.list(), query.count());

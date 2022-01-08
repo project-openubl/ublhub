@@ -46,10 +46,8 @@ import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.models.utils.RepresentationToEntity;
 import io.github.project.openubl.ublhub.models.utils.RepresentationToModel;
 import io.quarkus.hibernate.reactive.panache.Panache;
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.keycloak.common.util.PemUtils;
 import org.keycloak.crypto.KeyWrapper;
@@ -62,7 +60,10 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Path("/namespaces")
@@ -99,7 +100,6 @@ public class NamespaceResource {
                             namespaceEntity.id = UUID.randomUUID().toString();
                             namespaceEntity.name = rep.getName();
                             namespaceEntity.description = rep.getDescription();
-                            namespaceEntity.created = new Date();
 
                             namespaceEntity.sunat = new SunatEntity();
                             namespaceEntity.sunat.sunatUsername = rep.getCredentials().getUsername();
@@ -112,10 +112,8 @@ public class NamespaceResource {
                                     .chain(namespace -> defaultKeyProviders.createProviders(namespace))
                                     .map(unused -> namespaceEntity);
                         })
-                        .map(namespaceEntity -> Response.status(Response.Status.CREATED)
-                                .entity(EntityToRepresentation.toRepresentation(namespaceEntity))
-                                .build()
-                        )
+                        .map(EntityToRepresentation::toRepresentation)
+                        .map(result -> Response.status(Response.Status.CREATED).entity(result).build())
                 );
     }
 
@@ -136,8 +134,14 @@ public class NamespaceResource {
     @Path("/{namespaceId}")
     public Uni<Response> getNamespace(@PathParam("namespaceId") @NotNull String namespaceId) {
         return Panache.withTransaction(() -> namespaceRepository.findById(namespaceId))
-                .onItem().ifNotNull().transform(entity -> Response.ok().entity(EntityToRepresentation.toRepresentation(entity)).build())
-                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
+                .onItem().ifNotNull().transform(EntityToRepresentation::toRepresentation)
+                .map(rep -> {
+                    if (rep != null) {
+                        return Response.status(Response.Status.OK).entity(rep).build();
+                    } else {
+                        return Response.status(Response.Status.NOT_FOUND).build();
+                    }
+                });
     }
 
     @PUT
@@ -150,12 +154,15 @@ public class NamespaceResource {
                 .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().invoke(namespaceEntity -> RepresentationToEntity.assign(namespaceEntity, rep))
                 )
-                .onItem().ifNotNull().transform(entity -> Response.ok().entity(EntityToRepresentation.toRepresentation(entity)).build())
-                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
+                .onItem().ifNotNull().transform(EntityToRepresentation::toRepresentation)
+                .map(result -> {
+                    if (result != null) {
+                        return Response.status(Response.Status.OK).entity(result).build();
+                    } else {
+                        return Response.status(Response.Status.NOT_FOUND).build();
+                    }
+                });
     }
-
-    @Inject
-    Mutiny.SessionFactory sessionFactory;
 
     @DELETE
     @Path("/{namespaceId}")
