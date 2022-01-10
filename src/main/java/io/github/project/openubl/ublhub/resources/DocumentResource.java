@@ -48,6 +48,7 @@ import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
+import io.github.project.openubl.ublhub.resources.validation.JSONValidatorManager;
 import io.github.project.openubl.ublhub.scheduler.SchedulerManager;
 import io.github.project.openubl.xmlbuilderlib.xml.XMLSigner;
 import io.github.project.openubl.xmlbuilderlib.xml.XmlSignatureHelper;
@@ -104,6 +105,9 @@ public class DocumentResource {
     @Inject
     KeyManager keystore;
 
+    @Inject
+    JSONValidatorManager jsonManager;
+
     public Uni<UBLDocumentEntity> createDocumentFromFileID(NamespaceEntity namespaceEntity, String fileSavedId) {
         // Wait for file to be saved
         return Uni.createFrom().item(fileSavedId)
@@ -118,7 +122,7 @@ public class DocumentResource {
                 .chain(documentEntity -> Panache
                         .withTransaction(() -> {
                             documentEntity.id = UUID.randomUUID().toString();
-                            documentEntity.createdOn = new Date();
+                            documentEntity.created = new Date();
                             documentEntity.inProgress = true;
                             return documentEntity.<UBLDocumentEntity>persist().map(unused -> documentEntity);
                         })
@@ -135,53 +139,50 @@ public class DocumentResource {
     @Path("/{namespaceId}/documents")
     public Uni<Response> createDocument(
             @PathParam("namespaceId") @NotNull String namespaceId,
-            @NotNull JsonObject jsonObject
+            @NotNull JsonObject json
     ) {
-        InputTemplateRepresentation inputTemplate = jsonObject.mapTo(InputTemplateRepresentation.class);
-        JsonObject documentJsonObject = jsonObject.getJsonObject("spec").getJsonObject("document");
         return Panache
                 .withTransaction(() -> namespaceRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespaceEntity -> xmlBuilderManager.createXMLString(namespaceEntity, inputTemplate, documentJsonObject, false)
-                                .chain(xmlString -> keystore
-                                        .getActiveKey(namespaceEntity, KeyUse.SIG, inputTemplate.getSpec().getSignature() != null ? inputTemplate.getSpec().getSignature().getAlgorithm() : Algorithm.RS256)
-                                        .map(key -> {
-                                            KeyManager.ActiveRsaKey activeRsaKey = new KeyManager.ActiveRsaKey(key.getKid(), (PrivateKey) key.getPrivateKey(), (PublicKey) key.getPublicKey(), key.getCertificate());
-                                            try {
-                                                return XMLSigner.signXML(xmlString, "OPENUBL", activeRsaKey.getCertificate(), activeRsaKey.getPrivateKey());
-                                            } catch (Exception e) {
-                                                throw new IllegalStateException(e);
-                                            }
-                                        })
+                        .onItem().ifNotNull().transformToUni(namespaceEntity -> jsonManager
+                                .getUniInputTemplateFromJSON(json)
+                                .onItem().ifNotNull().transformToUni(input -> xmlBuilderManager
+                                        .createXMLString(namespaceEntity, input, false)
+                                        .chain(xmlString -> keystore
+                                                .getActiveKey(namespaceEntity, KeyUse.SIG, input.getSpec().getSignature() != null ? input.getSpec().getSignature().getAlgorithm() : Algorithm.RS256)
+                                                .map(key -> {
+                                                    KeyManager.ActiveRsaKey activeRsaKey = new KeyManager.ActiveRsaKey(key.getKid(), (PrivateKey) key.getPrivateKey(), (PublicKey) key.getPublicKey(), key.getCertificate());
+                                                    try {
+                                                        return XMLSigner.signXML(xmlString, "OPENUBL", activeRsaKey.getCertificate(), activeRsaKey.getPrivateKey());
+                                                    } catch (Exception e) {
+                                                        throw new IllegalStateException(e);
+                                                    }
+                                                })
+
+                                                // Save file
+                                                .chain(document -> {
+                                                    try {
+                                                        byte[] bytes = XmlSignatureHelper.getBytesFromDocument(document);
+                                                        return filesMutiny.createFile(bytes, true);
+                                                    } catch (Exception e) {
+                                                        throw new IllegalStateException(e);
+                                                    }
+                                                })
+
+                                                // Link the file Entity
+                                                .chain(fileSavedId -> createDocumentFromFileID(namespaceEntity, fileSavedId))
+
+                                                // Response
+                                                .map(documentEntity -> Response
+                                                        .status(Response.Status.CREATED)
+                                                        .entity(EntityToRepresentation.toRepresentation(documentEntity))
+                                                        .build()
+                                                )
+                                        )
                                 )
-
-                                // Save file
-                                .chain(document -> {
-                                    try {
-                                        byte[] bytes = XmlSignatureHelper.getBytesFromDocument(document);
-                                        return filesMutiny.createFile(bytes, true);
-                                    } catch (Exception e) {
-                                        throw new IllegalStateException(e);
-                                    }
-                                })
-
-                                // Link the file Entity
-                                .chain(fileSavedId -> createDocumentFromFileID(namespaceEntity, fileSavedId))
-
-                                // Response
-                                .map(documentEntity -> Response
-                                        .status(Response.Status.CREATED)
-                                        .entity(EntityToRepresentation.toRepresentation(documentEntity))
-                                        .build()
-                                )
+                                .onItem().ifNull().continueWith(Response.ok().status(Response.Status.BAD_REQUEST)::build)
                         )
-
                         .onItem().ifNull().continueWith(Response.ok()
                                 .status(Response.Status.NOT_FOUND)::build
-                        )
-
-                        .onFailure(throwable -> throwable instanceof ConstraintViolationException).recoverWithItem(throwable -> Response
-                                .status(Response.Status.BAD_REQUEST)
-                                .entity(throwable.getMessage()).build()
                         )
                 );
     }
@@ -224,7 +225,7 @@ public class DocumentResource {
             @QueryParam("filterText") String filterText,
             @QueryParam("offset") @DefaultValue("0") Integer offset,
             @QueryParam("limit") @DefaultValue("10") Integer limit,
-            @QueryParam("sort_by") @DefaultValue("createdOn:desc") List<String> sortBy
+            @QueryParam("sort_by") @DefaultValue("created:desc") List<String> sortBy
     ) {
         PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
         List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, UBLDocumentRepository.SORT_BY_FIELDS);

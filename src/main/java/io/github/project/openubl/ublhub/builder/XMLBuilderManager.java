@@ -51,7 +51,7 @@ public class XMLBuilderManager {
     @Inject
     IGGeneratorManager igGeneratorManager;
 
-    public Uni<String> createXMLString(NamespaceEntity namespace, InputTemplateRepresentation inputTemplate, JsonObject document, boolean isPreview) {
+    public Uni<String> createXMLString(NamespaceEntity namespace, InputTemplateRepresentation inputTemplate, boolean isPreview) {
         KindRepresentation kind = inputTemplate.getKind();
         SpecRepresentation spec = inputTemplate.getSpec();
 
@@ -61,6 +61,8 @@ public class XMLBuilderManager {
             idGeneratorType = spec.getIdGenerator().getName();
             idGeneratorConfig = spec.getIdGenerator().getConfig();
         }
+
+        JsonObject document = inputTemplate.getSpec().getDocument();
 
         IDGenerator idGenerator = igGeneratorManager.selectIDGenerator(idGeneratorType);
         switch (kind) {

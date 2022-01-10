@@ -18,18 +18,19 @@ package io.github.project.openubl.ublhub.models.jpa.entities;
 
 import io.github.project.openubl.ublhub.models.ErrorType;
 import io.github.project.openubl.ublhub.models.jpa.entities.listeners.UBLDocumentEntityListener;
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "ubl_document")
 @EntityListeners(UBLDocumentEntityListener.class)
-public class UBLDocumentEntity extends PanacheEntityBase {
+public class UBLDocumentEntity extends BaseEntity {
 
     @Id
     @Column(name = "id")
@@ -37,18 +38,14 @@ public class UBLDocumentEntity extends PanacheEntityBase {
     public String id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
     public NamespaceEntity namespace;
 
+    @NotNull
     @Type(type = "org.hibernate.type.YesNoType")
     @Column(name = "in_progress")
     public boolean inProgress;
-
-    @NotNull
-    @Column(name = "created_on")
-    @Temporal(TemporalType.TIMESTAMP)
-    public Date createdOn;
 
     @Column(name = "scheduled_delivery")
     @Temporal(TemporalType.TIMESTAMP)
@@ -68,47 +65,53 @@ public class UBLDocumentEntity extends PanacheEntityBase {
 
     // XML Content
 
+    @Size(max = 11)
     @Column(name = "ruc")
     public String ruc;
 
+    @Size(max = 50)
     @Column(name = "document_id")
     public String documentID;
 
+    @Size(max = 50)
     @Column(name = "document_type")
     public String documentType;
 
+    @Size(max = 50)
     @Column(name = "voided_line_document_type_code")
     public String voidedLineDocumentTypeCode;
 
     // Storage
 
     @NotNull
+    @Size(max = 255)
     @Column(name = "storage_file")
     public String storageFile;
 
+    @Size(max = 255)
     @Column(name = "storage_cdr")
     public String storageCdr;
 
     //
 
+    @Size(max = 50)
     @Column(name = "sunat_ticket")
     public String sunatTicket;
 
+    @Size(max = 50)
     @Column(name = "sunat_status")
     public String sunatStatus;
 
     @Column(name = "sunat_code")
     public Integer sunatCode;
 
+    @Size(max = 255)
     @Column(name = "sunat_description")
     public String sunatDescription;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @Column(name = "value")
     @CollectionTable(name = "ubl_document_sunat_notes", joinColumns = {@JoinColumn(name = "ubl_document_id")})
-    public Set<String> sunatNotes;
+    public Set<@NotNull @Size(max = 255) String> sunatNotes = new HashSet<>();
 
-    @Version
-    @Column(name = "version")
-    public int version;
 }

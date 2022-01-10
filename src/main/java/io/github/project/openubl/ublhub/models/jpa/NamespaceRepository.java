@@ -34,10 +34,10 @@ public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntit
 
     public enum SortByField {
         name,
-        createdOn
+        created
     }
 
-    public static final String[] SORT_BY_FIELDS = {SortByField.name.toString(), SortByField.createdOn.toString()};
+    public static final String[] SORT_BY_FIELDS = {SortByField.name.toString(), SortByField.created.toString()};
 
     public Uni<NamespaceEntity> findByName(String name) {
         return find("name", name).firstResult();
@@ -48,7 +48,7 @@ public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntit
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
         PanacheQuery<NamespaceEntity> query = NamespaceEntity
-                .find("From NamespaceEntity as o", sort)
+                .find("From NamespaceEntity as n", sort)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
         return Uni.combine().all().unis(query.list(), query.count());
@@ -69,4 +69,10 @@ public class NamespaceRepository implements PanacheRepositoryBase<NamespaceEntit
         return Uni.combine().all().unis(query.list(), query.count());
     }
 
+    @Override
+    public Uni<Boolean> deleteById(String id) {
+        return NamespaceEntity
+                .delete("id", id)
+                .map(rowCount -> rowCount > 0);
+    }
 }

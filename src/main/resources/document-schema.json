@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "required": [
+    "kind",
+    "spec"
+  ],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "Invoice",
+        "CreditNote",
+        "DebitNote",
+        "SummaryDocument",
+        "VoidedDocument"
+      ]
+    },
+    "spec": {
+      "type": "object",
+      "required": [
+        "document"
+      ],
+      "properties": {
+        "idGenerator": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "none",
+                "generated"
+              ]
+            },
+            "config": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "signature": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "algorithm"
+          ],
+          "properties": {
+            "algorithm": {
+              "type": "string"
+            }
+          }
+        },
+        "document": {
+          "type": "object"
+        }
+      }
+    }
+  },
+  "definitions": {}
+}

@@ -34,13 +34,16 @@ import java.util.List;
 @ApplicationScoped
 public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentEntity, String> {
 
-    public static final String[] SORT_BY_FIELDS = {"createdOn"};
+    public static final String[] SORT_BY_FIELDS = {"created"};
 
     public Uni<UBLDocumentEntity> findById(NamespaceEntity namespace, String id) {
-        Parameters queryParameters = Parameters.with("namespaceId", namespace.id)
-                .and("id", id);
+        return findById(namespace.id, id);
+    }
+
+    public Uni<UBLDocumentEntity> findById(String namespaceId, String id) {
+        Parameters params = Parameters.with("namespaceId", namespaceId).and("id", id);
         return UBLDocumentEntity
-                .find("From UBLDocumentEntity as d where d.namespace.id = :namespaceId and d.id = :id", queryParameters)
+                .find("From UBLDocumentEntity as d where d.namespace.id = :namespaceId and d.id = :id", params)
                 .firstResult();
     }
 
@@ -49,19 +52,19 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
         StringBuilder queryBuilder = new StringBuilder("From UBLDocumentEntity as c where c.namespace.id = :namespaceId");
-        Parameters queryParameters = Parameters.with("namespaceId", namespace.id);
+        Parameters params = Parameters.with("namespaceId", namespace.id);
 
         if (filters.getRuc() != null && !filters.getRuc().isEmpty()) {
             queryBuilder.append(" and c.ruc in :ruc");
-            queryParameters = queryParameters.and("ruc", filters.getRuc());
+            params = params.and("ruc", filters.getRuc());
         }
         if (filters.getDocumentType() != null && !filters.getDocumentType().isEmpty()) {
             queryBuilder.append(" and c.documentType in :documentType");
-            queryParameters = queryParameters.and("documentType", filters.getDocumentType());
+            params = params.and("documentType", filters.getDocumentType());
         }
 
         PanacheQuery<UBLDocumentEntity> query = UBLDocumentEntity
-                .find(queryBuilder.toString(), sort, queryParameters)
+                .find(queryBuilder.toString(), sort, params)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
         return Uni.combine().all().unis(query.list(), query.count());

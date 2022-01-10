@@ -329,7 +329,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
         given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsId + "/companies?sort_by=createdOn:asc")
+                .get("/api/namespaces/" + nsId + "/companies?sort_by=created:asc")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(2),

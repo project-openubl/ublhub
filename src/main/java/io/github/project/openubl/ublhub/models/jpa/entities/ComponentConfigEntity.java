@@ -20,6 +20,8 @@ import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import org.hibernate.annotations.Nationalized;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "component_config")
@@ -28,17 +30,19 @@ public class ComponentConfigEntity extends PanacheEntityBase {
     @Id
     @Column(name = "id", length = 36)
     @Access(AccessType.PROPERTY)
-    // we do this because relationships often fetch id, but not entity.  This avoids an extra SQL
     public String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "component_id")
     public ComponentEntity component;
 
+    @Size(max = 255)
     @Column(name = "name")
     public String name;
 
     @Nationalized
+    @Size(max = 4000)
     @Column(name = "value", length = 4000)
     public String value;
 

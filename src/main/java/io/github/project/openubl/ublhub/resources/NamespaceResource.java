@@ -34,13 +34,10 @@ package io.github.project.openubl.ublhub.resources;
  */
 
 import io.github.project.openubl.ublhub.idm.NamespaceRepresentation;
-import io.github.project.openubl.ublhub.idm.PageRepresentation;
 import io.github.project.openubl.ublhub.keys.DefaultKeyProviders;
 import io.github.project.openubl.ublhub.keys.KeyManager;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.component.utils.ComponentUtil;
-import io.github.project.openubl.ublhub.models.PageBean;
-import io.github.project.openubl.ublhub.models.SortBean;
 import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
 import io.github.project.openubl.ublhub.models.jpa.NamespaceRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
@@ -48,9 +45,7 @@ import io.github.project.openubl.ublhub.models.jpa.entities.SunatEntity;
 import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.models.utils.RepresentationToEntity;
 import io.github.project.openubl.ublhub.models.utils.RepresentationToModel;
-import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
 import io.quarkus.hibernate.reactive.panache.Panache;
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
@@ -65,9 +60,11 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Path("/namespaces")
 @Produces("application/json")
@@ -103,7 +100,6 @@ public class NamespaceResource {
                             namespaceEntity.id = UUID.randomUUID().toString();
                             namespaceEntity.name = rep.getName();
                             namespaceEntity.description = rep.getDescription();
-                            namespaceEntity.createdOn = new Date();
 
                             namespaceEntity.sunat = new SunatEntity();
                             namespaceEntity.sunat.sunatUsername = rep.getCredentials().getUsername();
@@ -116,17 +112,15 @@ public class NamespaceResource {
                                     .chain(namespace -> defaultKeyProviders.createProviders(namespace))
                                     .map(unused -> namespaceEntity);
                         })
-                        .map(namespaceEntity -> Response.status(Response.Status.CREATED)
-                                .entity(EntityToRepresentation.toRepresentation(namespaceEntity))
-                                .build()
-                        )
+                        .map(EntityToRepresentation::toRepresentation)
+                        .map(result -> Response.status(Response.Status.CREATED).entity(result).build())
                 );
     }
 
     @GET
     @Path("/")
     public Uni<List<NamespaceRepresentation>> getNamespaces() {
-        Sort sort = Sort.by(NamespaceRepository.SortByField.createdOn.toString(), Sort.Direction.Descending);
+        Sort sort = Sort.by(NamespaceRepository.SortByField.created.toString(), Sort.Direction.Descending);
         return Panache.withTransaction(() -> namespaceRepository
                 .listAll(sort)
                 .map(entities -> entities.stream()
@@ -140,8 +134,14 @@ public class NamespaceResource {
     @Path("/{namespaceId}")
     public Uni<Response> getNamespace(@PathParam("namespaceId") @NotNull String namespaceId) {
         return Panache.withTransaction(() -> namespaceRepository.findById(namespaceId))
-                .onItem().ifNotNull().transform(entity -> Response.ok().entity(EntityToRepresentation.toRepresentation(entity)).build())
-                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
+                .onItem().ifNotNull().transform(EntityToRepresentation::toRepresentation)
+                .map(rep -> {
+                    if (rep != null) {
+                        return Response.status(Response.Status.OK).entity(rep).build();
+                    } else {
+                        return Response.status(Response.Status.NOT_FOUND).build();
+                    }
+                });
     }
 
     @PUT
@@ -154,21 +154,25 @@ public class NamespaceResource {
                 .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().invoke(namespaceEntity -> RepresentationToEntity.assign(namespaceEntity, rep))
                 )
-                .onItem().ifNotNull().transform(entity -> Response.ok().entity(EntityToRepresentation.toRepresentation(entity)).build())
-                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
+                .onItem().ifNotNull().transform(EntityToRepresentation::toRepresentation)
+                .map(result -> {
+                    if (result != null) {
+                        return Response.status(Response.Status.OK).entity(result).build();
+                    } else {
+                        return Response.status(Response.Status.NOT_FOUND).build();
+                    }
+                });
     }
 
     @DELETE
     @Path("/{namespaceId}")
     public Uni<Response> deleteNamespace(@PathParam("namespaceId") @NotNull String namespaceId) {
-        return Panache
-                .withTransaction(() -> namespaceRepository.findById(namespaceId)
-                        .onItem().ifNotNull().call(PanacheEntityBase::delete)
-                )
-                .onItem().ifNotNull().transform(entity -> Response.status(Response.Status.NO_CONTENT).build())
-                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
+        return Panache.withTransaction(() -> namespaceRepository.deleteById(namespaceId))
+                .map(result -> Response
+                        .status(result ? Response.Status.NO_CONTENT : Response.Status.NOT_FOUND)
+                        .build()
+                );
     }
-
 
     @GET
     @Path("/{namespaceId}/keys")

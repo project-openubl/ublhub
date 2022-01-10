@@ -136,7 +136,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/namespaces/" + nsId + "/documents?sort_by=createdOn:asc")
+                .get("/api/namespaces/" + nsId + "/documents?sort_by=created:asc")
                 .then()
                 .statusCode(200)
                 .body("meta.count", is(2),
