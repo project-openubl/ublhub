@@ -17,7 +17,6 @@
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
 import io.github.project.openubl.ublhub.models.ErrorType;
-import io.github.project.openubl.ublhub.models.jpa.entities.listeners.UBLDocumentEntityListener;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -29,7 +28,6 @@ import java.util.Set;
 
 @Entity
 @Table(name = "ubl_document")
-@EntityListeners(UBLDocumentEntityListener.class)
 public class UBLDocumentEntity extends BaseEntity {
 
     @Id

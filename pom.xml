@@ -202,17 +202,6 @@
             <artifactId>quarkus-container-image-jib</artifactId>
         </dependency>
 
-        <!--Websockets-->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.8.1</version>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-websockets</artifactId>
-        </dependency>
-
         <!--Camel-->
         <dependency>
             <groupId>org.apache.camel.quarkus</groupId>
