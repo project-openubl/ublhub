@@ -34,15 +34,14 @@ package io.github.project.openubl.ublhub.resources;
  */
 
 import io.github.project.openubl.ublhub.builder.XMLBuilderManager;
-import io.github.project.openubl.ublhub.idm.input.InputTemplateRepresentation;
 import io.github.project.openubl.ublhub.models.jpa.NamespaceRepository;
+import io.github.project.openubl.ublhub.resources.validation.JSONValidatorManager;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.validation.ConstraintViolationException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -59,32 +58,32 @@ public class DocumentPreviewResource {
     @Inject
     XMLBuilderManager xmlBuilderManager;
 
+    @Inject
+    JSONValidatorManager jsonManager;
+
     @POST
     @Path("/{namespaceId}/document-preview")
     public Uni<Response> createDocumentPreview(
             @PathParam("namespaceId") @NotNull String namespaceId,
-            @NotNull JsonObject jsonObject
+            @NotNull JsonObject json
     ) {
-        InputTemplateRepresentation inputTemplate = jsonObject.mapTo(InputTemplateRepresentation.class);
-        JsonObject documentJsonObject = jsonObject.getJsonObject("spec").getJsonObject("document");
         return Panache
-                .withTransaction(() -> namespaceRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespaceEntity -> xmlBuilderManager.createXMLString(namespaceEntity, inputTemplate, documentJsonObject, true)
-                                // Response
-                                .map(xmlString -> Response
-                                        .status(Response.Status.OK)
-                                        .entity(xmlString)
-                                        .build()
+                .withTransaction(() -> namespaceRepository
+                        .findById(namespaceId)
+                        .onItem().ifNotNull().transformToUni(namespaceEntity -> jsonManager
+                                .getUniInputTemplateFromJSON(json)
+                                .onItem().ifNotNull().transformToUni(input -> xmlBuilderManager
+                                        .createXMLString(namespaceEntity, input, true)
+                                        .map(xmlString -> Response
+                                                .status(Response.Status.OK)
+                                                .entity(xmlString)
+                                                .build()
+                                        )
                                 )
+                                .onItem().ifNull().continueWith(Response.ok().status(Response.Status.BAD_REQUEST)::build)
                         )
-
                         .onItem().ifNull().continueWith(Response.ok()
                                 .status(Response.Status.NOT_FOUND)::build
-                        )
-
-                        .onFailure(throwable -> throwable instanceof ConstraintViolationException).recoverWithItem(throwable -> Response
-                                .status(Response.Status.BAD_REQUEST)
-                                .entity(throwable.getMessage()).build()
                         )
                 );
     }

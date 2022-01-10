@@ -34,7 +34,6 @@ package io.github.project.openubl.ublhub.resources;
  */
 
 import io.github.project.openubl.ublhub.files.FilesMutiny;
-import io.github.project.openubl.ublhub.models.jpa.NamespaceRepository;
 import io.github.project.openubl.ublhub.models.jpa.UBLDocumentRepository;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
@@ -55,9 +54,6 @@ public class DocumentFileResource {
 
     @Inject
     FilesMutiny filesMutiny;
-
-    @Inject
-    NamespaceRepository namespaceRepository;
 
     @Inject
     UBLDocumentRepository documentRepository;
