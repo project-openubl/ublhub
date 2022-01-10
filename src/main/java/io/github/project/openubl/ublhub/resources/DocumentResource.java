@@ -34,10 +34,8 @@ package io.github.project.openubl.ublhub.resources;
  */
 
 import io.github.project.openubl.ublhub.builder.XMLBuilderManager;
-import io.github.project.openubl.ublhub.events.BroadcasterEventManager;
 import io.github.project.openubl.ublhub.exceptions.NoNamespaceException;
 import io.github.project.openubl.ublhub.files.FilesMutiny;
-import io.github.project.openubl.ublhub.idm.input.InputTemplateRepresentation;
 import io.github.project.openubl.ublhub.keys.KeyManager;
 import io.github.project.openubl.ublhub.models.DocumentFilterModel;
 import io.github.project.openubl.ublhub.models.PageBean;
@@ -63,7 +61,6 @@ import org.keycloak.crypto.KeyUse;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.validation.ConstraintViolationException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -87,11 +84,6 @@ public class DocumentResource {
 
     @Inject
     SchedulerManager schedulerManager;
-
-    // Needed to not remove BroadcasterEventManager at build-time
-    // https://github.com/quarkusio/quarkus/issues/6948
-    @Inject
-    BroadcasterEventManager broadcasterEventManager;
 
     @Inject
     NamespaceRepository namespaceRepository;
