@@ -29,6 +29,7 @@ import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.representations.idm.ComponentRepresentation;
 import org.keycloak.representations.idm.ConfigPropertyRepresentation;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
@@ -98,33 +99,44 @@ public class EntityToRepresentation {
         DocumentRepresentation rep = new DocumentRepresentation();
 
         rep.setId(entity.id);
-        rep.setNamespaceId(entity.namespace.id);
+        rep.setJobInProgress(entity.jobInProgress);
 
-        rep.setInProgress(entity.inProgress);
-
-        rep.setCreatedOn(entity.created.getTime());
-        rep.setError(entity.error);
-        rep.setScheduledDelivery(entity.scheduledDelivery != null ? entity.scheduledDelivery.getTime() : null);
-        rep.setRetryCount(entity.retries);
+        rep.setCreated(entity.created.getTime());
+        rep.setUpdated(entity.updated != null ? entity.updated.getTime() : null);
 
         // File
+        if (entity.xmlFileContent != null) {
+            XMLFileContentRepresentation xmlFileContentRep = new XMLFileContentRepresentation();
+            rep.setXmlFileContent(xmlFileContentRep);
 
-        rep.setFileContentValid(entity.fileValid);
-
-        rep.setFileContent(new FileContentRepresentation());
-        rep.getFileContent().setRuc(entity.ruc);
-        rep.getFileContent().setDocumentID(entity.documentID);
-        rep.getFileContent().setDocumentType(entity.documentType);
+            xmlFileContentRep.setRuc(entity.xmlFileContent.ruc);
+            xmlFileContentRep.setSerieNumero(entity.xmlFileContent.serieNumero);
+            xmlFileContentRep.setTipoDocumento(entity.xmlFileContent.tipoDocumento);
+        }
 
         // Sunat
+        if (entity.sunatResponse != null) {
+            SunatStatusRepresentation sunatResponseRep = new SunatStatusRepresentation();
+            rep.setSunatResponse(sunatResponseRep);
 
-        rep.setSunat(new SunatStatusRepresentation());
+            sunatResponseRep.setCode(entity.sunatResponse.code);
+            sunatResponseRep.setTicket(entity.sunatResponse.ticket);
+            sunatResponseRep.setStatus(entity.sunatResponse.status);
+            sunatResponseRep.setDescription(entity.sunatResponse.description);
+            sunatResponseRep.setNotes(new ArrayList<>(entity.sunatResponse.notes));
+            sunatResponseRep.setHasCdr(entity.cdrFileId != null);
+        }
 
-        rep.getSunat().setCode(entity.sunatCode);
-        rep.getSunat().setTicket(entity.sunatTicket);
-        rep.getSunat().setStatus(entity.sunatStatus);
-        rep.getSunat().setDescription(entity.sunatDescription);
-        rep.getSunat().setHasCdr(entity.storageCdr != null);
+        // Error
+        if (entity.jobError != null) {
+            JobErrorRepresentation errorJobRep = new JobErrorRepresentation();
+            rep.setJobError(errorJobRep);
+
+            errorJobRep.setDescription(entity.jobError.description);
+            errorJobRep.setPhase(entity.jobError.phase);
+            errorJobRep.setRecoveryAction(entity.jobError.recoveryAction);
+            errorJobRep.setRecoveryActionCount(entity.jobError.recoveryActionCount);
+        }
 
         return rep;
     }

@@ -16,25 +16,20 @@
  */
 package io.github.project.openubl.ublhub.idm;
 
-import io.github.project.openubl.ublhub.models.ErrorType;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
 public class DocumentRepresentation {
 
     private String id;
-    private String namespaceId;
+    private boolean jobInProgress;
 
-    private Long createdOn;
-    private boolean inProgress;
-    private ErrorType error;
-    private Long scheduledDelivery;
-    private int retryCount;
+    private XMLFileContentRepresentation xmlFileContent;
+    private SunatStatusRepresentation sunatResponse;
+    private JobErrorRepresentation jobError;
 
-    private Boolean fileContentValid;
-    private FileContentRepresentation fileContent;
-
-    private SunatStatusRepresentation sunat;
+    private Long created;
+    private Long updated;
 
     public String getId() {
         return id;
@@ -44,75 +39,51 @@ public class DocumentRepresentation {
         this.id = id;
     }
 
-    public Long getCreatedOn() {
-        return createdOn;
+    public boolean isJobInProgress() {
+        return jobInProgress;
     }
 
-    public void setCreatedOn(Long createdOn) {
-        this.createdOn = createdOn;
+    public void setJobInProgress(boolean jobInProgress) {
+        this.jobInProgress = jobInProgress;
     }
 
-    public boolean isInProgress() {
-        return inProgress;
+    public XMLFileContentRepresentation getXmlFileContent() {
+        return xmlFileContent;
     }
 
-    public void setInProgress(boolean inProgress) {
-        this.inProgress = inProgress;
+    public void setXmlFileContent(XMLFileContentRepresentation xmlFileContent) {
+        this.xmlFileContent = xmlFileContent;
     }
 
-    public ErrorType getError() {
-        return error;
+    public SunatStatusRepresentation getSunatResponse() {
+        return sunatResponse;
     }
 
-    public void setError(ErrorType error) {
-        this.error = error;
+    public void setSunatResponse(SunatStatusRepresentation sunatResponse) {
+        this.sunatResponse = sunatResponse;
     }
 
-    public Boolean getFileContentValid() {
-        return fileContentValid;
+    public JobErrorRepresentation getJobError() {
+        return jobError;
     }
 
-    public void setFileContentValid(Boolean fileContentValid) {
-        this.fileContentValid = fileContentValid;
+    public void setJobError(JobErrorRepresentation jobError) {
+        this.jobError = jobError;
     }
 
-    public FileContentRepresentation getFileContent() {
-        return fileContent;
+    public Long getCreated() {
+        return created;
     }
 
-    public void setFileContent(FileContentRepresentation fileContent) {
-        this.fileContent = fileContent;
+    public void setCreated(Long created) {
+        this.created = created;
     }
 
-    public SunatStatusRepresentation getSunat() {
-        return sunat;
+    public Long getUpdated() {
+        return updated;
     }
 
-    public void setSunat(SunatStatusRepresentation sunat) {
-        this.sunat = sunat;
-    }
-
-    public Long getScheduledDelivery() {
-        return scheduledDelivery;
-    }
-
-    public void setScheduledDelivery(Long scheduledDelivery) {
-        this.scheduledDelivery = scheduledDelivery;
-    }
-
-    public int getRetryCount() {
-        return retryCount;
-    }
-
-    public void setRetryCount(int retryCount) {
-        this.retryCount = retryCount;
-    }
-
-    public String getNamespaceId() {
-        return namespaceId;
-    }
-
-    public void setNamespaceId(String namespaceId) {
-        this.namespaceId = namespaceId;
+    public void setUpdated(Long updated) {
+        this.updated = updated;
     }
 }

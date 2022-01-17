@@ -20,12 +20,12 @@ values
 ('44', '44444444444', 'company4', '3', 'username4', 'password4', 'http://urlFactura4', 'http://urlGuia4', 'http://urlPercepcionRetencion4', CURRENT_TIMESTAMP + INTERVAL '4 day', 1);
 
 -- DOCUMENTS
-insert into ubl_document(id, namespace_id, document_id, in_progress, retries, created, version)
+insert into ubl_document(id, namespace_id, xml_file_id, job_in_progress, created, version)
 values
 -- Documents in namespace 1
-('11', '1', 'F-11', 'N', 0, CURRENT_TIMESTAMP + INTERVAL '1 day', 1),
-('22', '1', 'F-22', 'N', 0, CURRENT_TIMESTAMP + INTERVAL '2 day', 1),
+('11', '1', '/home/ubl.xml', 'N', CURRENT_TIMESTAMP + INTERVAL '1 day', 1),
+('22', '1', '/home/ubl.xml', 'N', CURRENT_TIMESTAMP + INTERVAL '2 day', 1),
 -- Companies in namespace 2
-('33', '2', 'F-33', 'N', 0, CURRENT_TIMESTAMP + INTERVAL '3 day', 1),
+('33', '2', '/home/ubl.xml', 'N', CURRENT_TIMESTAMP + INTERVAL '3 day', 1),
 -- Companies in namespace 3
-('44', '3', 'F-44', 'N', 0, CURRENT_TIMESTAMP + INTERVAL '4 day', 1);
+('44', '3', '/home/ubl.xml', 'N', CURRENT_TIMESTAMP + INTERVAL '4 day', 1);

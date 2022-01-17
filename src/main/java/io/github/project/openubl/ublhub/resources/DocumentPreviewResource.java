@@ -33,7 +33,9 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
-import io.github.project.openubl.ublhub.builder.XMLBuilderManager;
+import io.github.project.openubl.ublhub.idm.input.IDGeneratorRepresentation;
+import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
+import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorManager;
 import io.github.project.openubl.ublhub.models.jpa.NamespaceRepository;
 import io.github.project.openubl.ublhub.resources.validation.JSONValidatorManager;
 import io.quarkus.hibernate.reactive.panache.Panache;
@@ -56,7 +58,7 @@ public class DocumentPreviewResource {
     NamespaceRepository namespaceRepository;
 
     @Inject
-    XMLBuilderManager xmlBuilderManager;
+    XMLGeneratorManager xmlGeneratorManager;
 
     @Inject
     JSONValidatorManager jsonManager;
@@ -72,8 +74,15 @@ public class DocumentPreviewResource {
                         .findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespaceEntity -> jsonManager
                                 .getUniInputTemplateFromJSON(json)
-                                .onItem().ifNotNull().transformToUni(input -> xmlBuilderManager
-                                        .createXMLString(namespaceEntity, input, true)
+                                .onItem().ifNotNull().transformToUni(input -> Uni.createFrom()
+                                        .item(() -> {
+                                            // Always set generator to NONE in case of a Preview
+                                            IDGeneratorRepresentation idGeneratorRepresentation = new IDGeneratorRepresentation();
+                                            idGeneratorRepresentation.setName(IDGeneratorType.none);
+                                            return idGeneratorRepresentation;
+                                        })
+                                        .invoke(idGeneratorRepresentation -> input.getSpec().setIdGenerator(idGeneratorRepresentation))
+                                        .chain(() -> xmlGeneratorManager.createXMLString(namespaceEntity, input))
                                         .map(xmlString -> Response
                                                 .status(Response.Status.OK)
                                                 .entity(xmlString)
@@ -82,9 +91,7 @@ public class DocumentPreviewResource {
                                 )
                                 .onItem().ifNull().continueWith(Response.ok().status(Response.Status.BAD_REQUEST)::build)
                         )
-                        .onItem().ifNull().continueWith(Response.ok()
-                                .status(Response.Status.NOT_FOUND)::build
-                        )
+                        .onItem().ifNull().continueWith(Response.ok().status(Response.Status.NOT_FOUND)::build)
                 );
     }
 

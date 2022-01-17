@@ -55,38 +55,60 @@ create table component_config
 
 create table ubl_document
 (
-    id                             varchar(255) not null,
-
-    in_progress                    char(1)      not null,
-    scheduled_delivery             timestamp,
-    file_valid                     char(1),
-    error                          varchar(255),
-    retries                        int4,
-
-    ruc                            varchar(11),
-    document_id                    varchar(50),
-    document_type                  varchar(50),
-    voided_line_document_type_code varchar(50),
-
-    storage_file                   varchar(255),
-    storage_cdr                    varchar(255),
-
-    sunat_ticket                   varchar(50),
-    sunat_status                   varchar(50),
-    sunat_code                     int4,
-    sunat_description              varchar(255),
-
-    namespace_id                   varchar(255) not null,
-    created                        timestamp    not null,
-    updated                        timestamp,
-    version                        int4         not null,
+    id              varchar(255) not null,
+    job_in_progress char(1)      not null,
+    xml_file_id     varchar(255) not null,
+    cdr_file_id     varchar(255),
+    namespace_id    varchar(255) not null,
+    created         timestamp    not null,
+    updated         timestamp,
+    version         int4         not null,
     primary key (id)
 );
 
-create table ubl_document_sunat_notes
+create table xml_file_content
 (
-    ubl_document_id varchar(255) not null,
-    value           varchar(255)
+    document_id                varchar(255) not null,
+    ruc                        varchar(11)  not null,
+    serie_numero               varchar(50)  not null,
+    tipo_documento             varchar(50)  not null,
+    baja_codigo_tipo_documento varchar(50),
+    created                    timestamp    not null,
+    updated                    timestamp,
+    version                    int4         not null,
+    primary key (document_id)
+);
+
+create table sunat_response
+(
+    document_id varchar(255) not null,
+    code        int4,
+    description varchar(255),
+    status      varchar(50),
+    ticket      varchar(50),
+    created     timestamp    not null,
+    updated     timestamp,
+    version     int4         not null,
+    primary key (document_id)
+);
+
+create table sunat_response_notes
+(
+    sunat_response_id varchar(255) not null,
+    value             varchar(255)
+);
+
+create table job_error
+(
+    document_id           varchar(255) not null,
+    description           varchar(255),
+    phase                 varchar(255),
+    recovery_action       varchar(255),
+    recovery_action_count int4         not null,
+    created               timestamp    not null,
+    updated               timestamp,
+    version               int4         not null,
+    primary key (document_id)
 );
 
 create table generated_id

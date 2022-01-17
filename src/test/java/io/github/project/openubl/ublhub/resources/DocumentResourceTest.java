@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.resources;
 
+import io.github.project.openubl.ublhub.models.JobPhaseType;
 import io.github.project.openubl.xmlbuilderlib.models.catalogs.Catalog1;
 import io.github.project.openubl.xmlbuilderlib.models.catalogs.Catalog19;
 import io.github.project.openubl.xmlbuilderlib.models.catalogs.Catalog6;
@@ -28,12 +29,10 @@ import io.github.project.openubl.xmlbuilderlib.models.input.standard.note.debitN
 import io.github.project.openubl.xmlbuilderlib.models.input.sunat.*;
 import io.github.project.openubl.ublhub.AbstractBaseTest;
 import io.github.project.openubl.ublhub.ProfileManager;
-import io.github.project.openubl.ublhub.idgenerator.IDGeneratorType;
-import io.github.project.openubl.ublhub.idgenerator.generators.GeneratedIDGenerator;
+import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
+import io.github.project.openubl.ublhub.ubl.builder.idgenerator.impl.GeneratedIDGenerator;
 import io.github.project.openubl.ublhub.idm.DocumentRepresentation;
 import io.github.project.openubl.ublhub.idm.input.*;
-import io.github.project.openubl.ublhub.models.ErrorType;
-import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
@@ -79,13 +78,10 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + documentId)
                 .then()
                 .statusCode(200)
-                .body("id", is("11"),
-                        "createdOn", is(notNullValue()),
-                        "inProgress", is(false),
-                        "error", is(nullValue()),
-//                        "scheduledDelivery", is(nullValue()),
-//                        "retryCount", is(0),
-                        "fileContentValid", is(nullValue())
+                .body("id", is(documentId),
+                        "jobInProgress", is(false),
+                        "created", is(notNullValue()),
+                        "updated", is(nullValue())
                 );
         // Then
     }
@@ -161,7 +157,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .statusCode(200)
                 .body("meta.count", is(1),
                         "items.size()", is(1),
-                        "items[0].fileContent.documentID", is("F-11")
+                        "items[0].xmlFileContent.serieNumero", is("F-11")
                 );
         // Then
     }
@@ -237,7 +233,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isInProgress();
+            return !watchResponse.isJobInProgress();
         });
 
         given()
@@ -330,7 +326,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isInProgress();
+            return !watchResponse.isJobInProgress();
         });
 
         given()
@@ -419,7 +415,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isInProgress();
+            return !watchResponse.isJobInProgress();
         });
 
         given()
@@ -512,7 +508,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isInProgress();
+            return !watchResponse.isJobInProgress();
         });
 
         given()
@@ -601,7 +597,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isInProgress();
+            return !watchResponse.isJobInProgress();
         });
 
         given()
@@ -690,7 +686,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isInProgress();
+            return !watchResponse.isJobInProgress();
         });
 
         given()
@@ -768,7 +764,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isInProgress();
+            return !watchResponse.isJobInProgress();
         });
 
         given()
@@ -865,7 +861,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isInProgress();
+            return !watchResponse.isJobInProgress();
         });
 
         given()
@@ -958,7 +954,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.UNSUPPORTED_DOCUMENT_TYPE);
+            return !watchResponse.isJobInProgress() && watchResponse.getJobError() != null && watchResponse.getJobError().getPhase().equals(JobPhaseType.READ_XML_FILE);
         });
 
         given()
@@ -968,7 +964,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
-                        "error", is(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.toString()),
+//                        "error", is(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.toString()),
 //                        "scheduledDelivery", is(nullValue()),
 //                        "retryCount", is(0),
                         "fileContentValid", is(false),
@@ -1054,7 +1050,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.SEND_FILE);
+            return !watchResponse.isJobInProgress() && watchResponse.getJobError() != null && watchResponse.getJobError().getPhase().equals(JobPhaseType.SEND_XML_FILE);
         });
 
         given()
@@ -1064,7 +1060,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(200)
                 .body("inProgress", is(false),
-                        "error", is(ErrorType.SEND_FILE.toString()),
+//                        "error", is(ErrorType.SEND_FILE.toString()),
                         "fileContentValid", is(true),
                         "fileContent.ruc", is("11111111111"),
                         "fileContent.documentID", is("F001-1"),
@@ -1103,7 +1099,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isInProgress();
+            return !watchResponse.isJobInProgress();
         });
 
         given()
@@ -1157,7 +1153,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isInProgress();
+            return !watchResponse.isJobInProgress();
         });
 
         given()
@@ -1211,7 +1207,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isInProgress();
+            return !watchResponse.isJobInProgress();
         });
 
         given()
