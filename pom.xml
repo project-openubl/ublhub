@@ -50,7 +50,7 @@
 
         <!--libs-->
         <awaitility.version>4.1.1</awaitility.version>
-        <testcontainers.version>1.16.2</testcontainers.version>
+        <testcontainers.version>1.16.3</testcontainers.version>
 
         <xbuilder-lib.version>1.2.2.Final</xbuilder-lib.version>
         <xsender-lib.version>3.0.3.Final</xsender-lib.version>
