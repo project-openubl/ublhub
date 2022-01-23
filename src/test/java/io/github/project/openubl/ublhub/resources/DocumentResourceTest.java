@@ -218,8 +218,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
-                        "namespaceId", is("1"),
-                        "inProgress", is(true)
+                        "jobInProgress", is(true)
                 )
                 .extract().body().as(DocumentRepresentation.class);
 
@@ -242,12 +241,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(nullValue()),
-                        "fileContentValid", is(true),
-                        "fileContent.ruc", is("12345678912"),
-                        "fileContent.documentID", is("F001-1"),
-                        "fileContent.documentType", is("Invoice")
+                .body("jobInProgress", is(false),
+                        "jobError", is(nullValue()),
+                        "xmlFileContent.ruc", is("12345678912"),
+                        "xmlFileContent.serieNumero", is("F001-1"),
+                        "xmlFileContent.tipoDocumento", is("Invoice")
                 );
     }
 
@@ -311,8 +309,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
-                        "namespaceId", is("1"),
-                        "inProgress", is(true)
+                        "jobInProgress", is(true)
                 )
                 .extract().body().as(DocumentRepresentation.class);
 
@@ -335,12 +332,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(nullValue()),
-                        "fileContentValid", is(true),
-                        "fileContent.ruc", is("12345678912"),
-                        "fileContent.documentID", is("F001-1"),
-                        "fileContent.documentType", is("Invoice")
+                .body("jobInProgress", is(false),
+                        "jobError", is(nullValue()),
+                        "xmlFileContent.ruc", is("12345678912"),
+                        "xmlFileContent.serieNumero", is("F001-1"),
+                        "xmlFileContent.tipoDocumento", is("Invoice")
                 );
     }
 
@@ -400,8 +396,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
-                        "namespaceId", is("1"),
-                        "inProgress", is(true)
+                        "jobInProgress", is(true)
                 )
                 .extract().body().as(DocumentRepresentation.class);
 
@@ -424,107 +419,104 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(nullValue()),
-                        "fileContentValid", is(true),
-                        "fileContent.ruc", is("12345678912"),
-                        "fileContent.documentID", is("F001-1"),
-                        "fileContent.documentType", is("Invoice")
+                .body("jobInProgress", is(false),
+                        "jobError", is(nullValue()),
+                        "xmlFileContent.ruc", is("12345678912"),
+                        "xmlFileContent.serieNumero", is("F001-1"),
+                        "xmlFileContent.tipoDocumento", is("Invoice")
                 );
     }
 
-    @Test
-    public void createInvoiceWithAutoIDGeneratorConfig() {
-        // Given
-        String nsId = "1";
-
-        InvoiceInputModel input = InvoiceInputModel.Builder.anInvoiceInputModel()
-                .withSerie("F001")
-                .withNumero(1)
-                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
-                        .withRuc("12345678912")
-                        .withRazonSocial("Softgreen S.A.C.")
-                        .build()
-                )
-                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
-                        .withNombre("Carlos Feria")
-                        .withNumeroDocumentoIdentidad("12121212121")
-                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
-                        .build()
-                )
-                .withDetalle(Arrays.asList(
-                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-                                .withDescripcion("Item1")
-                                .withCantidad(new BigDecimal(10))
-                                .withPrecioUnitario(new BigDecimal(100))
-                                .withUnidadMedida("KGM")
-                                .build(),
-                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-                                .withDescripcion("Item2")
-                                .withCantidad(new BigDecimal(10))
-                                .withPrecioUnitario(new BigDecimal(100))
-                                .withUnidadMedida("KGM")
-                                .build())
-                )
-                .build();
-
-        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
-                .withKind(KindRepresentation.Invoice)
-                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
-                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
-                                .withName(IDGeneratorType.generated)
-                                .withConfig(new HashMap<>() {{
-                                    put(GeneratedIDGenerator.SERIE_PROPERTY, "2");
-                                    put(GeneratedIDGenerator.NUMERO_PROPERTY, "33");
-                                }})
-                                .build()
-                        )
-                        .withDocument(JsonObject.mapFrom(input))
-                        .build()
-                )
-                .build();
-
-        // When
-        DocumentRepresentation response = given()
-                .contentType(ContentType.JSON)
-                .body(JsonObject.mapFrom(template).toString())
-                .when()
-                .post("/api/namespaces/" + nsId + "/documents")
-                .then()
-                .statusCode(201)
-                .body("id", is(notNullValue()),
-                        "namespaceId", is("1"),
-                        "inProgress", is(true)
-                )
-                .extract().body().as(DocumentRepresentation.class);
-
-        // Then
-        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            DocumentRepresentation watchResponse = given()
-                    .contentType(ContentType.JSON)
-                    .when()
-
-                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-                    .then()
-                    .statusCode(200)
-                    .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isJobInProgress();
-        });
-
-        given()
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-                .then()
-                .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(nullValue()),
-                        "fileContentValid", is(true),
-                        "fileContent.ruc", is("12345678912"),
-                        "fileContent.documentID", is("F002-33"),
-                        "fileContent.documentType", is("Invoice")
-                );
-    }
+//    @Test
+//    public void createInvoiceWithAutoIDGeneratorConfig() {
+//        // Given
+//        String nsId = "1";
+//
+//        InvoiceInputModel input = InvoiceInputModel.Builder.anInvoiceInputModel()
+//                .withSerie("F001")
+//                .withNumero(1)
+//                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
+//                        .withRuc("12345678912")
+//                        .withRazonSocial("Softgreen S.A.C.")
+//                        .build()
+//                )
+//                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
+//                        .withNombre("Carlos Feria")
+//                        .withNumeroDocumentoIdentidad("12121212121")
+//                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
+//                        .build()
+//                )
+//                .withDetalle(Arrays.asList(
+//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
+//                                .withDescripcion("Item1")
+//                                .withCantidad(new BigDecimal(10))
+//                                .withPrecioUnitario(new BigDecimal(100))
+//                                .withUnidadMedida("KGM")
+//                                .build(),
+//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
+//                                .withDescripcion("Item2")
+//                                .withCantidad(new BigDecimal(10))
+//                                .withPrecioUnitario(new BigDecimal(100))
+//                                .withUnidadMedida("KGM")
+//                                .build())
+//                )
+//                .build();
+//
+//        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
+//                .withKind(KindRepresentation.Invoice)
+//                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
+//                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
+//                                .withName(IDGeneratorType.generated)
+//                                .withConfig(new HashMap<>() {{
+//                                    put(GeneratedIDGenerator.SERIE_PROPERTY, "2");
+//                                    put(GeneratedIDGenerator.NUMERO_PROPERTY, "33");
+//                                }})
+//                                .build()
+//                        )
+//                        .withDocument(JsonObject.mapFrom(input))
+//                        .build()
+//                )
+//                .build();
+//
+//        // When
+//        DocumentRepresentation response = given()
+//                .contentType(ContentType.JSON)
+//                .body(JsonObject.mapFrom(template).toString())
+//                .when()
+//                .post("/api/namespaces/" + nsId + "/documents")
+//                .then()
+//                .statusCode(201)
+//                .body("id", is(notNullValue()),
+//                        "jobInProgress", is(true)
+//                )
+//                .extract().body().as(DocumentRepresentation.class);
+//
+//        // Then
+//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+//            DocumentRepresentation watchResponse = given()
+//                    .contentType(ContentType.JSON)
+//                    .when()
+//
+//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
+//                    .then()
+//                    .statusCode(200)
+//                    .extract().body().as(DocumentRepresentation.class);
+//            return !watchResponse.isJobInProgress();
+//        });
+//
+//        given()
+//                .contentType(ContentType.JSON)
+//                .when()
+//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
+//                .then()
+//                .statusCode(200)
+//                .body("jobInProgress", is(false),
+//                        "jobError", is(nullValue()),
+//                        "xmlFileContent.ruc", is("12345678912"),
+//                        "xmlFileContent.serieNumero", is("F002-33"),
+//                        "xmlFileContent.tipoDocumento", is("Invoice")
+//                );
+//    }
 
     @Test
     public void createCreditNoteWithAutoIDGenerator() {
@@ -582,8 +574,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
-                        "namespaceId", is("1"),
-                        "inProgress", is(true)
+                        "jobInProgress", is(true)
                 )
                 .extract().body().as(DocumentRepresentation.class);
 
@@ -592,7 +583,6 @@ public class DocumentResourceTest extends AbstractBaseTest {
             DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
-
                     .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
@@ -606,12 +596,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(nullValue()),
-                        "fileContentValid", is(true),
-                        "fileContent.ruc", is("12345678912"),
-                        "fileContent.documentID", is("FC01-1"),
-                        "fileContent.documentType", is("CreditNote")
+                .body("jobInProgress", is(false),
+                        "jobError", is(nullValue()),
+                        "xmlFileContent.ruc", is("12345678912"),
+                        "xmlFileContent.serieNumero", is("FC01-1"),
+                        "xmlFileContent.tipoDocumento", is("CreditNote")
                 );
     }
 
@@ -671,8 +660,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
-                        "namespaceId", is("1"),
-                        "inProgress", is(true)
+                        "jobInProgress", is(true)
                 )
                 .extract().body().as(DocumentRepresentation.class);
 
@@ -681,7 +669,6 @@ public class DocumentResourceTest extends AbstractBaseTest {
             DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
-
                     .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
@@ -695,12 +682,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(nullValue()),
-                        "fileContentValid", is(true),
-                        "fileContent.ruc", is("12345678912"),
-                        "fileContent.documentID", is("FD01-1"),
-                        "fileContent.documentType", is("DebitNote")
+                .body("jobInProgress", is(false),
+                        "jobError", is(nullValue()),
+                        "xmlFileContent.ruc", is("12345678912"),
+                        "xmlFileContent.serieNumero", is("FD01-1"),
+                        "xmlFileContent.tipoDocumento", is("DebitNote")
                 );
     }
 
@@ -749,8 +735,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
-                        "namespaceId", is("1"),
-                        "inProgress", is(true)
+                        "jobInProgress", is(true)
                 )
                 .extract().body().as(DocumentRepresentation.class);
 
@@ -759,7 +744,6 @@ public class DocumentResourceTest extends AbstractBaseTest {
             DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
-
                     .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
@@ -773,12 +757,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(nullValue()),
-                        "fileContentValid", is(true),
-                        "fileContent.ruc", is("12345678912"),
-                        "fileContent.documentID", is("RA-20191224-1"),
-                        "fileContent.documentType", is("VoidedDocuments")
+                .body("jobInProgress", is(false),
+                        "jobError", is(nullValue()),
+                        "xmlFileContent.ruc", is("12345678912"),
+                        "xmlFileContent.serieNumero", is("RA-20191224-1"),
+                        "xmlFileContent.tipoDocumento", is("VoidedDocuments")
                 );
     }
 
@@ -846,8 +829,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
-                        "namespaceId", is("1"),
-                        "inProgress", is(true)
+                        "jobInProgress", is(true)
                 )
                 .extract().body().as(DocumentRepresentation.class);
 
@@ -856,7 +838,6 @@ public class DocumentResourceTest extends AbstractBaseTest {
             DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
-
                     .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
@@ -870,12 +851,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(nullValue()),
-                        "fileContentValid", is(true),
-                        "fileContent.ruc", is("12345678912"),
-                        "fileContent.documentID", is("RC-20191224-1"),
-                        "fileContent.documentType", is("SummaryDocuments")
+                .body("jobInProgress", is(false),
+                        "jobError", is(nullValue()),
+                        "xmlFileContent.ruc", is("12345678912"),
+                        "xmlFileContent.serieNumero", is("RC-20191224-1"),
+                        "xmlFileContent.tipoDocumento", is("SummaryDocuments")
                 );
     }
 
@@ -915,14 +895,14 @@ public class DocumentResourceTest extends AbstractBaseTest {
 //                .get("/" + nsId + "/documents/" + response.getId())
 //                .then()
 //                .statusCode(200)
-//                .body("inProgress", is(false),
-//                        "error", is(ErrorType.READ_FILE.toString()),
+//                .body("jobInProgress", is(false),
+//                        "jobError", is(ErrorType.READ_FILE.toString()),
 ////                        "scheduledDelivery", is(nullValue()),
 ////                        "retryCount", is(0),
-//                        "fileContentValid", is(false),
-//                        "fileContent.ruc", is(nullValue()),
-//                        "fileContent.documentID", is(nullValue()),
-//                        "fileContent.documentType", is(nullValue())
+//                        
+//                        "xmlFileContent.ruc", is(nullValue()),
+//                        "xmlFileContent.serieNumero", is(nullValue()),
+//                        "xmlFileContent.tipoDocumento", is(nullValue())
 //                );
 //    }
 
@@ -949,12 +929,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
             DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
-
                     .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
                     .extract().body().as(DocumentRepresentation.class);
-            return !watchResponse.isJobInProgress() && watchResponse.getJobError() != null && watchResponse.getJobError().getPhase().equals(JobPhaseType.READ_XML_FILE);
+            return !watchResponse.isJobInProgress();
         });
 
         given()
@@ -963,14 +942,9 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(false),
-//                        "error", is(ErrorType.UNSUPPORTED_DOCUMENT_TYPE.toString()),
-//                        "scheduledDelivery", is(nullValue()),
-//                        "retryCount", is(0),
-                        "fileContentValid", is(false),
-                        "fileContent.ruc", is(nullValue()),
-                        "fileContent.documentID", is(nullValue()),
-                        "fileContent.documentType", is("project")
+                .body("jobInProgress", is(false),
+                        "jobError", is(notNullValue()),
+                        "xmlFileContent", is(nullValue())
                 );
     }
 
@@ -1011,14 +985,14 @@ public class DocumentResourceTest extends AbstractBaseTest {
 //                .get("/" + nsId + "/documents/" + response.getId())
 //                .then()
 //                .statusCode(200)
-//                .body("inProgress", is(false),
-//                        "error", is(ErrorType.COMPANY_NOT_FOUND.toString()),
+//                .body("jobInProgress", is(false),
+//                        "jobError", is(ErrorType.COMPANY_NOT_FOUND.toString()),
 ////                        "scheduledDelivery", is(nullValue()),
 ////                        "retryCount", is(0),
-//                        "fileContentValid", is(true),
-//                        "fileContent.ruc", is("22222222222"),
-//                        "fileContent.documentID", is("F001-1"),
-//                        "fileContent.documentType", is("Invoice")
+//                        
+//                        "xmlFileContent.ruc", is("22222222222"),
+//                        "xmlFileContent.serieNumero", is("F001-1"),
+//                        "xmlFileContent.tipoDocumento", is("Invoice")
 //                );
 //    }
 
@@ -1045,7 +1019,6 @@ public class DocumentResourceTest extends AbstractBaseTest {
             DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
-
                     .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
@@ -1059,14 +1032,11 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(false),
-//                        "error", is(ErrorType.SEND_FILE.toString()),
-                        "fileContentValid", is(true),
-                        "fileContent.ruc", is("11111111111"),
-                        "fileContent.documentID", is("F001-1"),
-                        "fileContent.documentType", is("Invoice")
-//                        "scheduledDelivery", is(notNullValue()),
-//                        "retryCount", is(1),
+                .body("jobInProgress", is(false),
+                        "jobError", is(notNullValue()),
+                        "xmlFileContent.ruc", is("11111111111"),
+                        "xmlFileContent.serieNumero", is("F001-1"),
+                        "xmlFileContent.tipoDocumento", is("Invoice")
                 );
     }
 
@@ -1086,7 +1056,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .post("/api/namespaces/" + nsId + "/documents/upload")
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(true))
+                .body("jobInProgress", is(true))
                 .extract().body().as(DocumentRepresentation.class);
 
         // Then
@@ -1094,7 +1064,6 @@ public class DocumentResourceTest extends AbstractBaseTest {
             DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
-
                     .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
@@ -1108,19 +1077,16 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(nullValue()),
-//                        "scheduledDelivery", is(nullValue()),
-//                        "retryCount", is(0),
-                        "fileContentValid", is(true),
-                        "fileContent.ruc", is("12345678912"),
-                        "fileContent.documentID", is("F001-1"),
-                        "fileContent.documentType", is("Invoice"),
-                        "sunat.code", is(2335),
-                        "sunat.ticket", is(nullValue()),
-                        "sunat.status", is("RECHAZADO"),
-                        "sunat.description", is("El documento electrónico ingresado ha sido alterado"),
-                        "sunat.hasCdr", is(false)
+                .body("jobInProgress", is(false),
+                        "jobError", is(nullValue()),
+                        "xmlFileContent.ruc", is("12345678912"),
+                        "xmlFileContent.serieNumero", is("F001-1"),
+                        "xmlFileContent.tipoDocumento", is("Invoice"),
+                        "sunatResponse.code", is(2335),
+                        "sunatResponse.ticket", is(nullValue()),
+                        "sunatResponse.status", is("RECHAZADO"),
+                        "sunatResponse.description", is("El documento electrónico ingresado ha sido alterado"),
+                        "sunatResponse.hasCdr", is(false)
                 );
     }
 
@@ -1140,7 +1106,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .post("/api/namespaces/" + nsId + "/documents/upload")
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(true))
+                .body("jobInProgress", is(true))
                 .extract().body().as(DocumentRepresentation.class);
 
         // Then
@@ -1148,7 +1114,6 @@ public class DocumentResourceTest extends AbstractBaseTest {
             DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
-
                     .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
@@ -1162,19 +1127,16 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(nullValue()),
-//                        "scheduledDelivery", is(nullValue()),
-//                        "retryCount", is(0),
-                        "fileContentValid", is(true),
-                        "fileContent.ruc", is("12345678912"),
-                        "fileContent.documentID", is("F001-1"),
-                        "fileContent.documentType", is("Invoice"),
-                        "sunat.code", is(0),
-                        "sunat.ticket", is(nullValue()),
-                        "sunat.status", is("ACEPTADO"),
-                        "sunat.description", is("La Factura numero F001-1, ha sido aceptada"),
-                        "sunat.hasCdr", is(true)
+                .body("jobInProgress", is(false),
+                        "jobError", is(nullValue()),
+                        "xmlFileContent.ruc", is("12345678912"),
+                        "xmlFileContent.serieNumero", is("F001-1"),
+                        "xmlFileContent.tipoDocumento", is("Invoice"),
+                        "sunatResponse.code", is(0),
+                        "sunatResponse.ticket", is(nullValue()),
+                        "sunatResponse.status", is("ACEPTADO"),
+                        "sunatResponse.description", is("La Factura numero F001-1, ha sido aceptada"),
+                        "sunatResponse.hasCdr", is(true)
                 );
     }
 
@@ -1194,7 +1156,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .post("/api/namespaces/" + nsId + "/documents/upload")
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(true))
+                .body("jobInProgress", is(true))
                 .extract().body().as(DocumentRepresentation.class);
 
         // Then
@@ -1202,7 +1164,6 @@ public class DocumentResourceTest extends AbstractBaseTest {
             DocumentRepresentation watchResponse = given()
                     .contentType(ContentType.JSON)
                     .when()
-
                     .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                     .then()
                     .statusCode(200)
@@ -1216,19 +1177,16 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
                 .then()
                 .statusCode(200)
-                .body("inProgress", is(false),
-                        "error", is(nullValue()),
-//                        "scheduledDelivery", is(nullValue()),
-//                        "retryCount", is(0),
-                        "fileContentValid", is(true),
-                        "fileContent.ruc", is("12345678912"),
-                        "fileContent.documentID", is("RA-20200328-1"),
-                        "fileContent.documentType", is("VoidedDocuments"),
-                        "sunat.code", is(0),
-                        "sunat.ticket", is(notNullValue()),
-                        "sunat.status", is("ACEPTADO"),
-                        "sunat.description", is("La Comunicacion de baja RA-20200328-1, ha sido aceptada"),
-                        "sunat.hasCdr", is(true)
+                .body("jobInProgress", is(false),
+                        "jobError", is(nullValue()),
+                        "xmlFileContent.ruc", is("12345678912"),
+                        "xmlFileContent.serieNumero", is("RA-20200328-1"),
+                        "xmlFileContent.tipoDocumento", is("VoidedDocuments"),
+                        "sunatResponse.code", is(0),
+                        "sunatResponse.ticket", is(notNullValue()),
+                        "sunatResponse.status", is("ACEPTADO"),
+                        "sunatResponse.description", is("La Comunicacion de baja RA-20200328-1, ha sido aceptada"),
+                        "sunatResponse.hasCdr", is(true)
                 );
     }
 }

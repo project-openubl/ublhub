@@ -45,7 +45,7 @@ import java.util.HashSet;
 @ApplicationScoped
 public class VertxSchedulerConsumer {
 
-    static final int INITIAL_DELAY = 100;
+    static final int INITIAL_DELAY = 10;
 
     @Inject
     SchedulerManager schedulerManager;
@@ -65,6 +65,10 @@ public class VertxSchedulerConsumer {
                 .onItem().delayIt().by(Duration.ofMillis(INITIAL_DELAY))
                 .chain(() -> Panache.withTransaction(() -> documentRepository
                         .findById(documentId)
+                        .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + documentId + " was not found for being sent"))
+                        .onFailure(throwable -> throwable instanceof IllegalStateException)
+                        .retry().withBackOff(Duration.ofMillis(500)).withJitter(0.2).atMost(3)
+
                         .onItem().ifNull().failWith(IllegalStateException::new)
                         .onFailure(IllegalStateException.class)
                         .retry().withBackOff(Duration.ofSeconds(1)).withJitter(0.2).atMost(3)
@@ -82,10 +86,12 @@ public class VertxSchedulerConsumer {
                                                 .failure(new FetchFileException(JobPhaseType.READ_XML_FILE, throwable))
                                         )
                                         .chain(xmlFileContent -> {
-                                            documentEntity.xmlFileContent = new XMLFileContentEntity();
-
                                             XMLFileContentEntity xmlFileContentEntity = documentEntity.xmlFileContent;
-                                            xmlFileContentEntity.document = documentEntity;
+                                            if (xmlFileContentEntity == null) {
+                                                xmlFileContentEntity = new XMLFileContentEntity();
+                                                xmlFileContentEntity.document = documentEntity;
+                                                documentEntity.xmlFileContent = xmlFileContentEntity;
+                                            }
 
                                             xmlFileContentEntity.ruc = xmlFileContent.getRuc();
                                             xmlFileContentEntity.tipoDocumento = xmlFileContent.getDocumentType();
@@ -102,16 +108,18 @@ public class VertxSchedulerConsumer {
                                                 .failure(new FetchFileException(JobPhaseType.SEND_XML_FILE, throwable))
                                         )
                                         .invoke(sunatResponse -> {
-                                            documentEntity.sunatResponse = new SUNATResponseEntity();
-
                                             SUNATResponseEntity sunatResponseEntity = documentEntity.sunatResponse;
-                                            sunatResponseEntity.document = documentEntity;
+                                            if (sunatResponseEntity == null) {
+                                                sunatResponseEntity = new SUNATResponseEntity();
+                                                sunatResponseEntity.document = documentEntity;
+                                                documentEntity.sunatResponse = sunatResponseEntity;
+                                            }
 
                                             sunatResponseEntity.code = sunatResponse.getCode();
                                             sunatResponseEntity.ticket = sunatResponse.getTicket();
                                             sunatResponseEntity.description = sunatResponse.getDescription();
-                                            sunatResponseEntity.status = sunatResponse.getStatus().toString();
-                                            sunatResponseEntity.notes = new HashSet<>(sunatResponse.getNotes());
+                                            sunatResponseEntity.status = sunatResponse.getStatus() != null ? sunatResponse.getStatus().toString() : null;
+                                            sunatResponseEntity.notes = sunatResponse.getNotes() != null ? new HashSet<>(sunatResponse.getNotes()) : null;
                                         })
 
                                         // Save CDR
@@ -124,46 +132,52 @@ public class VertxSchedulerConsumer {
                                                 .invoke(cdrFileId -> documentEntity.cdrFileId = cdrFileId)
                                         )
                                 )
-                                .map(unused -> documentEntity)
+
+                                .onItemOrFailure().transformToUni((unused, throwable) -> {
+                                    if (throwable instanceof FetchFileException) {
+                                        FetchFileException jobException = (FetchFileException) throwable;
+
+                                        JobErrorEntity jobErrorEntity = documentEntity.jobError;
+                                        if (jobErrorEntity == null) {
+                                            jobErrorEntity = new JobErrorEntity();
+                                            jobErrorEntity.document = documentEntity;
+                                            documentEntity.jobError = jobErrorEntity;
+                                        }
+
+                                        jobErrorEntity.phase = jobException.getPhase();
+
+                                        switch (jobException.getPhase()) {
+                                            case FETCH_XML_FILE: {
+                                                jobErrorEntity.description = "No se pudo descargar el XML para ser procesado";
+                                                jobErrorEntity.recoveryAction = JobRecoveryActionType.RETRY_SEND;
+                                                jobErrorEntity.recoveryActionCount = 1;
+
+                                                break;
+                                            }
+                                            case READ_XML_FILE: {
+                                                jobErrorEntity.description = "El contenido del XML no es válido";
+                                                break;
+                                            }
+                                            case SEND_XML_FILE: {
+                                                jobErrorEntity.description = "No se pudo enviar el XML a la SUNAT";
+                                                jobErrorEntity.recoveryAction = JobRecoveryActionType.RETRY_SEND;
+                                                jobErrorEntity.recoveryActionCount = 1;
+                                                break;
+                                            }
+                                            case SAVE_CDR: {
+                                                jobErrorEntity.description = "No se pudo guardar el CDR en el storage";
+                                                jobErrorEntity.recoveryAction = JobRecoveryActionType.RETRY_FETCH_CDR;
+                                                jobErrorEntity.recoveryActionCount = 1;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    documentEntity.jobInProgress = false;
+                                    return documentEntity.<UBLDocumentEntity>persistAndFlush();
+                                })
+
                         )
-                        .onItemOrFailure().transformToUni((documentEntity, throwable) -> {
-                            if (throwable instanceof FetchFileException) {
-                                FetchFileException jobException = (FetchFileException) throwable;
-                                documentEntity.jobError = new JobErrorEntity();
-
-                                JobErrorEntity jobErrorEntity = documentEntity.jobError;
-                                jobErrorEntity.phase = jobException.getPhase();
-
-                                switch (jobException.getPhase()) {
-                                    case FETCH_XML_FILE: {
-                                        jobErrorEntity.description = "No se pudo descargar el XML para ser procesado";
-                                        jobErrorEntity.recoveryAction = JobRecoveryActionType.RETRY_SEND;
-                                        jobErrorEntity.recoveryActionCount = 1;
-
-                                        break;
-                                    }
-                                    case READ_XML_FILE: {
-                                        jobErrorEntity.description = "El contenido del XML no es válido";
-                                        break;
-                                    }
-                                    case SEND_XML_FILE: {
-                                        jobErrorEntity.description = "No se pudo enviar el XML a la SUNAT";
-                                        jobErrorEntity.recoveryAction = JobRecoveryActionType.RETRY_SEND;
-                                        jobErrorEntity.recoveryActionCount = 1;
-                                        break;
-                                    }
-                                    case SAVE_CDR: {
-                                        jobErrorEntity.description = "No se pudo guardar el CDR en el storage";
-                                        jobErrorEntity.recoveryAction = JobRecoveryActionType.RETRY_FETCH_CDR;
-                                        jobErrorEntity.recoveryActionCount = 1;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            documentEntity.jobInProgress = false;
-                            return documentEntity.<UBLDocumentEntity>persist();
-                        })
                 ))
                 .chain(documentEntity -> {
                     if (documentEntity.sunatResponse != null && documentEntity.sunatResponse.ticket != null) {
@@ -180,6 +194,10 @@ public class VertxSchedulerConsumer {
                 .onItem().delayIt().by(Duration.ofMillis(INITIAL_DELAY))
                 .chain(() -> Panache.withTransaction(() -> documentRepository
                         .findById(documentId)
+                        .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + documentId + " was not found for being sent"))
+                        .onFailure(throwable -> throwable instanceof IllegalStateException)
+                        .retry().withBackOff(Duration.ofMillis(500)).withJitter(0.2).atMost(3)
+
                         .onItem().ifNull().failWith(IllegalStateException::new)
                         .onFailure(IllegalStateException.class)
                         .retry().withBackOff(Duration.ofSeconds(1)).withJitter(0.2).atMost(3)
@@ -200,16 +218,18 @@ public class VertxSchedulerConsumer {
                                                     .failure(new FetchFileException(JobPhaseType.VERIFY_TICKET))
                                             )
                                             .invoke(sunatResponse -> {
-                                                documentEntity.sunatResponse = new SUNATResponseEntity();
-
                                                 SUNATResponseEntity sunatResponseEntity = documentEntity.sunatResponse;
-                                                sunatResponseEntity.document = documentEntity;
+                                                if (sunatResponseEntity == null) {
+                                                    sunatResponseEntity = new SUNATResponseEntity();
+                                                    sunatResponseEntity.document = documentEntity;
+                                                    documentEntity.sunatResponse = sunatResponseEntity;
+                                                }
 
                                                 sunatResponseEntity.code = sunatResponse.getCode();
                                                 sunatResponseEntity.ticket = sunatResponse.getTicket();
                                                 sunatResponseEntity.description = sunatResponse.getDescription();
-                                                sunatResponseEntity.status = sunatResponse.getStatus().toString();
-                                                sunatResponseEntity.notes = new HashSet<>(sunatResponse.getNotes());
+                                                sunatResponseEntity.status = sunatResponse.getStatus() != null ? sunatResponse.getStatus().toString() : null;
+                                                sunatResponseEntity.notes = sunatResponse.getNotes() != null ? new HashSet<>(sunatResponse.getNotes()) : null;
                                             })
 
                                             // Save CDR
@@ -227,9 +247,14 @@ public class VertxSchedulerConsumer {
                         .onItemOrFailure().transformToUni((documentEntity, throwable) -> {
                             if (throwable instanceof FetchFileException) {
                                 FetchFileException jobException = (FetchFileException) throwable;
-                                documentEntity.jobError = new JobErrorEntity();
 
                                 JobErrorEntity jobErrorEntity = documentEntity.jobError;
+                                if (jobErrorEntity == null) {
+                                    jobErrorEntity = new JobErrorEntity();
+                                    jobErrorEntity.document = documentEntity;
+                                    documentEntity.jobError = jobErrorEntity;
+                                }
+
                                 jobErrorEntity.phase = jobException.getPhase();
 
                                 if (jobException.getPhase() == JobPhaseType.VERIFY_TICKET) {
@@ -243,6 +268,9 @@ public class VertxSchedulerConsumer {
                             return documentEntity.<UBLDocumentEntity>persist();
                         })
                 ))
+                .onFailure().invoke(throwable -> {
+                    System.out.println("");
+                })
                 .replaceWithVoid();
     }
 }

@@ -29,22 +29,22 @@ public class JobErrorEntity extends BaseEntity {
 
     @Id
     @Column(name = "id")
-    private String id;
+    public String id;
 
+    @NotNull
     @MapsId
     @OneToOne(fetch = FetchType.LAZY)
-    private UBLDocumentEntity document;
+    public UBLDocumentEntity document;
 
     @Size(max = 255)
     @Column(name = "description")
     public String description;
 
-    @Size(max = 255)
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "phase")
     public JobPhaseType phase;
 
-    @Size(max = 255)
     @Enumerated(EnumType.STRING)
     @Column(name = "recovery_action")
     public JobRecoveryActionType recoveryAction;

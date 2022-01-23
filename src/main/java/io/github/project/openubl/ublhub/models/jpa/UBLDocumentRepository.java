@@ -52,12 +52,12 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
     }
 
     public UniAndGroup2<List<UBLDocumentEntity>, Long> list(NamespaceEntity namespace, String filterText, DocumentFilterModel filters, PageBean pageBean, List<SortBean> sortBy) {
-        StringBuilder queryBuilder = new StringBuilder("From UBLDocumentEntity as d inner join d.xmlFileContent x where d.namespace.id = :namespaceId");
+        StringBuilder queryBuilder = new StringBuilder("select distinct d from UBLDocumentEntity d left join d.xmlFileContent x where d.namespace.id = :namespaceId");
         Parameters params = Parameters.with("namespaceId", namespace.id);
 
         if (filterText != null && !filterText.trim().isEmpty()) {
             queryBuilder.append(" and lower(x.serieNumero) like :filterText");
-            params = params.and("filterText", "%" + filterText);
+            params = params.and("filterText", "%" + filterText.toLowerCase());
         }
         if (filters.getRuc() != null && !filters.getRuc().isEmpty()) {
             queryBuilder.append(" and x.ruc in :ruc");

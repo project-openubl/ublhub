@@ -102,7 +102,7 @@ create table job_error
 (
     document_id           varchar(255) not null,
     description           varchar(255),
-    phase                 varchar(255),
+    phase                 varchar(255) not null,
     recovery_action       varchar(255),
     recovery_action_count int4         not null,
     created               timestamp    not null,
