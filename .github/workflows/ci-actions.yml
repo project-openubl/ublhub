@@ -37,7 +37,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Build
-        working-directory: src/main/webapp
+        working-directory: server/src/main/webapp
         run: |
           yarn install
           yarn build
