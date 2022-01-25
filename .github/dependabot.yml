@@ -18,7 +18,7 @@ updates:
       include: "scope"
   # Maintain dependencies from package.json
   - package-ecosystem: "npm"
-    directory: "/src/main/webapp"
+    directory: "admin-console/src/main/webapp"
     schedule:
       interval: "daily"
     allow:
