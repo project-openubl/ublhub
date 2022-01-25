@@ -17,21 +17,8 @@ jobs:
           java-version: 11
           distribution: temurin
           cache: maven
-#      - name: Build native container image
-#        run: |
-#          mvn -U -B package --file pom.xml -DskipTests \
-#          -Dquarkus.native.container-build=true \
-#          -Dquarkus.container-image.push=true \
-#          -Dquarkus.container-image.build=true \
-#          -Dquarkus.container-image.registry=quay.io \
-#          -Dquarkus.container-image.group=projectopenubl \
-#          -Dquarkus.container-image.name=ublhub \
-#          -Dquarkus.container-image.tag=early-access \
-#          -Dquarkus.container-image.username=${{ secrets.QUAYIO_USERNAME }} \
-#          -Dquarkus.container-image.password=${{ secrets.QUAYIO_PASSWORD }} \
-#          -P native,ui
       - name: Build jvm container image
-        run: mvn -U -B package --file pom.xml -Pcontainer-image -DskipTests \
+        run: mvn -U -B package --file server/pom.xml -Pcontainer-image -DskipTests \
         -Dquarkus.native.container-build=false \
         -Dquarkus.container-image.push=true \
         -Dquarkus.container-image.build=true \

@@ -14,7 +14,7 @@ Microservicio que expone los datos provenientes del `padrón reducido` de la SUN
 Puedes ejecutar la aplicación en modo desarrollo con:
 
 ```shell script
-./mvnw compile quarkus:dev -Pdev
+./mvnw clean quarkus:dev -Pdev -f server/
 ```
 
 ### Iniciar UI
@@ -22,13 +22,13 @@ Puedes ejecutar la aplicación en modo desarrollo con:
 Instala las dependencias npm:
 
 ```shell
-yarn --cwd src/main/webapp install
+yarn --cwd server/src/main/webapp install
 ```
 
 Inicia la UI en modo desarrollo:
 
 ```shell
-yarn --cwd src/main/webapp run start
+yarn --cwd server/src/main/webapp run start
 ```
 
 ## Links
