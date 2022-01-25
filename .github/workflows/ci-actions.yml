@@ -11,8 +11,8 @@ on:
       - "README.md"
 
 jobs:
-  jvm-tests:
-    name: JVM Tests
+  backend-jvm-tests:
+    name: Backend JVM Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -24,8 +24,8 @@ jobs:
       - name: Maven
         run: mvn test
 
-  ui-tests:
-    name: UI Tests
+  admin-console-tests:
+    name: Admin Console Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -37,12 +37,12 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Build
-        working-directory: server/src/main/webapp
+        working-directory: admin-console/src/main/webapp
         run: |
           yarn install
           yarn build
       - name: Test
-        working-directory: server/src/main/webapp
+        working-directory: admin-console/src/main/webapp
         run: yarn test --coverage --watchAll=false
       - uses: codecov/codecov-action@v2.1.0
         with:
