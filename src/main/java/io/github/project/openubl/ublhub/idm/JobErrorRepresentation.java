@@ -16,43 +16,17 @@
  */
 package io.github.project.openubl.ublhub.idm;
 
+import io.github.project.openubl.ublhub.models.JobPhaseType;
+import io.github.project.openubl.ublhub.models.JobRecoveryActionType;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
-import java.util.List;
-
 @RegisterForReflection
-public class SunatStatusRepresentation {
+public class JobErrorRepresentation {
 
-    private Integer code;
-    private String ticket;
-    private String status;
     private String description;
-    private boolean hasCdr;
-    public List<String> notes;
-
-    public Integer getCode() {
-        return code;
-    }
-
-    public void setCode(Integer code) {
-        this.code = code;
-    }
-
-    public String getTicket() {
-        return ticket;
-    }
-
-    public void setTicket(String ticket) {
-        this.ticket = ticket;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    private JobPhaseType phase;
+    private JobRecoveryActionType recoveryAction;
+    private int recoveryActionCount;
 
     public String getDescription() {
         return description;
@@ -62,19 +36,27 @@ public class SunatStatusRepresentation {
         this.description = description;
     }
 
-    public boolean isHasCdr() {
-        return hasCdr;
+    public JobPhaseType getPhase() {
+        return phase;
     }
 
-    public void setHasCdr(boolean hasCdr) {
-        this.hasCdr = hasCdr;
+    public void setPhase(JobPhaseType phase) {
+        this.phase = phase;
     }
 
-    public List<String> getNotes() {
-        return notes;
+    public JobRecoveryActionType getRecoveryAction() {
+        return recoveryAction;
     }
 
-    public void setNotes(List<String> notes) {
-        this.notes = notes;
+    public void setRecoveryAction(JobRecoveryActionType recoveryAction) {
+        this.recoveryAction = recoveryAction;
+    }
+
+    public int getRecoveryActionCount() {
+        return recoveryActionCount;
+    }
+
+    public void setRecoveryActionCount(int recoveryActionCount) {
+        this.recoveryActionCount = recoveryActionCount;
     }
 }

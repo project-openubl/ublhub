@@ -69,12 +69,13 @@ public class DocumentFileResource {
     ) {
         return Panache
                 .withTransaction(() -> documentRepository.findById(namespaceId, documentId))
-                .onItem().ifNotNull().transformToUni(documentEntity -> {
+                .onItem().ifNotNull().transformToUni(documentEntity -> Uni.createFrom().item(documentEntity.xmlFileId)
+                        .onItem().ifNotNull().transformToUni(xmlFileId -> {
                             String fileId;
                             if (requestedFile.equals("ubl")) {
-                                fileId = documentEntity.storageFile;
+                                fileId = documentEntity.xmlFileId;
                             } else {
-                                fileId = documentEntity.storageCdr;
+                                fileId = documentEntity.cdrFileId;
                             }
 
                             boolean isZipFormatRequested = requestedFormat.equals("zip");
@@ -86,14 +87,15 @@ public class DocumentFileResource {
                                 bytesUni = filesMutiny.getFileAsBytesAfterUnzip(fileId);
                             }
 
-                            String filename = documentEntity.documentID + (isZipFormatRequested ? ".zip" : ".xml");
+                            String filename = documentEntity.xmlFileContent.serieNumero + (isZipFormatRequested ? ".zip" : ".xml");
                             String mediaType = isZipFormatRequested ? "application/zip" : MediaType.APPLICATION_XML;
 
                             return bytesUni.map(bytes -> Response.ok(bytes, mediaType)
                                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                                     .build()
                             );
-                        }
+                        })
+                        .onItem().ifNull().continueWith(() -> Response.status(Response.Status.NOT_FOUND).build())
                 )
                 .onItem().ifNull().continueWith(() -> Response.status(Response.Status.NOT_FOUND).build());
     }

@@ -33,8 +33,6 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
-import io.github.project.openubl.ublhub.builder.XMLBuilderManager;
-import io.github.project.openubl.ublhub.exceptions.NoNamespaceException;
 import io.github.project.openubl.ublhub.files.FilesMutiny;
 import io.github.project.openubl.ublhub.keys.KeyManager;
 import io.github.project.openubl.ublhub.models.DocumentFilterModel;
@@ -48,6 +46,7 @@ import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
 import io.github.project.openubl.ublhub.resources.validation.JSONValidatorManager;
 import io.github.project.openubl.ublhub.scheduler.SchedulerManager;
+import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorManager;
 import io.github.project.openubl.xmlbuilderlib.xml.XMLSigner;
 import io.github.project.openubl.xmlbuilderlib.xml.XmlSignatureHelper;
 import io.quarkus.hibernate.reactive.panache.Panache;
@@ -67,7 +66,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -92,7 +90,7 @@ public class DocumentResource {
     UBLDocumentRepository documentRepository;
 
     @Inject
-    XMLBuilderManager xmlBuilderManager;
+    XMLGeneratorManager xmlGeneratorManager;
 
     @Inject
     KeyManager keystore;
@@ -100,29 +98,20 @@ public class DocumentResource {
     @Inject
     JSONValidatorManager jsonManager;
 
-    public Uni<UBLDocumentEntity> createDocumentFromFileID(NamespaceEntity namespaceEntity, String fileSavedId) {
+    public Uni<UBLDocumentEntity> createAndScheduleSend(NamespaceEntity namespaceEntity, String fileSavedId) {
         // Wait for file to be saved
         return Uni.createFrom().item(fileSavedId)
-                .map(fileID -> {
+                .chain(xmlFileId -> {
                     UBLDocumentEntity documentEntity = new UBLDocumentEntity();
-                    documentEntity.storageFile = fileID;
+                    documentEntity.id = UUID.randomUUID().toString();
+                    documentEntity.xmlFileId = xmlFileId;
                     documentEntity.namespace = namespaceEntity;
-                    return documentEntity;
+                    return documentEntity.<UBLDocumentEntity>persist();
                 })
 
-                // Save entity
-                .chain(documentEntity -> Panache
-                        .withTransaction(() -> {
-                            documentEntity.id = UUID.randomUUID().toString();
-                            documentEntity.created = new Date();
-                            documentEntity.inProgress = true;
-                            return documentEntity.<UBLDocumentEntity>persist().map(unused -> documentEntity);
-                        })
-                )
-
-                // Events
+                // Schedule send
                 .chain(documentEntity -> schedulerManager
-                        .sendDocumentToSUNAT(documentEntity.id)
+                        .sendDocumentToSUNAT(documentEntity)
                         .map(unused -> documentEntity)
                 );
     }
@@ -137,8 +126,8 @@ public class DocumentResource {
                 .withTransaction(() -> namespaceRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespaceEntity -> jsonManager
                                 .getUniInputTemplateFromJSON(json)
-                                .onItem().ifNotNull().transformToUni(input -> xmlBuilderManager
-                                        .createXMLString(namespaceEntity, input, false)
+                                .onItem().ifNotNull().transformToUni(input -> xmlGeneratorManager
+                                        .createXMLString(namespaceEntity, input)
                                         .chain(xmlString -> keystore
                                                 .getActiveKey(namespaceEntity, KeyUse.SIG, input.getSpec().getSignature() != null ? input.getSpec().getSignature().getAlgorithm() : Algorithm.RS256)
                                                 .map(key -> {
@@ -151,9 +140,9 @@ public class DocumentResource {
                                                 })
 
                                                 // Save file
-                                                .chain(document -> {
+                                                .chain(xmlDocument -> {
                                                     try {
-                                                        byte[] bytes = XmlSignatureHelper.getBytesFromDocument(document);
+                                                        byte[] bytes = XmlSignatureHelper.getBytesFromDocument(xmlDocument);
                                                         return filesMutiny.createFile(bytes, true);
                                                     } catch (Exception e) {
                                                         throw new IllegalStateException(e);
@@ -161,7 +150,7 @@ public class DocumentResource {
                                                 })
 
                                                 // Link the file Entity
-                                                .chain(fileSavedId -> createDocumentFromFileID(namespaceEntity, fileSavedId))
+                                                .chain(fileSavedId -> createAndScheduleSend(namespaceEntity, fileSavedId))
 
                                                 // Response
                                                 .map(documentEntity -> Response
@@ -190,22 +179,15 @@ public class DocumentResource {
         return Panache
                 // Verify namespace
                 .withTransaction(() -> namespaceRepository.findById(namespaceId))
-                .onItem().ifNull().failWith(NoNamespaceException::new)
-
-                .chain(namespaceEntity -> filesMutiny
-                        // Save file
+                .onItem().ifNotNull().transformToUni(namespaceEntity -> filesMutiny
                         .createFile(formData.file.uploadedFile().toFile(), true)
-
-                        // Link the file Entity
-                        .chain(fileSavedId -> createDocumentFromFileID(namespaceEntity, fileSavedId))
+                        .chain(fileSavedId -> createAndScheduleSend(namespaceEntity, fileSavedId))
+                        .map(documentEntity -> Response.ok()
+                                .entity(EntityToRepresentation.toRepresentation(documentEntity))
+                                .build()
+                        )
                 )
-
-                .map(documentEntity -> Response.ok()
-                        .entity(EntityToRepresentation.toRepresentation(documentEntity))
-                        .build()
-                )
-                .onFailure(throwable -> throwable instanceof NoNamespaceException).recoverWithItem(Response.status(Response.Status.NOT_FOUND).build())
-                .onFailure(throwable -> !(throwable instanceof NoNamespaceException)).recoverWithItem(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
     }
 
     @GET
@@ -257,9 +239,7 @@ public class DocumentResource {
             @PathParam("documentId") @NotNull String documentId
     ) {
         return Panache
-                .withTransaction(() -> namespaceRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespaceEntity -> documentRepository.findById(namespaceEntity, documentId))
-                )
+                .withTransaction(() -> documentRepository.findById(namespaceId, documentId))
                 .onItem().ifNotNull().transform(documentEntity -> Response.ok()
                         .entity(EntityToRepresentation.toRepresentation(documentEntity))
                         .build()

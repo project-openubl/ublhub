@@ -16,9 +16,11 @@
  */
 package io.github.project.openubl.ublhub.files;
 
-import io.github.project.openubl.ublhub.exceptions.FetchFileException;
-import io.github.project.openubl.ublhub.exceptions.SaveFileException;
+import io.github.project.openubl.ublhub.files.exceptions.PersistFileException;
+import io.github.project.openubl.ublhub.files.exceptions.ReadFileException;
+import io.github.project.openubl.ublhub.keys.DefaultKeyManager;
 import io.smallrye.mutiny.Uni;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -27,20 +29,25 @@ import java.io.File;
 @ApplicationScoped
 public class FilesMutiny {
 
+    private static final Logger LOGGER = Logger.getLogger(DefaultKeyManager.class);
+
     @Inject
     FilesManager filesManager;
 
     public Uni<String> createFile(byte[] file, boolean shouldZipFile) {
-        return Uni.createFrom().item(file)
-                .onItem().ifNull().failWith(() -> new SaveFileException("Invalid body"))
-                .onItem().ifNotNull().transformToUni((bytes, uniEmitter) -> {
-                    try {
-                        String fileID = filesManager.createFile(file, shouldZipFile);
-                        uniEmitter.complete(fileID);
-                    } catch (Throwable e) {
-                        uniEmitter.fail(new SaveFileException(e));
-                    }
-                });
+        return Uni.createFrom().emitter((emitter) -> {
+            if (file == null) {
+                emitter.fail(new PersistFileException("Can not save null file"));
+            } else {
+                try {
+                    String fileID = filesManager.createFile(file, shouldZipFile);
+                    emitter.complete(fileID);
+                } catch (Throwable e) {
+                    LOGGER.error(e);
+                    emitter.fail(new PersistFileException(e));
+                }
+            }
+        });
     }
 
     public Uni<String> createFile(File file, boolean shouldZipFile) {
@@ -49,7 +56,8 @@ public class FilesMutiny {
                 String fileID = filesManager.createFile(file, shouldZipFile);
                 uniEmitter.complete(fileID);
             } catch (Throwable e) {
-                uniEmitter.fail(new SaveFileException(e));
+                LOGGER.error(e);
+                uniEmitter.fail(new PersistFileException(e));
             }
         });
     }
@@ -60,7 +68,8 @@ public class FilesMutiny {
                 byte[] file = filesManager.getFileAsBytesAfterUnzip(fileID);
                 uniEmitter.complete(file);
             } catch (Throwable e) {
-                uniEmitter.fail(new FetchFileException(e));
+                LOGGER.error(e);
+                uniEmitter.fail(new ReadFileException(e));
             }
         });
     }
@@ -71,7 +80,8 @@ public class FilesMutiny {
                 byte[] file = filesManager.getFileAsBytesWithoutUnzipping(fileID);
                 uniEmitter.complete(file);
             } catch (Throwable e) {
-                uniEmitter.fail(new FetchFileException(e));
+                LOGGER.error(e);
+                uniEmitter.fail(new ReadFileException(e));
             }
         });
     }
@@ -82,7 +92,8 @@ public class FilesMutiny {
                 String fileLink = filesManager.getFileLink(fileID);
                 uniEmitter.complete(fileLink);
             } catch (Throwable e) {
-                uniEmitter.fail(new FetchFileException(e));
+                LOGGER.error(e);
+                uniEmitter.fail(new ReadFileException(e));
             }
         });
     }
@@ -93,7 +104,8 @@ public class FilesMutiny {
                 filesManager.delete(fileID);
                 uniEmitter.complete(null);
             } catch (Throwable e) {
-                uniEmitter.fail(new FetchFileException(e));
+                LOGGER.error(e);
+                uniEmitter.fail(new PersistFileException(e));
             }
         });
     }

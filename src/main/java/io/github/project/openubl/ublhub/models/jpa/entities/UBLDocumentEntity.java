@@ -16,15 +16,12 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
-import io.github.project.openubl.ublhub.models.ErrorType;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "ubl_document")
@@ -36,80 +33,33 @@ public class UBLDocumentEntity extends BaseEntity {
     public String id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
     public NamespaceEntity namespace;
 
     @NotNull
-    @Type(type = "org.hibernate.type.YesNoType")
-    @Column(name = "in_progress")
-    public boolean inProgress;
+    @Size(max = 255)
+    @Column(name = "xml_file_id")
+    public String xmlFileId;
 
-    @Column(name = "scheduled_delivery")
-    @Temporal(TemporalType.TIMESTAMP)
-    public Date scheduledDelivery;
-
-    @Type(type = "org.hibernate.type.YesNoType")
-    @Column(name = "file_valid")
-    public Boolean fileValid;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "error")
-    public ErrorType error;
+    @Size(max = 255)
+    @Column(name = "cdr_file_id")
+    public String cdrFileId;
 
     @NotNull
-    @Column(name = "retries")
-    public int retries;
+    @Type(type = "org.hibernate.type.YesNoType")
+    @Column(name = "job_in_progress")
+    public boolean jobInProgress;
 
-    // XML Content
+    @Valid
+    @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    public XMLFileContentEntity xmlFileContent;
 
-    @Size(max = 11)
-    @Column(name = "ruc")
-    public String ruc;
+    @Valid
+    @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    public SUNATResponseEntity sunatResponse;
 
-    @Size(max = 50)
-    @Column(name = "document_id")
-    public String documentID;
-
-    @Size(max = 50)
-    @Column(name = "document_type")
-    public String documentType;
-
-    @Size(max = 50)
-    @Column(name = "voided_line_document_type_code")
-    public String voidedLineDocumentTypeCode;
-
-    // Storage
-
-    @NotNull
-    @Size(max = 255)
-    @Column(name = "storage_file")
-    public String storageFile;
-
-    @Size(max = 255)
-    @Column(name = "storage_cdr")
-    public String storageCdr;
-
-    //
-
-    @Size(max = 50)
-    @Column(name = "sunat_ticket")
-    public String sunatTicket;
-
-    @Size(max = 50)
-    @Column(name = "sunat_status")
-    public String sunatStatus;
-
-    @Column(name = "sunat_code")
-    public Integer sunatCode;
-
-    @Size(max = 255)
-    @Column(name = "sunat_description")
-    public String sunatDescription;
-
-    @ElementCollection(fetch = FetchType.EAGER)
-    @Column(name = "value")
-    @CollectionTable(name = "ubl_document_sunat_notes", joinColumns = {@JoinColumn(name = "ubl_document_id")})
-    public Set<@NotNull @Size(max = 255) String> sunatNotes = new HashSet<>();
-
+    @Valid
+    @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    public JobErrorEntity jobError;
 }

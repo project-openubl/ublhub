@@ -48,46 +48,31 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
     }
 
     public UniAndGroup2<List<UBLDocumentEntity>, Long> list(NamespaceEntity namespace, DocumentFilterModel filters, PageBean pageBean, List<SortBean> sortBy) {
-        Sort sort = Sort.by();
-        sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
-
-        StringBuilder queryBuilder = new StringBuilder("From UBLDocumentEntity as c where c.namespace.id = :namespaceId");
-        Parameters params = Parameters.with("namespaceId", namespace.id);
-
-        if (filters.getRuc() != null && !filters.getRuc().isEmpty()) {
-            queryBuilder.append(" and c.ruc in :ruc");
-            params = params.and("ruc", filters.getRuc());
-        }
-        if (filters.getDocumentType() != null && !filters.getDocumentType().isEmpty()) {
-            queryBuilder.append(" and c.documentType in :documentType");
-            params = params.and("documentType", filters.getDocumentType());
-        }
-
-        PanacheQuery<UBLDocumentEntity> query = UBLDocumentEntity
-                .find(queryBuilder.toString(), sort, params)
-                .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
-
-        return Uni.combine().all().unis(query.list(), query.count());
+        return list(namespace, null, filters, pageBean, sortBy);
     }
 
     public UniAndGroup2<List<UBLDocumentEntity>, Long> list(NamespaceEntity namespace, String filterText, DocumentFilterModel filters, PageBean pageBean, List<SortBean> sortBy) {
-        Sort sort = Sort.by();
-        sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
+        StringBuilder queryBuilder = new StringBuilder("select distinct d from UBLDocumentEntity d left join d.xmlFileContent x where d.namespace.id = :namespaceId");
+        Parameters params = Parameters.with("namespaceId", namespace.id);
 
-        StringBuilder queryBuilder = new StringBuilder("From UBLDocumentEntity as c where c.namespace.id = :namespaceId and lower(c.documentID) like :filterText");
-        Parameters queryParameters = Parameters.with("namespaceId", namespace.id).and("filterText", "%" + filterText.toLowerCase());
-
+        if (filterText != null && !filterText.trim().isEmpty()) {
+            queryBuilder.append(" and lower(x.serieNumero) like :filterText");
+            params = params.and("filterText", "%" + filterText.toLowerCase());
+        }
         if (filters.getRuc() != null && !filters.getRuc().isEmpty()) {
-            queryBuilder.append(" and c.ruc in :ruc");
-            queryParameters = queryParameters.and("ruc", filters.getRuc());
+            queryBuilder.append(" and x.ruc in :ruc");
+            params = params.and("ruc", filters.getRuc());
         }
         if (filters.getDocumentType() != null && !filters.getDocumentType().isEmpty()) {
-            queryBuilder.append(" and c.documentType in :documentType");
-            queryParameters = queryParameters.and("documentType", filters.getDocumentType());
+            queryBuilder.append(" and x.documentType in :documentType");
+            params = params.and("documentType", filters.getDocumentType());
         }
 
+        Sort sort = Sort.by();
+        sortBy.forEach(f -> sort.and("d." + f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
+
         PanacheQuery<UBLDocumentEntity> query = UBLDocumentEntity
-                .find(queryBuilder.toString(), sort, queryParameters)
+                .find(queryBuilder.toString(), sort, params)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
         return Uni.combine().all().unis(query.list(), query.count());

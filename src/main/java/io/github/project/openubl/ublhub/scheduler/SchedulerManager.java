@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.scheduler;
 
+import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -35,20 +36,27 @@ public class SchedulerManager {
     @Any
     Instance<Scheduler> schedulers;
 
-    public Uni<Void> sendDocumentToSUNAT(String documentId) {
-        SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
-        Annotation annotation = new SchedulerProviderLiteral(providerType);
-
-        Scheduler scheduler = schedulers.select(annotation).get();
-        return scheduler.sendDocumentToSUNAT(documentId);
+    public Uni<Void> sendDocumentToSUNAT(UBLDocumentEntity documentEntity) {
+        documentEntity.jobInProgress = true;
+        return documentEntity.<UBLDocumentEntity>persistAndFlush()
+                .chain(() -> {
+                    SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
+                    Annotation annotation = new SchedulerProviderLiteral(providerType);
+                    Scheduler scheduler = schedulers.select(annotation).get();
+                    return scheduler.sendDocumentToSUNAT(documentEntity.id);
+                });
     }
 
-    public Uni<Void> sendVerifyTicketAtSUNAT(String documentId) {
-        SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
-        Annotation annotation = new SchedulerProviderLiteral(providerType);
+    public Uni<Void> sendVerifyTicketAtSUNAT(UBLDocumentEntity documentEntity) {
+        documentEntity.jobInProgress = true;
+        return documentEntity.<UBLDocumentEntity>persistAndFlush()
+                .chain(() -> {
+                    SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
+                    Annotation annotation = new SchedulerProviderLiteral(providerType);
 
-        Scheduler scheduler = schedulers.select(annotation).get();
-        return scheduler.sendVerifyTicketAtSUNAT(documentId);
+                    Scheduler scheduler = schedulers.select(annotation).get();
+                    return scheduler.sendVerifyTicketAtSUNAT(documentEntity.id);
+                });
     }
 
 }

@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.idm.input;
 
-import io.github.project.openubl.ublhub.idgenerator.IDGeneratorType;
+import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
 
 import javax.validation.constraints.NotNull;
 import java.util.Map;
