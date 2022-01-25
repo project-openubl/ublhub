@@ -11,8 +11,8 @@ on:
       - "README.md"
 
 jobs:
-  jvm-tests:
-    name: JVM Tests
+  backend-jvm-tests:
+    name: Backend JVM Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
