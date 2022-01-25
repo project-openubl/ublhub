@@ -18,7 +18,7 @@ jobs:
           distribution: temurin
           cache: maven
       - name: Build jvm container image
-        run: mvn -U -B package --file server/pom.xml -Pcontainer-image -DskipTests \
+        run: mvn -U -B package --file backend/pom.xml -Pcontainer-image -DskipTests \
         -Dquarkus.native.container-build=false \
         -Dquarkus.container-image.push=true \
         -Dquarkus.container-image.build=true \
@@ -28,5 +28,5 @@ jobs:
         -Dquarkus.container-image.tag=early-access \
         -Dquarkus.container-image.username=${{ secrets.QUAYIO_USERNAME }} \
         -Dquarkus.container-image.password=${{ secrets.QUAYIO_PASSWORD }} \
-        -P ui
+        -P admin-console
 

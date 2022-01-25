@@ -22,7 +22,7 @@ jobs:
 
       - name: Build jvm container image
         run: |
-          mvn -U -B package --file server/pom.xml -DskipTests \
+          mvn -U -B package --file backend/pom.xml -DskipTests \
           -Dquarkus.container-image.build=true \
           -Dquarkus.container-image.push=true \
           -Dquarkus.container-image.build=true \
@@ -32,4 +32,4 @@ jobs:
           -Dquarkus.container-image.tag=${{ steps.extract_branch.outputs.branch }} \
           -Dquarkus.container-image.username=${{ github.actor }} \
           -Dquarkus.container-image.password=${{ secrets.GITHUB_TOKEN }} \
-          -P ui
+          -P admin-console
