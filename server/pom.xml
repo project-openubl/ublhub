@@ -17,8 +17,7 @@
     limitations under the License.
 
 -->
-<project
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 camel-quarkus-aws2-s3:https://maven.apache.org/xsd/maven-4.0.0.xsd"
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 camel-quarkus-aws2-s3:https://maven.apache.org/xsd/maven-4.0.0.xsd"
         xmlns="http://maven.apache.org/POM/4.0.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
@@ -289,9 +288,7 @@
                                             <color>cyan</color>
                                         </log>
                                         <wait>
-                                            <log>(?s)database system is ready to accept connections.*database system is
-                                                ready to accept connections
-                                            </log>
+                                            <log>(?s)database system is ready to accept connections.*database system is ready to accept connections</log>
                                             <time>20000</time>
                                         </wait>
                                     </run>

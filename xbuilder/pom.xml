@@ -30,7 +30,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>xbuilder</artifactId>
+    <artifactId>xbuilder2</artifactId>
     <name>XBuilder</name>
     <description>Creates XContent and then build XMLs</description>
 </project>
