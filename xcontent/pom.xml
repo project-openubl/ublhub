@@ -33,4 +33,11 @@
     <artifactId>xcontent</artifactId>
     <name>XContent</name>
     <description>Represents the XML content</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-validator</artifactId>
+        </dependency>
+    </dependencies>
 </project>

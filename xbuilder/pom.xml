@@ -31,6 +31,18 @@
     </parent>
 
     <artifactId>xbuilder2</artifactId>
-    <name>XBuilder</name>
+    <name>UblHub :: XBuilder</name>
     <description>Creates XContent and then build XMLs</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-validator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.project-openubl</groupId>
+            <artifactId>xcontent</artifactId>
+        </dependency>
+    </dependencies>
 </project>
