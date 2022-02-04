@@ -30,7 +30,6 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
+    <name>UblHub :: XReader</name>
     <artifactId>xreader</artifactId>
-    <name>XReader</name>
-    <description>Reads an XML and generates XContent</description>
 </project>

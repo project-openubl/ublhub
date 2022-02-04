@@ -17,7 +17,8 @@
     limitations under the License.
 
 -->
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 camel-quarkus-aws2-s3:https://maven.apache.org/xsd/maven-4.0.0.xsd"
+<project
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 camel-quarkus-aws2-s3:https://maven.apache.org/xsd/maven-4.0.0.xsd"
         xmlns="http://maven.apache.org/POM/4.0.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
@@ -43,6 +44,11 @@
     <dependencies>
         <dependency>
             <groupId>io.github.project-openubl</groupId>
+            <artifactId>xrenderer</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.project-openubl</groupId>
             <artifactId>xbuilder</artifactId>
             <version>${xbuilder-lib.version}</version>
         </dependency>
@@ -64,10 +70,6 @@
         </dependency>
 
         <!--Quarkus-->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-arc</artifactId>
-        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
@@ -163,16 +165,6 @@
         </dependency>
 
         <!--Test-->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>rest-assured</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>

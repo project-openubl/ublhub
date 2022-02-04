@@ -1,0 +1,17 @@
+package io.github.project.openubl.xbuilder;
+//unit BoletaFacturaUnit;
+
+import io.github.project.openubl.xcontent.models.standard.general.BoletaFactura;
+
+rule "Is currency missing"
+when
+   $invoice: /BoletaFactura[ moneda == null ]
+then
+    modify($invoice) {
+        moneda = "PEN"
+    };
+end
+
+query FindApprovedd
+   $invoice: /loanApplications[ approved ]
+end
