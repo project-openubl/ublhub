@@ -1,0 +1,56 @@
+package io.github.project.openubl.ublhub.ubl.content.ruleunits;
+unit InvoiceUnit;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+import io.github.project.openubl.ublhub.ubl.content.models.common.Firmante;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
+
+// Queries
+query boletaFactura
+    $i: /invoice
+end
+
+// General
+rule "¿Documento requiere moneda?" when
+    $i: /invoice[ moneda == null ]
+then
+    modify($i) {
+        moneda = "PEN"
+    };
+end
+
+rule "¿Documento requiere fecha?" when
+    $i: /invoice[ fechaEmision == null ]
+then
+    modify($i) {
+        fechaEmision = LocalDate.now();
+    };
+end
+
+rule "¿Documento requiere hora de emisión?" when
+    $i: /invoice[ horaEmision == null ]
+then
+    modify($i) {
+        horaEmision = LocalTime.now();
+    };
+end
+
+// Firmante
+rule "¿Documento Requiere firmante?" when
+    $i: /invoice[ firmante == null, proveedor != null ]
+then
+    Firmante newFirmante = new Firmante();
+    newFirmante.ruc = $i.proveedor.ruc;
+    newFirmante.razonSocial = $i.proveedor.razonSocial;
+
+    $i.firmante = newFirmante;
+end
+
+// Proveedor
+rule "¿Proveedor Requiere dirección?" when
+    $d: /invoice/proveedor/direccion[ codigoLocal == null ]
+then
+    $d.codigoLocal = "0000";
+end

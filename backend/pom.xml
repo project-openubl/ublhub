@@ -44,11 +44,6 @@
     <dependencies>
         <dependency>
             <groupId>io.github.project-openubl</groupId>
-            <artifactId>xrenderer</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.github.project-openubl</groupId>
             <artifactId>xbuilder</artifactId>
             <version>${xbuilder-lib.version}</version>
         </dependency>
@@ -70,6 +65,11 @@
         </dependency>
 
         <!--Quarkus-->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-arc</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
@@ -154,6 +154,11 @@
             <artifactId>camel-quarkus-json-validator</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.kie.kogito</groupId>
+            <artifactId>kogito-quarkus-rules</artifactId>
+        </dependency>
+
         <!--Jdbc-->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -165,6 +170,16 @@
         </dependency>
 
         <!--Test-->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
@@ -194,6 +209,23 @@
 
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler-plugin.version}</version>
+                <configuration>
+                    <parameters>${maven.compiler.parameters}</parameters>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire-plugin.version}</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <maven.home>${maven.home}</maven.home>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
