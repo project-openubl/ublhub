@@ -16,13 +16,13 @@
  */
 package io.github.project.openubl.ublhub.ubl.content.models.standard.guia;
 
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog1;
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog21;
+import io.github.project.openubl.ublhub.ubl.content.catalogs.validation.CatalogConstraint;
 import io.github.project.openubl.ublhub.ubl.content.models.common.Cliente;
 import io.github.project.openubl.ublhub.ubl.content.models.common.Firmante;
 import io.github.project.openubl.ublhub.ubl.content.models.common.Proveedor;
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.DespatchAdviceTraslado;
-import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog1;
-import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog21;
-import io.github.project.openubl.ublhub.ubl.content.catalogs.validation.CatalogConstraint;
 
 import javax.validation.Valid;
 import javax.validation.constraints.*;

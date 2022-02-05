@@ -22,7 +22,10 @@ import io.github.project.openubl.ublhub.ubl.content.ruleunits.InvoiceLineUnit;
 import io.github.project.openubl.ublhub.ubl.content.ruleunits.InvoiceTotalImpuestosUnit;
 import io.github.project.openubl.ublhub.ubl.content.ruleunits.InvoiceUnit;
 import org.kie.kogito.incubation.application.AppRoot;
+import org.kie.kogito.incubation.common.DataContext;
+import org.kie.kogito.incubation.common.MapDataContext;
 import org.kie.kogito.incubation.rules.QueryId;
+import org.kie.kogito.incubation.rules.RuleUnitIds;
 import org.kie.kogito.incubation.rules.services.RuleUnitService;
 
 import javax.inject.Inject;
@@ -31,14 +34,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import org.kie.kogito.incubation.common.DataContext;
-import org.kie.kogito.incubation.common.MapDataContext;
-import org.kie.kogito.incubation.rules.RuleUnitIds;
-
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;

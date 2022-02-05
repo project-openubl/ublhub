@@ -16,9 +16,9 @@
  */
 package io.github.project.openubl.ublhub.ubl.content.models.sunat.resumen;
 
-import io.github.project.openubl.ublhub.ubl.content.models.common.Cliente;
 import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog1;
 import io.github.project.openubl.ublhub.ubl.content.catalogs.validation.CatalogConstraint;
+import io.github.project.openubl.ublhub.ubl.content.models.common.Cliente;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;

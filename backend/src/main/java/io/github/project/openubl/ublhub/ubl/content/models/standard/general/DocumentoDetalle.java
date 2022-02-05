@@ -16,8 +16,8 @@
  */
 package io.github.project.openubl.ublhub.ubl.content.models.standard.general;
 
-import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog7;
 import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog16;
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog7;
 import io.github.project.openubl.ublhub.ubl.content.catalogs.validation.CatalogConstraint;
 
 import javax.validation.constraints.Digits;
