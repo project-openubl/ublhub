@@ -16,17 +16,17 @@
  */
 package io.github.project.openubl.ublhub.ubl.content.ruleunits;
 
-import io.github.project.openubl.ublhub.ubl.content.models.standard.general.DocumentoDetalle;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
 import org.kie.kogito.rules.DataSource;
-import org.kie.kogito.rules.DataStore;
 import org.kie.kogito.rules.RuleUnitData;
+import org.kie.kogito.rules.SingletonStore;
 
-public class InvoiceLineUnit implements RuleUnitData {
+public class InitialEnrichInvoiceUnit implements RuleUnitData {
 
-    private final DataStore<DocumentoDetalle> invoiceLines = DataSource.createStore();
+    private final SingletonStore<BoletaFactura> invoice = DataSource.createSingleton();
 
-    public DataStore<DocumentoDetalle> getInvoiceLines() {
-        return invoiceLines;
+    public SingletonStore<BoletaFactura> getInvoice() {
+        return invoice;
     }
 
 }

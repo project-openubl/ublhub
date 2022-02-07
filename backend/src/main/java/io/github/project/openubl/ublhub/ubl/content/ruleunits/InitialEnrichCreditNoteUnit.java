@@ -16,17 +16,27 @@
  */
 package io.github.project.openubl.ublhub.ubl.content.ruleunits;
 
-import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
+import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorConfig;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.NotaDeCredito;
 import org.kie.kogito.rules.DataSource;
 import org.kie.kogito.rules.RuleUnitData;
 import org.kie.kogito.rules.SingletonStore;
 
-public class InvoiceTotalImpuestosUnit implements RuleUnitData {
+public class InitialEnrichCreditNoteUnit implements RuleUnitData {
 
-    private final SingletonStore<BoletaFactura> invoice = DataSource.createSingleton();
+    private XMLGeneratorConfig config;
 
-    public SingletonStore<BoletaFactura> getInvoice() {
-        return invoice;
+    private final SingletonStore<NotaDeCredito> creditNote = DataSource.createSingleton();
+
+    public SingletonStore<NotaDeCredito> getCreditNote() {
+        return creditNote;
     }
 
+    public XMLGeneratorConfig getConfig() {
+        return config;
+    }
+
+    public void setConfig(XMLGeneratorConfig config) {
+        this.config = config;
+    }
 }

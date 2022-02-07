@@ -29,7 +29,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-public abstract class BaseDocumento {
+public class BaseDocumento {
 
     @Size(min = 3, max = 3)
     public String moneda;
@@ -73,6 +73,10 @@ public abstract class BaseDocumento {
 
     @CatalogConstraint(value = CatalogContadoCredito.class)
     public String formaDePago;
+
+    @Min(0)
+    @Digits(integer = 100, fraction = 2)
+    public BigDecimal formaDePagoTotal;
 
     @Valid
     public List<CuotaDePago> formaDePagoCuotas;

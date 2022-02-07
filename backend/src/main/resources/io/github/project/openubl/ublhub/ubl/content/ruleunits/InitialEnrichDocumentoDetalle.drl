@@ -1,0 +1,153 @@
+package io.github.project.openubl.ublhub.ubl.content.ruleunits;
+unit InitialEnrichDocumentoDetalleUnit;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog;
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog7;
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog7_1;
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog16;
+
+query documentLines
+    $dl: /documentLines
+end
+
+
+rule "¿Requiere unidad medida?" when
+    $dl: /documentLines[ unidadMedida == null ]
+then
+    modify($dl) {
+        unidadMedida = config.defaultUnidadMedida;
+    };
+end
+
+rule "¿Requiere tipo IGV?" when
+    $dl: /documentLines[ igvTipo == null ]
+then
+    modify($dl) {
+        igvTipo = Catalog7.GRAVADO_OPERACION_ONEROSA.getCode();
+    };
+end
+
+rule "¿Requiere icb tasa?" when
+    $dl: /documentLines[ icbTasa == null ]
+then
+    modify($dl) {
+        icbTasa = config.defaultIcb;
+    };
+end
+
+rule "¿Requiere igv tasa?" when
+    $dl: /documentLines[ igvTasa == null, igvTipo != null ]
+then
+    Catalog7 catalog7 = Catalog.valueOfCode(Catalog7.class, $dl.igvTipo).orElseThrow(Catalog.invalidCatalogValue);
+
+    BigDecimal newIgvTasa;
+    if (catalog7.getGrupo().equals(Catalog7_1.GRAVADO)) {
+        newIgvTasa = catalog7.equals(Catalog7.GRAVADO_IVAP) ? config.ivap : config.igv;
+    } else {
+        newIgvTasa = BigDecimal.ZERO;
+    }
+
+    modify($dl) {
+        igvTasa = newIgvTasa;
+    };
+end
+
+// Precios
+
+rule "¿Requiere tipo precio referencia?" when
+    $dl: /documentLines[ precioReferenciaTipo == null, igvTipo != null ]
+then
+    Catalog7 catalog7 = Catalog.valueOfCode(Catalog7.class, $dl.igvTipo).orElseThrow(Catalog.invalidCatalogValue);
+    Catalog16 catalog16 = catalog7.isOperacionOnerosa() ? Catalog16.PRECIO_UNITARIO_INCLUYE_IGV : Catalog16.VALOR_REFERENCIAL_UNITARIO_EN_OPERACIONES_NO_ONEROSAS;
+    modify($dl) {
+        precioReferenciaTipo = catalog16.getCode();
+    };
+end
+
+
+rule "¿Requiere precio referencial cuando precio no tiene impuestos?" when
+    $dl: /documentLines[ precioReferencia == null, igvTipo != null, igvTasa != null, precioConImpuestos == false ]
+then
+    Catalog7 catalog7 = Catalog.valueOfCode(Catalog7.class, $dl.igvTipo).orElseThrow(Catalog.invalidCatalogValue);
+    BigDecimal newPrecioReferencia = catalog7.isOperacionOnerosa() ? $dl.precio.multiply($dl.igvTasa.add(BigDecimal.ONE)) : $dl.precio;
+    modify($dl) {
+        precioReferencia = newPrecioReferencia;
+    };
+end
+
+rule "¿Requiere precio referencia cuando precio original si tiene impuestos?" when
+    $dl: /documentLines[ precioReferencia == null, igvTipo != null, precioConImpuestos == true ]
+then
+    Catalog7 catalog7 = Catalog.valueOfCode(Catalog7.class, $dl.igvTipo).orElseThrow(Catalog.invalidCatalogValue);
+    BigDecimal newPrecioReferencia = catalog7.isOperacionOnerosa() ? $dl.precio : $dl.precio.divide($dl.igvTasa.add(BigDecimal.ONE), 10, RoundingMode.HALF_EVEN);
+    modify($dl) {
+        precioReferencia = newPrecioReferencia;
+    };
+end
+
+
+// ICB
+
+rule "¿Requiere icb?" when
+    $dl: /documentLines[ icb == null ]
+then
+    BigDecimal newIcb = $dl.icbAplica ? $dl.cantidad.multiply($dl.icbTasa) : BigDecimal.ZERO;
+    modify($dl) {
+        icb = newIcb;
+    };
+end
+
+rule "¿Requiere icb aplica?" when
+    $dl: /documentLines[ icbAplica == false, icb != null, icb.compareTo(BigDecimal.ZERO) > 0 ]
+then
+    modify($dl) {
+        icbAplica = true;
+    };
+end
+
+
+// IGV
+
+rule "¿Requiere base imponible?" when
+    $dl: /documentLines[ igvBaseImponible == null, precio != null, precioReferencia != null  ]
+then
+    BigDecimal newIgvBaseImponible = !$dl.precioConImpuestos ?
+        $dl.cantidad.multiply($dl.precio) :
+        $dl.cantidad.multiply($dl.precioReferencia);
+    modify($dl) {
+        igvBaseImponible = newIgvBaseImponible;
+    };
+end
+
+rule "¿Requiere igv?" when
+    $dl: /documentLines[ igv == null, igvBaseImponible != null, igvTasa != null ]
+then
+    BigDecimal newIgv = $dl.igvBaseImponible.multiply($dl.igvTasa);
+    modify($dl) {
+        igv = newIgv;
+    };
+end
+
+
+// Totales
+
+rule "¿Requiere total impuestos?" when
+    $dl: /documentLines[ totalImpuestos == null, igv != null, icb != null ]
+then
+    BigDecimal newTotalImpuestos = $dl.igv.add($dl.icb);
+    modify($dl) {
+        totalImpuestos = newTotalImpuestos;
+    };
+end
+
+rule "¿Requiere valor de venta sin impuestos?" when
+    $dl: /documentLines[ valorVentaSinImpuestos == null, igvBaseImponible != null ]
+then
+    BigDecimal newValorVentaSinImpuestos = $dl.cantidad.multiply($dl.igvBaseImponible);
+    modify($dl) {
+        valorVentaSinImpuestos = newValorVentaSinImpuestos;
+    };
+end

@@ -32,28 +32,28 @@ import java.math.BigDecimal;
 public class XMLGeneratorConfig implements Config {
 
     @ConfigProperty(name = "openubl.xbuilder.igv")
-    BigDecimal igv;
+    public BigDecimal igv;
 
     @ConfigProperty(name = "openubl.xbuilder.ivap")
-    BigDecimal ivap;
+    public BigDecimal ivap;
 
     @ConfigProperty(name = "openubl.xbuilder.defaultMoneda")
-    String defaultMoneda;
+    public String defaultMoneda;
 
     @ConfigProperty(name = "openubl.xbuilder.defaultUnidadMedida")
-    String defaultUnidadMedida;
+    public String defaultUnidadMedida;
 
     @ConfigProperty(name = "openubl.xbuilder.defaultTipoNotaCredito")
-    String defaultTipoNotaCredito;
+    public String defaultTipoNotaCredito;
 
     @ConfigProperty(name = "openubl.xbuilder.defaultTipoNotaDebito")
-    String defaultTipoNotaDebito;
+    public String defaultTipoNotaDebito;
 
     @ConfigProperty(name = "openubl.xbuilder.defaultIcb")
-    BigDecimal defaultIcb;
+    public BigDecimal defaultIcb;
 
     @ConfigProperty(name = "openubl.xbuilder.defaultTipoIgv")
-    String defaultTipoIgv;
+    public String defaultTipoIgv;
 
     @Override
     public BigDecimal getIgv() {

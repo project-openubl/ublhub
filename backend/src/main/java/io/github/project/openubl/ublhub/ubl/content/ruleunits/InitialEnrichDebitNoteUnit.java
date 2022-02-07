@@ -14,22 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.catalogs;
+package io.github.project.openubl.ublhub.ubl.content.ruleunits;
 
-public enum Catalog16 implements Catalog {
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.NotaDeDebito;
+import org.kie.kogito.rules.DataSource;
+import org.kie.kogito.rules.RuleUnitData;
+import org.kie.kogito.rules.SingletonStore;
 
-    PRECIO_UNITARIO_INCLUYE_IGV("01"),
-    VALOR_REFERENCIAL_UNITARIO_EN_OPERACIONES_NO_ONEROSAS("02");
+public class InitialEnrichDebitNoteUnit implements RuleUnitData {
 
-    private final String code;
+    private final SingletonStore<NotaDeDebito> debitNote = DataSource.createSingleton();
 
-    Catalog16(String code) {
-        this.code = code;
-    }
-
-    @Override
-    public String getCode() {
-        return code;
+    public SingletonStore<NotaDeDebito> getDebitNote() {
+        return debitNote;
     }
 
 }

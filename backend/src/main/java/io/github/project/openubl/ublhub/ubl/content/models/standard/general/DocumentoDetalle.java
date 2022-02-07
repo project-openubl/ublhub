@@ -28,8 +28,6 @@ import java.math.BigDecimal;
 
 public class DocumentoDetalle {
 
-    public int order;
-
     @NotNull
     @NotBlank
     public String descripcion;

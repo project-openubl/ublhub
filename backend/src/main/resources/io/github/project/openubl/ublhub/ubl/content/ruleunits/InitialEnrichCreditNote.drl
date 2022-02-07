@@ -1,0 +1,7 @@
+package io.github.project.openubl.ublhub.ubl.content.ruleunits;
+unit InitialEnrichCreditNoteUnit;
+
+// Queries
+query creditNote
+    $cn: /creditNote
+end

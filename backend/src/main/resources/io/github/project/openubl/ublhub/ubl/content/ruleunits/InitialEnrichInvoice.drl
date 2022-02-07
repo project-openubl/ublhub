@@ -1,0 +1,31 @@
+package io.github.project.openubl.ublhub.ubl.content.ruleunits;
+unit InitialEnrichInvoiceUnit;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog1_Invoice;
+import io.github.project.openubl.ublhub.ubl.content.catalogs.CatalogContadoCredito;
+
+import io.github.project.openubl.ublhub.ubl.content.models.common.Firmante;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
+
+// Queries
+query invoice
+    $i: /invoice
+end
+
+rule "¿Requiere tipo de invoice (comprobante)?" when
+    $i: /invoice[ tipoComprobante == null, serie != null ]
+then
+    String newTipoComprobante = null;
+    if ($i.serie.matches("^[F|f].*$")) {
+        newTipoComprobante = Catalog1_Invoice.FACTURA.getCode();
+    } else if ($i.serie.matches("^[B|b].*$")) {
+        newTipoComprobante = Catalog1_Invoice.BOLETA.getCode();
+    }
+
+    modify($i) {
+        tipoComprobante = newTipoComprobante
+    };
+end

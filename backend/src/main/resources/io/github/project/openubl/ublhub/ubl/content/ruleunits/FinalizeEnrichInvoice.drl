@@ -1,5 +1,5 @@
 package io.github.project.openubl.ublhub.ubl.content.ruleunits;
-unit InvoiceTotalImpuestosUnit;
+unit FinalizeEnrichInvoiceUnit;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -18,7 +18,7 @@ import io.github.project.openubl.ublhub.ubl.content.models.standard.general.Tota
 import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog5;
 
 // Queries
-query boletaFacturaTotalImpuestos
+query invoiceWithTotals
     $i: /invoice
 end
 
