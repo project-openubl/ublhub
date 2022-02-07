@@ -62,6 +62,14 @@ then
     };
 end
 
+rule "¿Requiere icb tasa?" when
+    $il: /invoiceLines[ icbTasa == null ]
+then
+    modify($il) {
+        icbTasa = new BigDecimal("0.3");
+    };
+end
+
 rule "¿Requiere icb?" when
     $il: /invoiceLines[ icb == null ]
 then
@@ -113,6 +121,15 @@ then
     BigDecimal newIgv = $il.igvTasa.multiply($il.igvBaseImponible);
     modify($il) {
         igv = newIgv;
+    };
+end
+
+rule "¿Requiere total impuestos?" when
+    $il: /invoiceLines[ totalImpuestos == null, igv != null, icb != null ]
+then
+    BigDecimal newTotalImpuestos = $il.igv.add($il.icb);
+    modify($il) {
+        totalImpuestos = newTotalImpuestos;
     };
 end
 

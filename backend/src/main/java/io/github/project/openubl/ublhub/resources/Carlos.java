@@ -21,6 +21,9 @@ import io.github.project.openubl.ublhub.ubl.content.models.standard.general.Docu
 import io.github.project.openubl.ublhub.ubl.content.ruleunits.InvoiceLineUnit;
 import io.github.project.openubl.ublhub.ubl.content.ruleunits.InvoiceTotalImpuestosUnit;
 import io.github.project.openubl.ublhub.ubl.content.ruleunits.InvoiceUnit;
+import io.quarkus.qute.Location;
+import io.quarkus.qute.Template;
+import io.smallrye.mutiny.Uni;
 import org.kie.kogito.incubation.application.AppRoot;
 import org.kie.kogito.incubation.common.DataContext;
 import org.kie.kogito.incubation.common.MapDataContext;
@@ -29,10 +32,7 @@ import org.kie.kogito.incubation.rules.RuleUnitIds;
 import org.kie.kogito.incubation.rules.services.RuleUnitService;
 
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.LinkedList;
 import java.util.Map;
@@ -47,6 +47,10 @@ public class Carlos {
 
     @Inject
     RuleUnitService svc;
+
+    @Inject
+    @Location("ubl/standard/general/invoice.xml")
+    Template invoiceTemplate;
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
@@ -75,6 +79,14 @@ public class Carlos {
 
         // Result
         return invoice;
+    }
+
+    @PUT
+    @Produces(MediaType.TEXT_XML)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Uni<String> createXML(BoletaFactura invoiceDto) {
+        BoletaFactura boletaFactura = executeQuery(invoiceDto);
+        return Uni.createFrom().completionStage(() -> invoiceTemplate.data(boletaFactura).renderAsync());
     }
 
 }

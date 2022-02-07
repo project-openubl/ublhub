@@ -16,12 +16,15 @@
  */
 package io.github.project.openubl.ublhub.ubl.content.models.standard.general;
 
+import io.github.project.openubl.ublhub.ubl.content.catalogs.CatalogContadoCredito;
+import io.github.project.openubl.ublhub.ubl.content.catalogs.validation.CatalogConstraint;
 import io.github.project.openubl.ublhub.ubl.content.models.common.Cliente;
 import io.github.project.openubl.ublhub.ubl.content.models.common.Firmante;
 import io.github.project.openubl.ublhub.ubl.content.models.common.Proveedor;
 
 import javax.validation.Valid;
 import javax.validation.constraints.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -30,7 +33,7 @@ public abstract class BaseDocumento {
 
     @Size(min = 3, max = 3)
     public String moneda;
-    
+
     @NotNull
     @NotBlank
     @Pattern(regexp = "^[F|f|B|b].*$")
@@ -62,12 +65,19 @@ public abstract class BaseDocumento {
     public List<DocumentoDetalle> detalle;
 
     @Valid
-    public List<GuiaRemisionRelacionada> guiasRemisionRelacionadas;
-
-    @Valid
     public TotalImporte totalImporte;
 
     @Valid
     public TotalImpuestos totalImpuestos;
 
+
+    @CatalogConstraint(value = CatalogContadoCredito.class)
+    public String formaDePago;
+
+    @Valid
+    public List<CuotaDePago> formaDePagoCuotas;
+
+
+    @Valid
+    public List<GuiaRemisionRelacionada> guiasRemisionRelacionadas;
 }

@@ -14,20 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.models.standard.general;
+package io.github.project.openubl.ublhub.ubl.content.catalogs;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+public enum Catalog1_Invoice implements Catalog {
 
-public class CuotaDePago {
+    FACTURA("01"),
+    BOLETA("03"),;
 
-    @NotNull
-    @Positive
-    public BigDecimal importe;
+    private final String code;
 
-    @NotNull
-    public LocalDate fechaPago;
+    Catalog1_Invoice(String code) {
+        this.code = code;
+    }
+
+    @Override
+    public String getCode() {
+        return code;
+    }
 
 }

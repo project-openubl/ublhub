@@ -54,6 +54,8 @@ public class DocumentoDetalle {
     @CatalogConstraint(value = Catalog16.class)
     public String precioReferenciaTipo;
 
+    // Impuestos
+
     @Positive
     @Digits(integer = 100, fraction = 2)
     public BigDecimal igv;
@@ -72,30 +74,21 @@ public class DocumentoDetalle {
     @Positive
     @Digits(integer = 100, fraction = 2)
     public BigDecimal icb;
+
+    @Positive
+    @Digits(integer = 100, fraction = 2)
+    public BigDecimal icbTasa;
+
     public boolean icbAplica;
+
+    // Totales
+    @Positive
+    @Digits(integer = 100, fraction = 2)
+    public BigDecimal totalImpuestos;
 
     @Positive
     @Digits(integer = 100, fraction = 2)
     public BigDecimal valorVentaSinImpuestos;
 
-    @Override
-    public String toString() {
-        return "DocumentoDetalle{" +
-                "order=" + order +
-                ", descripcion='" + descripcion + '\'' +
-                ", unidadMedida='" + unidadMedida + '\'' +
-                ", cantidad=" + cantidad +
-                ", precio=" + precio +
-                ", precioConImpuestos=" + precioConImpuestos +
-                ", precioReferencia=" + precioReferencia +
-                ", precioReferenciaTipo='" + precioReferenciaTipo + '\'' +
-                ", igv=" + igv +
-                ", igvBaseImponible=" + igvBaseImponible +
-                ", igvTasa=" + igvTasa +
-                ", igvTipo='" + igvTipo + '\'' +
-                ", icb=" + icb +
-                ", icbAplica=" + icbAplica +
-                '}';
-    }
 }
 

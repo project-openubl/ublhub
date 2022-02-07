@@ -4,6 +4,9 @@ unit InvoiceUnit;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog1_Invoice;
+import io.github.project.openubl.ublhub.ubl.content.catalogs.CatalogContadoCredito;
+
 import io.github.project.openubl.ublhub.ubl.content.models.common.Firmante;
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
 
@@ -29,11 +32,37 @@ then
     };
 end
 
-rule "¿Documento requiere hora de emisión?" when
-    $i: /invoice[ horaEmision == null ]
+//rule "¿Documento requiere hora de emisión?" when
+//    $i: /invoice[ horaEmision == null ]
+//then
+//    modify($i) {
+//        horaEmision = LocalTime.now();
+//    };
+//end
+
+rule "¿Documento requiere tipo de invoice (comprobante)?" when
+    $i: /invoice[ tipoComprobante == null, serie != null ]
 then
+    String newTipoComprobante = null;
+    if ($i.serie.matches("^[F|f].*$")) {
+        newTipoComprobante = Catalog1_Invoice.FACTURA.getCode();
+    } else if ($i.serie.matches("^[B|b].*$")) {
+        newTipoComprobante = Catalog1_Invoice.BOLETA.getCode();
+    }
+
     modify($i) {
-        horaEmision = LocalTime.now();
+        tipoComprobante = newTipoComprobante
+    };
+end
+
+rule "¿Documento requiere forma de pago?" when
+    $i: /invoice[ formaDePago == null  ]
+then
+    String newFormaDePago = $i.formaDePagoCuotas == null || $i.formaDePagoCuotas.isEmpty() ?
+        CatalogContadoCredito.CONTADO.getCode() :
+        CatalogContadoCredito.CREDITO.getCode();
+    modify($i) {
+        formaDePago = newFormaDePago;
     };
 end
 

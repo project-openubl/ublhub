@@ -16,13 +16,16 @@
  */
 package io.github.project.openubl.ublhub.ubl.content.models.standard.general;
 
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog1_Invoice;
+import io.github.project.openubl.ublhub.ubl.content.catalogs.validation.CatalogConstraint;
+
 import javax.validation.Valid;
 import java.util.List;
 
 public class BoletaFactura extends BaseDocumento {
 
-    @Valid
-    public List<CuotaDePago> cuotasDePago;
+    @CatalogConstraint(value = Catalog1_Invoice.class)
+    public String tipoComprobante;
 
     @Valid
     public List<DocumentoTributarioRelacionado_Invoice> otrosDocumentosTributariosRelacionados;

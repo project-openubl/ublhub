@@ -1,0 +1,3 @@
+<cbc:LineExtensionAmount currencyID="{moneda}">{totalImporte.importeSinImpuestos}</cbc:LineExtensionAmount>
+<cbc:TaxInclusiveAmount currencyID="{moneda}">{totalImporte.importe}</cbc:TaxInclusiveAmount>
+<cbc:PayableAmount currencyID="{moneda}">{totalImporte.importe}</cbc:PayableAmount>
