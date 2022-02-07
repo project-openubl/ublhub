@@ -16,77 +16,37 @@
  */
 package io.github.project.openubl.ublhub.resources;
 
+import io.github.project.openubl.ublhub.ubl.content.enricher.InvoiceEnricher;
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
-import io.github.project.openubl.ublhub.ubl.content.models.standard.general.DocumentoDetalle;
-import io.github.project.openubl.ublhub.ubl.content.ruleunits.InvoiceLineUnit;
-import io.github.project.openubl.ublhub.ubl.content.ruleunits.InvoiceTotalImpuestosUnit;
-import io.github.project.openubl.ublhub.ubl.content.ruleunits.InvoiceUnit;
-import io.quarkus.qute.Location;
-import io.quarkus.qute.Template;
+import io.github.project.openubl.ublhub.ubl.renderer.InvoiceRenderer;
 import io.smallrye.mutiny.Uni;
-import org.kie.kogito.incubation.application.AppRoot;
-import org.kie.kogito.incubation.common.DataContext;
-import org.kie.kogito.incubation.common.MapDataContext;
-import org.kie.kogito.incubation.rules.QueryId;
-import org.kie.kogito.incubation.rules.RuleUnitIds;
-import org.kie.kogito.incubation.rules.services.RuleUnitService;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Path("/carlos")
 public class Carlos {
 
     @Inject
-    AppRoot appRoot;
+    InvoiceEnricher invoiceEnricher;
 
     @Inject
-    RuleUnitService svc;
-
-    @Inject
-    @Location("ubl/standard/general/invoice.xml")
-    Template invoiceTemplate;
+    InvoiceRenderer invoiceRenderer;
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public BoletaFactura executeQuery(BoletaFactura invoiceDto) {
-        // General
-        QueryId invoiceQueryId = appRoot.get(RuleUnitIds.class).get(InvoiceUnit.class).queries().get("boletaFactura");
-        DataContext invoiceCtx = MapDataContext.of(Map.of("invoice", invoiceDto));
-        Stream<BoletaFactura> invoiceStream = svc.evaluate(invoiceQueryId, invoiceCtx).map(dc -> dc.as(MapDataContext.class).get("$i", BoletaFactura.class));
-
-        BoletaFactura invoice = invoiceStream.findFirst().orElseThrow(IllegalStateException::new);
-
-        // Lines
-        QueryId invoiceLineQueryId = appRoot.get(RuleUnitIds.class).get(InvoiceLineUnit.class).queries().get("detalle");
-        MapDataContext invoiceLineCtx = MapDataContext.of(Map.of("invoiceLines", new LinkedList<>(invoiceDto.detalle)));
-        Stream<DocumentoDetalle> invoiceLineStream = svc.evaluate(invoiceLineQueryId, invoiceLineCtx).map(dc -> dc.as(MapDataContext.class).get("$il", DocumentoDetalle.class));
-
-        invoice.detalle = invoiceLineStream.collect(Collectors.toList());
-
-        // Totals
-        invoiceQueryId = appRoot.get(RuleUnitIds.class).get(InvoiceTotalImpuestosUnit.class).queries().get("boletaFacturaTotalImpuestos");
-        invoiceCtx = MapDataContext.of(Map.of("invoice", invoice));
-        invoiceStream = svc.evaluate(invoiceQueryId, invoiceCtx).map(dc -> dc.as(MapDataContext.class).get("$i", BoletaFactura.class));
-
-        invoice = invoiceStream.findFirst().orElseThrow(IllegalStateException::new);
-
-        // Result
-        return invoice;
+        return invoiceEnricher.enrich(invoiceDto);
     }
 
     @PUT
     @Produces(MediaType.TEXT_XML)
     @Consumes(MediaType.APPLICATION_JSON)
     public Uni<String> createXML(BoletaFactura invoiceDto) {
-        BoletaFactura boletaFactura = executeQuery(invoiceDto);
-        return Uni.createFrom().completionStage(() -> invoiceTemplate.data(boletaFactura).renderAsync());
+        BoletaFactura enrichedInvoice = executeQuery(invoiceDto);
+        return invoiceRenderer.renderInvoice(enrichedInvoice);
     }
 
 }
