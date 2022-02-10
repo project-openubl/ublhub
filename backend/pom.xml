@@ -39,6 +39,7 @@
         <xsender-lib.version>3.0.3.Final</xsender-lib.version>
 
         <keycloak.version>15.0.2</keycloak.version>
+        <xmlunit.version>2.6.4</xmlunit.version>
     </properties>
 
     <dependencies>
@@ -203,6 +204,19 @@
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <version>${awaitility.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.xmlunit</groupId>
+            <artifactId>xmlunit-core</artifactId>
+            <version>${xmlunit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.xmlunit</groupId>
+            <artifactId>xmlunit-matchers</artifactId>
+            <version>${xmlunit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

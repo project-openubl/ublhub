@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.ubl.content.ruleunits;
 
+import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorConfig;
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.NotaDeDebito;
 import org.kie.kogito.rules.DataSource;
 import org.kie.kogito.rules.RuleUnitData;
@@ -23,10 +24,20 @@ import org.kie.kogito.rules.SingletonStore;
 
 public class InitialEnrichDebitNoteUnit implements RuleUnitData {
 
+    private XMLGeneratorConfig config;
+
     private final SingletonStore<NotaDeDebito> debitNote = DataSource.createSingleton();
 
     public SingletonStore<NotaDeDebito> getDebitNote() {
         return debitNote;
+    }
+
+    public XMLGeneratorConfig getConfig() {
+        return config;
+    }
+
+    public void setConfig(XMLGeneratorConfig config) {
+        this.config = config;
     }
 
 }

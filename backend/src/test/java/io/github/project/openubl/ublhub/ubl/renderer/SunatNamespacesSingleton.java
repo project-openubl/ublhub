@@ -14,22 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.catalogs;
+package io.github.project.openubl.ublhub.ubl.renderer;
 
-public enum CatalogContadoCredito implements Catalog {
+public class SunatNamespacesSingleton {
 
-    CONTADO("Contado"),
-    CREDITO("Credito");
+    private static SunatNamespaces instance;
 
-    private final String code;
-
-    CatalogContadoCredito(String code) {
-        this.code = code;
+    private SunatNamespacesSingleton() {
     }
 
-    @Override
-    public String getCode() {
-        return code;
+    public static SunatNamespaces getInstance() {
+        if (instance == null) {
+            instance = new SunatNamespaces();
+        }
+        return instance;
     }
-
 }

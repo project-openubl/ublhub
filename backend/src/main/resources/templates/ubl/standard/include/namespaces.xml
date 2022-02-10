@@ -7,5 +7,4 @@ xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponent
 xmlns:qdt="urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2"
 xmlns:sac="urn:sunat:names:specification:ubl:peru:schema:xsd:SunatAggregateComponents-1"
 xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2"
-xmlns:xs="http://www.w3.org/2001/XMLSchema"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

@@ -39,4 +39,5 @@ public class InitialEnrichCreditNoteUnit implements RuleUnitData {
     public void setConfig(XMLGeneratorConfig config) {
         this.config = config;
     }
+
 }

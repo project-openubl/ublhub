@@ -14,22 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.catalogs;
+package io.github.project.openubl.ublhub.ubl.content.enricher;
 
-public enum CatalogContadoCredito implements Catalog {
+import io.quarkus.test.Mock;
 
-    CONTADO("Contado"),
-    CREDITO("Credito");
+import javax.enterprise.context.ApplicationScoped;
+import java.time.LocalDate;
 
-    private final String code;
-
-    CatalogContadoCredito(String code) {
-        this.code = code;
-    }
+@Mock
+@ApplicationScoped
+public class MockDateProvider extends DateProvider {
 
     @Override
-    public String getCode() {
-        return code;
+    public LocalDate getLocalDateNow() {
+        return LocalDate.of(2019, 12, 24);
     }
 
 }

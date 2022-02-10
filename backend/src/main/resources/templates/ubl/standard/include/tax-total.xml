@@ -1,9 +1,9 @@
 <cac:TaxTotal>
-    <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.total}</cbc:TaxAmount>
+    <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.total.currency}</cbc:TaxAmount>
     {#if totalImpuestos.gravadoImporte}
     <cac:TaxSubtotal>
-        <cbc:TaxableAmount currencyID="{moneda}">{totalImpuestos.gravadoBaseImponible}</cbc:TaxableAmount>
-        <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.gravadoImporte}</cbc:TaxAmount>
+        <cbc:TaxableAmount currencyID="{moneda}">{totalImpuestos.gravadoBaseImponible.currency}</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.gravadoImporte.currency}</cbc:TaxAmount>
         <cac:TaxCategory>
             <cbc:ID schemeAgencyName="United Nations Economic Commission for Europe" schemeID="UN/ECE 5305" schemeName="Tax Category Identifie">S</cbc:ID>
             <cac:TaxScheme>
@@ -16,8 +16,8 @@
     {/if}
     {#if totalImpuestos.inafectoImporte}
     <cac:TaxSubtotal>
-        <cbc:TaxableAmount currencyID="{moneda}">{totalImpuestos.inafectoBaseImponible}</cbc:TaxableAmount>
-        <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.inafectoImporte}</cbc:TaxAmount>
+        <cbc:TaxableAmount currencyID="{moneda}">{totalImpuestos.inafectoBaseImponible.currency}</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.inafectoImporte.currency}</cbc:TaxAmount>
         <cac:TaxCategory>
             <cbc:ID schemeAgencyName="United Nations Economic Commission for Europe" schemeID="UN/ECE 5305" schemeName="Tax Category Identifie">S</cbc:ID>
             <cac:TaxScheme>
@@ -30,8 +30,8 @@
     {/if}
     {#if totalImpuestos.exoneradoImporte}
     <cac:TaxSubtotal>
-        <cbc:TaxableAmount currencyID="{moneda}">{totalImpuestos.exoneradoBaseImponible}</cbc:TaxableAmount>
-        <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.exoneradoImporte}</cbc:TaxAmount>
+        <cbc:TaxableAmount currencyID="{moneda}">{totalImpuestos.exoneradoBaseImponible.currency}</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.exoneradoImporte.currency}</cbc:TaxAmount>
         <cac:TaxCategory>
             <cbc:ID schemeAgencyName="United Nations Economic Commission for Europe" schemeID="UN/ECE 5305" schemeName="Tax Category Identifie">S</cbc:ID>
             <cac:TaxScheme>
@@ -42,10 +42,10 @@
         </cac:TaxCategory>
     </cac:TaxSubtotal>
     {/if}
-    {#if totalImpuestos.gratuitoImporte}
+    {#if totalImpuestos.gratuitoImporte.currency}
     <cac:TaxSubtotal>
-        <cbc:TaxableAmount currencyID="{moneda}">{totalImpuestos.gratuitoBaseImponible}</cbc:TaxableAmount>
-        <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.gratuitoImporte}</cbc:TaxAmount>
+        <cbc:TaxableAmount currencyID="{moneda}">{totalImpuestos.gratuitoBaseImponible.currency}</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.gratuitoImporte.currency}</cbc:TaxAmount>
         <cac:TaxCategory>
             <cbc:ID schemeAgencyName="United Nations Economic Commission for Europe" schemeID="UN/ECE 5305" schemeName="Tax Category Identifie">S</cbc:ID>
             <cac:TaxScheme>
@@ -58,8 +58,8 @@
     {/if}
     {#if totalImpuestos.ivapImporte}
     <cac:TaxSubtotal>
-        <cbc:TaxableAmount currencyID="{moneda}">{totalImpuestos.ivapBaseImponible}</cbc:TaxableAmount>
-        <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.ivapImporte}</cbc:TaxAmount>
+        <cbc:TaxableAmount currencyID="{moneda}">{totalImpuestos.ivapBaseImponible.currency}</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.ivapImporte.currency}</cbc:TaxAmount>
         <cac:TaxCategory>
             <cbc:ID schemeAgencyName="United Nations Economic Commission for Europe" schemeID="UN/ECE 5305" schemeName="Tax Category Identifie">S</cbc:ID>
             <cac:TaxScheme>
@@ -72,7 +72,7 @@
     {/if}
     {#if totalImpuestos.icbImporte}
     <cac:TaxSubtotal>
-        <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.icbImporte}</cbc:TaxAmount>
+        <cbc:TaxAmount currencyID="{moneda}">{totalImpuestos.icbImporte.currency}</cbc:TaxAmount>
         <cac:TaxCategory>
             <cbc:ID schemeAgencyName="United Nations Economic Commission for Europe" schemeID="UN/ECE 5305" schemeName="Tax Category Identifie">S</cbc:ID>
             <cac:TaxScheme>

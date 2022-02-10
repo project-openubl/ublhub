@@ -76,15 +76,7 @@ end
 rule "¿Documento requiere total importes?" when
     $i: /invoice[ totalImporte == null, detalle != null ]
 then
-    BigDecimal newImporte = $i.detalle.stream()
-       .filter($il -> {
-           Catalog7 catalog7 = Catalog.valueOfCode(Catalog7.class, $il.igvTipo).orElseThrow(Catalog.invalidCatalogValue);
-           return !catalog7.getTaxCategory().equals(Catalog5.GRATUITO);
-       })
-       .map(e -> e.igv.add(e.icb))
-       .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-   BigDecimal newImporteSinImpuestos = $i.detalle.stream()
+   BigDecimal totalValorDeVentaSinImpuestos = $i.detalle.stream()
        .filter($il -> {
            Catalog7 catalog7 = Catalog.valueOfCode(Catalog7.class, $il.igvTipo).orElseThrow(Catalog.invalidCatalogValue);
            return !catalog7.getTaxCategory().equals(Catalog5.GRATUITO);
@@ -92,9 +84,17 @@ then
        .map(e -> e.valorVentaSinImpuestos)
        .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+    BigDecimal totalImpuestos = $i.detalle.stream()
+           .filter($il -> {
+               Catalog7 catalog7 = Catalog.valueOfCode(Catalog7.class, $il.igvTipo).orElseThrow(Catalog.invalidCatalogValue);
+               return !catalog7.getTaxCategory().equals(Catalog5.GRATUITO);
+           })
+           .map(e -> e.igv.add(e.icb))
+           .reduce(BigDecimal.ZERO, BigDecimal::add);
+
     TotalImporte newTotalImporte = new TotalImporte();
-    newTotalImporte.importe = newImporte;
-    newTotalImporte.importeSinImpuestos = newImporteSinImpuestos;
+    newTotalImporte.importeSinImpuestos = totalValorDeVentaSinImpuestos;
+    newTotalImporte.importe = totalValorDeVentaSinImpuestos.add(totalImpuestos);
 
     modify($i) {
         totalImporte = newTotalImporte;

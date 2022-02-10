@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.ubl.content.ruleunits;
 
+import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorConfig;
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
 import org.kie.kogito.rules.DataSource;
 import org.kie.kogito.rules.RuleUnitData;
@@ -23,10 +24,23 @@ import org.kie.kogito.rules.SingletonStore;
 
 public class InitialEnrichInvoiceUnit implements RuleUnitData {
 
+    private XMLGeneratorConfig config;
+
     private final SingletonStore<BoletaFactura> invoice = DataSource.createSingleton();
+
+    public InitialEnrichInvoiceUnit() {
+    }
 
     public SingletonStore<BoletaFactura> getInvoice() {
         return invoice;
+    }
+
+    public XMLGeneratorConfig getConfig() {
+        return config;
+    }
+
+    public void setConfig(XMLGeneratorConfig config) {
+        this.config = config;
     }
 
 }

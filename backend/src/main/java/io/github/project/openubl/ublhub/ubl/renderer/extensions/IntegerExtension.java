@@ -14,22 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.catalogs;
+package io.github.project.openubl.ublhub.ubl.renderer.extensions;
 
-public enum CatalogContadoCredito implements Catalog {
+import io.quarkus.qute.TemplateExtension;
 
-    CONTADO("Contado"),
-    CREDITO("Credito");
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
-    private final String code;
+@TemplateExtension
+public class IntegerExtension {
 
-    CatalogContadoCredito(String code) {
-        this.code = code;
-    }
-
-    @Override
-    public String getCode() {
-        return code;
+    public static int add(Integer value, int incremental) {
+        return value + incremental;
     }
 
 }

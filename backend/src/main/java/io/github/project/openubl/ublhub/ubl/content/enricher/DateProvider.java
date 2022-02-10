@@ -14,22 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.catalogs;
+package io.github.project.openubl.ublhub.ubl.content.enricher;
 
-public enum CatalogContadoCredito implements Catalog {
+import javax.enterprise.context.ApplicationScoped;
+import java.time.LocalDate;
 
-    CONTADO("Contado"),
-    CREDITO("Credito");
+@ApplicationScoped
+public class DateProvider {
 
-    private final String code;
-
-    CatalogContadoCredito(String code) {
-        this.code = code;
+    public LocalDate getLocalDateNow() {
+        return LocalDate.now();
     }
-
-    @Override
-    public String getCode() {
-        return code;
-    }
-
 }

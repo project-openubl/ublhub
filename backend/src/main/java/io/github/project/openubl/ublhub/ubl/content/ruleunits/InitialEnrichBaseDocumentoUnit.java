@@ -18,14 +18,16 @@ package io.github.project.openubl.ublhub.ubl.content.ruleunits;
 
 import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorConfig;
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BaseDocumento;
-import io.github.project.openubl.xmlbuilderlib.config.Config;
 import org.kie.kogito.rules.DataSource;
 import org.kie.kogito.rules.RuleUnitData;
 import org.kie.kogito.rules.SingletonStore;
 
+import java.time.LocalDate;
+
 public class InitialEnrichBaseDocumentoUnit implements RuleUnitData {
 
     private XMLGeneratorConfig config;
+    private LocalDate systemLocalDate;
 
     private final SingletonStore<BaseDocumento> document = DataSource.createSingleton();
 
@@ -39,5 +41,13 @@ public class InitialEnrichBaseDocumentoUnit implements RuleUnitData {
 
     public void setConfig(XMLGeneratorConfig config) {
         this.config = config;
+    }
+
+    public LocalDate getSystemLocalDate() {
+        return systemLocalDate;
+    }
+
+    public void setSystemLocalDate(LocalDate systemLocalDate) {
+        this.systemLocalDate = systemLocalDate;
     }
 }

@@ -20,13 +20,13 @@ import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog16;
 import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog7;
 import io.github.project.openubl.ublhub.ubl.content.catalogs.validation.CatalogConstraint;
 
-import javax.validation.constraints.Digits;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
+import javax.validation.constraints.*;
 import java.math.BigDecimal;
 
 public class DocumentoDetalle {
+
+    @Min(0)
+    public Integer index;
 
     @NotNull
     @NotBlank

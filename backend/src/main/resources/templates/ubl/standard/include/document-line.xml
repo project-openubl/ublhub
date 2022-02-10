@@ -1,18 +1,18 @@
-<cbc:LineExtensionAmount currencyID="{moneda}">{item.valorVentaSinImpuestos}</cbc:LineExtensionAmount>
+<cbc:LineExtensionAmount currencyID="{moneda}">{item.valorVentaSinImpuestos.currency}</cbc:LineExtensionAmount>
 <cac:PricingReference>
     <cac:AlternativeConditionPrice>
-        <cbc:PriceAmount currencyID="{moneda}">{item.precioReferencia}</cbc:PriceAmount>
+        <cbc:PriceAmount currencyID="{moneda}">{item.precioReferencia.currency}</cbc:PriceAmount>
         <cbc:PriceTypeCode listAgencyName="PE:SUNAT" listName="Tipo de Precio" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16">{item.precioReferenciaTipo}</cbc:PriceTypeCode>
     </cac:AlternativeConditionPrice>
 </cac:PricingReference>
 <cac:TaxTotal>
-    <cbc:TaxAmount currencyID="{moneda}">{item.totalImpuestos}</cbc:TaxAmount>
+    <cbc:TaxAmount currencyID="{moneda}">{item.totalImpuestos.currency}</cbc:TaxAmount>
     <cac:TaxSubtotal>
-        <cbc:TaxableAmount currencyID="{moneda}">{item.igvBaseImponible}</cbc:TaxableAmount>
-        <cbc:TaxAmount currencyID="{moneda}">{item.igv}</cbc:TaxAmount>
+        <cbc:TaxableAmount currencyID="{moneda}">{item.igvBaseImponible.currency}</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="{moneda}">{item.igv.currency}</cbc:TaxAmount>
         <cac:TaxCategory>
             <cbc:ID schemeAgencyName="United Nations Economic Commission for Europe" schemeID="UN/ECE 5305" schemeName="Tax Category Identifier">{item.igvTipoCatalog.taxCategory.categoria}</cbc:ID>
-            <cbc:Percent>{item.igvTasa}</cbc:Percent>
+            <cbc:Percent>{item.igvTasa.percentage}</cbc:Percent>
             <cbc:TaxExemptionReasonCode listAgencyName="PE:SUNAT" listName="Afectacion del IGV" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07">{item.igvTipoCatalog.code}</cbc:TaxExemptionReasonCode>
             <cac:TaxScheme>
                 <cbc:ID schemeAgencyName="PE:SUNAT" schemeID="UN/ECE 5153" schemeName="Codigo de tributos">{item.igvTipoCatalog.taxCategory.code}</cbc:ID>
@@ -23,7 +23,7 @@
     </cac:TaxSubtotal>
     {#if item.icb}
     <cac:TaxSubtotal>
-        <cbc:TaxAmount currencyID="{moneda}">{item.icb}</cbc:TaxAmount>
+        <cbc:TaxAmount currencyID="{moneda}">{item.icb.currency}</cbc:TaxAmount>
         <cbc:BaseUnitMeasure unitCode="{item.unidadMedida}">{item.cantidad}</cbc:BaseUnitMeasure>
         <cac:TaxCategory>
             <cbc:PerUnitAmount currencyID="{moneda}">{item.icbTasa}</cbc:PerUnitAmount>
@@ -40,5 +40,5 @@
     <cbc:Description><![CDATA[{item.descripcion}]]></cbc:Description>
 </cac:Item>
 <cac:Price>
-    <cbc:PriceAmount currencyID="{moneda}">{item.precio}</cbc:PriceAmount>
+    <cbc:PriceAmount currencyID="{moneda}">{item.precio.currency}</cbc:PriceAmount>
 </cac:Price>

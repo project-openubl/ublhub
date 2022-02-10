@@ -5,10 +5,13 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.math.BigDecimal;
 
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog;
 import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog1_Invoice;
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog6;
 import io.github.project.openubl.ublhub.ubl.content.catalogs.CatalogContadoCredito;
 
 import io.github.project.openubl.ublhub.ubl.content.models.common.Firmante;
+import io.github.project.openubl.ublhub.ubl.content.models.common.Direccion
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
 
 query document
@@ -28,7 +31,7 @@ rule "¿Requiere fecha?" when
     $d: /document[ fechaEmision == null ]
 then
     modify($d) {
-        fechaEmision = LocalDate.now();
+        fechaEmision = systemLocalDate;
     };
 end
 
@@ -64,7 +67,16 @@ then
 end
 
 rule "¿Requiere proveedor.dirección.codigoLocal?" when
-    $d: /document/proveedor/direccion[ codigoLocal == null ]
+    $d: /document/proveedor[ direccion == null ]
 then
-    $d.codigoLocal = "0000";
+    $d.direccion = new Direccion();
+    $d.direccion.codigoLocal = "0000";
+end
+
+
+rule "Procesar cliente catalogo" when
+    $d: /document/cliente[ tipoDocumentoIdentidad != null, tipoDocumentoIdentidad not matches "[0-9]+" ]
+then
+    Catalog6 catalog = Catalog.valueOfCode(Catalog6.class, $d.tipoDocumentoIdentidad).orElseThrow(Catalog.invalidCatalogValue);
+    $d.tipoDocumentoIdentidad = catalog.getCode();
 end

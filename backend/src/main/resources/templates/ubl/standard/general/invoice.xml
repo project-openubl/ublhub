@@ -16,17 +16,19 @@
         <cbc:ID>FormaPago</cbc:ID>
         <cbc:PaymentMeansID>{formaDePago}</cbc:PaymentMeansID>
         {#if formaDePago == 'Credito'}
-        <cbc:Amount currencyID="{moneda}">{formaDePagoTotal}</cbc:Amount>
+        <cbc:Amount currencyID="{moneda}">{formaDePagoTotal.currency}</cbc:Amount>
         {/if}
     </cac:PaymentTerms>
+    {#if formaDePagoCuotas}
     {#each formaDePagoCuotas}
     <cac:PaymentTerms>
         <cbc:ID>FormaPago</cbc:ID>
         <cbc:PaymentMeansID>Cuota{it_index}</cbc:PaymentMeansID>
-        <cbc:Amount currencyID="{moneda}">{it.importe}</cbc:Amount>
+        <cbc:Amount currencyID="{moneda}">{it.importe.currency}</cbc:Amount>
         <cbc:PaymentDueDate>{it.fechaPago}</cbc:PaymentDueDate>
     </cac:PaymentTerms>
     {/each}
+    {/if}
 
     {#include ubl/standard/include/tax-total.xml /}
 
@@ -36,7 +38,7 @@
 
     {#each detalle}
     <cac:InvoiceLine>
-        <cbc:ID>{it_index}</cbc:ID>
+        <cbc:ID>{it_index.add(1)}</cbc:ID>
         <cbc:InvoicedQuantity unitCode="{it.unidadMedida}" unitCodeListAgencyName="United Nations Economic Commission for Europe" unitCodeListID="UN/ECE rec 20">{it.cantidad}</cbc:InvoicedQuantity>
         {#include ubl/standard/include/document-line.xml item=it /}
     </cac:InvoiceLine>

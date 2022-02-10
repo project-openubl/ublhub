@@ -146,7 +146,7 @@ end
 rule "¿Requiere valor de venta sin impuestos?" when
     $dl: /documentLines[ valorVentaSinImpuestos == null, igvBaseImponible != null ]
 then
-    BigDecimal newValorVentaSinImpuestos = $dl.cantidad.multiply($dl.igvBaseImponible);
+    BigDecimal newValorVentaSinImpuestos = $dl.igvBaseImponible;
     modify($dl) {
         valorVentaSinImpuestos = newValorVentaSinImpuestos;
     };
