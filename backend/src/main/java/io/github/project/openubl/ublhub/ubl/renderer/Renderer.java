@@ -14,15 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.enricher;
+package io.github.project.openubl.ublhub.ubl.renderer;
 
-import javax.enterprise.context.ApplicationScoped;
-import java.time.LocalDate;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
+import io.quarkus.qute.Location;
+import io.quarkus.qute.Template;
+import io.smallrye.mutiny.Uni;
 
-@ApplicationScoped
-public class DateProvider {
+import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
 
-    public LocalDate getLocalDateNow() {
-        return LocalDate.now();
+@Dependent
+public class Renderer {
+
+    @Inject
+    @Location("ubl/standard/general/invoice.xml")
+    Template invoiceTemplate;
+
+    public Uni<String> renderAsync(BoletaFactura dto) {
+        return Uni.createFrom()
+                .completionStage(() -> invoiceTemplate.data(dto).renderAsync());
     }
+
 }

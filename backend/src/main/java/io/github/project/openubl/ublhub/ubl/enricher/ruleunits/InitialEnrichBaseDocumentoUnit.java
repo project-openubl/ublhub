@@ -14,22 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.ruleunits;
+package io.github.project.openubl.ublhub.ubl.enricher.ruleunits;
 
 import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorConfig;
-import io.github.project.openubl.ublhub.ubl.content.models.standard.general.NotaDeCredito;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BaseDocumento;
 import org.kie.kogito.rules.DataSource;
 import org.kie.kogito.rules.RuleUnitData;
 import org.kie.kogito.rules.SingletonStore;
 
-public class InitialEnrichCreditNoteUnit implements RuleUnitData {
+import java.time.LocalDate;
+
+public class InitialEnrichBaseDocumentoUnit implements RuleUnitData {
 
     private XMLGeneratorConfig config;
+    private LocalDate systemLocalDate;
 
-    private final SingletonStore<NotaDeCredito> creditNote = DataSource.createSingleton();
+    private final SingletonStore<BaseDocumento> document = DataSource.createSingleton();
 
-    public SingletonStore<NotaDeCredito> getCreditNote() {
-        return creditNote;
+    public SingletonStore<BaseDocumento> getDocument() {
+        return document;
     }
 
     public XMLGeneratorConfig getConfig() {
@@ -40,4 +43,11 @@ public class InitialEnrichCreditNoteUnit implements RuleUnitData {
         this.config = config;
     }
 
+    public LocalDate getSystemLocalDate() {
+        return systemLocalDate;
+    }
+
+    public void setSystemLocalDate(LocalDate systemLocalDate) {
+        this.systemLocalDate = systemLocalDate;
+    }
 }

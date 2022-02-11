@@ -14,22 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.ruleunits;
+package io.github.project.openubl.ublhub.ubl.enricher.ruleunits;
 
 import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorConfig;
-import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.NotaDeCredito;
 import org.kie.kogito.rules.DataSource;
 import org.kie.kogito.rules.RuleUnitData;
 import org.kie.kogito.rules.SingletonStore;
 
-public class FinalizeEnrichInvoiceUnit implements RuleUnitData {
+public class InitialEnrichCreditNoteUnit implements RuleUnitData {
 
     private XMLGeneratorConfig config;
 
-    private final SingletonStore<BoletaFactura> invoice = DataSource.createSingleton();
+    private final SingletonStore<NotaDeCredito> creditNote = DataSource.createSingleton();
 
-    public SingletonStore<BoletaFactura> getInvoice() {
-        return invoice;
+    public SingletonStore<NotaDeCredito> getCreditNote() {
+        return creditNote;
     }
 
     public XMLGeneratorConfig getConfig() {

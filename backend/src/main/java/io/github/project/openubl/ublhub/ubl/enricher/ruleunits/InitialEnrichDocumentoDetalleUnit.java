@@ -14,22 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.ruleunits;
+package io.github.project.openubl.ublhub.ubl.enricher.ruleunits;
 
 import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorConfig;
-import io.github.project.openubl.ublhub.ubl.content.models.standard.general.NotaDeDebito;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.DocumentoDetalle;
 import org.kie.kogito.rules.DataSource;
+import org.kie.kogito.rules.DataStore;
 import org.kie.kogito.rules.RuleUnitData;
-import org.kie.kogito.rules.SingletonStore;
 
-public class InitialEnrichDebitNoteUnit implements RuleUnitData {
+public class InitialEnrichDocumentoDetalleUnit implements RuleUnitData {
 
     private XMLGeneratorConfig config;
 
-    private final SingletonStore<NotaDeDebito> debitNote = DataSource.createSingleton();
+    private final DataStore<DocumentoDetalle> documentLines = DataSource.createStore();
 
-    public SingletonStore<NotaDeDebito> getDebitNote() {
-        return debitNote;
+    public DataStore<DocumentoDetalle> getDocumentLines() {
+        return documentLines;
     }
 
     public XMLGeneratorConfig getConfig() {

@@ -14,19 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.renderer;
+package io.github.project.openubl.ublhub.ubl.enricher;
 
-public class SunatNamespacesSingleton {
+import io.quarkus.test.Mock;
 
-    private static SunatNamespaces instance;
+import javax.enterprise.context.ApplicationScoped;
+import java.time.LocalDate;
 
-    private SunatNamespacesSingleton() {
+@Mock
+@ApplicationScoped
+public class MockDateProvider extends DateProvider {
+
+    @Override
+    public LocalDate getLocalDateNow() {
+        return LocalDate.of(2019, 12, 24);
     }
 
-    public static SunatNamespaces getInstance() {
-        if (instance == null) {
-            instance = new SunatNamespaces();
-        }
-        return instance;
-    }
 }

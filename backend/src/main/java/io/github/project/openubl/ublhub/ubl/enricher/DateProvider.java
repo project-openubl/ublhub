@@ -14,20 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.enricher;
-
-import io.quarkus.test.Mock;
+package io.github.project.openubl.ublhub.ubl.enricher;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.time.LocalDate;
 
-@Mock
 @ApplicationScoped
-public class MockDateProvider extends DateProvider {
+public class DateProvider {
 
-    @Override
     public LocalDate getLocalDateNow() {
-        return LocalDate.of(2019, 12, 24);
+        return LocalDate.now();
     }
 
 }

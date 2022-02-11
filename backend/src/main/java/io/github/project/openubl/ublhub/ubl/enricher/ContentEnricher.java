@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.enricher;
+package io.github.project.openubl.ublhub.ubl.enricher;
 
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BaseDocumento;
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.DocumentoDetalle;
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.NotaDeCredito;
-import io.github.project.openubl.ublhub.ubl.content.ruleunits.*;
+import io.github.project.openubl.ublhub.ubl.enricher.DateProvider;
+import io.github.project.openubl.ublhub.ubl.enricher.ruleunits.*;
 import io.github.project.openubl.xmlbuilderlib.config.Config;
 import org.kie.kogito.incubation.application.AppRoot;
 import org.kie.kogito.incubation.common.DataContext;
@@ -31,9 +32,7 @@ import org.kie.kogito.incubation.rules.services.RuleUnitService;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
-import java.math.BigDecimal;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

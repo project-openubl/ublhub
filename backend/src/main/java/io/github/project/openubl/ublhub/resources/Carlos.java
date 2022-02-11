@@ -16,9 +16,9 @@
  */
 package io.github.project.openubl.ublhub.resources;
 
-import io.github.project.openubl.ublhub.ubl.content.enricher.ContentEnricher;
+import io.github.project.openubl.ublhub.ubl.enricher.ContentEnricher;
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
-import io.github.project.openubl.ublhub.ubl.renderer.XMLRenderer;
+import io.github.project.openubl.ublhub.ubl.renderer.Renderer;
 import io.smallrye.mutiny.Uni;
 
 import javax.inject.Inject;
@@ -32,7 +32,7 @@ public class Carlos {
     ContentEnricher contentEnricher;
 
     @Inject
-    XMLRenderer XMLRenderer;
+    Renderer XMLRenderer;
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
@@ -46,7 +46,7 @@ public class Carlos {
     @Consumes(MediaType.APPLICATION_JSON)
     public Uni<String> createXML(BoletaFactura invoiceDto) {
         BoletaFactura enrichedInvoice = executeQuery(invoiceDto);
-        return XMLRenderer.renderInvoice(enrichedInvoice);
+        return XMLRenderer.renderAsync(enrichedInvoice);
     }
 
 }

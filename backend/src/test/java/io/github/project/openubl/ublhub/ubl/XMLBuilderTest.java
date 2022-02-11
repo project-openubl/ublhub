@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.renderer;
+package io.github.project.openubl.ublhub.ubl;
 
 import io.github.project.openubl.ublhub.ProfileManager;
 import io.github.project.openubl.ublhub.ubl.content.models.common.Cliente;
@@ -29,20 +29,18 @@ import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 
-import static io.github.project.openubl.ublhub.ubl.renderer.RendererUtils.assertSendSunat;
-import static io.github.project.openubl.ublhub.ubl.renderer.RendererUtils.assertSnapshot;
-import static org.junit.jupiter.api.Assertions.*;
+import static io.github.project.openubl.ublhub.ubl.XMLAssertUtils.assertSendSunat;
+import static io.github.project.openubl.ublhub.ubl.XMLAssertUtils.assertSnapshot;
 
 @QuarkusTest
 @TestProfile(ProfileManager.class)
-public class XMLRendererTest {
+public class XMLBuilderTest {
 
     @Inject
-    XMLRenderer xmlRenderer;
+    XMLBuilder xmlBuilder;
 
     @Test
     public void testInvoiceWithCustomUnidadMedida() throws Exception {
@@ -73,7 +71,7 @@ public class XMLRendererTest {
         input.detalle = Arrays.asList(detalle1, detalle2);
 
         // When
-        UniAssertSubscriber<String> subscriber = xmlRenderer.renderInvoice(input).subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<String> subscriber = xmlBuilder.enrichAndRenderAsync(input).subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Then
         subscriber.assertCompleted();

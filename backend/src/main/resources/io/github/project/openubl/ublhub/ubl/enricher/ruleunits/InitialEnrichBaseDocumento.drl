@@ -1,4 +1,4 @@
-package io.github.project.openubl.ublhub.ubl.content.ruleunits;
+package io.github.project.openubl.ublhub.ubl.enricher.ruleunits;
 unit InitialEnrichBaseDocumentoUnit;
 
 import java.time.LocalDate;

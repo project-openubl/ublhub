@@ -14,25 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.content.ruleunits;
+package io.github.project.openubl.ublhub.ubl.enricher.ruleunits;
 
 import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorConfig;
-import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BaseDocumento;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
 import org.kie.kogito.rules.DataSource;
 import org.kie.kogito.rules.RuleUnitData;
 import org.kie.kogito.rules.SingletonStore;
 
-import java.time.LocalDate;
-
-public class InitialEnrichBaseDocumentoUnit implements RuleUnitData {
+public class InitialEnrichInvoiceUnit implements RuleUnitData {
 
     private XMLGeneratorConfig config;
-    private LocalDate systemLocalDate;
 
-    private final SingletonStore<BaseDocumento> document = DataSource.createSingleton();
+    private final SingletonStore<BoletaFactura> invoice = DataSource.createSingleton();
 
-    public SingletonStore<BaseDocumento> getDocument() {
-        return document;
+    public InitialEnrichInvoiceUnit() {
+    }
+
+    public SingletonStore<BoletaFactura> getInvoice() {
+        return invoice;
     }
 
     public XMLGeneratorConfig getConfig() {
@@ -43,11 +43,4 @@ public class InitialEnrichBaseDocumentoUnit implements RuleUnitData {
         this.config = config;
     }
 
-    public LocalDate getSystemLocalDate() {
-        return systemLocalDate;
-    }
-
-    public void setSystemLocalDate(LocalDate systemLocalDate) {
-        this.systemLocalDate = systemLocalDate;
-    }
 }

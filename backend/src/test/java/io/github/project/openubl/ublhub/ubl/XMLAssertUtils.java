@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.renderer;
+package io.github.project.openubl.ublhub.ubl;
 
 import io.github.project.openubl.xmlbuilderlib.utils.CertificateDetails;
 import io.github.project.openubl.xmlbuilderlib.utils.CertificateDetailsFactory;
@@ -30,25 +30,35 @@ import org.w3c.dom.Document;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class RendererUtils {
+public class XMLAssertUtils {
 
-    static final String SUNAT_BETA_USERNAME = "MODDATOS";
-    static final String SUNAT_BETA_PASSWORD = "MODDATOS";
+    private static final String SUNAT_BETA_USERNAME = "MODDATOS";
+    private static final String SUNAT_BETA_PASSWORD = "MODDATOS";
 
-    static String SIGN_REFERENCE_ID = "PROJECT-OPENUBL";
-    static final String KEYSTORE = "LLAMA-PE-CERTIFICADO-DEMO-10467793549.pfx";
-    static final String KEYSTORE_PASSWORD = "password";
-    static CertificateDetails CERTIFICATE;
+    private static final String SIGN_REFERENCE_ID = "PROJECT-OPENUBL";
+    private static final String KEYSTORE = "LLAMA-PE-CERTIFICADO-DEMO-10467793549.pfx";
+    private static final String KEYSTORE_PASSWORD = "password";
+    private static final CertificateDetails CERTIFICATE;
+
+    static {
+        InputStream ksInputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(KEYSTORE);
+        try {
+            CERTIFICATE = CertificateDetailsFactory.create(ksInputStream, KEYSTORE_PASSWORD);
+            SmartBillServiceConfig.getInstance()
+                    .withInvoiceAndNoteDeliveryURL("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
+                    .withPerceptionAndRetentionDeliveryURL("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
+                    .withDespatchAdviceDeliveryURL("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService");
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
     public static void assertSnapshot(String expected, String snapshotFile) {
         InputStream snapshotInputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(snapshotFile);
@@ -67,18 +77,12 @@ public class RendererUtils {
     public static void assertSendSunat(String xmlWithoutSignature, String... allowedNotes) throws Exception {
         String skipSunat = System.getProperty("skipSunat", "false");
         if (skipSunat != null && skipSunat.equals("false")) {
-            InputStream ksInputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(KEYSTORE);
-            CERTIFICATE = CertificateDetailsFactory.create(ksInputStream, KEYSTORE_PASSWORD);
-
-            SmartBillServiceConfig.getInstance()
-                    .withInvoiceAndNoteDeliveryURL("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
-                    .withPerceptionAndRetentionDeliveryURL("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
-                    .withDespatchAdviceDeliveryURL("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService");
-
             Document signedXML = XMLSigner.signXML(xmlWithoutSignature, SIGN_REFERENCE_ID, CERTIFICATE.getX509Certificate(), CERTIFICATE.getPrivateKey());
             sendFileToSunat(signedXML, xmlWithoutSignature, allowedNotes);
         }
     }
+
+    //
 
     private static void sendFileToSunat(Document document, String xmlWithoutSignature, String... allowedNotes) throws Exception {
         SmartBillServiceModel smartBillServiceModel = SmartBillServiceManager.send(XmlSignatureHelper.getBytesFromDocument(document), SUNAT_BETA_USERNAME, SUNAT_BETA_PASSWORD);

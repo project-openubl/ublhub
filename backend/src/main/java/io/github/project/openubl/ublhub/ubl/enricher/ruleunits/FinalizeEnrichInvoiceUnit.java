@@ -14,33 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.renderer;
+package io.github.project.openubl.ublhub.ubl.enricher.ruleunits;
 
-import io.github.project.openubl.ublhub.ubl.content.enricher.ContentEnricher;
+import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorConfig;
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
-import io.quarkus.qute.Location;
-import io.quarkus.qute.Template;
-import io.smallrye.mutiny.Uni;
+import org.kie.kogito.rules.DataSource;
+import org.kie.kogito.rules.RuleUnitData;
+import org.kie.kogito.rules.SingletonStore;
 
-import javax.enterprise.context.Dependent;
-import javax.inject.Inject;
+public class FinalizeEnrichInvoiceUnit implements RuleUnitData {
 
-@Dependent
-public class XMLRenderer {
+    private XMLGeneratorConfig config;
 
-    @Inject
-    ContentEnricher contentEnricher;
+    private final SingletonStore<BoletaFactura> invoice = DataSource.createSingleton();
 
-    @Inject
-    @Location("ubl/standard/general/invoice.xml")
-    Template invoiceTemplate;
+    public SingletonStore<BoletaFactura> getInvoice() {
+        return invoice;
+    }
 
-    public Uni<String> renderInvoice(BoletaFactura dto) {
-        return Uni.createFrom()
-                .completionStage(() -> {
-                    BoletaFactura data = contentEnricher.enrich(dto);
-                    return invoiceTemplate.data(data).renderAsync();
-                });
+    public XMLGeneratorConfig getConfig() {
+        return config;
+    }
+
+    public void setConfig(XMLGeneratorConfig config) {
+        this.config = config;
     }
 
 }
