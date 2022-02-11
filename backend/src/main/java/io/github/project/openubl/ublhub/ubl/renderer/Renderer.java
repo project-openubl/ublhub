@@ -17,23 +17,22 @@
 package io.github.project.openubl.ublhub.ubl.renderer;
 
 import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
-import io.quarkus.qute.Location;
-import io.quarkus.qute.Template;
+import io.quarkus.qute.CheckedTemplate;
+import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.Dependent;
-import javax.inject.Inject;
 
 @Dependent
 public class Renderer {
 
-    @Inject
-    @Location("ubl/standard/general/invoice.xml")
-    Template invoiceTemplate;
+    @CheckedTemplate
+    public static class Templates {
+        public static native TemplateInstance invoice(BoletaFactura data);
+    }
 
     public Uni<String> renderAsync(BoletaFactura dto) {
-        return Uni.createFrom()
-                .completionStage(() -> invoiceTemplate.data(dto).renderAsync());
+        return Templates.invoice(dto).createUni();
     }
 
 }

@@ -1,7 +1,5 @@
 <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
 <cbc:CustomizationID>2.0</cbc:CustomizationID>
-<cbc:ID>{serie}-{numero}</cbc:ID>
-<cbc:IssueDate>{fechaEmision}</cbc:IssueDate>
-{#if horaEmision}
-<cbc:IssueTime>{horaEmision}</cbc:IssueTime>
-{/if}
+<cbc:ID>{item.serie}-{item.numero}</cbc:ID>
+<cbc:IssueDate>{item.fechaEmision}</cbc:IssueDate>
+{#if item.horaEmision}<cbc:IssueTime>{item.horaEmision}</cbc:IssueTime>{/if}
