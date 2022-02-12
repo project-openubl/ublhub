@@ -66,13 +66,18 @@ then
     $d.firmante = newFirmante;
 end
 
-rule "¿Requiere proveedor.dirección.codigoLocal?" when
+rule "¿Requiere proveedor.dirección?" when
     $d: /document/proveedor[ direccion == null ]
 then
     $d.direccion = new Direccion();
     $d.direccion.codigoLocal = "0000";
 end
 
+rule "¿Requiere proveedor.dirección.codigoLocal?" when
+    $d: /document/proveedor/direccion[ codigoLocal == null ]
+then
+    $d.codigoLocal = "0000";
+end
 
 rule "Procesar cliente catalogo" when
     $d: /document/cliente[ tipoDocumentoIdentidad != null, tipoDocumentoIdentidad not matches "[0-9]+" ]

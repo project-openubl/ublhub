@@ -358,4 +358,46 @@ public class InvoiceTest {
         assertSnapshot(xml, getClass(), "icb.xml");
         assertSendSunat(xml);
     }
+
+    @Test
+    public void testInvoiceWithCustomProveedor_direccionNotNullAndCodigoLocalNull() throws Exception {
+        // Given
+        BoletaFactura input = new BoletaFactura();
+        input.serie = "F001";
+        input.numero = 1;
+
+        input.proveedor = new Proveedor();
+        input.proveedor.ruc = "12345678912";
+        input.proveedor.razonSocial = "Softgreen S.A.C.";
+        input.proveedor.direccion = new Direccion();
+        input.proveedor.direccion.direccion = "Jr. las flores 123";
+
+        input.cliente = new Cliente();
+        input.cliente.nombre = "Carlos Feria";
+        input.cliente.numeroDocumentoIdentidad = "12121212121";
+        input.cliente.tipoDocumentoIdentidad = Catalog6.RUC.toString();
+
+        DocumentoDetalle detalle1 = new DocumentoDetalle();
+        detalle1.descripcion = "Item1";
+        detalle1.cantidad = new BigDecimal(10);
+        detalle1.precio = new BigDecimal(118);
+
+        DocumentoDetalle detalle2 = new DocumentoDetalle();
+        detalle2.descripcion = "Item2";
+        detalle2.cantidad = new BigDecimal(10);
+        detalle2.precio = new BigDecimal(118);
+
+        input.detalle = Arrays.asList(detalle1, detalle2);
+
+        // When
+        UniAssertSubscriber<String> subscriber = xmlBuilder.enrichAndRenderAsync(input).subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // Then
+        subscriber.assertCompleted();
+
+        String xml = subscriber.getItem();
+        assertSnapshot(xml, getClass(), "customCodigoLocal.xml");
+        assertSendSunat(xml);
+    }
+
 }
