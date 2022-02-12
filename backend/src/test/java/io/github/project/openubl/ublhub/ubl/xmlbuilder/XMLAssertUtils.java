@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl;
+package io.github.project.openubl.ublhub.ubl.xmlbuilder;
 
 import io.github.project.openubl.xmlbuilderlib.utils.CertificateDetails;
 import io.github.project.openubl.xmlbuilderlib.utils.CertificateDetailsFactory;
@@ -31,6 +31,8 @@ import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
 
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -60,8 +62,10 @@ public class XMLAssertUtils {
         }
     }
 
-    public static void assertSnapshot(String expected, String snapshotFile) {
-        InputStream snapshotInputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(snapshotFile);
+    public static void assertSnapshot(String expected, Class<?> clasz, String snapshotFile) {
+        String rootDir = clasz.getName().replaceAll("\\.", "/");
+
+        InputStream snapshotInputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(rootDir + "/" + snapshotFile);
         assertNotNull(snapshotInputStream, "Could not find snapshot file " + snapshotFile);
 
         Diff myDiff = DiffBuilder
@@ -85,7 +89,8 @@ public class XMLAssertUtils {
     //
 
     private static void sendFileToSunat(Document document, String xmlWithoutSignature, String... allowedNotes) throws Exception {
-        SmartBillServiceModel smartBillServiceModel = SmartBillServiceManager.send(XmlSignatureHelper.getBytesFromDocument(document), SUNAT_BETA_USERNAME, SUNAT_BETA_PASSWORD);
+        byte[] bytesFromDocument = XmlSignatureHelper.getBytesFromDocument(document);
+        SmartBillServiceModel smartBillServiceModel = SmartBillServiceManager.send(bytesFromDocument, SUNAT_BETA_USERNAME, SUNAT_BETA_PASSWORD);
         XmlContentModel xmlContentModel = smartBillServiceModel.getXmlContentModel();
         BillServiceModel billServiceModel = smartBillServiceModel.getBillServiceModel();
 

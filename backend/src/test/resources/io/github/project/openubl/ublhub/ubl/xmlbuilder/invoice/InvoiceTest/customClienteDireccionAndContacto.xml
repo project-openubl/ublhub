@@ -9,7 +9,8 @@
          xmlns:qdt="urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2"
          xmlns:sac="urn:sunat:names:specification:ubl:peru:schema:xsd:SunatAggregateComponents-1"
          xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2"
-         xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+         xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+>
     <ext:UBLExtensions>
         <ext:UBLExtension>
             <ext:ExtensionContent/>
@@ -19,8 +20,8 @@
     <cbc:CustomizationID>2.0</cbc:CustomizationID>
     <cbc:ID>F001-1</cbc:ID>
     <cbc:IssueDate>2019-12-24</cbc:IssueDate>
-    <cbc:InvoiceTypeCode listAgencyName="PE:SUNAT" listID="0101" listName="Tipo de Documento" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01">01</cbc:InvoiceTypeCode>
-    <cbc:DocumentCurrencyCode listAgencyName="United Nations Economic Commission for Europe" listID="ISO 4217 Alpha" listName="Currency">PEN</cbc:DocumentCurrencyCode>
+    <cbc:InvoiceTypeCode listID="0101" listAgencyName="PE:SUNAT" listName="Tipo de Documento" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01">01</cbc:InvoiceTypeCode>
+    <cbc:DocumentCurrencyCode listID="ISO 4217 Alpha" listAgencyName="United Nations Economic Commission for Europe" listName="Currency">PEN</cbc:DocumentCurrencyCode>
     <cac:Signature>
         <cbc:ID>12345678912</cbc:ID>
         <cac:SignatoryParty>
@@ -28,7 +29,7 @@
                 <cbc:ID>12345678912</cbc:ID>
             </cac:PartyIdentification>
             <cac:PartyName>
-                <cbc:Name>Softgreen S.A.C.</cbc:Name>
+                <cbc:Name><![CDATA[Softgreen S.A.C.]]></cbc:Name>
             </cac:PartyName>
         </cac:SignatoryParty>
         <cac:DigitalSignatureAttachment>
@@ -40,10 +41,10 @@
     <cac:AccountingSupplierParty>
         <cac:Party>
             <cac:PartyIdentification>
-                <cbc:ID schemeAgencyName="PE:SUNAT" schemeID="6" schemeName="Documento de Identidad" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">12345678912</cbc:ID>
+                <cbc:ID schemeID="6" schemeAgencyName="PE:SUNAT" schemeName="Documento de Identidad" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">12345678912</cbc:ID>
             </cac:PartyIdentification>
             <cac:PartyLegalEntity>
-                <cbc:RegistrationName>Softgreen S.A.C.</cbc:RegistrationName>
+                <cbc:RegistrationName><![CDATA[Softgreen S.A.C.]]></cbc:RegistrationName>
                 <cac:RegistrationAddress>
                     <cbc:AddressTypeCode>0000</cbc:AddressTypeCode>
                 </cac:RegistrationAddress>
@@ -53,11 +54,29 @@
     <cac:AccountingCustomerParty>
         <cac:Party>
             <cac:PartyIdentification>
-                <cbc:ID schemeAgencyName="PE:SUNAT" schemeID="6" schemeName="Documento de Identidad" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">12121212121</cbc:ID>
+                <cbc:ID schemeID="6" schemeAgencyName="PE:SUNAT" schemeName="Documento de Identidad" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">12121212121</cbc:ID>
             </cac:PartyIdentification>
             <cac:PartyLegalEntity>
-                <cbc:RegistrationName>Carlos Feria</cbc:RegistrationName>
+                <cbc:RegistrationName><![CDATA[Carlos Feria]]></cbc:RegistrationName>
+                <cac:RegistrationAddress>
+                    <cbc:ID>050101</cbc:ID>
+                    <cbc:AddressTypeCode>0101</cbc:AddressTypeCode>
+                    <cbc:CitySubdivisionName>000000</cbc:CitySubdivisionName>
+                    <cbc:CityName>Huamanga</cbc:CityName>
+                    <cbc:CountrySubentity>Ayacucho</cbc:CountrySubentity>
+                    <cbc:District>Jesus Nazareno</cbc:District>
+                    <cac:AddressLine>
+                        <cbc:Line><![CDATA[Jr. Las piedras 123]]></cbc:Line>
+                    </cac:AddressLine>
+                    <cac:Country>
+                        <cbc:IdentificationCode>PE</cbc:IdentificationCode>
+                    </cac:Country>
+                </cac:RegistrationAddress>
             </cac:PartyLegalEntity>
+            <cac:Contact>
+                <cbc:Telephone>+123456789</cbc:Telephone>
+                <cbc:ElectronicMail>carlos@gmail.com</cbc:ElectronicMail>
+            </cac:Contact>
         </cac:Party>
     </cac:AccountingCustomerParty>
     <cac:PaymentTerms>
@@ -72,8 +91,7 @@
             <cac:TaxCategory>
                 <cbc:ID schemeAgencyName="United Nations Economic Commission for Europe" schemeID="UN/ECE 5305" schemeName="Tax Category Identifie">S</cbc:ID>
                 <cac:TaxScheme>
-                    <cbc:ID schemeAgencyName="PE:SUNAT" schemeID="UN/ECE 5153" schemeName="Codigo de tributos">1000
-                    </cbc:ID>
+                    <cbc:ID schemeAgencyName="PE:SUNAT" schemeID="UN/ECE 5153" schemeName="Codigo de tributos">1000</cbc:ID>
                     <cbc:Name>IGV</cbc:Name>
                     <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
                 </cac:TaxScheme>
@@ -87,7 +105,7 @@
     </cac:LegalMonetaryTotal>
     <cac:InvoiceLine>
         <cbc:ID>1</cbc:ID>
-        <cbc:InvoicedQuantity unitCode="KGM" unitCodeListAgencyName="United Nations Economic Commission for Europe" unitCodeListID="UN/ECE rec 20">10</cbc:InvoicedQuantity>
+        <cbc:InvoicedQuantity unitCode="NIU" unitCodeListAgencyName="United Nations Economic Commission for Europe" unitCodeListID="UN/ECE rec 20">10</cbc:InvoicedQuantity>
         <cbc:LineExtensionAmount currencyID="PEN">1000.00</cbc:LineExtensionAmount>
         <cac:PricingReference>
             <cac:AlternativeConditionPrice>
@@ -113,7 +131,7 @@
             </cac:TaxSubtotal>
         </cac:TaxTotal>
         <cac:Item>
-            <cbc:Description>Item1</cbc:Description>
+            <cbc:Description><![CDATA[Item1]]></cbc:Description>
         </cac:Item>
         <cac:Price>
             <cbc:PriceAmount currencyID="PEN">100.00</cbc:PriceAmount>
@@ -121,7 +139,7 @@
     </cac:InvoiceLine>
     <cac:InvoiceLine>
         <cbc:ID>2</cbc:ID>
-        <cbc:InvoicedQuantity unitCode="KGM" unitCodeListAgencyName="United Nations Economic Commission for Europe" unitCodeListID="UN/ECE rec 20">10</cbc:InvoicedQuantity>
+        <cbc:InvoicedQuantity unitCode="NIU" unitCodeListAgencyName="United Nations Economic Commission for Europe" unitCodeListID="UN/ECE rec 20">10</cbc:InvoicedQuantity>
         <cbc:LineExtensionAmount currencyID="PEN">1000.00</cbc:LineExtensionAmount>
         <cac:PricingReference>
             <cac:AlternativeConditionPrice>
@@ -147,7 +165,7 @@
             </cac:TaxSubtotal>
         </cac:TaxTotal>
         <cac:Item>
-            <cbc:Description>Item2</cbc:Description>
+            <cbc:Description><![CDATA[Item2]]></cbc:Description>
         </cac:Item>
         <cac:Price>
             <cbc:PriceAmount currencyID="PEN">100.00</cbc:PriceAmount>
