@@ -18,14 +18,15 @@ package io.github.project.openubl.ublhub.ubl.renderer.extensions;
 
 import io.quarkus.qute.TemplateExtension;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
 @TemplateExtension
 public class IntegerExtension {
 
     public static int add(Integer value, int incremental) {
         return value + incremental;
+    }
+
+    public static String format(Integer value, String pattern) {
+        return String.format(pattern, value);
     }
 
 }
