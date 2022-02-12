@@ -101,7 +101,7 @@
                                     <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>../${project.basedir}/backend/src/main/resources/META-INF/resources</outputDirectory>
+                                    <outputDirectory>${project.basedir}/../backend/src/main/resources/META-INF/resources</outputDirectory>
                                     <resources>
                                         <resource>
                                             <directory>${project.basedir}/src/main/webapp/build</directory>
