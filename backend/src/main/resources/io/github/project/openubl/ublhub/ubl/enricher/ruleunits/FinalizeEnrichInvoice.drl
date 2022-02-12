@@ -66,7 +66,7 @@ then
     newTotalImpuestos.gratuitoBaseImponible = gratuito.getBaseImponible();
     newTotalImpuestos.icbImporte = icb;
 
-    newTotalImpuestos.total = ivap.getImporte().add(gravado.getImporte());
+    newTotalImpuestos.total = ivap.getImporte().add(gravado.getImporte()).add(icb);
 
     modify($i) {
         totalImpuestos = newTotalImpuestos;
