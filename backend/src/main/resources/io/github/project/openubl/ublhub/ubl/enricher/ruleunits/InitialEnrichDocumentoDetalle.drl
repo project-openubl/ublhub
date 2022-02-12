@@ -68,7 +68,7 @@ then
 end
 
 
-rule "¿Requiere precio referencial cuando precio no tiene impuestos?" when
+rule "¿Requiere precio referencia cuando precio no tiene impuestos?" when
     $dl: /documentLines[ precioReferencia == null, igvTipo != null, igvTasa != null, precioConImpuestos == false ]
 then
     Catalog7 catalog7 = Catalog.valueOfCode(Catalog7.class, $dl.igvTipo).orElseThrow(Catalog.invalidCatalogValue);
@@ -79,10 +79,10 @@ then
 end
 
 rule "¿Requiere precio referencia cuando precio original si tiene impuestos?" when
-    $dl: /documentLines[ precioReferencia == null, igvTipo != null, precioConImpuestos == true ]
+    $dl: /documentLines[ precioReferencia == null, igvTipo != null, igvTasa != null, precioConImpuestos == true ]
 then
     Catalog7 catalog7 = Catalog.valueOfCode(Catalog7.class, $dl.igvTipo).orElseThrow(Catalog.invalidCatalogValue);
-    BigDecimal newPrecioReferencia = catalog7.isOperacionOnerosa() ? $dl.precio : $dl.precio.divide($dl.igvTasa.add(BigDecimal.ONE), 10, RoundingMode.HALF_EVEN);
+    BigDecimal newPrecioReferencia = catalog7.isOperacionOnerosa() ? $dl.precio.divide($dl.igvTasa.add(BigDecimal.ONE), 10, RoundingMode.HALF_EVEN) : $dl.precio;
     modify($dl) {
         precioReferencia = newPrecioReferencia;
     };

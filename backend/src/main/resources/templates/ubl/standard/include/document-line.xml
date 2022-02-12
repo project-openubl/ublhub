@@ -1,7 +1,7 @@
         <cbc:LineExtensionAmount currencyID="{moneda}">{item.valorVentaSinImpuestos.currency}</cbc:LineExtensionAmount>
         <cac:PricingReference>
             <cac:AlternativeConditionPrice>
-                <cbc:PriceAmount currencyID="{moneda}">{item.precioReferencia.currency}</cbc:PriceAmount>
+                <cbc:PriceAmount currencyID="{moneda}">{item.precioConImpuestos ? item.precio.currency : item.precioReferencia.currency}</cbc:PriceAmount>
                 <cbc:PriceTypeCode listAgencyName="PE:SUNAT" listName="Tipo de Precio" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16">{item.precioReferenciaTipo}</cbc:PriceTypeCode>
             </cac:AlternativeConditionPrice>
         </cac:PricingReference>
@@ -40,5 +40,5 @@
             <cbc:Description><![CDATA[{item.descripcion}]]></cbc:Description>
         </cac:Item>
         <cac:Price>
-            <cbc:PriceAmount currencyID="{moneda}">{item.precio.currency}</cbc:PriceAmount>
+            <cbc:PriceAmount currencyID="{moneda}">{item.precioConImpuestos ? item.precioReferencia.currency : item.precio.currency}</cbc:PriceAmount>
         </cac:Price>
