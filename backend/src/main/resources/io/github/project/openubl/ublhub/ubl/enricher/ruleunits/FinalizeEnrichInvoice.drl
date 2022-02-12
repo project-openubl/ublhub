@@ -1,0 +1,102 @@
+package io.github.project.openubl.ublhub.ubl.enricher.ruleunits;
+unit FinalizeEnrichInvoiceUnit;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+import java.util.Objects;
+
+import io.github.project.openubl.ublhub.ubl.content.models.common.Firmante;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.BoletaFactura;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.DocumentoDetalle;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.TotalImpuestos;
+import io.github.project.openubl.ublhub.ubl.content.models.standard.general.TotalImporte;
+
+import io.github.project.openubl.ublhub.ubl.content.catalogs.Catalog5;
+
+// Queries
+query invoiceWithTotals
+    $i: /invoice
+end
+
+declare Impuesto
+  baseImponible : BigDecimal
+  importe : BigDecimal
+end
+
+function Impuesto calImpuestoByTipo(List<DocumentoDetalle> detalle, Catalog5 categoria) {
+    Supplier<Stream<DocumentoDetalle>> stream = () -> detalle.stream().filter($il -> {
+        Catalog7 catalog7 = Catalog.valueOfCode(Catalog7.class, $il.igvTipo).orElseThrow(Catalog.invalidCatalogValue);
+        return catalog7.getTaxCategory().equals(categoria);
+    });
+
+    BigDecimal baseImponible = stream.get().map(e -> e.igvBaseImponible).reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal importe = stream.get().map(e -> e.igv).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    return new Impuesto(baseImponible, importe);
+}
+
+rule "¿Documento requiere total impuestos?" when
+    $i: /invoice[ totalImpuestos == null, detalle != null ]
+then
+    Impuesto ivap = calImpuestoByTipo($i.detalle, Catalog5.IMPUESTO_ARROZ_PILADO);
+    Impuesto gravado = calImpuestoByTipo($i.detalle, Catalog5.IGV);
+    Impuesto inafecto = calImpuestoByTipo($i.detalle, Catalog5.INAFECTO);
+    Impuesto exonerado = calImpuestoByTipo($i.detalle, Catalog5.EXONERADO);
+    Impuesto gratuito = calImpuestoByTipo($i.detalle, Catalog5.GRATUITO);
+
+    BigDecimal icb = $i.detalle.stream()
+                .map(e -> e.icb)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    TotalImpuestos newTotalImpuestos = new TotalImpuestos();
+    newTotalImpuestos.ivapImporte = ivap.getImporte();
+    newTotalImpuestos.ivapBaseImponible = ivap.getBaseImponible();
+    newTotalImpuestos.gravadoImporte = gravado.getImporte();
+    newTotalImpuestos.gravadoBaseImponible = gravado.getBaseImponible();
+    newTotalImpuestos.inafectoImporte = inafecto.getImporte();
+    newTotalImpuestos.inafectoBaseImponible = inafecto.getBaseImponible();
+    newTotalImpuestos.exoneradoImporte = exonerado.getImporte();
+    newTotalImpuestos.exoneradoBaseImponible = exonerado.getBaseImponible();
+    newTotalImpuestos.gratuitoImporte = gratuito.getImporte();
+    newTotalImpuestos.gratuitoBaseImponible = gratuito.getBaseImponible();
+    newTotalImpuestos.icbImporte = icb;
+
+    newTotalImpuestos.total = ivap.getImporte().add(gravado.getImporte()).add(icb);
+
+    modify($i) {
+        totalImpuestos = newTotalImpuestos;
+    };
+end
+
+rule "¿Documento requiere total importes?" when
+    $i: /invoice[ totalImporte == null, detalle != null ]
+then
+   BigDecimal totalValorDeVentaSinImpuestos = $i.detalle.stream()
+       .filter($il -> {
+           Catalog7 catalog7 = Catalog.valueOfCode(Catalog7.class, $il.igvTipo).orElseThrow(Catalog.invalidCatalogValue);
+           return !catalog7.getTaxCategory().equals(Catalog5.GRATUITO);
+       })
+       .map(e -> e.valorVentaSinImpuestos)
+       .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    BigDecimal totalImpuestos = $i.detalle.stream()
+           .filter($il -> {
+               Catalog7 catalog7 = Catalog.valueOfCode(Catalog7.class, $il.igvTipo).orElseThrow(Catalog.invalidCatalogValue);
+               return !catalog7.getTaxCategory().equals(Catalog5.GRATUITO);
+           })
+           .map(e -> e.igv.add(e.icb))
+           .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    TotalImporte newTotalImporte = new TotalImporte();
+    newTotalImporte.importeSinImpuestos = totalValorDeVentaSinImpuestos;
+    newTotalImporte.importe = totalValorDeVentaSinImpuestos.add(totalImpuestos);
+
+    modify($i) {
+        totalImporte = newTotalImporte;
+    };
+end

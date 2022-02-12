@@ -16,10 +16,9 @@
  */
 package io.github.project.openubl.ublhub.ubl.sender;
 
-import io.github.project.openubl.ublhub.files.exceptions.ReadFileException;
-import io.github.project.openubl.ublhub.ubl.sender.exceptions.ConnectToSUNATException;
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
 import io.github.project.openubl.ublhub.models.jpa.NamespaceRepository;
+import io.github.project.openubl.ublhub.ubl.sender.exceptions.ConnectToSUNATException;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ReadXMLFileContentException;
 import io.github.project.openubl.xmlsenderws.webservices.exceptions.InvalidXMLFileException;
 import io.github.project.openubl.xmlsenderws.webservices.exceptions.UnsupportedDocumentTypeException;

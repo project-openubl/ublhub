@@ -41,7 +41,7 @@
         <!--Quarkus-->
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-        <quarkus.platform.version>2.6.2.Final</quarkus.platform.version>
+        <quarkus.platform.version>2.7.1.Final</quarkus.platform.version>
 
         <!--plugings-->
         <maven.compiler.parameters>true</maven.compiler.parameters>
@@ -113,28 +113,34 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>quarkus-kogito-bom</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.project-openubl</groupId>
+                <artifactId>xcontent</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.project-openubl</groupId>
+                <artifactId>xrenderer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <modules>
         <module>admin-console</module>
-        <module>xcontent</module>
-        <module>xbuilder</module>
-        <module>xreader</module>
         <module>backend</module>
     </modules>
 
     <build>
-        <extensions>
-            <extension>
-                <groupId>kr.motd.maven</groupId>
-                <artifactId>os-maven-plugin</artifactId>
-                <version>1.7.0</version>
-            </extension>
-        </extensions>
-
         <plugins>
-            <!-- License information -->
             <!--mvn license:format-->
             <plugin>
                 <groupId>com.mycila</groupId>
@@ -171,83 +177,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${compiler-plugin.version}</version>
-                <configuration>
-                    <parameters>${maven.compiler.parameters}</parameters>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${surefire-plugin.version}</version>
-                <configuration>
-                    <systemPropertyVariables>
-                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                        <maven.home>${maven.home}</maven.home>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>windows</id>
-            <activation>
-                <os>
-                    <family>windows</family>
-                </os>
-            </activation>
-            <properties>
-                <executable-suffix>.exe</executable-suffix>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>admin-console</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <version>3.2.0</version>
-                        <configuration>
-                            <nonFilteredFileExtensions>
-                                <nonFilteredFileExtension>ico</nonFilteredFileExtension>
-                                <nonFilteredFileExtension>eot</nonFilteredFileExtension>
-                                <nonFilteredFileExtension>ttf</nonFilteredFileExtension>
-                                <nonFilteredFileExtension>woff</nonFilteredFileExtension>
-                                <nonFilteredFileExtension>woff2</nonFilteredFileExtension>
-                                <nonFilteredFileExtension>js</nonFilteredFileExtension>
-                                <nonFilteredFileExtension>html</nonFilteredFileExtension>
-                                <nonFilteredFileExtension>css</nonFilteredFileExtension>
-                                <nonFilteredFileExtension>svg</nonFilteredFileExtension>
-                            </nonFilteredFileExtensions>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>copy-resources</id>
-                                <phase>generate-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.basedir}/backend/src/main/resources/META-INF/resources</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.basedir}/admin-console/src/main/webapp/build</directory>
-                                            <filtering>false</filtering>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
 </project>

@@ -1,0 +1,7 @@
+package io.github.project.openubl.ublhub.ubl.enricher.ruleunits;
+unit InitialEnrichDebitNoteUnit;
+
+// Queries
+query debitNote
+    $dn: /debitNote
+end

@@ -17,7 +17,8 @@
     limitations under the License.
 
 -->
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 camel-quarkus-aws2-s3:https://maven.apache.org/xsd/maven-4.0.0.xsd"
+<project
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 camel-quarkus-aws2-s3:https://maven.apache.org/xsd/maven-4.0.0.xsd"
         xmlns="http://maven.apache.org/POM/4.0.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
@@ -38,6 +39,7 @@
         <xsender-lib.version>3.0.3.Final</xsender-lib.version>
 
         <keycloak.version>15.0.2</keycloak.version>
+        <xmlunit.version>2.6.4</xmlunit.version>
     </properties>
 
     <dependencies>
@@ -68,6 +70,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
         </dependency>
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
@@ -152,6 +155,11 @@
             <artifactId>camel-quarkus-json-validator</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.kie.kogito</groupId>
+            <artifactId>kogito-quarkus-rules</artifactId>
+        </dependency>
+
         <!--Jdbc-->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -198,10 +206,40 @@
             <version>${awaitility.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.xmlunit</groupId>
+            <artifactId>xmlunit-core</artifactId>
+            <version>${xmlunit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.xmlunit</groupId>
+            <artifactId>xmlunit-matchers</artifactId>
+            <version>${xmlunit.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler-plugin.version}</version>
+                <configuration>
+                    <parameters>${maven.compiler.parameters}</parameters>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire-plugin.version}</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <maven.home>${maven.home}</maven.home>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>

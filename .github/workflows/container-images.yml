@@ -18,7 +18,7 @@ jobs:
           distribution: temurin
           cache: maven
       - name: Build jvm container image
-        run: mvn -U -B package --file backend/pom.xml -Pcontainer-image -DskipTests \
+        run: mvn -U -B package -Pcontainer-image -DskipTests \
         -Dquarkus.native.container-build=false \
         -Dquarkus.container-image.push=true \
         -Dquarkus.container-image.build=true \

@@ -34,10 +34,10 @@ package io.github.project.openubl.ublhub.resources;
  */
 
 import io.github.project.openubl.ublhub.idm.input.IDGeneratorRepresentation;
-import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
-import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorManager;
 import io.github.project.openubl.ublhub.models.jpa.NamespaceRepository;
 import io.github.project.openubl.ublhub.resources.validation.JSONValidatorManager;
+import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
+import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorManager;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
