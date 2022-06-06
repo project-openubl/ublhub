@@ -155,11 +155,6 @@
             <artifactId>camel-quarkus-json-validator</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.kie.kogito</groupId>
-            <artifactId>kogito-quarkus-rules</artifactId>
-        </dependency>
-
         <!--Jdbc-->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -179,11 +174,6 @@
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
 

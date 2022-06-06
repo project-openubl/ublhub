@@ -41,7 +41,7 @@
         <!--Quarkus-->
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-        <quarkus.platform.version>2.7.1.Final</quarkus.platform.version>
+        <quarkus.platform.version>2.9.2.Final</quarkus.platform.version>
 
         <!--plugings-->
         <maven.compiler.parameters>true</maven.compiler.parameters>
@@ -112,24 +112,6 @@
                 <version>${quarkus.platform.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>${quarkus.platform.group-id}</groupId>
-                <artifactId>quarkus-kogito-bom</artifactId>
-                <version>${quarkus.platform.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>io.github.project-openubl</groupId>
-                <artifactId>xcontent</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.project-openubl</groupId>
-                <artifactId>xrenderer</artifactId>
-                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
