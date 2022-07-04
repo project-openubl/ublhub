@@ -17,7 +17,7 @@
 package io.github.project.openubl.ublhub.keys;
 
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import org.keycloak.common.util.CertificateUtils;
 import org.keycloak.common.util.KeyUtils;
 import org.keycloak.crypto.KeyWrapper;
@@ -31,12 +31,12 @@ import java.security.cert.X509Certificate;
 
 public class JavaKeystoreKeyProvider extends AbstractRsaKeyProvider {
 
-    public JavaKeystoreKeyProvider(NamespaceEntity namespace, ComponentModel model) {
+    public JavaKeystoreKeyProvider(ProjectEntity namespace, ComponentModel model) {
         super(namespace, model);
     }
 
     @Override
-    protected KeyWrapper loadKey(NamespaceEntity namespace, ComponentModel model) {
+    protected KeyWrapper loadKey(ProjectEntity namespace, ComponentModel model) {
         try {
             KeyStore keyStore = KeyStore.getInstance("JKS");
             keyStore.load(new FileInputStream(model.get(JavaKeystoreKeyProviderFactory.KEYSTORE_KEY)), model.get(JavaKeystoreKeyProviderFactory.KEYSTORE_PASSWORD_KEY).toCharArray());

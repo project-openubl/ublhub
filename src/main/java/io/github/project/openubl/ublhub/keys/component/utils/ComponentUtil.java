@@ -19,7 +19,7 @@ package io.github.project.openubl.ublhub.keys.component.utils;
 import io.github.project.openubl.ublhub.keys.component.ComponentFactory;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import org.keycloak.representations.idm.ComponentRepresentation;
 
 import java.util.HashMap;
@@ -65,14 +65,14 @@ public interface ComponentUtil {
 
     ComponentFactory getComponentFactory(String providerType, String providerId);
 
-    default void notifyCreated(NamespaceEntity namespace, ComponentModel model) {
+    default void notifyCreated(ProjectEntity project, ComponentModel model) {
         ComponentFactory factory = getComponentFactory(model);
-        factory.onCreate(namespace, model);
+        factory.onCreate(project, model);
     }
 
-    default void notifyUpdated(NamespaceEntity namespace, ComponentModel model) {
+    default void notifyUpdated(ProjectEntity project, ComponentModel model) {
         ComponentFactory factory = getComponentFactory(model);
-        factory.onUpdate(namespace, model);
+        factory.onUpdate(project, model);
     }
 
 }

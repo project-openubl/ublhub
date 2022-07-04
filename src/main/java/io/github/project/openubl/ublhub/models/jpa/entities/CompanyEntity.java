@@ -22,9 +22,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Entity
-@Table(name = "company", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"namespace_id", "ruc"})
-})
+@Table(name = "company")
 public class CompanyEntity extends BaseEntity {
 
     @Id
@@ -52,7 +50,7 @@ public class CompanyEntity extends BaseEntity {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
-    public NamespaceEntity namespace;
+    @JoinColumn(foreignKey = @ForeignKey, name = "project_id")
+    public ProjectEntity project;
 
 }

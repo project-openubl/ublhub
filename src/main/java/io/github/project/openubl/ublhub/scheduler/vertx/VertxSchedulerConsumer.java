@@ -99,7 +99,7 @@ public class VertxSchedulerConsumer {
                                             xmlFileContentEntity.bajaCodigoTipoDocumento = xmlFileContent.getVoidedLineDocumentTypeCode();
 
                                             // Read SUNAT configuration
-                                            return xSenderMutiny.getXSenderConfig(documentEntity.namespace.id, xmlFileContent.getRuc());
+                                            return xSenderMutiny.getXSenderConfig(documentEntity.project.id, xmlFileContent.getRuc());
                                         })
 
                                         // Send file to SUNAT
@@ -203,7 +203,7 @@ public class VertxSchedulerConsumer {
                         .retry().withBackOff(Duration.ofSeconds(1)).withJitter(0.2).atMost(3)
 
                         .chain(documentEntity -> xSenderMutiny
-                                .getXSenderConfig(documentEntity.namespace.id, documentEntity.xmlFileContent.ruc)
+                                .getXSenderConfig(documentEntity.project.id, documentEntity.xmlFileContent.ruc)
                                 .chain(sunatConfig -> {
                                     XmlContentModel xmlContentModel = new XmlContentModel();
                                     xmlContentModel.setRuc(documentEntity.xmlFileContent.ruc);

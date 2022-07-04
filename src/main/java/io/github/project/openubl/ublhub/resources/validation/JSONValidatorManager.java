@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.resources.validation;
 
-import io.github.project.openubl.ublhub.idm.input.InputTemplateRepresentation;
+import io.github.project.openubl.ublhub.dto.input.InputTemplateRepresentation;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.apache.camel.ProducerTemplate;

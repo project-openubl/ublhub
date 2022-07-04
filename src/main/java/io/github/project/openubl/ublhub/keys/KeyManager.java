@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.keys;
 
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.smallrye.mutiny.Uni;
 import org.keycloak.crypto.KeyUse;
 import org.keycloak.crypto.KeyWrapper;
@@ -28,13 +28,13 @@ import java.util.List;
 
 public interface KeyManager {
 
-    Uni<KeyWrapper> getActiveKey(NamespaceEntity namespace, KeyUse use, String algorithm);
+    Uni<KeyWrapper> getActiveKey(ProjectEntity namespace, KeyUse use, String algorithm);
 
-    Uni<KeyWrapper> getKey(NamespaceEntity namespace, String kid, KeyUse use, String algorithm);
+    Uni<KeyWrapper> getKey(ProjectEntity namespace, String kid, KeyUse use, String algorithm);
 
-    Uni<List<KeyWrapper>> getKeys(NamespaceEntity namespace);
+    Uni<List<KeyWrapper>> getKeys(ProjectEntity namespace);
 
-    Uni<List<KeyWrapper>> getKeys(NamespaceEntity namespace, KeyUse use, String algorithm);
+    Uni<List<KeyWrapper>> getKeys(ProjectEntity namespace, KeyUse use, String algorithm);
 
     class ActiveRsaKey {
         private final String kid;

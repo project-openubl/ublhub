@@ -33,11 +33,11 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
-import io.github.project.openubl.ublhub.idm.CompanyRepresentation;
+import io.github.project.openubl.ublhub.dto.CompanyRepresentation;
 import io.github.project.openubl.ublhub.models.PageBean;
 import io.github.project.openubl.ublhub.models.SortBean;
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
-import io.github.project.openubl.ublhub.models.jpa.NamespaceRepository;
+import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.models.utils.RepresentationToEntity;
@@ -67,7 +67,7 @@ public class CompanyResource {
     UriInfo uriInfo;
 
     @Inject
-    NamespaceRepository namespaceRepository;
+    ProjectRepository namespaceRepository;
 
     @Inject
     CompanyRepository companyRepository;
@@ -104,7 +104,7 @@ public class CompanyResource {
                                 .onItem().ifNull().switchTo(() -> {
                                     CompanyEntity companyEntity = new CompanyEntity();
                                     companyEntity.id = UUID.randomUUID().toString();
-                                    companyEntity.namespace = namespaceEntity;
+                                    companyEntity.project = namespaceEntity;
 
                                     RepresentationToEntity.assign(companyEntity, rep);
                                     return companyEntity.<CompanyEntity>persist()

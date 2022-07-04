@@ -16,17 +16,17 @@
  */
 package io.github.project.openubl.ublhub.models.utils;
 
-import io.github.project.openubl.ublhub.idm.CompanyRepresentation;
-import io.github.project.openubl.ublhub.idm.NamespaceRepresentation;
-import io.github.project.openubl.ublhub.idm.SunatCredentialsRepresentation;
-import io.github.project.openubl.ublhub.idm.SunatUrlsRepresentation;
+import io.github.project.openubl.ublhub.dto.CompanyRepresentation;
+import io.github.project.openubl.ublhub.dto.ProjectDto;
+import io.github.project.openubl.ublhub.dto.SunatCredentialsDto;
+import io.github.project.openubl.ublhub.dto.SunatWebServicesDto;
 import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.SunatEntity;
 
 public class RepresentationToEntity {
 
-    public static NamespaceEntity assign(NamespaceEntity entity, NamespaceRepresentation rep) {
+    public static ProjectEntity assign(ProjectEntity entity, ProjectDto rep) {
         if (rep.getName() != null) {
             entity.name = rep.getName();
         }
@@ -34,11 +34,11 @@ public class RepresentationToEntity {
             entity.description = rep.getDescription();
         }
 
-        if (rep.getWebServices() != null) {
-            assign(entity.sunat, rep.getWebServices());
+        if (rep.getSunatWebServices() != null) {
+            assign(entity.sunat, rep.getSunatWebServices());
         }
-        if (rep.getCredentials() != null) {
-            assign(entity.sunat, rep.getCredentials());
+        if (rep.getSunatCredentials() != null) {
+            assign(entity.sunat, rep.getSunatCredentials());
         }
 
         return entity;
@@ -63,19 +63,19 @@ public class RepresentationToEntity {
         return entity;
     }
 
-    private static void assign(SunatEntity entity, SunatUrlsRepresentation rep) {
+    private static void assign(SunatEntity entity, SunatWebServicesDto rep) {
         if (rep.getFactura() != null) {
             entity.sunatUrlFactura = rep.getFactura();
         }
         if (rep.getGuia() != null) {
             entity.sunatUrlGuiaRemision = rep.getGuia();
         }
-        if (rep.getRetenciones() != null) {
-            entity.sunatUrlPercepcionRetencion = rep.getRetenciones();
+        if (rep.getRetencion() != null) {
+            entity.sunatUrlPercepcionRetencion = rep.getRetencion();
         }
     }
 
-    private static void assign(SunatEntity entity, SunatCredentialsRepresentation rep) {
+    private static void assign(SunatEntity entity, SunatCredentialsDto rep) {
         if (rep.getUsername() != null) {
             entity.sunatUsername = rep.getUsername();
         }

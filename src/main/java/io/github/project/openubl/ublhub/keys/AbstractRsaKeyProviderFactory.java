@@ -20,7 +20,7 @@ import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.component.ComponentValidationException;
 import io.github.project.openubl.ublhub.keys.provider.ConfigurationValidationHelper;
 import io.github.project.openubl.ublhub.keys.provider.ProviderConfigurationBuilder;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 
 public abstract class AbstractRsaKeyProviderFactory implements KeyProviderFactory {
 
@@ -33,7 +33,7 @@ public abstract class AbstractRsaKeyProviderFactory implements KeyProviderFactor
     }
 
     @Override
-    public void validateConfiguration(NamespaceEntity namespace, ComponentModel model) throws ComponentValidationException {
+    public void validateConfiguration(ProjectEntity project, ComponentModel model) throws ComponentValidationException {
         ConfigurationValidationHelper.check(model)
                 .checkLong(Attributes.PRIORITY_PROPERTY, false)
                 .checkBoolean(Attributes.ENABLED_PROPERTY, false)

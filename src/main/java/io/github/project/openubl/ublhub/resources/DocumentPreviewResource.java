@@ -33,8 +33,8 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
-import io.github.project.openubl.ublhub.idm.input.IDGeneratorRepresentation;
-import io.github.project.openubl.ublhub.models.jpa.NamespaceRepository;
+import io.github.project.openubl.ublhub.dto.input.IDGeneratorRepresentation;
+import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.resources.validation.JSONValidatorManager;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
 import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorManager;
@@ -55,7 +55,7 @@ import javax.ws.rs.core.Response;
 public class DocumentPreviewResource {
 
     @Inject
-    NamespaceRepository namespaceRepository;
+    ProjectRepository namespaceRepository;
 
     @Inject
     XMLGeneratorManager xmlGeneratorManager;

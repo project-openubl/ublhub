@@ -33,7 +33,7 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
-import io.github.project.openubl.ublhub.idm.ServerInfoRepresentation;
+import io.github.project.openubl.ublhub.dto.ServerInfoRepresentation;
 import io.github.project.openubl.ublhub.keys.KeyProvider;
 import io.github.project.openubl.ublhub.keys.KeyProviderFactory;
 import io.github.project.openubl.ublhub.keys.component.ComponentFactory;

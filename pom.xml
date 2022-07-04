@@ -52,7 +52,7 @@
         <executable-suffix/>
 
         <lombok.version>1.18.24</lombok.version>
-        <mapstruct.version>1.4.2.Final</mapstruct.version>
+        <mapstruct.version>1.5.1.Final</mapstruct.version>
 
         <helm.image.tag>${project.version}</helm.image.tag>
     </properties>

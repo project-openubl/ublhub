@@ -24,7 +24,7 @@ import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderType;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderType;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyType;
 import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 import org.keycloak.common.util.CertificateUtils;
@@ -61,12 +61,12 @@ public class GeneratedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactor
     ComponentRepository componentRepository;
 
     @Override
-    public KeyProvider create(NamespaceEntity namespace, ComponentModel model) {
-        return new ImportedRsaKeyProvider(namespace, model);
+    public KeyProvider create(ProjectEntity project, ComponentModel model) {
+        return new ImportedRsaKeyProvider(project, model);
     }
 
     @Override
-    public Uni<Boolean> createFallbackKeys(NamespaceEntity namespace, KeyUse keyUse, String algorithm) {
+    public Uni<Boolean> createFallbackKeys(ProjectEntity namespace, KeyUse keyUse, String algorithm) {
         if (keyUse.equals(KeyUse.SIG) && isSupportedRsaAlgorithm(algorithm)) {
             ComponentModel generated = new ComponentModel();
             generated.setName("fallback-" + algorithm);
@@ -95,29 +95,29 @@ public class GeneratedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactor
     }
 
     @Override
-    public void validateConfiguration(NamespaceEntity namespace, ComponentModel model) throws ComponentValidationException {
-        super.validateConfiguration(namespace, model);
+    public void validateConfiguration(ProjectEntity project, ComponentModel model) throws ComponentValidationException {
+        super.validateConfiguration(project, model);
 
         ConfigurationValidationHelper.check(model).checkList(Attributes.KEY_SIZE_PROPERTY, false);
 
         int size = model.get(Attributes.KEY_SIZE_KEY, 2048);
 
         if (!(model.contains(Attributes.PRIVATE_KEY_KEY) && model.contains(Attributes.CERTIFICATE_KEY))) {
-            generateKeys(namespace, model, size);
+            generateKeys(project, model, size);
 
-            logger.debugv("Generated keys for namespace={0}", namespace.id);
+            logger.debugv("Generated keys for namespace={0}", project.id);
         } else {
             PrivateKey privateKey = PemUtils.decodePrivateKey(model.get(Attributes.PRIVATE_KEY_KEY));
             int currentSize = ((RSAPrivateKey) privateKey).getModulus().bitLength();
             if (currentSize != size) {
-                generateKeys(namespace, model, size);
+                generateKeys(project, model, size);
 
-                logger.debugv("Key size changed, generating new keys for namespace={0}", namespace.id);
+                logger.debugv("Key size changed, generating new keys for namespace={0}", project.id);
             }
         }
     }
 
-    private void generateKeys(NamespaceEntity namespace, ComponentModel model, int size) {
+    private void generateKeys(ProjectEntity namespace, ComponentModel model, int size) {
         KeyPair keyPair;
         try {
             keyPair = KeyUtils.generateRsaKeyPair(size);
@@ -129,7 +129,7 @@ public class GeneratedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactor
         generateCertificate(namespace, model, keyPair);
     }
 
-    private void generateCertificate(NamespaceEntity namespace, ComponentModel model, KeyPair keyPair) {
+    private void generateCertificate(ProjectEntity namespace, ComponentModel model, KeyPair keyPair) {
         try {
             Certificate certificate = CertificateUtils.generateV1SelfSignedCertificate(keyPair, namespace.name);
             model.put(Attributes.CERTIFICATE_KEY, PemUtils.encodeCertificate(certificate));

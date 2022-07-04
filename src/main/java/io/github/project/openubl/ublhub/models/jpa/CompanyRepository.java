@@ -19,7 +19,7 @@ package io.github.project.openubl.ublhub.models.jpa;
 import io.github.project.openubl.ublhub.models.PageBean;
 import io.github.project.openubl.ublhub.models.SortBean;
 import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
@@ -35,54 +35,54 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
 
     public static final String[] SORT_BY_FIELDS = {"name", "created"};
 
-    public Uni<CompanyEntity> findById(NamespaceEntity namespace, String companyId) {
-        return findById(namespace.id, companyId);
+    public Uni<CompanyEntity> findById(ProjectEntity project, String companyId) {
+        return findById(project.id, companyId);
     }
 
-    public Uni<CompanyEntity> findById(String namespaceId, String companyId) {
-        Parameters params = Parameters.with("namespaceId", namespaceId).and("companyId", companyId);
-        return find("id = :companyId and namespace.id = :namespaceId", params).firstResult();
+    public Uni<CompanyEntity> findById(String projectId, String companyId) {
+        Parameters params = Parameters.with("projectId", projectId).and("companyId", companyId);
+        return find("id = :companyId and project.id = :projectId", params).firstResult();
     }
 
-    public Uni<CompanyEntity> findByRuc(NamespaceEntity namespace, String ruc) {
-        return findByRuc(namespace.id, ruc);
+    public Uni<CompanyEntity> findByRuc(ProjectEntity project, String ruc) {
+        return findByRuc(project.id, ruc);
     }
 
-    public Uni<CompanyEntity> findByRuc(String namespaceId, String ruc) {
-        Parameters params = Parameters.with("namespaceId", namespaceId).and("ruc", ruc);
-        return find("ruc = :ruc and namespace.id = :namespaceId", params).firstResult();
+    public Uni<CompanyEntity> findByRuc(String projectId, String ruc) {
+        Parameters params = Parameters.with("projectId", projectId).and("ruc", ruc);
+        return find("ruc = :ruc and project.id = :projectId", params).firstResult();
     }
 
-    public UniAndGroup2<List<CompanyEntity>, Long> list(NamespaceEntity namespace, PageBean pageBean, List<SortBean> sortBy) {
+    public UniAndGroup2<List<CompanyEntity>, Long> list(ProjectEntity project, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
-        Parameters params = Parameters.with("namespaceId", namespace.id);
+        Parameters params = Parameters.with("projectId", project.id);
 
         PanacheQuery<CompanyEntity> query = CompanyEntity
-                .find("From CompanyEntity as c where c.namespace.id = :namespaceId", sort, params)
+                .find("From CompanyEntity as c where c.project.id = :projectId", sort, params)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
         return Uni.combine().all().unis(query.list(), query.count());
     }
 
-    public UniAndGroup2<List<CompanyEntity>, Long> list(NamespaceEntity namespace, String filterText, PageBean pageBean, List<SortBean> sortBy) {
+    public UniAndGroup2<List<CompanyEntity>, Long> list(ProjectEntity project, String filterText, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
-        Parameters params = Parameters.with("namespaceId", namespace.id).and("filterText", "%" + filterText.toLowerCase() + "%");
+        Parameters params = Parameters.with("projectId", project.id).and("filterText", "%" + filterText.toLowerCase() + "%");
 
         PanacheQuery<CompanyEntity> query = CompanyEntity
-                .find("From CompanyEntity as c where c.namespace.id = :namespaceId and (lower(c.name) like :filterText or c.ruc like :filterText)", sort, params)
+                .find("From CompanyEntity as c where c.project.id = :projectId and (lower(c.name) like :filterText or c.ruc like :filterText)", sort, params)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
         return Uni.combine().all().unis(query.list(), query.count());
     }
 
-    public Uni<Boolean> deleteByNamespaceIdAndId(String namespaceId, String id) {
-        Parameters params = Parameters.with("namespaceId", namespaceId).and("id", id);
+    public Uni<Boolean> deleteByNamespaceIdAndId(String projectId, String id) {
+        Parameters params = Parameters.with("projectId", projectId).and("id", id);
         return CompanyEntity
-                .delete("namespace.id = :namespaceId and id = :id", params)
+                .delete("project.id = :projectId and id = :id", params)
                 .map(rowCount -> rowCount > 0);
     }
 }

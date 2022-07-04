@@ -17,7 +17,7 @@
 package io.github.project.openubl.ublhub.models.jpa;
 
 import io.github.project.openubl.ublhub.models.jpa.entities.GeneratedIDEntity;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 import io.smallrye.mutiny.Uni;
@@ -27,7 +27,7 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class GeneratedIDRepository implements PanacheRepositoryBase<GeneratedIDEntity, String> {
 
-    public Uni<GeneratedIDEntity> getCurrentID(NamespaceEntity namespace, String ruc, String documentType) {
+    public Uni<GeneratedIDEntity> getCurrentID(ProjectEntity namespace, String ruc, String documentType) {
         Parameters params = Parameters
                 .with("namespaceId", namespace.id)
                 .and("ruc", ruc)

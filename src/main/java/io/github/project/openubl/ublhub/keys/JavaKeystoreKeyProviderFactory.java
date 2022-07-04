@@ -24,7 +24,7 @@ import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
 import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderType;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderType;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyType;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -61,13 +61,13 @@ public class JavaKeystoreKeyProviderFactory extends AbstractRsaKeyProviderFactor
             .build();
 
     @Override
-    public KeyProvider create(NamespaceEntity namespace, ComponentModel model) {
-        return new JavaKeystoreKeyProvider(namespace, model);
+    public KeyProvider create(ProjectEntity project, ComponentModel model) {
+        return new JavaKeystoreKeyProvider(project, model);
     }
 
     @Override
-    public void validateConfiguration(NamespaceEntity namespace, ComponentModel model) throws ComponentValidationException {
-        super.validateConfiguration(namespace, model);
+    public void validateConfiguration(ProjectEntity project, ComponentModel model) throws ComponentValidationException {
+        super.validateConfiguration(project, model);
 
         ConfigurationValidationHelper.check(model)
                 .checkSingle(KEYSTORE_PROPERTY, true)
@@ -76,7 +76,7 @@ public class JavaKeystoreKeyProviderFactory extends AbstractRsaKeyProviderFactor
                 .checkSingle(KEY_PASSWORD_PROPERTY, true);
 
         try {
-            new JavaKeystoreKeyProvider(namespace, model).loadKey(namespace, model);
+            new JavaKeystoreKeyProvider(project, model).loadKey(project, model);
         } catch (Throwable t) {
             logger.error("Failed to load keys.", t);
             throw new ComponentValidationException("Failed to load keys. " + t.getMessage(), t);

@@ -18,7 +18,7 @@ package io.github.project.openubl.ublhub.keys;
 
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.smallrye.mutiny.Uni;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.crypto.KeyUse;
@@ -33,7 +33,7 @@ public class DefaultKeyProviders {
     @Inject
     ComponentRepository componentRepository;
 
-    public Uni<Void> createProviders(NamespaceEntity namespace) {
+    public Uni<Void> createProviders(ProjectEntity namespace) {
         return hasProvider(namespace, "rsa-generated").chain(hasProvider -> {
             if (!hasProvider) {
                 return createRsaKeyProvider("rsa-generated", KeyUse.SIG, namespace)
@@ -44,7 +44,7 @@ public class DefaultKeyProviders {
         });
     }
 
-    private Uni<ComponentModel> createRsaKeyProvider(String name, KeyUse keyUse, NamespaceEntity namespace) {
+    private Uni<ComponentModel> createRsaKeyProvider(String name, KeyUse keyUse, ProjectEntity namespace) {
         ComponentModel generated = new ComponentModel();
         generated.setName(name);
         generated.setParentId(namespace.id);
@@ -59,7 +59,7 @@ public class DefaultKeyProviders {
         return componentRepository.addComponentModel(namespace, generated);
     }
 
-    protected Uni<Boolean> hasProvider(NamespaceEntity namespace, String providerId) {
+    protected Uni<Boolean> hasProvider(ProjectEntity namespace, String providerId) {
         return componentRepository.getComponents(namespace.id, KeyProvider.class.getName())
                 .map(componentModels -> componentModels
                         .stream()

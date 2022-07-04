@@ -21,7 +21,7 @@ import io.github.project.openubl.ublhub.keys.component.utils.ComponentProviderLi
 import io.github.project.openubl.ublhub.keys.component.utils.RsaKeyProviderLiteral;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyType;
 import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 import org.keycloak.crypto.KeyUse;
@@ -51,7 +51,7 @@ public class DefaultKeyManager implements KeyManager {
     Instance<KeyProviderFactory> keyProviderFactories;
 
     @Override
-    public Uni<KeyWrapper> getActiveKey(NamespaceEntity namespace, KeyUse use, String algorithm) {
+    public Uni<KeyWrapper> getActiveKey(ProjectEntity namespace, KeyUse use, String algorithm) {
         return getProviders(namespace).chain(keyProviders -> {
             KeyWrapper activeKey = getActiveKey(keyProviders, namespace, use, algorithm);
             if (activeKey != null) {
@@ -80,7 +80,7 @@ public class DefaultKeyManager implements KeyManager {
         });
     }
 
-    private KeyWrapper getActiveKey(List<KeyProvider> providers, NamespaceEntity namespace, KeyUse use, String algorithm) {
+    private KeyWrapper getActiveKey(List<KeyProvider> providers, ProjectEntity namespace, KeyUse use, String algorithm) {
         for (KeyProvider p : providers) {
             for (KeyWrapper key : p.getKeys()) {
                 if (key.getStatus().isActive() && matches(key, use, algorithm)) {
@@ -96,7 +96,7 @@ public class DefaultKeyManager implements KeyManager {
     }
 
     @Override
-    public Uni<KeyWrapper> getKey(NamespaceEntity namespace, String kid, KeyUse use, String algorithm) {
+    public Uni<KeyWrapper> getKey(ProjectEntity namespace, String kid, KeyUse use, String algorithm) {
         if (kid == null) {
             logger.warnv("kid is null, can't find public key: namespace={0}", namespace.id);
             return Uni.createFrom().nullItem();
@@ -126,7 +126,7 @@ public class DefaultKeyManager implements KeyManager {
     }
 
     @Override
-    public Uni<List<KeyWrapper>> getKeys(NamespaceEntity namespace, KeyUse use, String algorithm) {
+    public Uni<List<KeyWrapper>> getKeys(ProjectEntity namespace, KeyUse use, String algorithm) {
         return getProviders(namespace).map(keyProviders -> keyProviders.stream()
                 .flatMap(keyProvider -> keyProvider.getKeys().stream().filter(key -> key.getStatus().isEnabled() && matches(key, use, algorithm)))
                 .collect(Collectors.toList())
@@ -134,7 +134,7 @@ public class DefaultKeyManager implements KeyManager {
     }
 
     @Override
-    public Uni<List<KeyWrapper>> getKeys(NamespaceEntity namespace) {
+    public Uni<List<KeyWrapper>> getKeys(ProjectEntity namespace) {
         return getProviders(namespace).map(keyProviders -> keyProviders.stream()
                 .flatMap(keyProvider -> keyProvider.getKeys().stream())
                 .collect(Collectors.toList())
@@ -145,7 +145,7 @@ public class DefaultKeyManager implements KeyManager {
         return use.equals(key.getUse()) && key.getAlgorithm().equals(algorithm);
     }
 
-    private Uni<List<KeyProvider>> getProviders(NamespaceEntity namespace) {
+    private Uni<List<KeyProvider>> getProviders(ProjectEntity namespace) {
         return componentRepository.getComponents(namespace.id, KeyProvider.class.getName())
                 .map(componentModels -> componentModels.stream()
                         .sorted(new ProviderComparator())

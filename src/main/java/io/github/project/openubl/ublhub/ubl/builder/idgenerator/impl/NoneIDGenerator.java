@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.ubl.builder.idgenerator.impl;
 
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.ID;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGenerator;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorProvider;
@@ -30,27 +30,27 @@ import javax.enterprise.context.ApplicationScoped;
 public class NoneIDGenerator implements IDGenerator {
     
     @Override
-    public Uni<ID> generateInvoiceID(NamespaceEntity namespace, String ruc, boolean isFactura) {
+    public Uni<ID> generateInvoiceID(ProjectEntity project, String ruc, boolean isFactura) {
         return Uni.createFrom().nullItem();
     }
 
     @Override
-    public Uni<ID> generateCreditNoteID(NamespaceEntity namespace, String ruc, boolean isFactura) {
+    public Uni<ID> generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura) {
         return Uni.createFrom().nullItem();
     }
 
     @Override
-    public Uni<ID> generateDebitNoteID(NamespaceEntity namespace, String ruc, boolean isFactura) {
+    public Uni<ID> generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura) {
         return Uni.createFrom().nullItem();
     }
 
     @Override
-    public Uni<ID> generateVoidedDocumentID(NamespaceEntity namespace, String ruc, boolean isPercepcionRetencionOrGuia) {
+    public Uni<ID> generateVoidedDocumentID(ProjectEntity project, String ruc, boolean isPercepcionRetencionOrGuia) {
         return Uni.createFrom().nullItem();
     }
 
     @Override
-    public Uni<ID> generateSummaryDocumentID(NamespaceEntity namespace, String ruc) {
+    public Uni<ID> generateSummaryDocumentID(ProjectEntity project, String ruc) {
         return Uni.createFrom().nullItem();
     }
 }

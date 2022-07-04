@@ -16,19 +16,19 @@
  */
 package io.github.project.openubl.ublhub.ubl.builder.idgenerator;
 
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.smallrye.mutiny.Uni;
 
 public interface IDGenerator {
 
-    Uni<ID> generateInvoiceID(NamespaceEntity namespace, String ruc, boolean isFactura);
+    Uni<ID> generateInvoiceID(ProjectEntity project, String ruc, boolean isFactura);
 
-    Uni<ID> generateCreditNoteID(NamespaceEntity namespace, String ruc, boolean isFactura);
+    Uni<ID> generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura);
 
-    Uni<ID> generateDebitNoteID(NamespaceEntity namespace, String ruc, boolean isFactura);
+    Uni<ID> generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura);
 
-    Uni<ID> generateVoidedDocumentID(NamespaceEntity namespace, String ruc, boolean isPercepcionRetencionOrGuia);
+    Uni<ID> generateVoidedDocumentID(ProjectEntity project, String ruc, boolean isPercepcionRetencionOrGuia);
 
-    Uni<ID> generateSummaryDocumentID(NamespaceEntity namespace, String ruc);
+    Uni<ID> generateSummaryDocumentID(ProjectEntity project, String ruc);
 
 }

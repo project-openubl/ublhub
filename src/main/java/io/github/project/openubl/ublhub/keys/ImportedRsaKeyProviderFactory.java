@@ -23,7 +23,7 @@ import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
 import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderType;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderType;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyType;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import org.keycloak.common.util.CertificateUtils;
 import org.keycloak.common.util.KeyUtils;
 import org.keycloak.common.util.PemUtils;
@@ -50,13 +50,13 @@ public class ImportedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactory
             .build();
 
     @Override
-    public KeyProvider create(NamespaceEntity namespace, ComponentModel model) {
-        return new ImportedRsaKeyProvider(namespace, model);
+    public KeyProvider create(ProjectEntity project, ComponentModel model) {
+        return new ImportedRsaKeyProvider(project, model);
     }
 
     @Override
-    public void validateConfiguration(NamespaceEntity namespace, ComponentModel model) throws ComponentValidationException {
-        super.validateConfiguration(namespace, model);
+    public void validateConfiguration(ProjectEntity project, ComponentModel model) throws ComponentValidationException {
+        super.validateConfiguration(project, model);
 
         ConfigurationValidationHelper.check(model)
                 .checkSingle(Attributes.PRIVATE_KEY_PROPERTY, true)
@@ -88,7 +88,7 @@ public class ImportedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactory
             }
         } else {
             try {
-                Certificate certificate = CertificateUtils.generateV1SelfSignedCertificate(keyPair, namespace.name);
+                Certificate certificate = CertificateUtils.generateV1SelfSignedCertificate(keyPair, project.name);
                 model.put(Attributes.CERTIFICATE_KEY, PemUtils.encodeCertificate(certificate));
             } catch (Throwable t) {
                 throw new ComponentValidationException("Failed to generate self-signed certificate");

@@ -18,15 +18,15 @@ package io.github.project.openubl.ublhub.keys;
 
 import io.github.project.openubl.ublhub.keys.component.ComponentFactory;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.smallrye.mutiny.Uni;
 import org.keycloak.crypto.KeyUse;
 
 public interface KeyProviderFactory<T extends KeyProvider> extends ComponentFactory<T, KeyProvider> {
 
-    T create(NamespaceEntity namespace, ComponentModel model);
+    T create(ProjectEntity project, ComponentModel model);
 
-    default Uni<Boolean> createFallbackKeys(NamespaceEntity namespace, KeyUse keyUse, String algorithm) {
+    default Uni<Boolean> createFallbackKeys(ProjectEntity namespace, KeyUse keyUse, String algorithm) {
         return Uni.createFrom().item(false);
     }
 }

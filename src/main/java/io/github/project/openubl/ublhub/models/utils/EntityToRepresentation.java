@@ -16,14 +16,17 @@
  */
 package io.github.project.openubl.ublhub.models.utils;
 
-import io.github.project.openubl.ublhub.idm.*;
+import io.github.project.openubl.ublhub.dto.CompanyRepresentation;
+import io.github.project.openubl.ublhub.dto.DocumentRepresentation;
+import io.github.project.openubl.ublhub.dto.JobErrorRepresentation;
+import io.github.project.openubl.ublhub.dto.PageRepresentation;
+import io.github.project.openubl.ublhub.dto.SunatStatusRepresentation;
+import io.github.project.openubl.ublhub.dto.XMLFileContentRepresentation;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.component.utils.ComponentUtil;
 import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
 import io.github.project.openubl.ublhub.keys.utils.StripSecretsUtils;
 import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
-import io.github.project.openubl.ublhub.models.jpa.entities.SunatEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.representations.idm.ComponentRepresentation;
@@ -40,24 +43,6 @@ public class EntityToRepresentation {
         // Just static methods
     }
 
-    public static NamespaceRepresentation toRepresentation(NamespaceEntity entity) {
-        NamespaceRepresentation rep = new NamespaceRepresentation();
-
-        rep.setId(entity.id);
-        rep.setName(entity.name);
-        rep.setDescription(entity.description);
-
-        // URLs
-        SunatUrlsRepresentation sunatUrlsRep = toRepresentationUrls(entity.sunat);
-        rep.setWebServices(sunatUrlsRep);
-
-        // Credentials
-        SunatCredentialsRepresentation credentialsRep = toRepresentationCredentials(entity.sunat);
-        rep.setCredentials(credentialsRep);
-
-        return rep;
-    }
-
     public static CompanyRepresentation toRepresentation(CompanyEntity entity) {
         CompanyRepresentation rep = new CompanyRepresentation();
 
@@ -68,31 +53,15 @@ public class EntityToRepresentation {
 
         if (entity.sunat != null) {
             // URLs
-            SunatUrlsRepresentation sunatUrlsRep = toRepresentationUrls(entity.sunat);
-            rep.setWebServices(sunatUrlsRep);
+//            SunatWebServicesDto sunatUrlsRep = toRepresentationUrls(entity.sunat);
+//            rep.setWebServices(sunatUrlsRep);
 
             // Credentials
-            SunatCredentialsRepresentation credentialsRep = toRepresentationCredentials(entity.sunat);
-            rep.setCredentials(credentialsRep);
+//            SunatCredentials credentialsRep = toRepresentationCredentials(entity.sunat);
+//            rep.setCredentials(credentialsRep);
         }
 
         return rep;
-    }
-
-    private static SunatUrlsRepresentation toRepresentationUrls(SunatEntity entity) {
-        SunatUrlsRepresentation sunatUrlsRep = new SunatUrlsRepresentation();
-
-        sunatUrlsRep.setFactura(entity.sunatUrlFactura);
-        sunatUrlsRep.setGuia(entity.sunatUrlGuiaRemision);
-        sunatUrlsRep.setRetenciones(entity.sunatUrlPercepcionRetencion);
-
-        return sunatUrlsRep;
-    }
-
-    private static SunatCredentialsRepresentation toRepresentationCredentials(SunatEntity entity) {
-        SunatCredentialsRepresentation credentialsRep = new SunatCredentialsRepresentation();
-        credentialsRep.setUsername(entity.sunatUsername);
-        return credentialsRep;
     }
 
     public static DocumentRepresentation toRepresentation(UBLDocumentEntity entity) {

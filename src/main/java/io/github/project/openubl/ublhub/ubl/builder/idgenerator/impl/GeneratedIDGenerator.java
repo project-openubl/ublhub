@@ -18,7 +18,7 @@ package io.github.project.openubl.ublhub.ubl.builder.idgenerator.impl;
 
 import io.github.project.openubl.ublhub.models.jpa.GeneratedIDRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.GeneratedIDEntity;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.ID;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGenerator;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorProvider;
@@ -79,13 +79,13 @@ public class GeneratedIDGenerator implements IDGenerator {
         }
     }
 
-    private Uni<GeneratedIDEntity> generateNextID(NamespaceEntity namespace, String ruc, String documentType) {
+    private Uni<GeneratedIDEntity> generateNextID(ProjectEntity namespace, String ruc, String documentType) {
         return generatedIDRepository.getCurrentID(namespace, ruc, documentType)
                 .onItem().ifNull().continueWith(() -> {
                     GeneratedIDEntity entity = new GeneratedIDEntity();
 
                     entity.id = UUID.randomUUID().toString();
-                    entity.namespace = namespace;
+                    entity.project = namespace;
                     entity.ruc = ruc;
                     entity.documentType = documentType;
                     entity.serie = 1;
@@ -105,13 +105,13 @@ public class GeneratedIDGenerator implements IDGenerator {
                 });
     }
 
-    private Uni<GeneratedIDEntity> generateNextIDVoidedAndSummaryDocument(NamespaceEntity namespace, String ruc, String documentType) {
-        return generatedIDRepository.getCurrentID(namespace, ruc, documentType)
+    private Uni<GeneratedIDEntity> generateNextIDVoidedAndSummaryDocument(ProjectEntity project, String ruc, String documentType) {
+        return generatedIDRepository.getCurrentID(project, ruc, documentType)
                 .onItem().ifNull().continueWith(() -> {
                     GeneratedIDEntity entity = new GeneratedIDEntity();
 
                     entity.id = UUID.randomUUID().toString();
-                    entity.namespace = namespace;
+                    entity.project = project;
                     entity.ruc = ruc;
                     entity.documentType = documentType;
                     entity.serie = Integer.parseInt(LocalDateTime
@@ -137,7 +137,7 @@ public class GeneratedIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<ID> generateInvoiceID(NamespaceEntity namespace, String ruc, boolean isFactura) {
+    public Uni<ID> generateInvoiceID(ProjectEntity project, String ruc, boolean isFactura) {
         DocumentType documentType;
         if (isFactura) {
             documentType = DocumentType.INVOICE_FACTURA_TYPE;
@@ -145,7 +145,7 @@ public class GeneratedIDGenerator implements IDGenerator {
             documentType = DocumentType.INVOICE_BOLETA_TYPE;
         }
 
-        return generateNextID(namespace, ruc, documentType.name)
+        return generateNextID(project, ruc, documentType.name)
                 .map(generatedIDEntity -> {
                     String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 3, "0");
                     int numero = generatedIDEntity.numero;
@@ -154,7 +154,7 @@ public class GeneratedIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<ID> generateCreditNoteID(NamespaceEntity namespace, String ruc, boolean isFactura) {
+    public Uni<ID> generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura) {
         DocumentType documentType;
         if (isFactura) {
             documentType = DocumentType.CREDIT_NOTE_FOR_FACTURA_TYPE;
@@ -162,7 +162,7 @@ public class GeneratedIDGenerator implements IDGenerator {
             documentType = DocumentType.CREDIT_NOTE_FOR_BOLETA_TYPE;
         }
 
-        return generateNextID(namespace, ruc, documentType.name)
+        return generateNextID(project, ruc, documentType.name)
                 .map(generatedIDEntity -> {
                     String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 2, "0");
                     int numero = generatedIDEntity.numero;
@@ -171,7 +171,7 @@ public class GeneratedIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<ID> generateDebitNoteID(NamespaceEntity namespace, String ruc, boolean isFactura) {
+    public Uni<ID> generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura) {
         DocumentType documentType;
         if (isFactura) {
             documentType = DocumentType.DEBIT_NOTE_FOR_FACTURA_TYPE;
@@ -179,7 +179,7 @@ public class GeneratedIDGenerator implements IDGenerator {
             documentType = DocumentType.DEBIT_NOTE_FOR_BOLETA_TYPE;
         }
 
-        return generateNextID(namespace, ruc, documentType.name)
+        return generateNextID(project, ruc, documentType.name)
                 .map(generatedIDEntity -> {
                     String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 2, "0");
                     int numero = generatedIDEntity.numero;
@@ -188,7 +188,7 @@ public class GeneratedIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<ID> generateVoidedDocumentID(NamespaceEntity namespace, String ruc, boolean isPercepcionRetencionOrGuia) {
+    public Uni<ID> generateVoidedDocumentID(ProjectEntity project, String ruc, boolean isPercepcionRetencionOrGuia) {
         DocumentType documentType;
         if (isPercepcionRetencionOrGuia) {
             documentType = DocumentType.VOIDED_DOCUMENT_PERCEPCION_RETENCION_GUIA_TYPE;
@@ -196,7 +196,7 @@ public class GeneratedIDGenerator implements IDGenerator {
             documentType = DocumentType.VOIDED_GENERIC_TYPE;
         }
 
-        return generateNextIDVoidedAndSummaryDocument(namespace, ruc, documentType.name)
+        return generateNextIDVoidedAndSummaryDocument(project, ruc, documentType.name)
                 .map(generatedIDEntity -> {
                     String serie = documentType.prefix + "-" + generatedIDEntity.serie;
                     int numero = generatedIDEntity.numero;
@@ -205,10 +205,10 @@ public class GeneratedIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<ID> generateSummaryDocumentID(NamespaceEntity namespace, String ruc) {
+    public Uni<ID> generateSummaryDocumentID(ProjectEntity project, String ruc) {
         DocumentType documentType = DocumentType.SUMMARY_DOCUMENT_TYPE;
 
-        return generateNextIDVoidedAndSummaryDocument(namespace, ruc, documentType.name)
+        return generateNextIDVoidedAndSummaryDocument(project, ruc, documentType.name)
                 .map(generatedIDEntity -> {
                     String serie = documentType.prefix + "-" + generatedIDEntity.serie;
                     int numero = generatedIDEntity.numero;

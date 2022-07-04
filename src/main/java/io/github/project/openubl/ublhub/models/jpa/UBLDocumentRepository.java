@@ -19,7 +19,7 @@ package io.github.project.openubl.ublhub.models.jpa;
 import io.github.project.openubl.ublhub.models.DocumentFilterModel;
 import io.github.project.openubl.ublhub.models.PageBean;
 import io.github.project.openubl.ublhub.models.SortBean;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
@@ -36,24 +36,24 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
 
     public static final String[] SORT_BY_FIELDS = {"created"};
 
-    public Uni<UBLDocumentEntity> findById(NamespaceEntity namespace, String id) {
-        return findById(namespace.id, id);
+    public Uni<UBLDocumentEntity> findById(ProjectEntity project, String id) {
+        return findById(project.id, id);
     }
 
-    public Uni<UBLDocumentEntity> findById(String namespaceId, String id) {
-        Parameters params = Parameters.with("namespaceId", namespaceId).and("id", id);
+    public Uni<UBLDocumentEntity> findById(String projectId, String id) {
+        Parameters params = Parameters.with("projectId", projectId).and("id", id);
         return UBLDocumentEntity
-                .find("From UBLDocumentEntity as d where d.namespace.id = :namespaceId and d.id = :id", params)
+                .find("From UBLDocumentEntity as d where d.project.id = :projectId and d.id = :id", params)
                 .firstResult();
     }
 
-    public UniAndGroup2<List<UBLDocumentEntity>, Long> list(NamespaceEntity namespace, DocumentFilterModel filters, PageBean pageBean, List<SortBean> sortBy) {
-        return list(namespace, null, filters, pageBean, sortBy);
+    public UniAndGroup2<List<UBLDocumentEntity>, Long> list(ProjectEntity project, DocumentFilterModel filters, PageBean pageBean, List<SortBean> sortBy) {
+        return list(project, null, filters, pageBean, sortBy);
     }
 
-    public UniAndGroup2<List<UBLDocumentEntity>, Long> list(NamespaceEntity namespace, String filterText, DocumentFilterModel filters, PageBean pageBean, List<SortBean> sortBy) {
-        StringBuilder queryBuilder = new StringBuilder("select distinct d from UBLDocumentEntity d left join d.xmlFileContent x where d.namespace.id = :namespaceId");
-        Parameters params = Parameters.with("namespaceId", namespace.id);
+    public UniAndGroup2<List<UBLDocumentEntity>, Long> list(ProjectEntity project, String filterText, DocumentFilterModel filters, PageBean pageBean, List<SortBean> sortBy) {
+        StringBuilder queryBuilder = new StringBuilder("select distinct d from UBLDocumentEntity d left join d.xmlFileContent x where d.project.id = :projectId");
+        Parameters params = Parameters.with("projectId", project.id);
 
         if (filterText != null && !filterText.trim().isEmpty()) {
             queryBuilder.append(" and lower(x.serieNumero) like :filterText");

@@ -35,8 +35,8 @@ public class ComponentEntity extends PanacheEntityBase {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(foreignKey = @ForeignKey, name = "namespace_id")
-    public NamespaceEntity namespace;
+    @JoinColumn(foreignKey = @ForeignKey, name = "project_id")
+    public ProjectEntity project;
 
     @NotNull
     @Size(max = 255)

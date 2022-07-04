@@ -16,15 +16,10 @@
  */
 package io.github.project.openubl.ublhub.ubl.builder.xmlgenerator;
 
-import io.github.project.openubl.ublhub.idm.input.InputTemplateRepresentation;
-import io.github.project.openubl.ublhub.idm.input.KindRepresentation;
-import io.github.project.openubl.ublhub.idm.input.SpecRepresentation;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
-import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGenerator;
+import io.github.project.openubl.ublhub.dto.input.InputTemplateRepresentation;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorManager;
-import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.JsonObject;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -35,7 +30,7 @@ public class XMLGeneratorManager {
     @Inject
     IDGeneratorManager igGeneratorManager;
 
-    public Uni<String> createXMLString(NamespaceEntity namespace, InputTemplateRepresentation inputTemplate) {
+    public Uni<String> createXMLString(ProjectEntity namespace, InputTemplateRepresentation inputTemplate) {
         return Uni.createFrom().item("");
 //        KindRepresentation kind = inputTemplate.getKind();
 //        SpecRepresentation spec = inputTemplate.getSpec();

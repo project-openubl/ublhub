@@ -17,7 +17,7 @@
 package io.github.project.openubl.ublhub.files;
 
 import com.google.common.io.Files;
-import io.github.project.openubl.ublhub.ProfileManager;
+import io.github.project.openubl.ublhub.BasicProfileManager;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
-@TestProfile(ProfileManager.class)
+@TestProfile(BasicProfileManager.class)
 public class FilesTest {
 
     @Inject

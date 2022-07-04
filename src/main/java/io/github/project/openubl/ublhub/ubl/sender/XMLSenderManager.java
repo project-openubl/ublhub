@@ -17,7 +17,7 @@
 package io.github.project.openubl.ublhub.ubl.sender;
 
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
-import io.github.project.openubl.ublhub.models.jpa.NamespaceRepository;
+import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ConnectToSUNATException;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ReadXMLFileContentException;
 import io.github.project.openubl.xmlsenderws.webservices.exceptions.InvalidXMLFileException;
@@ -48,7 +48,7 @@ public class XMLSenderManager {
     CompanyRepository companyRepository;
 
     @Inject
-    NamespaceRepository namespaceRepository;
+    ProjectRepository projectRepository;
 
     public Uni<XmlContentModel> getXMLContent(byte[] file) {
         return Uni.createFrom().emitter(uniEmitter -> {
@@ -75,7 +75,7 @@ public class XMLSenderManager {
     public Uni<XMLSenderConfig> getXSenderConfig(String namespaceId, String ruc) {
         return companyRepository.findByRuc(namespaceId, ruc)
                 .onItem().ifNotNull().transform(companyEntity -> companyEntity.sunat)
-                .onItem().ifNull().switchTo(() -> namespaceRepository
+                .onItem().ifNull().switchTo(() -> projectRepository
                         .findById(namespaceId)
                         .map(namespaceEntity -> namespaceEntity.sunat)
                 )

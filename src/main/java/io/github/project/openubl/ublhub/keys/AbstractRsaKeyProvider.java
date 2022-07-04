@@ -17,7 +17,7 @@
 package io.github.project.openubl.ublhub.keys;
 
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import org.keycloak.common.util.KeyUtils;
 import org.keycloak.crypto.*;
 
@@ -36,7 +36,7 @@ public abstract class AbstractRsaKeyProvider implements KeyProvider {
 
     private final String algorithm;
 
-    public AbstractRsaKeyProvider(NamespaceEntity namespace, ComponentModel model) {
+    public AbstractRsaKeyProvider(ProjectEntity namespace, ComponentModel model) {
         this.model = model;
         this.status = KeyStatus.from(model.get(Attributes.ACTIVE_KEY, true), model.get(Attributes.ENABLED_KEY, true));
         this.algorithm = model.get(Attributes.ALGORITHM_KEY, Algorithm.RS256);
@@ -49,7 +49,7 @@ public abstract class AbstractRsaKeyProvider implements KeyProvider {
         }
     }
 
-    protected abstract KeyWrapper loadKey(NamespaceEntity namespace, ComponentModel model);
+    protected abstract KeyWrapper loadKey(ProjectEntity namespace, ComponentModel model);
 
     @Override
     public List<KeyWrapper> getKeys() {

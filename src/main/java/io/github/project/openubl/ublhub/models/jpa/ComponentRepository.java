@@ -20,7 +20,7 @@ import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.component.utils.ComponentUtil;
 import io.github.project.openubl.ublhub.models.jpa.entities.ComponentConfigEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ComponentEntity;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 import io.smallrye.mutiny.Uni;
@@ -38,15 +38,15 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
     @Inject
     ComponentUtil componentUtil;
 
-    public Uni<ComponentModel> addComponentModel(NamespaceEntity namespace, ComponentModel model) {
-        return importComponentModel(namespace, model)
-                .invoke(componentModel -> componentUtil.notifyCreated(namespace, model));
+    public Uni<ComponentModel> addComponentModel(ProjectEntity project, ComponentModel model) {
+        return importComponentModel(project, model)
+                .invoke(componentModel -> componentUtil.notifyCreated(project, model));
     }
 
-    public Uni<ComponentModel> importComponentModel(NamespaceEntity namespace, ComponentModel model) {
+    public Uni<ComponentModel> importComponentModel(ProjectEntity project, ComponentModel model) {
         return Uni.createFrom().item(() -> componentUtil.getComponentFactory(model))
                 .onItem().ifNull().failWith(() -> new IllegalArgumentException("Invalid component type"))
-                .onItem().ifNotNull().invoke(componentFactory -> componentFactory.validateConfiguration(namespace, model))
+                .onItem().ifNotNull().invoke(componentFactory -> componentFactory.validateConfiguration(project, model))
                 .chain(componentFactory -> {
                     ComponentEntity c = new ComponentEntity();
                     if (model.getId() == null) {
@@ -57,13 +57,13 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                     c.name = model.getName();
                     c.parentId = model.getParentId();
                     if (model.getParentId() == null) {
-                        c.parentId = namespace.id;
-                        model.setParentId(namespace.id);
+                        c.parentId = project.id;
+                        model.setParentId(project.id);
                     }
                     c.providerType = model.getProviderType();
                     c.providerId = model.getProviderId();
                     c.subType = model.getSubType();
-                    c.namespace = namespace;
+                    c.project = project;
 
                     return c.<ComponentEntity>persist();
                 })
@@ -92,11 +92,11 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
         }
     }
 
-    public Uni<Void> updateComponent(NamespaceEntity namespace, ComponentModel component) {
+    public Uni<Void> updateComponent(ProjectEntity project, ComponentModel component) {
         return Uni.createFrom()
                 .<Void>emitter(uniEmitter -> {
                     try {
-                        componentUtil.getComponentFactory(component).validateConfiguration(namespace, component);
+                        componentUtil.getComponentFactory(component).validateConfiguration(project, component);
                         uniEmitter.complete(null);
                     } catch (Throwable e) {
                         uniEmitter.fail(e);
@@ -112,7 +112,7 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                     setConfig(component, c);
                     return c.<ComponentEntity>persist();
                 })
-                .invoke(c -> componentUtil.notifyUpdated(namespace, component))
+                .invoke(c -> componentUtil.notifyUpdated(project, component))
                 .chain(() -> Uni.createFrom().voidItem());
     }
 
@@ -125,10 +125,10 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
         return ComponentEntity.delete("parentId = :parentId", Parameters.with("parentId", parentId));
     }
 
-    public Uni<List<ComponentModel>> getComponents(NamespaceEntity namespace) {
+    public Uni<List<ComponentModel>> getComponents(ProjectEntity project) {
         return ComponentEntity
-                .find("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs WHERE c.namespace.id = :namespaceId",
-                        Parameters.with("namespaceId", namespace.id)
+                .find("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs WHERE c.project.id = :projectId",
+                        Parameters.with("projectId", project.id)
                 )
                 .<ComponentEntity>list()
                 .map(entities -> entities.stream()
@@ -149,10 +149,10 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                 );
     }
 
-    public Uni<List<ComponentModel>> getComponents(NamespaceEntity namespace, String parentId) {
+    public Uni<List<ComponentModel>> getComponents(ProjectEntity project, String parentId) {
         return ComponentEntity
-                .find("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs WHERE c.namespace.id = :namespaceId and c.parentId = :parentId",
-                        Parameters.with("namespaceId", namespace.id).and("parentId", parentId)
+                .find("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs WHERE c.project.id = :projectId and c.parentId = :parentId",
+                        Parameters.with("projectId", project.id).and("parentId", parentId)
                 ).<ComponentEntity>list()
                 .map(entities -> entities.stream()
                         .map(this::entityToModel)
@@ -160,10 +160,10 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                 );
     }
 
-    public Uni<ComponentModel> getComponent(NamespaceEntity namespace, String id) {
+    public Uni<ComponentModel> getComponent(ProjectEntity project, String id) {
         return ComponentEntity
-                .<ComponentEntity>find("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs WHERE c.namespace.id = :namespaceId and c.id = :id",
-                        Parameters.with("namespaceId", namespace.id).and("id", id)
+                .<ComponentEntity>find("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs WHERE c.project.id = :projectId and c.id = :id",
+                        Parameters.with("projectId", project.id).and("id", id)
                 )
                 .singleResult()
                 .map(entity -> entity != null ? entityToModel(entity) : null);

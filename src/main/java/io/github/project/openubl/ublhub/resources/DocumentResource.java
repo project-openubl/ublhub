@@ -38,9 +38,9 @@ import io.github.project.openubl.ublhub.keys.KeyManager;
 import io.github.project.openubl.ublhub.models.DocumentFilterModel;
 import io.github.project.openubl.ublhub.models.PageBean;
 import io.github.project.openubl.ublhub.models.SortBean;
-import io.github.project.openubl.ublhub.models.jpa.NamespaceRepository;
+import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.UBLDocumentRepository;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
@@ -50,11 +50,8 @@ import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorMan
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniAndGroup2;
-import io.vertx.core.json.JsonObject;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.MultipartForm;
-import org.keycloak.crypto.Algorithm;
-import org.keycloak.crypto.KeyUse;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -62,8 +59,6 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.List;
 import java.util.UUID;
 
@@ -82,7 +77,7 @@ public class DocumentResource {
     SchedulerManager schedulerManager;
 
     @Inject
-    NamespaceRepository namespaceRepository;
+    ProjectRepository namespaceRepository;
 
     @Inject
     UBLDocumentRepository documentRepository;
@@ -96,14 +91,14 @@ public class DocumentResource {
     @Inject
     JSONValidatorManager jsonManager;
 
-    public Uni<UBLDocumentEntity> createAndScheduleSend(NamespaceEntity namespaceEntity, String fileSavedId) {
+    public Uni<UBLDocumentEntity> createAndScheduleSend(ProjectEntity projectEntity, String fileSavedId) {
         // Wait for file to be saved
         return Uni.createFrom().item(fileSavedId)
                 .chain(xmlFileId -> {
                     UBLDocumentEntity documentEntity = new UBLDocumentEntity();
                     documentEntity.id = UUID.randomUUID().toString();
                     documentEntity.xmlFileId = xmlFileId;
-                    documentEntity.namespace = namespaceEntity;
+                    documentEntity.project = projectEntity;
                     return documentEntity.<UBLDocumentEntity>persist();
                 })
 

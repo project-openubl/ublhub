@@ -19,7 +19,7 @@ package io.github.project.openubl.ublhub.keys.component;
 import io.github.project.openubl.ublhub.keys.provider.ConfiguredProvider;
 import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
 import io.github.project.openubl.ublhub.keys.provider.ProviderFactory;
-import io.github.project.openubl.ublhub.models.jpa.entities.NamespaceEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,24 +27,24 @@ import java.util.Map;
 
 public interface ComponentFactory<CreatedType, ProviderType> extends ProviderFactory<ProviderType>, ConfiguredProvider {
 
-    CreatedType create(NamespaceEntity namespace, ComponentModel model);
+    CreatedType create(ProjectEntity project, ComponentModel model);
 
     @Override
     default ProviderType create() {
         return null;
     }
 
-    default void validateConfiguration(NamespaceEntity namespace, ComponentModel model) throws ComponentValidationException {
+    default void validateConfiguration(ProjectEntity project, ComponentModel model) throws ComponentValidationException {
     }
 
-    default void onCreate(NamespaceEntity namespace, ComponentModel model) {
+    default void onCreate(ProjectEntity project, ComponentModel model) {
     }
 
 
-    default void onUpdate(NamespaceEntity namespace, ComponentModel model) {
+    default void onUpdate(ProjectEntity project, ComponentModel model) {
     }
 
-    default void preRemove(NamespaceEntity namespace, ComponentModel model) {
+    default void preRemove(ProjectEntity project, ComponentModel model) {
     }
 
     /**

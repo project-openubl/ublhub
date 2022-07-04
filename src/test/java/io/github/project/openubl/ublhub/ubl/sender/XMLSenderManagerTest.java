@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.ubl.sender;
 
+import io.github.project.openubl.ublhub.BasicProfileManager;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ReadXMLFileContentException;
 import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
 import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
@@ -38,7 +39,7 @@ import java.nio.file.Paths;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
-@TestProfile(ProfileManager.class)
+@TestProfile(BasicProfileManager.class)
 public class XMLSenderManagerTest {
 
     @Inject
