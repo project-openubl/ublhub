@@ -17,16 +17,35 @@
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Nationalized;
 
-import javax.persistence.*;
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "component_config")
 public class ComponentConfigEntity extends PanacheEntityBase {
 
+    @EqualsAndHashCode.Include
     @Id
     @Column(name = "id", length = 36)
     @Access(AccessType.PROPERTY)
@@ -45,20 +64,5 @@ public class ComponentConfigEntity extends PanacheEntityBase {
     @Size(max = 4000)
     @Column(name = "value", length = 4000)
     public String value;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-        if (!(o instanceof ComponentConfigEntity)) return false;
-
-        ComponentConfigEntity that = (ComponentConfigEntity) o;
-        return id.equals(that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return id.hashCode();
-    }
 
 }

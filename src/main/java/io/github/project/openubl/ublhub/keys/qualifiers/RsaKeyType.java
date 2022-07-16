@@ -18,7 +18,6 @@ package io.github.project.openubl.ublhub.keys.qualifiers;
 
 import io.github.project.openubl.ublhub.keys.GeneratedRsaKeyProviderFactory;
 import io.github.project.openubl.ublhub.keys.ImportedRsaKeyProviderFactory;
-import io.github.project.openubl.ublhub.keys.JavaKeystoreKeyProviderFactory;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -29,11 +28,6 @@ public enum RsaKeyType {
      * rsa-generated
      */
     GENERATED(GeneratedRsaKeyProviderFactory.ID),
-
-    /**
-     * java-keystore
-     */
-    JAVA_KEYSTORE(JavaKeystoreKeyProviderFactory.ID),
 
     /**
      * rsa

@@ -17,6 +17,11 @@
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -24,10 +29,16 @@ import javax.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "component")
 public class ComponentEntity extends PanacheEntityBase {
 
+    @EqualsAndHashCode.Include
     @Id
     @Column(name = "id", length = 36)
     @Access(AccessType.PROPERTY)
@@ -61,20 +72,5 @@ public class ComponentEntity extends PanacheEntityBase {
 
     @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.ALL}, orphanRemoval = true, mappedBy = "component")
     public Set<ComponentConfigEntity> componentConfigs = new HashSet<>();
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-        if (!(o instanceof ComponentEntity)) return false;
-
-        ComponentEntity that = (ComponentEntity) o;
-        return id.equals(that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return id.hashCode();
-    }
 
 }

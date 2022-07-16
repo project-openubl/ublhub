@@ -19,18 +19,17 @@ package io.github.project.openubl.ublhub.keys;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.component.ComponentValidationException;
 import io.github.project.openubl.ublhub.keys.provider.ConfigurationValidationHelper;
-import io.github.project.openubl.ublhub.keys.provider.ProviderConfigurationBuilder;
+import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 
-public abstract class AbstractRsaKeyProviderFactory implements KeyProviderFactory {
+public abstract class AbstractRsaKeyProviderFactory implements KeyProviderFactory<KeyProvider> {
 
-    public static ProviderConfigurationBuilder configurationBuilder() {
-        return ProviderConfigurationBuilder.create()
-                .property(Attributes.PRIORITY_PROPERTY)
-                .property(Attributes.ENABLED_PROPERTY)
-                .property(Attributes.ACTIVE_PROPERTY)
-                .property(Attributes.RS_ALGORITHM_PROPERTY);
-    }
+    protected static final ProviderConfigProperty[] BASE_RSA_PROPERTIES = {
+            Attributes.PRIORITY_PROPERTY,
+            Attributes.ENABLED_PROPERTY,
+            Attributes.ACTIVE_PROPERTY,
+            Attributes.RS_ALGORITHM_PROPERTY
+    };
 
     @Override
     public void validateConfiguration(ProjectEntity project, ComponentModel model) throws ComponentValidationException {

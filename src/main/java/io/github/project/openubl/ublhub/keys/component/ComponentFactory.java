@@ -37,16 +37,6 @@ public interface ComponentFactory<CreatedType, ProviderType> extends ProviderFac
     default void validateConfiguration(ProjectEntity project, ComponentModel model) throws ComponentValidationException {
     }
 
-    default void onCreate(ProjectEntity project, ComponentModel model) {
-    }
-
-
-    default void onUpdate(ProjectEntity project, ComponentModel model) {
-    }
-
-    default void preRemove(ProjectEntity project, ComponentModel model) {
-    }
-
     /**
      * These are config properties that are common across all implementation of this component type
      *
@@ -57,7 +47,7 @@ public interface ComponentFactory<CreatedType, ProviderType> extends ProviderFac
     }
 
     /**
-     * This is metadata about this component type.  Its really configuration information about the component type and not
+     * This is metadata about this component type.  It's really configuration information about the component type and not
      * an individual instance
      *
      * @return
@@ -65,6 +55,5 @@ public interface ComponentFactory<CreatedType, ProviderType> extends ProviderFac
     default Map<String, Object> getTypeMetadata() {
         return Collections.emptyMap();
     }
-
 
 }

@@ -19,7 +19,9 @@ package io.github.project.openubl.ublhub.keys.provider;
 import java.util.List;
 
 public interface ConfiguredProvider {
+
     String getHelpText();
 
     List<ProviderConfigProperty> getConfigProperties();
+
 }

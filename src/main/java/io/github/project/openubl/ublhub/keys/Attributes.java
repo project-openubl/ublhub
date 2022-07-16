@@ -19,40 +19,96 @@ package io.github.project.openubl.ublhub.keys;
 import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
 import org.keycloak.crypto.Algorithm;
 
+import java.util.Arrays;
+
 public interface Attributes {
 
     String PRIORITY_KEY = "priority";
-    ProviderConfigProperty PRIORITY_PROPERTY = new ProviderConfigProperty(PRIORITY_KEY, "Priority", "Priority for the provider", ProviderConfigProperty.STRING_TYPE, "0");
+    ProviderConfigProperty PRIORITY_PROPERTY = ProviderConfigProperty.builder()
+            .name(PRIORITY_KEY)
+            .label("Priority")
+            .helpText("Priority for the provider")
+            .type(ProviderConfigProperty.STRING_TYPE)
+            .defaultValue("0")
+            .build();
 
     String ENABLED_KEY = "enabled";
-    ProviderConfigProperty ENABLED_PROPERTY = new ProviderConfigProperty(ENABLED_KEY, "Enabled", "Set if the keys are enabled", ProviderConfigProperty.BOOLEAN_TYPE, "true");
+    ProviderConfigProperty ENABLED_PROPERTY = ProviderConfigProperty.builder()
+            .name(ENABLED_KEY)
+            .label("Enabled")
+            .helpText("Set if the keys are enabled")
+            .type(ProviderConfigProperty.BOOLEAN_TYPE)
+            .defaultValue("true")
+            .build();
 
     String ACTIVE_KEY = "active";
-    ProviderConfigProperty ACTIVE_PROPERTY = new ProviderConfigProperty(ACTIVE_KEY, "Active", "Set if the keys can be used for signing", ProviderConfigProperty.BOOLEAN_TYPE, "true");
+    ProviderConfigProperty ACTIVE_PROPERTY = ProviderConfigProperty.builder()
+            .name(ACTIVE_KEY)
+            .label("Active")
+            .helpText("Set if the keys can be used for signing")
+            .type(ProviderConfigProperty.BOOLEAN_TYPE)
+            .defaultValue("true")
+            .build();
 
     String PRIVATE_KEY_KEY = "privateKey";
-    ProviderConfigProperty PRIVATE_KEY_PROPERTY = new ProviderConfigProperty(PRIVATE_KEY_KEY, "Private RSA Key", "Private RSA Key encoded in PEM format", ProviderConfigProperty.FILE_TYPE, null, true);
+    ProviderConfigProperty PRIVATE_KEY_PROPERTY = ProviderConfigProperty.builder()
+            .name(PRIVATE_KEY_KEY)
+            .label("Private RSA Key")
+            .helpText("Private RSA Key encoded in PEM format")
+            .type(ProviderConfigProperty.FILE_TYPE)
+            .defaultValue(null)
+            .secret(true)
+            .build();
 
     String CERTIFICATE_KEY = "certificate";
-    ProviderConfigProperty CERTIFICATE_PROPERTY = new ProviderConfigProperty(CERTIFICATE_KEY, "X509 Certificate", "X509 Certificate encoded in PEM format", ProviderConfigProperty.FILE_TYPE, null);
+    ProviderConfigProperty CERTIFICATE_PROPERTY = ProviderConfigProperty.builder()
+            .name(CERTIFICATE_KEY)
+            .label("X509 Certificate")
+            .helpText("X509 Certificate encoded in PEM format")
+            .type(ProviderConfigProperty.FILE_TYPE)
+            .defaultValue(null)
+            .build();
 
     String KEY_SIZE_KEY = "keySize";
-    ProviderConfigProperty KEY_SIZE_PROPERTY = new ProviderConfigProperty(KEY_SIZE_KEY, "Key size", "Size for the generated keys", ProviderConfigProperty.LIST_TYPE, "2048", "1024", "2048", "4096");
+    ProviderConfigProperty KEY_SIZE_PROPERTY = ProviderConfigProperty.builder()
+            .name(KEY_SIZE_KEY)
+            .label("Key size")
+            .helpText("Size for the generated keys")
+            .type(ProviderConfigProperty.LIST_TYPE)
+            .defaultValue("2048")
+            .options(Arrays.asList("1024", "2048", "4096"))
+            .build();
 
     String KID_KEY = "kid";
-
     String SECRET_KEY = "secret";
 
     String SECRET_SIZE_KEY = "secretSize";
-    ProviderConfigProperty SECRET_SIZE_PROPERTY = new ProviderConfigProperty(SECRET_SIZE_KEY, "Secret size", "Size in bytes for the generated secret", ProviderConfigProperty.LIST_TYPE, "32", "32", "64", "128", "256", "512");
+    ProviderConfigProperty SECRET_SIZE_PROPERTY = ProviderConfigProperty.builder()
+            .name(SECRET_SIZE_KEY)
+            .label("Secret size")
+            .helpText("Size in bytes for the generated secret")
+            .type(ProviderConfigProperty.LIST_TYPE)
+            .defaultValue("32")
+            .options(Arrays.asList("32", "64", "128", "256", "512"))
+            .build();
 
     String ALGORITHM_KEY = "algorithm";
 
-    ProviderConfigProperty RS_ALGORITHM_PROPERTY = new ProviderConfigProperty(ALGORITHM_KEY, "Algorithm", "Intended algorithm for the key", ProviderConfigProperty.LIST_TYPE,
-            Algorithm.RS256,
-            Algorithm.RS256, Algorithm.RS384, Algorithm.RS512, Algorithm.PS256, Algorithm.PS384, Algorithm.PS512);
+    ProviderConfigProperty RS_ALGORITHM_PROPERTY = ProviderConfigProperty.builder()
+            .name(ALGORITHM_KEY)
+            .label("Algorithm")
+            .helpText("Intended algorithm for the key")
+            .type(ProviderConfigProperty.LIST_TYPE)
+            .defaultValue(Algorithm.RS256)
+            .options(Arrays.asList(Algorithm.RS256, Algorithm.RS384, Algorithm.RS512, Algorithm.PS256, Algorithm.PS384, Algorithm.PS512))
+            .build();
 
-    ProviderConfigProperty HS_ALGORITHM_PROPERTY = new ProviderConfigProperty(ALGORITHM_KEY, "Algorithm", "Intended algorithm for the key", ProviderConfigProperty.LIST_TYPE,
-            Algorithm.HS256,
-            Algorithm.HS256, Algorithm.HS384, Algorithm.HS512);
+    ProviderConfigProperty HS_ALGORITHM_PROPERTY = ProviderConfigProperty.builder()
+            .name(ALGORITHM_KEY)
+            .label("Algorithm")
+            .helpText("Intended algorithm for the key")
+            .type(ProviderConfigProperty.LIST_TYPE)
+            .defaultValue(Algorithm.HS256)
+            .options(Arrays.asList(Algorithm.HS256, Algorithm.HS384, Algorithm.HS512))
+            .build();
 }

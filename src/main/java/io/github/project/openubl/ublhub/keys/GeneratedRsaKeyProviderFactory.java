@@ -40,7 +40,10 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 @ComponentProviderType(providerType = KeyProvider.class)
@@ -53,12 +56,38 @@ public class GeneratedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactor
 
     private static final String HELP_TEXT = "Generates RSA keys and creates a self-signed certificate";
 
-    private static final List<ProviderConfigProperty> CONFIG_PROPERTIES = configurationBuilder()
-            .property(Attributes.KEY_SIZE_PROPERTY)
-            .build();
+    private static final List<ProviderConfigProperty> CONFIG_PROPERTIES = Arrays.asList(
+            Attributes.ENABLED_PROPERTY,
+            Attributes.ACTIVE_PROPERTY,
+            Attributes.RS_ALGORITHM_PROPERTY,
+            Attributes.KEY_SIZE_PROPERTY,
+
+            Attributes.PRIORITY_PROPERTY
+    );
 
     @Inject
     ComponentRepository componentRepository;
+
+    // ConfiguredProvider
+
+    @Override
+    public String getHelpText() {
+        return HELP_TEXT;
+    }
+
+    @Override
+    public List<ProviderConfigProperty> getConfigProperties() {
+        return CONFIG_PROPERTIES;
+    }
+
+    // ProviderFactory
+
+    @Override
+    public String getId() {
+        return ID;
+    }
+
+    //
 
     @Override
     public KeyProvider create(ProjectEntity project, ComponentModel model) {
@@ -138,18 +167,4 @@ public class GeneratedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactor
         }
     }
 
-    @Override
-    public String getHelpText() {
-        return HELP_TEXT;
-    }
-
-    @Override
-    public List<ProviderConfigProperty> getConfigProperties() {
-        return CONFIG_PROPERTIES;
-    }
-
-    @Override
-    public String getId() {
-        return ID;
-    }
 }

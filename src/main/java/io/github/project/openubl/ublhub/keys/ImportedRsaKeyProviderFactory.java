@@ -33,7 +33,10 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 @ComponentProviderType(providerType = KeyProvider.class)
@@ -44,10 +47,15 @@ public class ImportedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactory
 
     private static final String HELP_TEXT = "RSA key provider that can optionally generated a self-signed certificate";
 
-    private static final List<ProviderConfigProperty> CONFIG_PROPERTIES = configurationBuilder()
-            .property(Attributes.PRIVATE_KEY_PROPERTY)
-            .property(Attributes.CERTIFICATE_PROPERTY)
-            .build();
+    private static final List<ProviderConfigProperty> CONFIG_PROPERTIES = Arrays.asList(
+            Attributes.ENABLED_PROPERTY,
+            Attributes.ACTIVE_PROPERTY,
+            Attributes.RS_ALGORITHM_PROPERTY,
+            Attributes.KEY_SIZE_PROPERTY,
+
+            Attributes.PRIVATE_KEY_PROPERTY,
+            Attributes.CERTIFICATE_PROPERTY
+    );
 
     @Override
     public KeyProvider create(ProjectEntity project, ComponentModel model) {
