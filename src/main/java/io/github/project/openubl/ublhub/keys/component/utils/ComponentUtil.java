@@ -67,12 +67,10 @@ public interface ComponentUtil {
 
     default void notifyCreated(ProjectEntity project, ComponentModel model) {
         ComponentFactory factory = getComponentFactory(model);
-        factory.onCreate(project, model);
     }
 
     default void notifyUpdated(ProjectEntity project, ComponentModel model) {
         ComponentFactory factory = getComponentFactory(model);
-        factory.onUpdate(project, model);
     }
 
 }

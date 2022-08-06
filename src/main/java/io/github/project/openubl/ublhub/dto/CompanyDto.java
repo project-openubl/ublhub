@@ -17,13 +17,21 @@
 package io.github.project.openubl.ublhub.dto;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @RegisterForReflection
-public class CompanyRepresentation {
+public class CompanyDto {
 
     private String id;
 
@@ -34,62 +42,15 @@ public class CompanyRepresentation {
     @NotNull
     private String name;
 
+    @Size(max = 250)
     private String description;
 
     @NotNull
     @Valid
-    private SunatWebServicesDto webServices;
+    private SunatWebServicesDto sunatWebServices;
 
     @NotNull
     @Valid
-    private SunatCredentialsDto credentials;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getRuc() {
-        return ruc;
-    }
-
-    public void setRuc(String ruc) {
-        this.ruc = ruc;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public SunatWebServicesDto getWebServices() {
-        return webServices;
-    }
-
-    public void setWebServices(SunatWebServicesDto webServices) {
-        this.webServices = webServices;
-    }
-
-    public SunatCredentialsDto getCredentials() {
-        return credentials;
-    }
-
-    public void setCredentials(SunatCredentialsDto credentials) {
-        this.credentials = credentials;
-    }
+    private SunatCredentialsDto sunatCredentials;
 
 }

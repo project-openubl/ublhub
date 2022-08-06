@@ -18,7 +18,6 @@ package io.github.project.openubl.ublhub.resources;
 
 import io.github.project.openubl.ublhub.AbstractBaseTest;
 import io.github.project.openubl.ublhub.BasicProfileManager;
-import io.github.project.openubl.ublhub.ProfileManager;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;

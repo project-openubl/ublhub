@@ -21,6 +21,7 @@ import java.util.List;
 
 public interface Permission {
     String admin = "admin:app";
+
     String project_read = "project:read";
     String project_write = "project:write";
 

@@ -22,7 +22,11 @@ import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.representations.idm.ComponentRepresentation;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 
 public class RepresentationToModel {
 

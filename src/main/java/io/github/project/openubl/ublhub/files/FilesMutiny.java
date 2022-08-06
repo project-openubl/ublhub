@@ -18,7 +18,6 @@ package io.github.project.openubl.ublhub.files;
 
 import io.github.project.openubl.ublhub.files.exceptions.PersistFileException;
 import io.github.project.openubl.ublhub.files.exceptions.ReadFileException;
-import io.github.project.openubl.ublhub.keys.DefaultKeyManager;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 
@@ -29,7 +28,7 @@ import java.io.File;
 @ApplicationScoped
 public class FilesMutiny {
 
-    private static final Logger LOGGER = Logger.getLogger(DefaultKeyManager.class);
+    private static final Logger LOGGER = Logger.getLogger(FilesMutiny.class);
 
     @Inject
     FilesManager filesManager;

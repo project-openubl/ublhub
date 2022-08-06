@@ -17,14 +17,23 @@
 package io.github.project.openubl.ublhub.resources;
 
 import io.github.project.openubl.ublhub.AbstractBaseTest;
-import io.github.project.openubl.ublhub.ProfileManager;
+import io.github.project.openubl.ublhub.BasicProfileManager;
+import io.github.project.openubl.ublhub.dto.CompanyDto;
+import io.github.project.openubl.ublhub.dto.SunatCredentialsDto;
+import io.github.project.openubl.ublhub.dto.SunatWebServicesDto;
+import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
+import io.restassured.http.ContentType;
+import org.junit.jupiter.api.Test;
 
-import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 
 @QuarkusTest
-@TestProfile(ProfileManager.class)
+@TestProfile(BasicProfileManager.class)
+@TestHTTPEndpoint(CompanyResource.class)
 public class CompanyResourceTest extends AbstractBaseTest {
 
     @Override
@@ -32,343 +41,302 @@ public class CompanyResourceTest extends AbstractBaseTest {
         return CompanyResourceTest.class;
     }
 
-//    @Test
-//    public void getCompany() {
-//        // Given
-//        String nsId = "1";
-//        String companyId = "11";
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/companies/" + companyId)
-//                .then()
-//                .statusCode(200)
-//                .body("id", is(notNullValue()),
-//                        "name", is("company1"),
-//                        "ruc", is("11111111111"),
-//                        "webServices.factura", is("http://urlFactura1"),
-//                        "webServices.guia", is("http://urlGuia1"),
-//                        "webServices.retenciones", is("http://urlPercepcionRetencion1")
-//                );
-//        // Then
-//    }
-//
-//    @Test
-//    public void getCompanyThatBelongsToOtherNamespace_shouldNotBeAllowed() {
-//        // Given
-//        String nsOwnerId = "1";
-//        String nsToTestId = "2";
-//
-//        String companyId = "11";
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsOwnerId + "/companies/" + companyId)
-//                .then()
-//                .statusCode(200);
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsToTestId + "/companies/" + companyId)
-//                .then()
-//                .statusCode(404);
-//        // Then
-//    }
-//
-//    @Test
-//    public void createCompany() {
-//        // Given
-//        String nsId = "1";
-//
-//        CompanyRepresentation company = CompanyRepresentationBuilder.aCompanyRepresentation()
-//                .withName("My company")
-//                .withRuc("12345678910")
-//                .withWebServices(SunatWebServicesDto.Builder.aSunatUrlsRepresentation()
-//                        .withFactura("http://url1.com")
-//                        .withGuia("http://url2.com")
-//                        .withRetenciones("http://url3.com")
-//                        .build()
-//                )
-//                .withCredentials(SunatCredentials.Builder.aSunatCredentialsRepresentation()
-//                        .withUsername("myUsername")
-//                        .withPassword("myPassword")
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        CompanyRepresentation response = given()
-//                .contentType(ContentType.JSON)
-//                .body(company)
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/companies")
-//                .then()
-//                .statusCode(200)
-//                .body("id", is(notNullValue()),
-//                        "name", is(company.getName()),
-//                        "webServices.factura", is(company.getWebServices().getFactura()),
-//                        "webServices.guia", is(company.getWebServices().getGuia()),
-//                        "webServices.retenciones", is(company.getWebServices().getRetencion()),
-//                        "credentials.username", is(company.getCredentials().getUsername()),
-//                        "credentials.password", nullValue()
-//                ).extract().body().as(CompanyRepresentation.class);
-//
-//        // Then
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/companies/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("id", is(response.getId()),
-//                        "name", is(company.getName()),
-//                        "webServices.factura", is(company.getWebServices().getFactura()),
-//                        "webServices.guia", is(company.getWebServices().getGuia()),
-//                        "webServices.retenciones", is(company.getWebServices().getRetencion()),
-//                        "credentials.username", is(company.getCredentials().getUsername()),
-//                        "credentials.password", nullValue()
-//                );
-//    }
-//
-//    @Test
-//    public void create2CompaniesWithSameRuc_shouldNotBeAllowed() {
-//        // Given
-//        String nsId = "1";
-//
-//        CompanyRepresentation company = CompanyRepresentationBuilder.aCompanyRepresentation()
-//                .withName("My company")
-//                .withRuc("11111111111")
-//                .withWebServices(SunatWebServicesDto.Builder.aSunatUrlsRepresentation()
-//                        .withFactura("http://url1.com")
-//                        .withGuia("http://url2.com")
-//                        .withRetenciones("http://url3.com")
-//                        .build()
-//                )
-//                .withCredentials(SunatCredentials.Builder.aSunatCredentialsRepresentation()
-//                        .withUsername("myUsername")
-//                        .withPassword("myPassword")
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .body(company)
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/companies")
-//                .then()
-//                .statusCode(409);
-//        // Then
-//    }
-//
-//    @Test
-//    public void updateCompany() {
-//        // Given
-//        String nsId = "1";
-//        String companyId = "11";
-//
-//        CompanyRepresentation companyRepresentation = CompanyRepresentationBuilder.aCompanyRepresentation()
-//                .withRuc("99999999999")
-//                .withName("new name")
-//                .withDescription("new description")
-//                .withWebServices(SunatWebServicesDto.Builder.aSunatUrlsRepresentation()
-//                        .withFactura("http://newUrl1.com")
-//                        .withRetenciones("http://newUrl2.com")
-//                        .withGuia("http://newUrl3.com")
-//                        .build()
-//                )
-//                .withCredentials(SunatCredentials.Builder.aSunatCredentialsRepresentation()
-//                        .withUsername("new username")
-//                        .withPassword("new password")
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .body(companyRepresentation)
-//                .when()
-//                .put("/api/namespaces/" + nsId + "/companies/" + companyId)
-//                .then()
-//                .statusCode(200)
-//                .body("ruc", is(companyRepresentation.getRuc()),
-//                        "name", is(companyRepresentation.getName()),
-//                        "description", is(companyRepresentation.getDescription()),
-//                        "webServices.factura", is(companyRepresentation.getWebServices().getFactura()),
-//                        "webServices.retenciones", is(companyRepresentation.getWebServices().getRetencion()),
-//                        "webServices.guia", is(companyRepresentation.getWebServices().getGuia()),
-//                        "credentials.username", is(companyRepresentation.getCredentials().getUsername()),
-//                        "credentials.password", is(nullValue())
-//                );
-//
-//        // Then
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/companies/" + companyId)
-//                .then()
-//                .statusCode(200)
-//                .body("id", is(companyId),
-//                        "ruc", is(companyRepresentation.getRuc()),
-//                        "name", is(companyRepresentation.getName()),
-//                        "description", is(companyRepresentation.getDescription()),
-//                        "webServices.factura", is(companyRepresentation.getWebServices().getFactura()),
-//                        "webServices.retenciones", is(companyRepresentation.getWebServices().getRetencion()),
-//                        "webServices.guia", is(companyRepresentation.getWebServices().getGuia()),
-//                        "credentials.username", is(companyRepresentation.getCredentials().getUsername()),
-//                        "credentials.password", is(nullValue())
-//                );
-//    }
-//
-//    @Test
-//    public void updateCompanyWithIncorrectNs_shouldNotBeAllowed() {
-//        String nsId = "1";
-//        String companyId = "33";
-//
-//        // Given
-//        CompanyRepresentation companyRepresentation = CompanyRepresentationBuilder.aCompanyRepresentation()
-//                .withRuc("99999999999")
-//                .withName("new name")
-//                .withDescription("new description")
-//                .withWebServices(SunatWebServicesDto.Builder.aSunatUrlsRepresentation()
-//                        .withFactura("http://newUrl1.com")
-//                        .withRetenciones("http://newUrl2.com")
-//                        .withGuia("http://newUrl3.com")
-//                        .build()
-//                )
-//                .withCredentials(SunatCredentials.Builder.aSunatCredentialsRepresentation()
-//                        .withUsername("new username")
-//                        .withPassword("new password")
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .body(companyRepresentation)
-//                .when()
-//                .put("/api/namespaces/" + nsId + "/companies/" + companyId)
-//                .then()
-//                .statusCode(404);
-//        // Then
-//    }
-//
-//    @Test
-//    public void deleteCompany() {
-//        // Given
-//        String nsId = "1";
-//        String companyId = "11";
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .delete("/api/namespaces/" + nsId + "/companies/" + companyId)
-//                .then()
-//                .statusCode(204);
-//
-//        // Then
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/companies/" + companyId)
-//                .then()
-//                .statusCode(404);
-//    }
-//
-//    @Test
-//    public void deleteCompanyByIncorrectNs_shouldNotBeAllowed() {
-//        // Given
-//        String nsId = "1";
-//        String companyId = "33";
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .delete("/api/namespaces/" + nsId + "/companies/" + companyId)
-//                .then()
-//                .statusCode(404);
-//        // Then
-//    }
-//
-//    @Test
-//    public void searchCompanies() {
-//        // Given
-//        String nsId = "1";
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/companies")
-//                .then()
-//                .statusCode(200)
-//                .body("meta.count", is(2),
-//                        "items.size()", is(2),
-//                        "items[0].name", is("company2"),
-//                        "items[1].name", is("company1")
-//                );
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/companies?sort_by=created:asc")
-//                .then()
-//                .statusCode(200)
-//                .body("meta.count", is(2),
-//                        "items.size()", is(2),
-//                        "items[0].name", is("company1"),
-//                        "items[1].name", is("company2")
-//                );
-//        // Then
-//    }
-//
-//    @Test
-//    public void searchCompanies_filterTextByName() {
-//        // Given
-//        String nsId = "1";
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/companies?filterText=company1")
-//                .then()
-//                .statusCode(200)
-//                .body("meta.count", is(1),
-//                        "items.size()", is(1),
-//                        "items[0].name", is("company1")
-//                );
-//        // Then
-//    }
-//
-//    @Test
-//    public void searchCompanies_filterTextByRuc() {
-//        // Given
-//        String nsId = "1";
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/companies?filterText=222222")
-//                .then()
-//                .statusCode(200)
-//                .body("meta.count", is(1),
-//                        "items.size()", is(1),
-//                        "items[0].name", is("company2")
-//                );
-//        // Then
-//    }
+    @Test
+    public void getCompany() {
+        // Given
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/1/companies/11")
+                .then()
+                .statusCode(200)
+                .body("id", is(notNullValue()),
+                        "name", is("company1"),
+                        "ruc", is("11111111111"),
+                        "sunatWebServices.factura", is("http://urlFactura1"),
+                        "sunatWebServices.guia", is("http://urlGuia1"),
+                        "sunatWebServices.retencion", is("http://urlPercepcionRetencion1"),
+                        "sunatCredentials.username", is("username1"),
+                        "sunatCredentials.password", nullValue()
+                );
+        // Then
+    }
+
+    @Test
+    public void getCompanyThatBelongsToOtherProject_shouldNotBeAllowed() {
+        // Given
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/1/companies/11")
+                .then()
+                .statusCode(200);
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/2/companies/11")
+                .then()
+                .statusCode(404);
+        // Then
+    }
+
+    @Test
+    public void createCompany() {
+        // Given
+        String projectId = "1";
+
+        CompanyDto companyDto = CompanyDto.builder()
+                .name("My company")
+                .ruc("12345678910")
+                .sunatWebServices(SunatWebServicesDto.builder()
+                        .factura("http://url1.com")
+                        .guia("http://url2.com")
+                        .retencion("http://url3.com")
+                        .build()
+                )
+                .sunatCredentials(SunatCredentialsDto.builder()
+                        .username("myUsername")
+                        .password("myPassword")
+                        .build()
+                )
+                .build();
+
+        // When
+        CompanyDto response = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(companyDto)
+                .when()
+                .post("/" + projectId + "/companies")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()),
+                        "name", is(companyDto.getName()),
+                        "ruc", is(companyDto.getRuc()),
+                        "sunatWebServices.factura", is(companyDto.getSunatWebServices().getFactura()),
+                        "sunatWebServices.guia", is(companyDto.getSunatWebServices().getGuia()),
+                        "sunatWebServices.retencion", is(companyDto.getSunatWebServices().getRetencion()),
+                        "sunatCredentials.username", is(companyDto.getSunatCredentials().getUsername()),
+                        "sunatCredentials.password", nullValue()
+                ).extract().body().as(CompanyDto.class);
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/companies/" + response.getId())
+                .then()
+                .statusCode(200)
+                .body("id", is(response.getId()),
+                        "name", is(companyDto.getName()),
+                        "sunatWebServices.factura", is(companyDto.getSunatWebServices().getFactura()),
+                        "sunatWebServices.guia", is(companyDto.getSunatWebServices().getGuia()),
+                        "sunatWebServices.retencion", is(companyDto.getSunatWebServices().getRetencion()),
+                        "sunatCredentials.username", is(companyDto.getSunatCredentials().getUsername()),
+                        "sunatCredentials.password", nullValue()
+                );
+    }
+
+    @Test
+    public void create2CompaniesWithSameRuc_shouldNotBeAllowed() {
+        // Given
+        String projectId = "1";
+
+        CompanyDto company = CompanyDto.builder()
+                .name("My company")
+                .ruc("11111111111")
+                .sunatWebServices(SunatWebServicesDto.builder()
+                        .factura("http://url1.com")
+                        .guia("http://url2.com")
+                        .retencion("http://url3.com")
+                        .build()
+                )
+                .sunatCredentials(SunatCredentialsDto.builder()
+                        .username("myUsername")
+                        .password("myPassword")
+                        .build()
+                )
+                .build();
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(company)
+                .when()
+                .post("/" + projectId + "/companies")
+                .then()
+                .statusCode(409);
+        // Then
+    }
+
+    @Test
+    public void updateCompany() {
+        // Given
+        String projectId = "1";
+        String companyId = "11";
+
+        CompanyDto companyDto = CompanyDto.builder()
+                .ruc("99999999999")
+                .name("new name")
+                .description("new description")
+                .sunatWebServices(SunatWebServicesDto.builder()
+                        .factura("http://newUrl1.com")
+                        .retencion("http://newUrl2.com")
+                        .guia("http://newUrl3.com")
+                        .build()
+                )
+                .sunatCredentials(SunatCredentialsDto.builder()
+                        .username("new username")
+                        .password("new password")
+                        .build()
+                )
+                .build();
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(companyDto)
+                .when()
+                .put("/" + projectId + "/companies/" + companyId)
+                .then()
+                .statusCode(200)
+                .body("ruc", is(companyDto.getRuc()),
+                        "name", is(companyDto.getName()),
+                        "description", is(companyDto.getDescription()),
+                        "sunatWebServices.factura", is(companyDto.getSunatWebServices().getFactura()),
+                        "sunatWebServices.retencion", is(companyDto.getSunatWebServices().getRetencion()),
+                        "sunatWebServices.guia", is(companyDto.getSunatWebServices().getGuia()),
+                        "sunatCredentials.username", is(companyDto.getSunatCredentials().getUsername()),
+                        "sunatCredentials.password", is(nullValue())
+                );
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/companies/" + companyId)
+                .then()
+                .statusCode(200)
+                .body("id", is(companyId),
+                        "ruc", is(companyDto.getRuc()),
+                        "name", is(companyDto.getName()),
+                        "description", is(companyDto.getDescription()),
+                        "sunatWebServices.factura", is(companyDto.getSunatWebServices().getFactura()),
+                        "sunatWebServices.retencion", is(companyDto.getSunatWebServices().getRetencion()),
+                        "sunatWebServices.guia", is(companyDto.getSunatWebServices().getGuia()),
+                        "sunatCredentials.username", is(companyDto.getSunatCredentials().getUsername()),
+                        "sunatCredentials.password", is(nullValue())
+                );
+    }
+
+    @Test
+    public void updateCompanyWithIncorrectProject_shouldNotBeAllowed() {
+        String projectId = "1";
+        String companyId = "33";
+
+        // Given
+        CompanyDto companyRepresentation = CompanyDto.builder()
+                .ruc("99999999999")
+                .name("new name")
+                .description("new description")
+                .sunatWebServices(SunatWebServicesDto.builder()
+                        .factura("http://newUrl1.com")
+                        .retencion("http://newUrl2.com")
+                        .guia("http://newUrl3.com")
+                        .build()
+                )
+                .sunatCredentials(SunatCredentialsDto.builder()
+                        .username("new username")
+                        .password("new password")
+                        .build()
+                )
+                .build();
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(companyRepresentation)
+                .when()
+                .put("/" + projectId + "/companies/" + companyId)
+                .then()
+                .statusCode(404);
+        // Then
+    }
+
+    @Test
+    public void deleteCompany() {
+        // Given
+        String projectId = "1";
+        String companyId = "11";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .delete("/" + projectId + "/companies/" + companyId)
+                .then()
+                .statusCode(204);
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/companies/" + companyId)
+                .then()
+                .statusCode(404);
+    }
+
+    @Test
+    public void deleteCompanyByIncorrectProject_shouldNotBeAllowed() {
+        // Given
+        String projectId = "1";
+        String companyId = "33";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .delete("/" + projectId + "/companies/" + companyId)
+                .then()
+                .statusCode(404);
+        // Then
+    }
+
+    @Test
+    public void getCompanies() {
+        // Given
+        String projectId = "1";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/companies")
+                .then()
+                .statusCode(200)
+                .body("size()", is(2),
+                        "[0].name", is("company2"),
+                        "[1].name", is("company1")
+                );
+        // Then
+    }
+
+    @Test
+    public void getCompaniesFromNonExistentProject_shouldReturn404() {
+        // Given
+        String projectId = "999";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/companies")
+                .then()
+                .statusCode(404);
+        // Then
+    }
 
 }
 

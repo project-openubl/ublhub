@@ -19,7 +19,12 @@ package io.github.project.openubl.ublhub.keys.utils;
 import io.github.project.openubl.ublhub.keys.component.utils.ComponentUtil;
 import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
 import org.keycloak.common.util.MultivaluedHashMap;
-import org.keycloak.representations.idm.*;
+import org.keycloak.representations.idm.ClientRepresentation;
+import org.keycloak.representations.idm.ComponentExportRepresentation;
+import org.keycloak.representations.idm.ComponentRepresentation;
+import org.keycloak.representations.idm.IdentityProviderRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 
 import java.util.Collections;
 import java.util.Iterator;

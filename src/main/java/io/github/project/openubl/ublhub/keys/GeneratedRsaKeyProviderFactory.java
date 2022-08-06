@@ -42,8 +42,6 @@ import java.security.cert.Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @ApplicationScoped
 @ComponentProviderType(providerType = KeyProvider.class)

@@ -21,9 +21,6 @@ import io.github.project.openubl.ublhub.ProfileManager;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 
-import static io.restassured.RestAssured.given;
-import static org.awaitility.Awaitility.await;
-
 @QuarkusTest
 @TestProfile(ProfileManager.class)
 public class DocumentResourceTest extends AbstractBaseTest {

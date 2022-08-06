@@ -16,8 +16,8 @@
  */
 package io.github.project.openubl.ublhub.mapper;
 
-import io.github.project.openubl.ublhub.dto.ProjectDto;
-import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
+import io.github.project.openubl.ublhub.dto.CompanyDto;
+import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -25,14 +25,14 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "cdi", builder = @Builder(disableBuilder = true))
-public abstract class ProjectMapper {
+public abstract class CompanyMapper {
 
     @Mapping(target = "sunatWebServices.factura", source = "sunat.sunatUrlFactura")
     @Mapping(target = "sunatWebServices.guia", source = "sunat.sunatUrlGuiaRemision")
     @Mapping(target = "sunatWebServices.retencion", source = "sunat.sunatUrlPercepcionRetencion")
     @Mapping(target = "sunatCredentials.username", source = "sunat.sunatUsername")
     @Mapping(target = "sunatCredentials.password", ignore = true)
-    public abstract ProjectDto toDto(ProjectEntity entity);
+    public abstract CompanyDto toDto(CompanyEntity entity);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "sunat.sunatUrlFactura", source = "sunatWebServices.factura")
@@ -40,6 +40,7 @@ public abstract class ProjectMapper {
     @Mapping(target = "sunat.sunatUrlPercepcionRetencion", source = "sunatWebServices.retencion")
     @Mapping(target = "sunat.sunatUsername", source = "sunatCredentials.username", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "sunat.sunatPassword", source = "sunatCredentials.password", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    public abstract ProjectEntity updateEntityFromDto(ProjectDto dto, @MappingTarget ProjectEntity entity);
+    @Mapping(target = "project", source = "sunatCredentials.password", ignore = true)
+    public abstract CompanyEntity updateEntityFromDto(CompanyDto dto, @MappingTarget CompanyEntity entity);
 
 }

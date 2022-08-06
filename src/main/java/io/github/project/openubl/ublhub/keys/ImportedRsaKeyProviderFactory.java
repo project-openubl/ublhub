@@ -35,8 +35,6 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @ApplicationScoped
 @ComponentProviderType(providerType = KeyProvider.class)

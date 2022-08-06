@@ -1,10 +1,7 @@
 package io.github.project.openubl.ublhub.ubl;
 
 
-import io.smallrye.mutiny.Uni;
-
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public class XMLBuilder {

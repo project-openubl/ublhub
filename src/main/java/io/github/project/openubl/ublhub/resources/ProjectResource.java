@@ -27,7 +27,6 @@ import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.SunatEntity;
 import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
-import io.github.project.openubl.ublhub.models.utils.RepresentationToEntity;
 import io.github.project.openubl.ublhub.models.utils.RepresentationToModel;
 import io.github.project.openubl.ublhub.security.Permission;
 import io.quarkus.hibernate.reactive.panache.Panache;
@@ -54,11 +53,9 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -210,12 +207,13 @@ public class ProjectResource {
         Uni<RestResponse<Void>> restResponseUni = projectRepository.deleteById(projectId)
                 .map(result -> result ? successResponse : notFoundResponse)
                 .map(Supplier::get);
+
         return Panache.withTransaction(() -> restResponseUni);
     }
 
     @GET
     @Path("/{namespaceId}/keys")
-    public Uni<Response> getKeyMetadata(@PathParam("namespaceId") @NotNull String namespaceId) {
+    public Uni<Response> getKeys(@PathParam("namespaceId") @NotNull String namespaceId) {
         return Panache
                 .withTransaction(() -> projectRepository.findById(namespaceId)
                         .onItem().ifNotNull().transformToUni(namespace -> keyManager.getKeys(namespace)
@@ -257,47 +255,9 @@ public class ProjectResource {
         return r;
     }
 
-    @GET
-    @Path("/{namespaceId}/components")
-    public Uni<Response> getComponents(
-            @PathParam("namespaceId") @NotNull String namespaceId,
-            @QueryParam("parent") String parent,
-            @QueryParam("type") String type,
-            @QueryParam("name") String name
-    ) {
-        return Panache
-                .withTransaction(() -> projectRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespace -> {
-                            if (parent == null && type == null) {
-                                return componentRepository.getComponents(namespace);
-                            } else if (type == null) {
-                                return componentRepository.getComponents(namespace, parent);
-                            } else if (parent == null) {
-                                return componentRepository.getComponents(namespace.id, type);
-                            } else {
-                                return componentRepository.getComponents(parent, type);
-                            }
-                        })
-                        .map(components -> components.stream()
-                                .filter(component -> Objects.isNull(name) || Objects.equals(component.getName(), name))
-                                .map(component -> {
-                                    try {
-                                        return EntityToRepresentation.toRepresentation(component, false, componentUtil);
-                                    } catch (Exception e) {
-                                        LOG.error("Failed to get component list for component model" + component.getName() + "of namespace " + namespaceId);
-                                        return EntityToRepresentation.toRepresentationWithoutConfig(component);
-                                    }
-                                })
-                                .collect(Collectors.toList())
-                        )
-                        .map(components -> Response.ok(components).build())
-                )
-                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
-    }
-
     @POST
-    @Path("/{namespaceId}/components")
-    public Uni<Response> createComponent(
+    @Path("/{namespaceId}/keys")
+    public Uni<Response> createKey(
             @PathParam("namespaceId") @NotNull String namespaceId,
             ComponentRepresentation rep
     ) {
@@ -314,8 +274,8 @@ public class ProjectResource {
     }
 
     @GET
-    @Path("/{namespaceId}/components/{componentId}")
-    public Uni<Response> getComponent(
+    @Path("/{namespaceId}/keys/{componentId}")
+    public Uni<Response> getKey(
             @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("componentId") String componentId
     ) {
@@ -328,8 +288,8 @@ public class ProjectResource {
     }
 
     @PUT
-    @Path("/{namespaceId}/components/{componentId}")
-    public Uni<Response> updateComponent(
+    @Path("/{namespaceId}/keys/{componentId}")
+    public Uni<Response> updateKeys(
             @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("componentId") String componentId,
             ComponentRepresentation rep
@@ -350,8 +310,8 @@ public class ProjectResource {
     }
 
     @DELETE
-    @Path("/{namespaceId}/components/{componentId}")
-    public Uni<Response> removeComponent(
+    @Path("/{namespaceId}/keys/{componentId}")
+    public Uni<Response> deleteKey(
             @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("componentId") String componentId
     ) {
