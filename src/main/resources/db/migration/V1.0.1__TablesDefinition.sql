@@ -55,7 +55,8 @@ create table component
     provider_id   varchar(255),
     provider_type varchar(255),
     sub_type      varchar(255),
-    project_id    varchar(255) not null,
+    project_id    varchar(255) null,
+    company_id    varchar(255) null,
     primary key (id)
 );
 
@@ -151,6 +152,11 @@ alter table if exists component
     add constraint FKegknd206umu3ad5to4ekp3aja
     foreign key (project_id)
     references project;
+
+alter table if exists component
+    add constraint FKegknd206umu3ad5to4ekp3ajb
+    foreign key (company_id)
+    references company;
 
 alter table if exists component_config
     add constraint FK30o84r8uoxnh7wlbkw1a5mqje

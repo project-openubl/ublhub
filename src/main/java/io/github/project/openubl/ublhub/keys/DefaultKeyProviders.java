@@ -17,8 +17,8 @@
 package io.github.project.openubl.ublhub.keys;
 
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
+import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
-import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.smallrye.mutiny.Uni;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.crypto.KeyUse;
@@ -33,10 +33,10 @@ public class DefaultKeyProviders {
     @Inject
     ComponentRepository componentRepository;
 
-    public Uni<Void> createProviders(ProjectEntity namespace) {
-        return hasProvider(namespace, "rsa-generated").chain(hasProvider -> {
+    public Uni<Void> createProviders(ComponentOwner owner) {
+        return hasProvider(owner, "rsa-generated").chain(hasProvider -> {
             if (!hasProvider) {
-                return createRsaKeyProvider("rsa-generated", KeyUse.SIG, namespace)
+                return createRsaKeyProvider("rsa-generated", KeyUse.SIG, owner)
                         .chain(c -> Uni.createFrom().voidItem());
             } else {
                 return Uni.createFrom().voidItem();
@@ -44,10 +44,10 @@ public class DefaultKeyProviders {
         });
     }
 
-    private Uni<ComponentModel> createRsaKeyProvider(String name, KeyUse keyUse, ProjectEntity namespace) {
+    private Uni<ComponentModel> createRsaKeyProvider(String name, KeyUse keyUse, ComponentOwner owner) {
         ComponentModel generated = new ComponentModel();
         generated.setName(name);
-        generated.setParentId(namespace.id);
+        generated.setParentId(owner.getId());
         generated.setProviderId("rsa-generated");
         generated.setProviderType(KeyProvider.class.getName());
 
@@ -56,11 +56,11 @@ public class DefaultKeyProviders {
         config.putSingle("keyUse", keyUse.getSpecName());
         generated.setConfig(config);
 
-        return componentRepository.addComponentModel(namespace, generated);
+        return componentRepository.addComponentModel(owner, generated);
     }
 
-    protected Uni<Boolean> hasProvider(ProjectEntity namespace, String providerId) {
-        return componentRepository.getComponents(namespace.id, KeyProvider.class.getName())
+    protected Uni<Boolean> hasProvider(ComponentOwner owner, String providerId) {
+        return componentRepository.getComponents(owner, owner.getId(), KeyProvider.class.getName())
                 .map(componentModels -> componentModels
                         .stream()
                         .anyMatch(component -> Objects.equals(component.getProviderId(), providerId))

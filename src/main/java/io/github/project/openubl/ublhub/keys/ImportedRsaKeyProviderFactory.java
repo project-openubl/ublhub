@@ -17,13 +17,13 @@
 package io.github.project.openubl.ublhub.keys;
 
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
+import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import io.github.project.openubl.ublhub.keys.component.ComponentValidationException;
 import io.github.project.openubl.ublhub.keys.provider.ConfigurationValidationHelper;
 import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
 import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderType;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderType;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyType;
-import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import org.keycloak.common.util.CertificateUtils;
 import org.keycloak.common.util.KeyUtils;
 import org.keycloak.common.util.PemUtils;
@@ -56,13 +56,13 @@ public class ImportedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactory
     );
 
     @Override
-    public KeyProvider create(ProjectEntity project, ComponentModel model) {
-        return new ImportedRsaKeyProvider(project, model);
+    public KeyProvider create(ComponentOwner owner, ComponentModel model) {
+        return new ImportedRsaKeyProvider(owner, model);
     }
 
     @Override
-    public void validateConfiguration(ProjectEntity project, ComponentModel model) throws ComponentValidationException {
-        super.validateConfiguration(project, model);
+    public void validateConfiguration(ComponentOwner owner, ComponentModel model) throws ComponentValidationException {
+        super.validateConfiguration(owner, model);
 
         ConfigurationValidationHelper.check(model)
                 .checkSingle(Attributes.PRIVATE_KEY_PROPERTY, true)
@@ -94,7 +94,7 @@ public class ImportedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactory
             }
         } else {
             try {
-                Certificate certificate = CertificateUtils.generateV1SelfSignedCertificate(keyPair, project.name);
+                Certificate certificate = CertificateUtils.generateV1SelfSignedCertificate(keyPair, owner.getPrettyName());
                 model.put(Attributes.CERTIFICATE_KEY, PemUtils.encodeCertificate(certificate));
             } catch (Throwable t) {
                 throw new ComponentValidationException("Failed to generate self-signed certificate");

@@ -17,7 +17,7 @@
 package io.github.project.openubl.ublhub.keys;
 
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
-import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
+import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import org.keycloak.common.util.KeyUtils;
 import org.keycloak.common.util.PemUtils;
 import org.keycloak.crypto.KeyWrapper;
@@ -29,12 +29,12 @@ import java.security.cert.X509Certificate;
 
 public class ImportedRsaKeyProvider extends AbstractRsaKeyProvider {
 
-    public ImportedRsaKeyProvider(ProjectEntity namespace, ComponentModel model) {
-        super(namespace, model);
+    public ImportedRsaKeyProvider(ComponentOwner owner, ComponentModel model) {
+        super(owner, model);
     }
 
     @Override
-    public KeyWrapper loadKey(ProjectEntity namespace, ComponentModel model) {
+    public KeyWrapper loadKey(ComponentOwner owner, ComponentModel model) {
         String privateRsaKeyPem = model.getConfig().getFirst(Attributes.PRIVATE_KEY_KEY);
         String certificatePem = model.getConfig().getFirst(Attributes.CERTIFICATE_KEY);
 

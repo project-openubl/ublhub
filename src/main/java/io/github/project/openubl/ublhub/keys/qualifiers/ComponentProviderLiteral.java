@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.keys.component.utils;
+package io.github.project.openubl.ublhub.keys.qualifiers;
 
 import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderType;
 

@@ -17,10 +17,10 @@
 package io.github.project.openubl.ublhub.models.jpa;
 
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
+import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import io.github.project.openubl.ublhub.keys.component.utils.ComponentUtil;
 import io.github.project.openubl.ublhub.models.jpa.entities.ComponentConfigEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ComponentEntity;
-import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 import io.smallrye.mutiny.Uni;
@@ -32,21 +32,26 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static io.github.project.openubl.ublhub.keys.component.ComponentOwner.OwnerType.project;
+
 @ApplicationScoped
 public class ComponentRepository implements PanacheRepositoryBase<ComponentEntity, String> {
 
     @Inject
     ComponentUtil componentUtil;
 
-    public Uni<ComponentModel> addComponentModel(ProjectEntity project, ComponentModel model) {
-        return importComponentModel(project, model)
-                .invoke(componentModel -> componentUtil.notifyCreated(project, model));
+    private String getOwnerFieldName(ComponentOwner owner) {
+        return owner.getType().equals(project) ? "projectId" : "companyId";
     }
 
-    public Uni<ComponentModel> importComponentModel(ProjectEntity project, ComponentModel model) {
+    public Uni<ComponentModel> addComponentModel(ComponentOwner owner, ComponentModel model) {
+        return importComponentModel(owner, model);
+    }
+
+    public Uni<ComponentModel> importComponentModel(ComponentOwner owner, ComponentModel model) {
         return Uni.createFrom().item(() -> componentUtil.getComponentFactory(model))
                 .onItem().ifNull().failWith(() -> new IllegalArgumentException("Invalid component type"))
-                .onItem().ifNotNull().invoke(componentFactory -> componentFactory.validateConfiguration(project, model))
+                .onItem().ifNotNull().invoke(componentFactory -> componentFactory.validateConfiguration(owner, model))
                 .chain(componentFactory -> {
                     ComponentEntity c = new ComponentEntity();
                     if (model.getId() == null) {
@@ -57,13 +62,17 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                     c.name = model.getName();
                     c.parentId = model.getParentId();
                     if (model.getParentId() == null) {
-                        c.parentId = project.id;
-                        model.setParentId(project.id);
+                        c.parentId = owner.getId();
+                        model.setParentId(owner.getId());
                     }
                     c.providerType = model.getProviderType();
                     c.providerId = model.getProviderId();
                     c.subType = model.getSubType();
-                    c.project = project;
+                    if (owner.getType().equals(project)) {
+                        c.projectId = owner.getId();
+                    } else {
+                        c.companyId = owner.getId();
+                    }
 
                     return c.<ComponentEntity>persist();
                 })
@@ -92,11 +101,11 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
         }
     }
 
-    public Uni<Void> updateComponent(ProjectEntity project, ComponentModel component) {
+    public Uni<Void> updateComponent(ComponentOwner owner, ComponentModel component) {
         return Uni.createFrom()
                 .<Void>emitter(uniEmitter -> {
                     try {
-                        componentUtil.getComponentFactory(component).validateConfiguration(project, component);
+                        componentUtil.getComponentFactory(component).validateConfiguration(owner, component);
                         uniEmitter.complete(null);
                     } catch (Throwable e) {
                         uniEmitter.fail(e);
@@ -112,24 +121,28 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                     setConfig(component, c);
                     return c.<ComponentEntity>persist();
                 })
-                .invoke(c -> componentUtil.notifyUpdated(project, component))
                 .chain(() -> Uni.createFrom().voidItem());
     }
 
-    public Uni<Boolean> removeComponent(ComponentModel component) {
-        return removeComponents(component.getId())
+    public Uni<Boolean> removeComponent(ComponentOwner owner, ComponentModel component) {
+        return removeComponents(owner, component.getId())
                 .chain(() -> ComponentEntity.deleteById(component.getId()));
     }
 
-    public Uni<Long> removeComponents(String parentId) {
-        return ComponentEntity.delete("parentId = :parentId", Parameters.with("parentId", parentId));
+    public Uni<Long> removeComponents(ComponentOwner owner, String parentId) {
+        String query = new StringBuilder(getOwnerFieldName(owner)).append(" = :ownerId")
+                .append(" and parentId = :parentId")
+                .toString();
+
+        return ComponentEntity.delete(query, Parameters.with("ownerId", owner.getId()).and("parentId", parentId));
     }
 
-    public Uni<List<ComponentModel>> getComponents(ProjectEntity project) {
+    public Uni<List<ComponentModel>> getComponents(ComponentOwner owner) {
+        String query = new StringBuilder("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs")
+                .append(" WHERE c.").append(getOwnerFieldName(owner)).append(" = :ownerId")
+                .toString();
         return ComponentEntity
-                .find("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs WHERE c.project.id = :projectId",
-                        Parameters.with("projectId", project.id)
-                )
+                .find(query, Parameters.with("ownerId", owner.getId()))
                 .<ComponentEntity>list()
                 .map(entities -> entities.stream()
                         .map(this::entityToModel)
@@ -137,22 +150,13 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                 );
     }
 
-    public Uni<List<ComponentModel>> getComponents(String parentId, final String providerType) {
+    public Uni<List<ComponentModel>> getComponents(ComponentOwner owner, String parentId) {
+        String query = new StringBuilder("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs")
+                .append(" WHERE c.").append(getOwnerFieldName(owner)).append(" = :ownerId")
+                .append(" and c.parentId = :parentId")
+                .toString();
         return ComponentEntity
-                .find("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs WHERE c.parentId = :parentId AND c.providerType = :providerType",
-                        Parameters.with("parentId", parentId).and("providerType", providerType)
-                )
-                .<ComponentEntity>list()
-                .map(entities -> entities.stream()
-                        .map(this::entityToModel)
-                        .collect(Collectors.toList())
-                );
-    }
-
-    public Uni<List<ComponentModel>> getComponents(ProjectEntity project, String parentId) {
-        return ComponentEntity
-                .find("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs WHERE c.project.id = :projectId and c.parentId = :parentId",
-                        Parameters.with("projectId", project.id).and("parentId", parentId)
+                .find(query, Parameters.with("ownerId", owner.getId()).and("parentId", parentId)
                 ).<ComponentEntity>list()
                 .map(entities -> entities.stream()
                         .map(this::entityToModel)
@@ -160,11 +164,29 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                 );
     }
 
-    public Uni<ComponentModel> getComponent(ProjectEntity project, String id) {
+    public Uni<List<ComponentModel>> getComponents(ComponentOwner owner, String parentId, String providerType) {
+        String query = new StringBuilder("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs")
+                .append(" WHERE c.").append(getOwnerFieldName(owner)).append(" = :ownerId")
+                .append(" and c.parentId = :parentId")
+                .append(" and c.providerType = :providerType")
+                .toString();
+
         return ComponentEntity
-                .<ComponentEntity>find("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs WHERE c.project.id = :projectId and c.id = :id",
-                        Parameters.with("projectId", project.id).and("id", id)
-                )
+                .find(query, Parameters.with("ownerId", owner.getId()).and("parentId", parentId).and("providerType", providerType))
+                .<ComponentEntity>list()
+                .map(entities -> entities.stream()
+                        .map(this::entityToModel)
+                        .collect(Collectors.toList())
+                );
+    }
+
+    public Uni<ComponentModel> getComponent(ComponentOwner owner, String id) {
+        String query = new StringBuilder("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs")
+                .append(" WHERE c.").append(getOwnerFieldName(owner)).append(" = :ownerId")
+                .append(" and c.id = :id")
+                .toString();
+        return ComponentEntity
+                .<ComponentEntity>find(query, Parameters.with("ownerId", owner.getId()).and("id", id))
                 .singleResult()
                 .map(entity -> entity != null ? entityToModel(entity) : null);
     }

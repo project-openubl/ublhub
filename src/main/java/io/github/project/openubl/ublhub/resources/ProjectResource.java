@@ -16,10 +16,12 @@
  */
 package io.github.project.openubl.ublhub.resources;
 
+import io.github.project.openubl.ublhub.dto.CompanyDto;
 import io.github.project.openubl.ublhub.dto.ProjectDto;
 import io.github.project.openubl.ublhub.keys.DefaultKeyProviders;
 import io.github.project.openubl.ublhub.keys.KeyManager;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
+import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import io.github.project.openubl.ublhub.keys.component.utils.ComponentUtil;
 import io.github.project.openubl.ublhub.mapper.ProjectMapper;
 import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
@@ -30,6 +32,7 @@ import io.github.project.openubl.ublhub.models.utils.EntityToRepresentation;
 import io.github.project.openubl.ublhub.models.utils.RepresentationToModel;
 import io.github.project.openubl.ublhub.security.Permission;
 import io.quarkus.hibernate.reactive.panache.Panache;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -90,6 +93,13 @@ public class ProjectResource {
     @Inject
     DefaultKeyProviders defaultKeyProviders;
 
+    private ComponentOwner getOwner(String projectId) {
+        return ComponentOwner.builder()
+                .type(ComponentOwner.OwnerType.project)
+                .id(projectId)
+                .build();
+    }
+
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Create project", description = "Create a project")
     @POST
@@ -103,20 +113,17 @@ public class ProjectResource {
                 .<ProjectDto>create(Status.CONFLICT)
                 .build();
 
-        Uni<ProjectEntity> createEntityUni = ProjectEntity.builder()
-                .id(UUID.randomUUID().toString())
-                .name(projectDto.getName())
-                .description(projectDto.getDescription())
-                .sunat(SunatEntity.builder()
-                        .sunatUsername(projectDto.getSunatCredentials().getUsername())
-                        .sunatPassword(projectDto.getSunatCredentials().getPassword())
-                        .sunatUrlFactura(projectDto.getSunatWebServices().getFactura())
-                        .sunatUrlGuiaRemision(projectDto.getSunatWebServices().getGuia())
-                        .sunatUrlPercepcionRetencion(projectDto.getSunatWebServices().getRetencion())
+        Uni<ProjectEntity> createEntityUni = projectMapper.updateEntityFromDto(projectDto, ProjectEntity
+                        .builder()
+                        .id(UUID.randomUUID().toString())
                         .build()
                 )
-                .build()
-                .persist();
+                .<ProjectEntity>persist()
+                .chain(projectEntity -> {
+                    ComponentOwner owner = getOwner(projectEntity.id);
+                    return defaultKeyProviders.createProviders(owner)
+                            .map(unused -> projectEntity);
+                });
 
         Uni<RestResponse<ProjectDto>> createResponseUni = projectRepository.findByName(projectDto.getName())
                 .onItem().ifNotNull().transform(errorResponse)
@@ -212,11 +219,13 @@ public class ProjectResource {
     }
 
     @GET
-    @Path("/{namespaceId}/keys")
-    public Uni<Response> getKeys(@PathParam("namespaceId") @NotNull String namespaceId) {
+    @Path("/{projectId}/keys")
+    public Uni<Response> getKeys(@PathParam("projectId") @NotNull String projectId) {
+        ComponentOwner owner = getOwner(projectId);
+
         return Panache
-                .withTransaction(() -> projectRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespace -> keyManager.getKeys(namespace)
+                .withTransaction(() -> projectRepository.findById(projectId)
+                        .onItem().ifNotNull().transformToUni(namespace -> keyManager.getKeys(owner)
                                 .map(keyWrappers -> {
                                     KeysMetadataRepresentation keys = new KeysMetadataRepresentation();
                                     keys.setActive(new HashMap<>());
@@ -256,52 +265,64 @@ public class ProjectResource {
     }
 
     @POST
-    @Path("/{namespaceId}/keys")
-    public Uni<Response> createKey(
-            @PathParam("namespaceId") @NotNull String namespaceId,
-            ComponentRepresentation rep
-    ) {
-        return Panache
-                .withTransaction(() -> projectRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespace -> {
-                            ComponentModel model = RepresentationToModel.toModel(rep);
-                            model.setId(null);
-                            return componentRepository.addComponentModel(namespace, model);
-                        })
-                        .map(entity -> Response.status(Response.Status.CREATED).build())
-                )
-                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
+    @Path("/{projectId}/keys")
+    public Uni<RestResponse<ComponentRepresentation>> createKey(@PathParam("projectId") @NotNull String projectId, ComponentRepresentation rep) {
+        ComponentOwner owner = getOwner(projectId);
+
+        Function<ComponentModel, RestResponse<ComponentRepresentation>> successResponse = (dto) -> RestResponse.ResponseBuilder
+                .<ComponentRepresentation>create(RestResponse.Status.CREATED)
+                .entity(EntityToRepresentation.toRepresentation(dto, false, componentUtil))
+                .build();
+        Supplier<RestResponse<ComponentRepresentation>> notFoundResponse = () -> RestResponse.ResponseBuilder
+                .<ComponentRepresentation>create(RestResponse.Status.NOT_FOUND)
+                .build();
+
+        Uni<RestResponse<ComponentRepresentation>> restResponseUni = projectRepository.findById(projectId)
+                .onItem().ifNotNull().transformToUni(projectEntity -> {
+                    ComponentModel model = RepresentationToModel.toModel(rep);
+                    model.setId(null);
+                    return componentRepository
+                            .addComponentModel(owner, model)
+                            .map(successResponse);
+                })
+                .onItem().ifNull().continueWith(notFoundResponse);
+
+        return Panache.withTransaction(() -> restResponseUni);
     }
 
     @GET
-    @Path("/{namespaceId}/keys/{componentId}")
+    @Path("/{projectId}/keys/{componentId}")
     public Uni<Response> getKey(
-            @PathParam("namespaceId") @NotNull String namespaceId,
+            @PathParam("projectId") @NotNull String projectId,
             @PathParam("componentId") String componentId
     ) {
+        ComponentOwner owner = getOwner(projectId);
+
         return Panache
-                .withTransaction(() -> projectRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespace -> componentRepository.getComponent(namespace, componentId))
+                .withTransaction(() -> projectRepository.findById(projectId)
+                        .onItem().ifNotNull().transformToUni(namespace -> componentRepository.getComponent(owner, componentId))
                 )
                 .onItem().ifNotNull().transform(componentModel -> Response.ok().entity(EntityToRepresentation.toRepresentation(componentModel, false, componentUtil)).build())
                 .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
     }
 
     @PUT
-    @Path("/{namespaceId}/keys/{componentId}")
+    @Path("/{projectId}/keys/{componentId}")
     public Uni<Response> updateKeys(
-            @PathParam("namespaceId") @NotNull String namespaceId,
+            @PathParam("projectId") @NotNull String projectId,
             @PathParam("componentId") String componentId,
             ComponentRepresentation rep
     ) {
+        ComponentOwner owner = getOwner(projectId);
+
         return Panache
-                .withTransaction(() -> projectRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespace -> componentRepository.getComponent(namespace, componentId)
+                .withTransaction(() -> projectRepository.findById(projectId)
+                        .onItem().ifNotNull().transformToUni(namespace -> componentRepository.getComponent(owner, componentId)
                                 .chain(componentModel -> {
                                     RepresentationToModel.updateComponent(rep, componentModel, false, componentUtil);
                                     return componentRepository
-                                            .updateComponent(namespace, componentModel)
-                                            .chain(() -> componentRepository.getComponent(namespace, componentId));
+                                            .updateComponent(owner, componentModel)
+                                            .chain(() -> componentRepository.getComponent(owner, componentId));
                                 })
                         )
                         .map(componentModel -> Response.ok().entity(EntityToRepresentation.toRepresentation(componentModel, false, componentUtil)).build())
@@ -310,15 +331,17 @@ public class ProjectResource {
     }
 
     @DELETE
-    @Path("/{namespaceId}/keys/{componentId}")
+    @Path("/{projectId}/keys/{componentId}")
     public Uni<Response> deleteKey(
-            @PathParam("namespaceId") @NotNull String namespaceId,
+            @PathParam("projectId") @NotNull String projectId,
             @PathParam("componentId") String componentId
     ) {
+        ComponentOwner owner = getOwner(projectId);
+
         return Panache
-                .withTransaction(() -> projectRepository.findById(namespaceId)
-                        .onItem().ifNotNull().transformToUni(namespace -> componentRepository.getComponent(namespace, componentId)
-                                .chain(componentModel -> componentRepository.removeComponent(componentModel))
+                .withTransaction(() -> projectRepository.findById(projectId)
+                        .onItem().ifNotNull().transformToUni(namespace -> componentRepository.getComponent(owner, componentId)
+                                .chain(componentModel -> componentRepository.removeComponent(owner, componentModel))
                         )
                         .map((result) -> Response.ok().build())
                 )

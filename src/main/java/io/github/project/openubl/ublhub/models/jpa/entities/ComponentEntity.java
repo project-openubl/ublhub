@@ -29,10 +29,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -54,11 +51,6 @@ public class ComponentEntity extends PanacheEntityBase {
     @Column(name = "id", length = 36)
     @Access(AccessType.PROPERTY)
     public String id;
-
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(foreignKey = @ForeignKey, name = "project_id")
-    public ProjectEntity project;
 
     @NotNull
     @Size(max = 255)
@@ -84,4 +76,9 @@ public class ComponentEntity extends PanacheEntityBase {
     @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.ALL}, orphanRemoval = true, mappedBy = "component")
     public Set<ComponentConfigEntity> componentConfigs = new HashSet<>();
 
+    @Column(name = "project_id")
+    public String projectId;
+
+    @Column(name = "company_id")
+    public String companyId;
 }

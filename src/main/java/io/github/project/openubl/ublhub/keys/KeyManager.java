@@ -17,11 +17,11 @@
 package io.github.project.openubl.ublhub.keys;
 
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
-import io.github.project.openubl.ublhub.keys.component.utils.ComponentProviderLiteral;
-import io.github.project.openubl.ublhub.keys.component.utils.RsaKeyProviderLiteral;
+import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
+import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderLiteral;
+import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderLiteral;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyType;
 import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
-import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 import org.keycloak.crypto.KeyUse;
@@ -53,17 +53,17 @@ public class KeyManager {
     @Any
     Instance<KeyProviderFactory> keyProviderFactories;
 
-    Uni<KeyWrapper> getActiveKey(ProjectEntity namespace, KeyUse use, String algorithm) {
-        return getProviders(namespace).chain(keyProviders -> {
-            KeyWrapper activeKey = getActiveKey(keyProviders, namespace, use, algorithm);
+    Uni<KeyWrapper> getActiveKey(ComponentOwner owner, KeyUse use, String algorithm) {
+        return getProviders(owner).chain(keyProviders -> {
+            KeyWrapper activeKey = getActiveKey(keyProviders, owner, use, algorithm);
             if (activeKey != null) {
                 return Uni.createFrom().item(activeKey);
             }
 
-            logger.debugv("Failed to find active key, trying fallback: namespace={0} algorithm={1} use={2}", namespace.id, algorithm, use.name());
+            logger.debugv("Failed to find active key, trying fallback: owner={0} algorithm={1} use={2}", owner, algorithm, use.name());
 
             List<Uni<Boolean>> collect = keyProviderFactories.stream()
-                    .map(keyProviderFactory -> (Uni<Boolean>) keyProviderFactory.createFallbackKeys(namespace, use, algorithm))
+                    .map(keyProviderFactory -> (Uni<Boolean>) keyProviderFactory.createFallbackKeys(owner, use, algorithm))
                     .collect(Collectors.toList());
 
             return Uni.combine().all().unis(collect)
@@ -72,22 +72,22 @@ public class KeyManager {
                         return results.stream().anyMatch(aBoolean -> Objects.equals(aBoolean, true));
                     })
                     .chain(isPresent -> isPresent
-                            ? getProviders(namespace).map(providers -> getActiveKey(providers, namespace, use, algorithm))
+                            ? getProviders(owner).map(providers -> getActiveKey(providers, owner, use, algorithm))
                             : Uni.createFrom().nullItem()
                     )
                     .onItem().ifNull().failWith(() -> {
-                        logger.errorv("Failed to create fallback key for realm: namespace={0} algorithm={1} use={2}", namespace.id, algorithm, use.name());
-                        return new RuntimeException("Failed to find key: namespace=" + namespace.id + " algorithm=" + algorithm + " use=" + use.name());
+                        logger.errorv("Failed to create fallback key for realm: owner={0} algorithm={1} use={2}", owner, algorithm, use.name());
+                        return new RuntimeException("Failed to find key: owner=" + owner + " algorithm=" + algorithm + " use=" + use.name());
                     });
         });
     }
 
-    private KeyWrapper getActiveKey(List<KeyProvider> providers, ProjectEntity namespace, KeyUse use, String algorithm) {
+    private KeyWrapper getActiveKey(List<KeyProvider> providers, ComponentOwner owner, KeyUse use, String algorithm) {
         for (KeyProvider p : providers) {
             for (KeyWrapper key : p.getKeys()) {
                 if (key.getStatus().isActive() && matches(key, use, algorithm)) {
                     if (logger.isTraceEnabled()) {
-                        logger.tracev("Found key: namespace={0} kid={1} algorithm={2} use={3}", namespace.id, key.getKid(), algorithm, use.name());
+                        logger.tracev("Found key: owner={0} kid={1} algorithm={2} use={3}", owner, key.getKid(), algorithm, use.name());
                     }
 
                     return key;
@@ -97,19 +97,19 @@ public class KeyManager {
         return null;
     }
 
-    public Uni<KeyWrapper> getKey(ProjectEntity namespace, String kid, KeyUse use, String algorithm) {
+    public Uni<KeyWrapper> getKey(ComponentOwner owner, String kid, KeyUse use, String algorithm) {
         if (kid == null) {
-            logger.warnv("kid is null, can't find public key: namespace={0}", namespace.id);
+            logger.warnv("kid is null, can't find public key: owner={0}", owner);
             return Uni.createFrom().nullItem();
         }
 
-        return getProviders(namespace).map(keyProviders -> {
+        return getProviders(owner).map(keyProviders -> {
             for (KeyProvider p : keyProviders) {
                 Optional<KeyWrapper> keyWrapper = p.getKeys().stream()
                         .filter(key -> Objects.equals(key.getKid(), kid) && key.getStatus().isEnabled() && matches(key, use, algorithm))
                         .peek(key -> {
                             if (logger.isTraceEnabled()) {
-                                logger.tracev("Found key: namespace={0} kid={1} algorithm={2} use={3}", namespace.id, key.getKid(), algorithm, use.name());
+                                logger.tracev("Found key: owner={0} kid={1} algorithm={2} use={3}", owner, key.getKid(), algorithm, use.name());
                             }
                         })
                         .findFirst();
@@ -119,22 +119,22 @@ public class KeyManager {
             }
 
             if (logger.isTraceEnabled()) {
-                logger.tracev("Failed to find public key: namespace={0} kid={1} algorithm={2} use={3}", namespace.id, kid, algorithm, use.name());
+                logger.tracev("Failed to find public key: owner={0} kid={1} algorithm={2} use={3}", owner, kid, algorithm, use.name());
             }
 
             return null;
         });
     }
 
-    public Uni<List<KeyWrapper>> getKeys(ProjectEntity namespace, KeyUse use, String algorithm) {
-        return getProviders(namespace).map(keyProviders -> keyProviders.stream()
+    public Uni<List<KeyWrapper>> getKeys(ComponentOwner owner, KeyUse use, String algorithm) {
+        return getProviders(owner).map(keyProviders -> keyProviders.stream()
                 .flatMap(keyProvider -> keyProvider.getKeys().stream().filter(key -> key.getStatus().isEnabled() && matches(key, use, algorithm)))
                 .collect(Collectors.toList())
         );
     }
 
-    public Uni<List<KeyWrapper>> getKeys(ProjectEntity namespace) {
-        return getProviders(namespace).map(keyProviders -> keyProviders.stream()
+    public Uni<List<KeyWrapper>> getKeys(ComponentOwner owner) {
+        return getProviders(owner).map(keyProviders -> keyProviders.stream()
                 .flatMap(keyProvider -> keyProvider.getKeys().stream())
                 .collect(Collectors.toList())
         );
@@ -144,8 +144,8 @@ public class KeyManager {
         return use.equals(key.getUse()) && key.getAlgorithm().equals(algorithm);
     }
 
-    private Uni<List<KeyProvider>> getProviders(ProjectEntity namespace) {
-        return componentRepository.getComponents(namespace.id, KeyProvider.class.getName())
+    private Uni<List<KeyProvider>> getProviders(ComponentOwner owner) {
+        return componentRepository.getComponents(owner, owner.getId(), KeyProvider.class.getName())
                 .map(componentModels -> componentModels.stream()
                         .sorted(new ProviderComparator())
                         .map(c -> {
@@ -154,7 +154,7 @@ public class KeyManager {
                             Annotation rsaKeyProviderLiteral = new RsaKeyProviderLiteral(rsaKeyType);
                             KeyProviderFactory<?> factory = keyProviderFactories.select(componentProviderLiteral, rsaKeyProviderLiteral).get();
 
-                            return factory.create(namespace, c);
+                            return factory.create(owner, c);
                         })
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList())
@@ -168,6 +168,7 @@ public class KeyManager {
             return i != 0 ? i : o1.getId().compareTo(o2.getId());
         }
     }
+
     class ActiveRsaKey {
         private final String kid;
         private final PrivateKey privateKey;

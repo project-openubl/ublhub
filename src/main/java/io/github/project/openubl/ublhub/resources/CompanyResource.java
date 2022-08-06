@@ -34,6 +34,8 @@ package io.github.project.openubl.ublhub.resources;
  */
 
 import io.github.project.openubl.ublhub.dto.CompanyDto;
+import io.github.project.openubl.ublhub.keys.DefaultKeyProviders;
+import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import io.github.project.openubl.ublhub.mapper.CompanyMapper;
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
@@ -68,6 +70,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static io.github.project.openubl.ublhub.keys.component.ComponentOwner.OwnerType.company;
+
 @Path("/projects")
 @Produces("application/json")
 @Consumes("application/json")
@@ -85,6 +89,16 @@ public class CompanyResource {
 
     @Inject
     CompanyMapper companyMapper;
+
+    @Inject
+    DefaultKeyProviders defaultKeyProviders;
+
+    private ComponentOwner getOwner(String companyId) {
+        return ComponentOwner.builder()
+                .type(company)
+                .id(companyId)
+                .build();
+    }
 
     @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
     @Operation(summary = "Get company", description = "Get one company")
@@ -131,22 +145,19 @@ public class CompanyResource {
                 .<CompanyDto>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
-        Function<ProjectEntity, Uni<CompanyEntity>> createEntityUni = projectEntity -> CompanyEntity.builder()
-                .project(projectEntity)
-                .id(UUID.randomUUID().toString())
-                .ruc(companyDto.getRuc())
-                .name(companyDto.getName())
-                .description(companyDto.getDescription())
-                .sunat(SunatEntity.builder()
-                        .sunatUsername(companyDto.getSunatCredentials().getUsername())
-                        .sunatPassword(companyDto.getSunatCredentials().getPassword())
-                        .sunatUrlFactura(companyDto.getSunatWebServices().getFactura())
-                        .sunatUrlGuiaRemision(companyDto.getSunatWebServices().getGuia())
-                        .sunatUrlPercepcionRetencion(companyDto.getSunatWebServices().getRetencion())
+
+        Function<ProjectEntity, Uni<CompanyEntity>> createEntityUni = projectEntity -> companyMapper
+                .updateEntityFromDto(companyDto, CompanyEntity.builder()
+                        .project(projectEntity)
+                        .id(UUID.randomUUID().toString())
                         .build()
                 )
-                .build()
-                .persist();
+                .<CompanyEntity>persist()
+                .chain(companyEntity -> {
+                    ComponentOwner owner = getOwner(companyEntity.id);
+                    return defaultKeyProviders.createProviders(owner)
+                            .map(unused -> companyEntity);
+                });
 
         Uni<RestResponse<CompanyDto>> restResponseUni = projectRepository.findById(projectId)
                 .onItem().ifNotNull().transformToUni(projectEntity -> companyRepository

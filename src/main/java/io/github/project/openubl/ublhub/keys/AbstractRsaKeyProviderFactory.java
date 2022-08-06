@@ -17,10 +17,10 @@
 package io.github.project.openubl.ublhub.keys;
 
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
+import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import io.github.project.openubl.ublhub.keys.component.ComponentValidationException;
 import io.github.project.openubl.ublhub.keys.provider.ConfigurationValidationHelper;
 import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
-import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 
 public abstract class AbstractRsaKeyProviderFactory implements KeyProviderFactory<KeyProvider> {
 
@@ -32,7 +32,7 @@ public abstract class AbstractRsaKeyProviderFactory implements KeyProviderFactor
     };
 
     @Override
-    public void validateConfiguration(ProjectEntity project, ComponentModel model) throws ComponentValidationException {
+    public void validateConfiguration(ComponentOwner owner, ComponentModel model) throws ComponentValidationException {
         ConfigurationValidationHelper.check(model)
                 .checkLong(Attributes.PRIORITY_PROPERTY, false)
                 .checkBoolean(Attributes.ENABLED_PROPERTY, false)

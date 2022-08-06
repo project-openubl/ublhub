@@ -17,7 +17,7 @@
 package io.github.project.openubl.ublhub.keys;
 
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
-import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
+import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import org.keycloak.common.util.KeyUtils;
 import org.keycloak.crypto.Algorithm;
 import org.keycloak.crypto.KeyStatus;
@@ -40,7 +40,7 @@ public abstract class AbstractRsaKeyProvider implements KeyProvider {
 
     private final String algorithm;
 
-    public AbstractRsaKeyProvider(ProjectEntity namespace, ComponentModel model) {
+    public AbstractRsaKeyProvider(ComponentOwner owner, ComponentModel model) {
         this.model = model;
         this.status = KeyStatus.from(model.get(Attributes.ACTIVE_KEY, true), model.get(Attributes.ENABLED_KEY, true));
         this.algorithm = model.get(Attributes.ALGORITHM_KEY, Algorithm.RS256);
@@ -48,12 +48,12 @@ public abstract class AbstractRsaKeyProvider implements KeyProvider {
         if (model.hasNote(KeyWrapper.class.getName())) {
             key = model.getNote(KeyWrapper.class.getName());
         } else {
-            key = loadKey(namespace, model);
+            key = loadKey(owner, model);
             model.setNote(KeyWrapper.class.getName(), key);
         }
     }
 
-    protected abstract KeyWrapper loadKey(ProjectEntity namespace, ComponentModel model);
+    protected abstract KeyWrapper loadKey(ComponentOwner owner, ComponentModel model);
 
     @Override
     public List<KeyWrapper> getKeys() {

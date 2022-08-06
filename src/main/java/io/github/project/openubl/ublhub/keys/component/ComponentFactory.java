@@ -19,7 +19,6 @@ package io.github.project.openubl.ublhub.keys.component;
 import io.github.project.openubl.ublhub.keys.provider.ConfiguredProvider;
 import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
 import io.github.project.openubl.ublhub.keys.provider.ProviderFactory;
-import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,31 +26,20 @@ import java.util.Map;
 
 public interface ComponentFactory<CreatedType, ProviderType> extends ProviderFactory<ProviderType>, ConfiguredProvider {
 
-    CreatedType create(ProjectEntity project, ComponentModel model);
+    CreatedType create(ComponentOwner owner, ComponentModel model);
 
     @Override
     default ProviderType create() {
         return null;
     }
 
-    default void validateConfiguration(ProjectEntity project, ComponentModel model) throws ComponentValidationException {
+    default void validateConfiguration(ComponentOwner owner, ComponentModel model) throws ComponentValidationException {
     }
 
-    /**
-     * These are config properties that are common across all implementation of this component type
-     *
-     * @return
-     */
     default List<ProviderConfigProperty> getCommonProviderConfigProperties() {
         return Collections.emptyList();
     }
 
-    /**
-     * This is metadata about this component type.  It's really configuration information about the component type and not
-     * an individual instance
-     *
-     * @return
-     */
     default Map<String, Object> getTypeMetadata() {
         return Collections.emptyMap();
     }

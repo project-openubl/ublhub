@@ -16,35 +16,58 @@
  */
 package io.github.project.openubl.ublhub.keys.component.utils;
 
+import io.github.project.openubl.ublhub.keys.ImportedRsaKeyProviderFactory;
+import io.github.project.openubl.ublhub.keys.KeyProvider;
 import io.github.project.openubl.ublhub.keys.component.ComponentFactory;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
-import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
+import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderLiteral;
+import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderType;
+import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderLiteral;
+import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderType;
+import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyType;
 import org.keycloak.representations.idm.ComponentRepresentation;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
+import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-public interface ComponentUtil {
+@ApplicationScoped
+public class ComponentUtil {
 
-    default Map<String, ProviderConfigProperty> getComponentConfigProperties(ComponentRepresentation component) {
+    @Inject
+    @Any
+    Instance<ComponentFactory<?, ?>> componentFactories;
+
+    @Inject
+    @ComponentProviderType(providerType = KeyProvider.class)
+    @RsaKeyProviderType(type = RsaKeyType.IMPORTED)
+    ImportedRsaKeyProviderFactory importedRsaKeyProviderFactory;
+
+
+    public Map<String, ProviderConfigProperty> getComponentConfigProperties(ComponentRepresentation component) {
         return getComponentConfigProperties(component.getProviderType(), component.getProviderId());
     }
 
-    default Map<String, ProviderConfigProperty> getComponentConfigProperties(ComponentModel component) {
+    public Map<String, ProviderConfigProperty> getComponentConfigProperties(ComponentModel component) {
         return getComponentConfigProperties(component.getProviderType(), component.getProviderId());
     }
 
-    default ComponentFactory getComponentFactory(ComponentRepresentation component) {
+    public ComponentFactory getComponentFactory(ComponentRepresentation component) {
         return getComponentFactory(component.getProviderType(), component.getProviderId());
     }
 
-    default ComponentFactory getComponentFactory(ComponentModel component) {
+    public ComponentFactory getComponentFactory(ComponentModel component) {
         return getComponentFactory(component.getProviderType(), component.getProviderId());
     }
 
-    default Map<String, ProviderConfigProperty> getComponentConfigProperties(String providerType, String providerId) {
+    public Map<String, ProviderConfigProperty> getComponentConfigProperties(String providerType, String providerId) {
         try {
             ComponentFactory componentFactory = getComponentFactory(providerType, providerId);
             List<ProviderConfigProperty> l = componentFactory.getConfigProperties();
@@ -63,14 +86,21 @@ public interface ComponentUtil {
         }
     }
 
-    ComponentFactory getComponentFactory(String providerType, String providerId);
+    private ComponentFactory getComponentFactory(String providerType, String providerId) {
+        try {
+            Class<?> aClass = Class.forName(providerType);
 
-    default void notifyCreated(ProjectEntity project, ComponentModel model) {
-        ComponentFactory factory = getComponentFactory(model);
+            Optional<RsaKeyType> op = RsaKeyType.findByProviderId(providerId);
+            if (op.isEmpty()) {
+                return null;
+            }
+
+            Annotation componentProviderLiteral = new ComponentProviderLiteral(aClass);
+            Annotation rsaKeyProviderLiteral = new RsaKeyProviderLiteral(op.get());
+
+            return componentFactories.select(componentProviderLiteral, rsaKeyProviderLiteral).get();
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("Invalid factory", e);
+        }
     }
-
-    default void notifyUpdated(ProjectEntity project, ComponentModel model) {
-        ComponentFactory factory = getComponentFactory(model);
-    }
-
 }

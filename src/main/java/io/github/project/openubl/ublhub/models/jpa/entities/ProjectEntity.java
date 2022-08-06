@@ -69,7 +69,4 @@ public class ProjectEntity extends BaseEntity {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "project", orphanRemoval = true, cascade = CascadeType.REMOVE)
     public List<CompanyEntity> companies = new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "project", orphanRemoval = true, cascade = CascadeType.REMOVE)
-    public List<ComponentEntity> components = new ArrayList<>();
-
 }
