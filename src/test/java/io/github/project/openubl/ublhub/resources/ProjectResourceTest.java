@@ -378,7 +378,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .when()
                 .get("/" + projectId + "/keys/" + componentId)
                 .then()
-                .statusCode(201)
+                .statusCode(200)
                 .body("id", is(componentId),
                         "name", is(componentDto.getName()),
                         "parentId", is(projectId),
@@ -438,7 +438,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .body(componentDto)
                 .put("/" + projectId + "/keys/" + componentId)
                 .then()
-                .statusCode(201)
+                .statusCode(200)
                 .body("id", is(componentId),
                         "name", is(componentDto.getName()),
                         "parentId", is(projectId),

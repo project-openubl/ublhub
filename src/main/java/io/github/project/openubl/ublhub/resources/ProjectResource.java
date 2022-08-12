@@ -16,15 +16,10 @@
  */
 package io.github.project.openubl.ublhub.resources;
 
-import io.github.project.openubl.ublhub.dto.ComponentDto;
 import io.github.project.openubl.ublhub.dto.ProjectDto;
 import io.github.project.openubl.ublhub.keys.DefaultKeyProviders;
-import io.github.project.openubl.ublhub.keys.KeyManager;
-import io.github.project.openubl.ublhub.keys.KeyProvider;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
-import io.github.project.openubl.ublhub.mapper.ComponentMapper;
 import io.github.project.openubl.ublhub.mapper.ProjectMapper;
-import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.security.Permission;
@@ -34,9 +29,6 @@ import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestResponse;
-import org.keycloak.common.util.PemUtils;
-import org.keycloak.crypto.KeyWrapper;
-import org.keycloak.representations.idm.KeysMetadataRepresentation;
 
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
@@ -51,7 +43,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -73,16 +64,7 @@ public class ProjectResource {
     ProjectMapper projectMapper;
 
     @Inject
-    ComponentMapper componentMapper;
-
-    @Inject
     ProjectRepository projectRepository;
-
-    @Inject
-    ComponentRepository componentRepository;
-
-    @Inject
-    KeyManager keyManager;
 
     @Inject
     DefaultKeyProviders defaultKeyProviders;
@@ -212,172 +194,6 @@ public class ProjectResource {
         return Panache.withTransaction(() -> restResponseUni);
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
-    @Operation(summary = "Get project keys", description = "List of keys")
-    @GET
-    @Path("/{projectId}/keys")
-    public Uni<RestResponse<KeysMetadataRepresentation>> getKeys(@PathParam("projectId") @NotNull String projectId) {
-        ComponentOwner owner = getOwner(projectId);
-
-        Function<KeysMetadataRepresentation, RestResponse<KeysMetadataRepresentation>> successResponse = dto -> ResponseBuilder
-                .<KeysMetadataRepresentation>create(Status.OK)
-                .entity(dto)
-                .build();
-        Supplier<RestResponse<KeysMetadataRepresentation>> notFoundResponse = () -> ResponseBuilder
-                .<KeysMetadataRepresentation>create(Status.NOT_FOUND)
-                .build();
-
-        return projectRepository.findById(projectId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> keyManager.getKeys(owner)
-                        .map(keyWrappers -> {
-                            KeysMetadataRepresentation keys = new KeysMetadataRepresentation();
-                            keys.setActive(new HashMap<>());
-
-                            List<KeysMetadataRepresentation.KeyMetadataRepresentation> namespaceKeys = keyWrappers.stream()
-                                    .map(key -> {
-                                        if (key.getStatus().isActive()) {
-                                            if (!keys.getActive().containsKey(key.getAlgorithmOrDefault())) {
-                                                keys.getActive().put(key.getAlgorithmOrDefault(), key.getKid());
-                                            }
-                                        }
-                                        return toKeyMetadataRepresentation(key);
-                                    })
-                                    .collect(Collectors.toList());
-
-                            keys.setKeys(namespaceKeys);
-
-                            return keys;
-                        })
-                        .map(successResponse)
-                )
-                .onItem().ifNull().continueWith(notFoundResponse);
-    }
-
-    private KeysMetadataRepresentation.KeyMetadataRepresentation toKeyMetadataRepresentation(KeyWrapper key) {
-        KeysMetadataRepresentation.KeyMetadataRepresentation r = new KeysMetadataRepresentation.KeyMetadataRepresentation();
-        r.setProviderId(key.getProviderId());
-        r.setProviderPriority(key.getProviderPriority());
-        r.setKid(key.getKid());
-        r.setStatus(key.getStatus() != null ? key.getStatus().name() : null);
-        r.setType(key.getType());
-        r.setAlgorithm(key.getAlgorithmOrDefault());
-        r.setPublicKey(key.getPublicKey() != null ? PemUtils.encodeKey(key.getPublicKey()) : null);
-        r.setCertificate(key.getCertificate() != null ? PemUtils.encodeCertificate(key.getCertificate()) : null);
-        r.setUse(key.getUse());
-        return r;
-    }
-
-    @RolesAllowed({Permission.admin, Permission.project_write})
-    @Operation(summary = "Create a project key", description = "Create key")
-    @POST
-    @Path("/{projectId}/keys")
-    public Uni<RestResponse<ComponentDto>> createKey(@PathParam("projectId") @NotNull String projectId, ComponentDto componentDto) {
-        componentDto.setId(null);
-        componentDto.setParentId(projectId);
-        componentDto.setProviderType(KeyProvider.class.getName());
-
-        ComponentOwner owner = getOwner(projectId);
-
-        Function<ComponentDto, RestResponse<ComponentDto>> successResponse = (dto) -> RestResponse.ResponseBuilder
-                .<ComponentDto>create(RestResponse.Status.CREATED)
-                .entity(dto)
-                .build();
-        Supplier<RestResponse<ComponentDto>> notFoundResponse = () -> RestResponse.ResponseBuilder
-                .<ComponentDto>create(RestResponse.Status.NOT_FOUND)
-                .build();
-
-        Uni<RestResponse<ComponentDto>> restResponseUni = projectRepository.findById(projectId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> componentRepository
-                        .addComponentModel(owner, componentMapper.toModel(componentDto))
-                        .map(componentModel -> componentMapper.toDto(componentModel, false))
-                        .map(successResponse)
-                )
-                .onItem().ifNull().continueWith(notFoundResponse);
-
-        return Panache.withTransaction(() -> restResponseUni);
-    }
-
-    @RolesAllowed({Permission.admin, Permission.project_write})
-    @Operation(summary = "Get project key", description = "Get one key")
-    @GET
-    @Path("/{projectId}/keys/{componentId}")
-    public Uni<RestResponse<ComponentDto>> getKey(@PathParam("projectId") @NotNull String projectId, @PathParam("componentId") String componentId) {
-        ComponentOwner owner = getOwner(projectId);
-
-        Function<ComponentDto, RestResponse<ComponentDto>> successResponse = (dto) -> RestResponse.ResponseBuilder
-                .<ComponentDto>create(RestResponse.Status.CREATED)
-                .entity(dto)
-                .build();
-        Supplier<RestResponse<ComponentDto>> notFoundResponse = () -> RestResponse.ResponseBuilder
-                .<ComponentDto>create(RestResponse.Status.NOT_FOUND)
-                .build();
-
-        Uni<RestResponse<ComponentDto>> restResponseUni = projectRepository.findById(projectId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> componentRepository
-                        .getComponent(owner, componentId)
-                        .map(model -> componentMapper.toDto(model, false))
-                        .map(dto -> dto != null ? successResponse.apply(dto) : notFoundResponse.get())
-                ).onItem().ifNull().continueWith(notFoundResponse);
-
-        return Panache.withTransaction(() -> restResponseUni);
-    }
-
-    @RolesAllowed({Permission.admin, Permission.project_write})
-    @Operation(summary = "Update project key", description = "Update a key")
-    @PUT
-    @Path("/{projectId}/keys/{componentId}")
-    public Uni<RestResponse<ComponentDto>> updateKey(@PathParam("projectId") @NotNull String projectId, @PathParam("componentId") String componentId, ComponentDto componentDto) {
-        ComponentOwner owner = getOwner(projectId);
-
-        Function<ComponentDto, RestResponse<ComponentDto>> successResponse = (dto) -> RestResponse.ResponseBuilder
-                .<ComponentDto>create(RestResponse.Status.CREATED)
-                .entity(dto)
-                .build();
-        Supplier<RestResponse<ComponentDto>> notFoundResponse = () -> RestResponse.ResponseBuilder
-                .<ComponentDto>create(RestResponse.Status.NOT_FOUND)
-                .build();
-
-        Uni<RestResponse<ComponentDto>> restResponseUni = projectRepository.findById(projectId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> componentRepository
-                        .getComponent(owner, componentId)
-                        .map(model -> componentMapper.updateModelFromDto(componentDto, model, false))
-                        .chain(model -> componentRepository.updateComponent(owner, model))
-                        .chain(unused -> componentRepository.getComponent(owner, componentId))
-                        .map(model -> componentMapper.toDto(model, false))
-                        .map(successResponse)
-                )
-                .onItem().ifNull().continueWith(notFoundResponse);
-
-        return Panache.withTransaction(() -> restResponseUni);
-    }
-
-    @RolesAllowed({Permission.admin, Permission.project_write})
-    @Operation(summary = "Delete a project key", description = "Delete a key")
-    @DELETE
-    @Path("/{projectId}/keys/{componentId}")
-    public Uni<RestResponse<Void>> deleteKey(@PathParam("projectId") @NotNull String projectId, @PathParam("componentId") String componentId) {
-        ComponentOwner owner = getOwner(projectId);
-
-        Supplier<RestResponse<Void>> successResponse = () -> RestResponse.ResponseBuilder
-                .<Void>create(RestResponse.Status.NO_CONTENT)
-                .build();
-        Supplier<RestResponse<Void>> notFoundResponse = () -> RestResponse.ResponseBuilder
-                .<Void>create(RestResponse.Status.NOT_FOUND)
-                .build();
-        Supplier<RestResponse<Void>> internalServerErrorResponse = () -> RestResponse.ResponseBuilder
-                .<Void>create(Status.INTERNAL_SERVER_ERROR)
-                .build();
-
-        Uni<RestResponse<Void>> restResponseUni = projectRepository.findById(projectId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> componentRepository
-                        .getComponent(owner, componentId)
-                        .chain(model -> componentRepository.removeComponent(owner, model))
-                        .map(result -> result ? successResponse.get() : internalServerErrorResponse.get())
-                )
-                .onItem().ifNull().continueWith(notFoundResponse);
-
-        return Panache.withTransaction(() -> restResponseUni);
-    }
 }
 
 

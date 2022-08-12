@@ -19,13 +19,20 @@ package io.github.project.openubl.ublhub.resources;
 import io.github.project.openubl.ublhub.AbstractBaseTest;
 import io.github.project.openubl.ublhub.BasicProfileManager;
 import io.github.project.openubl.ublhub.dto.CompanyDto;
+import io.github.project.openubl.ublhub.dto.ComponentDto;
+import io.github.project.openubl.ublhub.dto.ProjectDto;
 import io.github.project.openubl.ublhub.dto.SunatCredentialsDto;
 import io.github.project.openubl.ublhub.dto.SunatWebServicesDto;
+import io.github.project.openubl.ublhub.keys.GeneratedRsaKeyProviderFactory;
+import io.github.project.openubl.ublhub.keys.KeyProvider;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -336,6 +343,253 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .then()
                 .statusCode(404);
         // Then
+    }
+
+    @Test
+    public void getCompanyKeys() {
+        // Given
+        String projectId = "1";
+        CompanyDto companyDto = CompanyDto.builder()
+                .name("mycompany")
+                .description("my description")
+                .ruc("99999999999")
+                .sunatWebServices(SunatWebServicesDto.builder()
+                        .factura("http://url1.com")
+                        .guia("http://url2.com")
+                        .retencion("http://url3.com")
+                        .build()
+                )
+                .sunatCredentials(SunatCredentialsDto.builder()
+                        .username("myUsername")
+                        .password("myPassword")
+                        .build()
+                )
+                .build();
+
+        // When
+        String companyId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(companyDto)
+                .when()
+                .post("/" + projectId + "/companies")
+                .then()
+                .statusCode(201)
+                .extract().path("id").toString();
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/companies/" + companyId + "/keys")
+                .then()
+                .statusCode(200)
+                .body("active.RS256", is(notNullValue()),
+                        "keys.size()", is(1),
+                        "keys[0].status", is("ACTIVE"),
+                        "keys[0].type", is("RSA"),
+                        "keys[0].algorithm", is("RS256"),
+                        "keys[0].use", is("SIG"),
+                        "keys[0].kid", is(notNullValue()),
+                        "keys[0].publicKey", is(notNullValue()),
+                        "keys[0].certificate", is(notNullValue()),
+                        "keys[0].providerId", is(notNullValue()),
+                        "keys[0].providerPriority", is(100)
+                );
+    }
+
+    @Test
+    public void createCompanyKey() {
+        // Given
+        String projectId = "1";
+        String companyId = "11";
+
+        // When
+        ComponentDto componentDto = ComponentDto.builder()
+                .name("myKey")
+                .providerId(GeneratedRsaKeyProviderFactory.ID)
+                .config(new HashMap<>() {{
+                    put("active", List.of("true"));
+                    put("algorithm", List.of("RS256"));
+                    put("enabled", List.of("true"));
+                    put("keySize", List.of("2048"));
+                    put("priority", List.of("111"));
+                }})
+                .build();
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(componentDto)
+                .when()
+                .post("/" + projectId + "/companies/" + companyId + "/keys")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()),
+                        "name", is(componentDto.getName()),
+                        "parentId", is(projectId),
+                        "providerId", is(componentDto.getProviderId()),
+                        "providerType", is(KeyProvider.class.getName()),
+                        "config.active[0]", is("true"),
+                        "config.algorithm[0]", is("RS256"),
+                        "config.enabled[0]", is("true"),
+                        "config.keySize[0]", is("2048"),
+                        "config.priority[0]", is("111")
+                );
+    }
+
+    @Test
+    public void getCompanyKey() {
+        // Given
+        String projectId = "1";
+        String companyId = "11";
+
+        // When
+        ComponentDto componentDto = ComponentDto.builder()
+                .name("myKey")
+                .providerId(GeneratedRsaKeyProviderFactory.ID)
+                .config(new HashMap<>() {{
+                    put("active", List.of("true"));
+                    put("algorithm", List.of("RS256"));
+                    put("enabled", List.of("true"));
+                    put("keySize", List.of("2048"));
+                    put("priority", List.of("111"));
+                }})
+                .build();
+
+        String componentId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(componentDto)
+                .when()
+                .post("/" + projectId + "/companies/" + companyId + "/keys")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()))
+                .extract().path("id").toString();
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/companies/" + companyId + "/keys/" + componentId)
+                .then()
+                .statusCode(200)
+                .body("id", is(componentId),
+                        "name", is(componentDto.getName()),
+                        "parentId", is(projectId),
+                        "providerId", is(componentDto.getProviderId()),
+                        "providerType", is(KeyProvider.class.getName()),
+                        "config.active[0]", is("true"),
+                        "config.algorithm[0]", is("RS256"),
+                        "config.enabled[0]", is("true"),
+                        "config.keySize[0]", is("2048"),
+                        "config.priority[0]", is("111")
+                );
+    }
+
+    @Test
+    public void updateCompanyKey() {
+        // Given
+        String projectId = "1";
+        String companyId = "11";
+
+        // When
+        ComponentDto componentDto = ComponentDto.builder()
+                .name("myKey")
+                .providerId(GeneratedRsaKeyProviderFactory.ID)
+                .config(new HashMap<>() {{
+                    put("active", List.of("true"));
+                    put("algorithm", List.of("RS256"));
+                    put("enabled", List.of("true"));
+                    put("keySize", List.of("2048"));
+                    put("priority", List.of("111"));
+                }})
+                .build();
+
+        String componentId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(componentDto)
+                .when()
+                .post("/" + projectId + "/companies/" + companyId + "/keys")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()))
+                .extract().path("id").toString();
+
+        componentDto = ComponentDto.builder()
+                .name("myNewKeyname")
+                .config(new HashMap<>() {{
+                    put("active", List.of("false"));
+                    put("algorithm", List.of("RS512"));
+                    put("enabled", List.of("false"));
+                    put("keySize", List.of("4096"));
+                    put("priority", List.of("222"));
+                }})
+                .build();
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .body(componentDto)
+                .put("/" + projectId + "/companies/" + companyId + "/keys/" + componentId)
+                .then()
+                .statusCode(200)
+                .body("id", is(componentId),
+                        "name", is(componentDto.getName()),
+                        "parentId", is(projectId),
+                        "providerId", is(GeneratedRsaKeyProviderFactory.ID),
+                        "providerType", is(KeyProvider.class.getName()),
+                        "config.active[0]", is("false"),
+                        "config.algorithm[0]", is("RS512"),
+                        "config.enabled[0]", is("false"),
+                        "config.keySize[0]", is("4096"),
+                        "config.priority[0]", is("222")
+                );
+    }
+
+    @Test
+    public void deleteCompanyKey() {
+        // Given
+        String projectId = "1";
+        String companyId = "11";
+
+        // When
+        ComponentDto componentDto = ComponentDto.builder()
+                .name("myKey")
+                .providerId(GeneratedRsaKeyProviderFactory.ID)
+                .config(new HashMap<>() {{
+                    put("active", List.of("true"));
+                    put("algorithm", List.of("RS256"));
+                    put("enabled", List.of("true"));
+                    put("keySize", List.of("2048"));
+                    put("priority", List.of("111"));
+                }})
+                .build();
+
+        String componentId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(componentDto)
+                .when()
+                .post("/" + projectId + "/companies/" + companyId + "/keys")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()))
+                .extract().path("id").toString();
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .delete("/" + projectId + "/companies/" + companyId + "/keys/" + componentId)
+                .then()
+                .statusCode(204);
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/companies/" + companyId + "/keys/" + componentId)
+                .then()
+                .statusCode(404);
     }
 }
 
