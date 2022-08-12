@@ -21,17 +21,9 @@ import io.github.project.openubl.ublhub.dto.JobErrorRepresentation;
 import io.github.project.openubl.ublhub.dto.PageRepresentation;
 import io.github.project.openubl.ublhub.dto.SunatStatusRepresentation;
 import io.github.project.openubl.ublhub.dto.XMLFileContentRepresentation;
-import io.github.project.openubl.ublhub.keys.component.ComponentModel;
-import io.github.project.openubl.ublhub.keys.component.utils.ComponentUtil;
-import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
-import io.github.project.openubl.ublhub.keys.utils.StripSecretsUtils;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
-import org.keycloak.common.util.MultivaluedHashMap;
-import org.keycloak.representations.idm.ComponentRepresentation;
-import org.keycloak.representations.idm.ConfigPropertyRepresentation;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -85,47 +77,6 @@ public class EntityToRepresentation {
         }
 
         return rep;
-    }
-
-    public static ComponentRepresentation toRepresentation(ComponentModel component, boolean internal, ComponentUtil componentUtil) {
-        ComponentRepresentation rep = toRepresentationWithoutConfig(component);
-        if (!internal) {
-            rep = StripSecretsUtils.strip(componentUtil, rep);
-        }
-        return rep;
-    }
-
-    public static ComponentRepresentation toRepresentationWithoutConfig(ComponentModel component) {
-        ComponentRepresentation rep = new ComponentRepresentation();
-        rep.setId(component.getId());
-        rep.setName(component.getName());
-        rep.setProviderId(component.getProviderId());
-        rep.setProviderType(component.getProviderType());
-        rep.setSubType(component.getSubType());
-        rep.setParentId(component.getParentId());
-        rep.setConfig(new MultivaluedHashMap<>(component.getConfig()));
-        return rep;
-    }
-
-    public static List<ConfigPropertyRepresentation> toRepresentation(List<ProviderConfigProperty> configProperties) {
-        List<ConfigPropertyRepresentation> propertiesRep = new LinkedList<>();
-        for (ProviderConfigProperty prop : configProperties) {
-            ConfigPropertyRepresentation propRep = toRepresentation(prop);
-            propertiesRep.add(propRep);
-        }
-        return propertiesRep;
-    }
-
-    public static ConfigPropertyRepresentation toRepresentation(ProviderConfigProperty prop) {
-        ConfigPropertyRepresentation propRep = new ConfigPropertyRepresentation();
-        propRep.setName(prop.getName());
-        propRep.setLabel(prop.getLabel());
-        propRep.setType(prop.getType());
-        propRep.setDefaultValue(prop.getDefaultValue());
-        propRep.setOptions(prop.getOptions());
-        propRep.setHelpText(prop.getHelpText());
-        propRep.setSecret(prop.isSecret());
-        return propRep;
     }
 
     public static <T, R> PageRepresentation<R> toRepresentation(List<T> pageElements, Long totalElements, Function<T, R> mapper) {

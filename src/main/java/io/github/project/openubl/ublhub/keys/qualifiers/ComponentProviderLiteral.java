@@ -16,8 +16,6 @@
  */
 package io.github.project.openubl.ublhub.keys.qualifiers;
 
-import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderType;
-
 import javax.enterprise.util.AnnotationLiteral;
 
 public class ComponentProviderLiteral extends AnnotationLiteral<ComponentProviderType> implements ComponentProviderType {

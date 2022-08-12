@@ -51,7 +51,7 @@ public class KeyManager {
 
     @Inject
     @Any
-    Instance<KeyProviderFactory> keyProviderFactories;
+    Instance<KeyProviderFactory<?>> keyProviderFactories;
 
     Uni<KeyWrapper> getActiveKey(ComponentOwner owner, KeyUse use, String algorithm) {
         return getProviders(owner).chain(keyProviders -> {

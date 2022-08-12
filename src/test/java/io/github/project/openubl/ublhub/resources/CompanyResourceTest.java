@@ -337,6 +337,5 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .statusCode(404);
         // Then
     }
-
 }
 

@@ -187,7 +187,7 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                 .toString();
         return ComponentEntity
                 .<ComponentEntity>find(query, Parameters.with("ownerId", owner.getId()).and("id", id))
-                .singleResult()
+                .firstResult()
                 .map(entity -> entity != null ? entityToModel(entity) : null);
     }
 

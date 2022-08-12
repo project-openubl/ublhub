@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.keys.component.utils;
 
+import io.github.project.openubl.ublhub.dto.ComponentDto;
 import io.github.project.openubl.ublhub.keys.ImportedRsaKeyProviderFactory;
 import io.github.project.openubl.ublhub.keys.KeyProvider;
 import io.github.project.openubl.ublhub.keys.component.ComponentFactory;
@@ -26,7 +27,6 @@ import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderType;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderLiteral;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderType;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyType;
-import org.keycloak.representations.idm.ComponentRepresentation;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Any;
@@ -51,7 +51,7 @@ public class ComponentUtil {
     ImportedRsaKeyProviderFactory importedRsaKeyProviderFactory;
 
 
-    public Map<String, ProviderConfigProperty> getComponentConfigProperties(ComponentRepresentation component) {
+    public Map<String, ProviderConfigProperty> getComponentConfigProperties(ComponentDto component) {
         return getComponentConfigProperties(component.getProviderType(), component.getProviderId());
     }
 
@@ -59,7 +59,7 @@ public class ComponentUtil {
         return getComponentConfigProperties(component.getProviderType(), component.getProviderId());
     }
 
-    public ComponentFactory getComponentFactory(ComponentRepresentation component) {
+    public ComponentFactory getComponentFactory(ComponentDto component) {
         return getComponentFactory(component.getProviderType(), component.getProviderId());
     }
 

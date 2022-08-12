@@ -41,7 +41,6 @@ import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
-import io.github.project.openubl.ublhub.models.jpa.entities.SunatEntity;
 import io.github.project.openubl.ublhub.security.Permission;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.panache.common.Sort;
@@ -217,8 +216,7 @@ public class CompanyResource {
                 .build();
 
         Uni<RestResponse<Void>> restResponseUni = companyRepository.deleteByProjectIdAndId(projectId, companyId)
-                .map(result -> result ? successResponse : notFoundResponse)
-                .map(Supplier::get);
+                .map(result -> result ? successResponse.get() : notFoundResponse.get());
 
         return Panache.withTransaction(() -> restResponseUni);
     }
