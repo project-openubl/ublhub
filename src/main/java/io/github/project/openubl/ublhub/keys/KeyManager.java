@@ -22,7 +22,12 @@ import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderLiteral
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderLiteral;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyType;
 import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.jboss.logging.Logger;
 import org.keycloak.crypto.KeyUse;
 import org.keycloak.crypto.KeyWrapper;
@@ -53,7 +58,26 @@ public class KeyManager {
     @Any
     Instance<KeyProviderFactory<?>> keyProviderFactories;
 
-    Uni<KeyWrapper> getActiveKey(ComponentOwner owner, KeyUse use, String algorithm) {
+    public Uni<Optional<KeyWrapper>> getActiveKeyWithoutFallback(ComponentOwner owner, KeyUse use, String algorithm) {
+        return getProviders(owner)
+                .chain(keyProviders -> Uni.createFrom().<Optional<KeyWrapper>>emitter(emitter -> {
+                    KeyWrapper activeKey = getActiveKey(keyProviders, owner, use, algorithm);
+                    if (activeKey != null) {
+                        emitter.complete(Optional.of(activeKey));
+                    } else {
+                        emitter.complete(Optional.empty());
+                    }
+                }))
+                .chain(keyWrapper -> {
+                    if (keyWrapper.isPresent()) {
+                        return Uni.createFrom().item(keyWrapper);
+                    } else {
+                        return Uni.createFrom().item(Optional.empty());
+                    }
+                });
+    }
+
+    public Uni<KeyWrapper> getActiveKey(ComponentOwner owner, KeyUse use, String algorithm) {
         return getProviders(owner).chain(keyProviders -> {
             KeyWrapper activeKey = getActiveKey(keyProviders, owner, use, algorithm);
             if (activeKey != null) {
@@ -169,34 +193,16 @@ public class KeyManager {
         }
     }
 
-    class ActiveRsaKey {
-        private final String kid;
-        private final PrivateKey privateKey;
-        private final PublicKey publicKey;
-        private final X509Certificate certificate;
-
-        public ActiveRsaKey(String kid, PrivateKey privateKey, PublicKey publicKey, X509Certificate certificate) {
-            this.kid = kid;
-            this.privateKey = privateKey;
-            this.publicKey = publicKey;
-            this.certificate = certificate;
-        }
-
-        public String getKid() {
-            return kid;
-        }
-
-        public PrivateKey getPrivateKey() {
-            return privateKey;
-        }
-
-        public PublicKey getPublicKey() {
-            return publicKey;
-        }
-
-        public X509Certificate getCertificate() {
-            return certificate;
-        }
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @RegisterForReflection
+    public static class ActiveRsaKey {
+        private String kid;
+        private PrivateKey privateKey;
+        private PublicKey publicKey;
+        private X509Certificate certificate;
     }
 
 }

@@ -19,7 +19,7 @@ package io.github.project.openubl.ublhub.dto;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
-public class DocumentRepresentation {
+public class DocumentDto {
 
     private String id;
     private boolean jobInProgress;

@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.models.utils;
 
-import io.github.project.openubl.ublhub.dto.DocumentRepresentation;
+import io.github.project.openubl.ublhub.dto.DocumentDto;
 import io.github.project.openubl.ublhub.dto.JobErrorRepresentation;
 import io.github.project.openubl.ublhub.dto.PageRepresentation;
 import io.github.project.openubl.ublhub.dto.SunatStatusRepresentation;
@@ -33,8 +33,8 @@ public class EntityToRepresentation {
         // Just static methods
     }
 
-    public static DocumentRepresentation toRepresentation(UBLDocumentEntity entity) {
-        DocumentRepresentation rep = new DocumentRepresentation();
+    public static DocumentDto toRepresentation(UBLDocumentEntity entity) {
+        DocumentDto rep = new DocumentDto();
 
         rep.setId(entity.id);
         rep.setJobInProgress(entity.jobInProgress);

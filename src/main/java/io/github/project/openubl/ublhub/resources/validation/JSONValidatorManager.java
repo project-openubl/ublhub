@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.resources.validation;
 
-import io.github.project.openubl.ublhub.dto.input.InputTemplateRepresentation;
+import io.github.project.openubl.ublhub.dto.DocumentInputDto;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.apache.camel.ProducerTemplate;
@@ -30,28 +30,16 @@ public class JSONValidatorManager {
     @Inject
     ProducerTemplate producerTemplate;
 
-    private Boolean validateDocumentJSON(JsonObject json) {
-        return producerTemplate.requestBody("direct:validate-json-document", json.toString(), Boolean.class);
+    public Boolean validateJsonObject(JsonObject jsonObject) {
+        return producerTemplate.requestBody("direct:validate-json-document", jsonObject.toString(), Boolean.class);
     }
 
-    private InputTemplateRepresentation getInputTemplateFromJSON(JsonObject json) {
-        InputTemplateRepresentation input = json.mapTo(InputTemplateRepresentation.class);
+    public DocumentInputDto getDocumentInputDtoFromJsonObject(JsonObject jsonObject) {
+        DocumentInputDto input = jsonObject.mapTo(DocumentInputDto.class);
 
-        JsonObject documentJSON = json.getJsonObject("spec").getJsonObject("document");
-        input.getSpec().setDocument(documentJSON);
+        JsonObject documentJsonObject = jsonObject.getJsonObject("spec").getJsonObject("document");
+        input.getSpec().setDocument(documentJsonObject);
 
         return input;
-    }
-
-    public Uni<InputTemplateRepresentation> getUniInputTemplateFromJSON(JsonObject json) {
-        return Uni.createFrom()
-                .item(() -> validateDocumentJSON(json))
-                .map(isJSONValid -> {
-                    if (isJSONValid) {
-                        return getInputTemplateFromJSON(json);
-                    } else {
-                        return null;
-                    }
-                });
     }
 }

@@ -17,21 +17,38 @@
 package io.github.project.openubl.ublhub.resources;
 
 import io.github.project.openubl.ublhub.AbstractBaseTest;
+import io.github.project.openubl.ublhub.BasicProfileManager;
 import io.github.project.openubl.ublhub.ProfileManager;
+import io.github.project.openubl.ublhub.dto.DocumentInputDto;
+import io.github.project.openubl.xbuilder.content.catalogs.Catalog6;
+import io.github.project.openubl.xbuilder.content.models.common.Cliente;
+import io.github.project.openubl.xbuilder.content.models.common.Proveedor;
+import io.github.project.openubl.xbuilder.content.models.standard.general.DocumentoDetalle;
+import io.github.project.openubl.xbuilder.content.models.standard.general.Invoice;
+import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
+import io.restassured.http.ContentType;
+import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 
 @QuarkusTest
-@TestProfile(ProfileManager.class)
+@TestProfile(BasicProfileManager.class)
+@TestHTTPEndpoint(DocumentResourceTest.class)
 public class DocumentResourceTest extends AbstractBaseTest {
 
-//    final int TIMEOUT = 60;
-//
+    final int TIMEOUT = 60;
+
     @Override
     public Class<?> getTestClass() {
         return DocumentResourceTest.class;
     }
-//
+
 //    @Test
 //    public void getDocument() {
 //        // Given
@@ -128,60 +145,56 @@ public class DocumentResourceTest extends AbstractBaseTest {
 //                );
 //        // Then
 //    }
-//
+
 //    @Test
 //    public void createInvoiceWithDefaultSignAlgorithm() {
 //        // Given
 //        String nsId = "1";
 //
-//        InvoiceInputModel input = InvoiceInputModel.Builder.anInvoiceInputModel()
-//                .withSerie("F001")
-//                .withNumero(1)
-//                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
-//                        .withRuc("12345678912")
-//                        .withRazonSocial("Softgreen S.A.C.")
+//        Invoice invoice = Invoice.builder()
+//                .serie("F001")
+//                .numero(1)
+//                .proveedor(Proveedor.builder()
+//                        .ruc("12345678912")
+//                        .razonSocial("Softgreen S.A.C.")
 //                        .build()
 //                )
-//                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
-//                        .withNombre("Carlos Feria")
-//                        .withNumeroDocumentoIdentidad("12121212121")
-//                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
+//                .cliente(Cliente.builder()
+//                        .nombre("Carlos Feria")
+//                        .numeroDocumentoIdentidad("12121212121")
+//                        .tipoDocumentoIdentidad(Catalog6.RUC.toString())
 //                        .build()
 //                )
-//                .withDetalle(Arrays.asList(
-//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-//                                .withDescripcion("Item1")
-//                                .withCantidad(new BigDecimal(10))
-//                                .withPrecioUnitario(new BigDecimal(100))
-//                                .withUnidadMedida("KGM")
-//                                .build(),
-//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-//                                .withDescripcion("Item2")
-//                                .withCantidad(new BigDecimal(10))
-//                                .withPrecioUnitario(new BigDecimal(100))
-//                                .withUnidadMedida("KGM")
-//                                .build())
+//                .detalle(DocumentoDetalle.builder()
+//                        .descripcion("Item1")
+//                        .cantidad(new BigDecimal(10))
+//                        .precio(new BigDecimal(100))
+//                        .build()
+//                )
+//                .detalle(DocumentoDetalle.builder()
+//                        .descripcion("Item2")
+//                        .cantidad(new BigDecimal(10))
+//                        .precio(new BigDecimal(100))
+//                        .build()
 //                )
 //                .build();
 //
-//        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
-//                .withKind(KindRepresentation.Invoice)
-//                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
-//                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
-//                                .withName(IDGeneratorType.none)
-//                                .build()
-//                        )
-//                        .withDocument(JsonObject.mapFrom(input))
+//        DocumentInputDto inputDto = DocumentInputDto.builder()
+//                .kind(DocumentInputDto.Kind.Invoice)
+//                .spec(DocumentInputDto.Spec.builder()
+//                        .id(null)
+//                        .signature(null)
+//                        .document(JsonObject.mapFrom(invoice))
 //                        .build()
 //                )
 //                .build();
 //
 //        // When
-//        DocumentRepresentation response = given()
+//        givenAuth("alice")
 //                .contentType(ContentType.JSON)
-//                .body(JsonObject.mapFrom(template).toString())
+//                .body(JsonObject.mapFrom(inputDto).toString())
 //                .when()
-//                .post("/api/namespaces/" + nsId + "/documents")
+//                .post("/" + nsId + "/documents")
 //                .then()
 //                .statusCode(201)
 //                .body("id", is(notNullValue()),
@@ -215,7 +228,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
 //                        "xmlFileContent.tipoDocumento", is("Invoice")
 //                );
 //    }
-//
+
 //    @Test
 //    public void createInvoiceWithCustomSignAlgorithm() {
 //        // Given
