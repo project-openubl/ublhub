@@ -147,13 +147,13 @@ public class CompanyResource {
 
         Function<ProjectEntity, Uni<CompanyEntity>> createEntityUni = projectEntity -> companyMapper
                 .updateEntityFromDto(companyDto, CompanyEntity.builder()
-                        .project(projectEntity)
+                        .projectId(projectEntity.getId())
                         .id(UUID.randomUUID().toString())
                         .build()
                 )
                 .<CompanyEntity>persist()
                 .chain(companyEntity -> {
-                    ComponentOwner owner = getOwner(companyEntity.id);
+                    ComponentOwner owner = getOwner(companyEntity.getId());
                     return defaultKeyProviders.createProviders(owner)
                             .map(unused -> companyEntity);
                 });

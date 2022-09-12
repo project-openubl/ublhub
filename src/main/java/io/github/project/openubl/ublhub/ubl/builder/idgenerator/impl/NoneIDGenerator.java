@@ -24,23 +24,24 @@ import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.util.Map;
 
 @ApplicationScoped
 @IDGeneratorProvider(IDGeneratorType.none)
 public class NoneIDGenerator implements IDGenerator {
-    
+
     @Override
-    public Uni<ID> generateInvoiceID(ProjectEntity project, String ruc, boolean isFactura) {
+    public Uni<ID> generateInvoiceID(ProjectEntity project, String ruc, Map<String, String> config) {
+        return null;
+    }
+
+    @Override
+    public Uni<ID> generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
         return Uni.createFrom().nullItem();
     }
 
     @Override
-    public Uni<ID> generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura) {
-        return Uni.createFrom().nullItem();
-    }
-
-    @Override
-    public Uni<ID> generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura) {
+    public Uni<ID> generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
         return Uni.createFrom().nullItem();
     }
 

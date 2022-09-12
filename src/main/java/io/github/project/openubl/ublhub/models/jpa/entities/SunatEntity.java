@@ -37,29 +37,29 @@ public class SunatEntity {
     @NotNull
     @Size(max = 255)
     @Column(name = "sunat_username")
-    public String sunatUsername;
+    private String sunatUsername;
 
     @NotNull
     @Size(max = 255)
     @Column(name = "sunat_password")
-    public String sunatPassword;
+    private String sunatPassword;
 
     @NotNull
     @URL
     @Size(max = 255)
     @Column(name = "sunat_url_factura")
-    public String sunatUrlFactura;
+    private String sunatUrlFactura;
 
     @NotNull
     @URL
     @Size(max = 255)
     @Column(name = "sunat_url_guia_remision")
-    public String sunatUrlGuiaRemision;
+    private String sunatUrlGuiaRemision;
 
     @NotNull
     @URL
     @Size(max = 255)
     @Column(name = "sunat_url_percepcion_retencion")
-    public String sunatUrlPercepcionRetencion;
+    private String sunatUrlPercepcionRetencion;
 
 }

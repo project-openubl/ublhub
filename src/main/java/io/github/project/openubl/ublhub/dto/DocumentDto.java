@@ -16,74 +16,75 @@
  */
 package io.github.project.openubl.ublhub.dto;
 
+import io.github.project.openubl.ublhub.models.JobPhaseType;
+import io.github.project.openubl.ublhub.models.JobRecoveryActionType;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @RegisterForReflection
 public class DocumentDto {
 
     private String id;
-    private boolean jobInProgress;
-
-    private XMLFileContentRepresentation xmlFileContent;
-    private SunatStatusRepresentation sunatResponse;
-    private JobErrorRepresentation jobError;
-
     private Long created;
     private Long updated;
+    private Status status;
 
-    public String getId() {
-        return id;
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @RegisterForReflection
+    public static class Status {
+        private boolean inProgress;
+
+        private XMLData xmlData;
+        private Sunat sunat;
+        private Error error;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @RegisterForReflection
+    public static class XMLData {
+        private String ruc;
+        private String serieNumero;
+        private String tipoDocumento;
     }
 
-    public boolean isJobInProgress() {
-        return jobInProgress;
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @RegisterForReflection
+    public static class Sunat {
+        private Integer code;
+        private String ticket;
+        private String status;
+        private String description;
+        private boolean hasCdr;
+        private List<String> notes;
     }
 
-    public void setJobInProgress(boolean jobInProgress) {
-        this.jobInProgress = jobInProgress;
-    }
-
-    public XMLFileContentRepresentation getXmlFileContent() {
-        return xmlFileContent;
-    }
-
-    public void setXmlFileContent(XMLFileContentRepresentation xmlFileContent) {
-        this.xmlFileContent = xmlFileContent;
-    }
-
-    public SunatStatusRepresentation getSunatResponse() {
-        return sunatResponse;
-    }
-
-    public void setSunatResponse(SunatStatusRepresentation sunatResponse) {
-        this.sunatResponse = sunatResponse;
-    }
-
-    public JobErrorRepresentation getJobError() {
-        return jobError;
-    }
-
-    public void setJobError(JobErrorRepresentation jobError) {
-        this.jobError = jobError;
-    }
-
-    public Long getCreated() {
-        return created;
-    }
-
-    public void setCreated(Long created) {
-        this.created = created;
-    }
-
-    public Long getUpdated() {
-        return updated;
-    }
-
-    public void setUpdated(Long updated) {
-        this.updated = updated;
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @RegisterForReflection
+    public static class Error {
+        private JobPhaseType phase;
+        private String description;
+        private int recoveryActionCount;
+        private JobRecoveryActionType recoveryAction;
     }
 }

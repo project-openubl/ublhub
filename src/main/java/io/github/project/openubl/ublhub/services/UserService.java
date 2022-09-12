@@ -33,27 +33,27 @@ public class UserService {
     @ReactiveTransactional
     public Uni<UserEntity> create(UserDto dto) {
         UserEntity user = new UserEntity();
-        user.fullName = dto.getFullName();
-        user.username = dto.getUsername();
-        user.password = BcryptUtil.bcryptHash(dto.getPassword());
-        user.permissions = String.join(",", dto.getPermissions());
+        user.setFullName(dto.getFullName());
+        user.setUsername(dto.getUsername());
+        user.setPassword(BcryptUtil.bcryptHash(dto.getPassword()));
+        user.setPermissions(String.join(",", dto.getPermissions()));
         return user.persist();
     }
 
     public Uni<UserEntity> update(UserEntity entity, UserDto dto) {
-        entity.fullName = dto.getFullName();
-        entity.username = dto.getUsername();
+        entity.setFullName(dto.getFullName());
+        entity.setUsername(dto.getUsername());
         if (dto.getPassword() != null) {
-            entity.password = BcryptUtil.bcryptHash(dto.getPassword());
+            entity.setPassword(BcryptUtil.bcryptHash(dto.getPassword()));
         }
         if (dto.getPermissions() != null) {
-            entity.permissions = String.join(",", dto.getPermissions());
+            entity.setPermissions(String.join(",", dto.getPermissions()));
         }
         return entity.persist();
     }
 
     public Uni<UserEntity> changePassword(UserEntity entity, UserPasswordChangeDto dto) {
-        entity.password = BcryptUtil.bcryptHash(dto.getNewPassword());
+        entity.setPassword(BcryptUtil.bcryptHash(dto.getNewPassword()));
         return entity.persist();
     }
 

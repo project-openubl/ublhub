@@ -102,12 +102,12 @@ public class XMLSenderManagerTest {
         URI uri = XMLSenderManagerTest.class.getClassLoader().getResource("xml/invoice_alterado_11111111111.xml").toURI();
         byte[] file = Files.readAllBytes(Paths.get(uri));
 
-        XMLSenderConfig wsConfig = XMLSenderConfigBuilder.aXMLSenderConfig()
-                .withFacturaUrl("http://url1.com")
-                .withGuiaRemisionUrl("http://url1.com")
-                .withPercepcionRetencionUrl("http://url1.com")
-                .withUsername("MODDATOS11111111111")
-                .withPassword("MODDATOS")
+        XMLSenderConfig wsConfig = XMLSenderConfig.builder()
+                .facturaUrl("http://url1.com")
+                .guiaRemisionUrl("http://url1.com")
+                .percepcionRetencionUrl("http://url1.com")
+                .username("MODDATOS11111111111")
+                .password("MODDATOS")
                 .build();
 
         // When
@@ -125,12 +125,12 @@ public class XMLSenderManagerTest {
         URI uri = XMLSenderManagerTest.class.getClassLoader().getResource("xml/invoice_alterado_12345678912.xml").toURI();
         byte[] file = Files.readAllBytes(Paths.get(uri));
 
-        XMLSenderConfig wsConfig = XMLSenderConfigBuilder.aXMLSenderConfig()
-                .withFacturaUrl("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
-                .withGuiaRemisionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
-                .withPercepcionRetencionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")
-                .withUsername("MODDATOS11111111111")
-                .withPassword("MODDATOS")
+        XMLSenderConfig wsConfig = XMLSenderConfig.builder()
+                .facturaUrl("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
+                .guiaRemisionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
+                .percepcionRetencionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")
+                .username("MODDATOS11111111111")
+                .password("MODDATOS")
                 .build();
 
         // When
@@ -152,12 +152,12 @@ public class XMLSenderManagerTest {
         // Given
         String ticket = "123456789";
 
-        XMLSenderConfig wsConfig = XMLSenderConfigBuilder.aXMLSenderConfig()
-                .withFacturaUrl("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
-                .withGuiaRemisionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
-                .withPercepcionRetencionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")
-                .withUsername("MODDATOS11111111111")
-                .withPassword("MODDATOS")
+        XMLSenderConfig wsConfig = XMLSenderConfig.builder()
+                .facturaUrl("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
+                .guiaRemisionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
+                .percepcionRetencionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")
+                .username("MODDATOS11111111111")
+                .password("MODDATOS")
                 .build();
 
         XmlContentModel xmlContentModel = XmlContentModel.Builder.aXmlContentModel()

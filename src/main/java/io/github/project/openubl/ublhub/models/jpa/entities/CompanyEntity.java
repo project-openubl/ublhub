@@ -27,11 +27,7 @@ import javax.persistence.AccessType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -49,29 +45,27 @@ public class CompanyEntity extends BaseEntity {
     @Id
     @Column(name = "id")
     @Access(AccessType.PROPERTY)
-    public String id;
+    private String id;
 
     @NotNull
     @Size(max = 11)
     @Column(name = "ruc")
-    public String ruc;
+    private String ruc;
 
     @NotNull
     @Size(max = 255)
     @Column(name = "name")
-    public String name;
+    private String name;
 
     @Size(max = 255)
-    public String description;
+    private String description;
 
-    @NotNull
     @Valid
     @Embedded
-    public SunatEntity sunat;
+    private SunatEntity sunat;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(foreignKey = @ForeignKey, name = "project_id")
-    public ProjectEntity project;
+    @Column(name = "project_id")
+    private String projectId;
 
 }

@@ -34,23 +34,23 @@ public abstract class BaseEntity extends PanacheEntityBase {
     @NotNull
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created")
-    public Date created;
+    private Date created;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated")
-    public Date updated;
+    private Date updated;
 
     @Version
     @Column(name = "version")
-    public int version;
+    private int version;
 
     @PrePersist
-    public void prePersist() {
+    private void prePersist() {
         created = new Date();
     }
 
     @PreUpdate
-    public void preUpdate() {
+    private void preUpdate() {
         updated = new Date();
     }
 

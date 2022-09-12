@@ -75,13 +75,13 @@ public class DocumentFileResource {
     ) {
         return Panache
                 .withTransaction(() -> documentRepository.findById(namespaceId, documentId))
-                .onItem().ifNotNull().transformToUni(documentEntity -> Uni.createFrom().item(documentEntity.xmlFileId)
+                .onItem().ifNotNull().transformToUni(documentEntity -> Uni.createFrom().item(documentEntity.getXmlFileId())
                         .onItem().ifNotNull().transformToUni(xmlFileId -> {
                             String fileId;
                             if (requestedFile.equals("ubl")) {
-                                fileId = documentEntity.xmlFileId;
+                                fileId = documentEntity.getXmlFileId();
                             } else {
-                                fileId = documentEntity.cdrFileId;
+                                fileId = documentEntity.getCdrFileId();
                             }
 
                             boolean isZipFormatRequested = requestedFormat.equals("zip");
@@ -93,7 +93,7 @@ public class DocumentFileResource {
                                 bytesUni = filesMutiny.getFileAsBytesAfterUnzip(fileId);
                             }
 
-                            String filename = documentEntity.xmlFileContent.serieNumero + (isZipFormatRequested ? ".zip" : ".xml");
+                            String filename = documentEntity.getXmlFileContent().getSerieNumero() + (isZipFormatRequested ? ".zip" : ".xml");
                             String mediaType = isZipFormatRequested ? "application/zip" : MediaType.APPLICATION_XML;
 
                             return bytesUni.map(bytes -> Response.ok(bytes, mediaType)

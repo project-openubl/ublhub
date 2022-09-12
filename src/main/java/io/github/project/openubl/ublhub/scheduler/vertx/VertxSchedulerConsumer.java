@@ -37,12 +37,12 @@ import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import java.time.Duration;
 import java.util.HashSet;
 
-@ApplicationScoped
+@RequestScoped
 public class VertxSchedulerConsumer {
 
     static final int INITIAL_DELAY = 10;
@@ -61,131 +61,134 @@ public class VertxSchedulerConsumer {
 
     @ConsumeEvent(VertxScheduler.VERTX_SEND_FILE_SCHEDULER_BUS_NAME)
     public Uni<Void> sendFile(String documentId) {
-        return Uni.createFrom().item(documentId)
-                .onItem().delayIt().by(Duration.ofMillis(INITIAL_DELAY))
-                .chain(() -> Panache.withTransaction(() -> documentRepository
-                        .findById(documentId)
-                        .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + documentId + " was not found for being sent"))
-                        .onFailure(throwable -> throwable instanceof IllegalStateException)
-                        .retry().withBackOff(Duration.ofMillis(500)).withJitter(0.2).atMost(3)
+        Uni<UBLDocumentEntity> documentEntityUni = documentRepository
+                .findById(documentId)
+                .onItem().ifNull().failWith(() -> new IllegalStateException("Document id=" + documentId + " was not found for being sent"))
+                .onFailure(throwable -> throwable instanceof IllegalStateException)
+                .retry().withBackOff(Duration.ofMillis(500)).withJitter(0.2).atMost(3)
 
-                        .onItem().ifNull().failWith(IllegalStateException::new)
-                        .onFailure(IllegalStateException.class)
-                        .retry().withBackOff(Duration.ofSeconds(1)).withJitter(0.2).atMost(3)
+                .onItem().ifNull().failWith(IllegalStateException::new)
+                .onFailure(IllegalStateException.class)
+                .retry().withBackOff(Duration.ofSeconds(1)).withJitter(0.2).atMost(3)
 
-                        .chain(documentEntity -> filesMutiny
-                                // Download file
-                                .getFileAsBytesAfterUnzip(documentEntity.xmlFileId)
-                                .onFailure(ReadFileException.class).recoverWithUni(throwable -> Uni.createFrom()
-                                        .failure(new FetchFileException(JobPhaseType.FETCH_XML_FILE, throwable))
+                .chain(documentEntity -> filesMutiny
+                        // Download file
+                        .getFileAsBytesAfterUnzip(documentEntity.getXmlFileId())
+                        .onFailure(ReadFileException.class).recoverWithUni(throwable -> Uni
+                                .createFrom()
+                                .failure(new FetchFileException(JobPhaseType.FETCH_XML_FILE, throwable))
+                        )
+                        .chain(xmlFile -> xSenderMutiny
+                                // Read file content
+                                .getXMLContent(xmlFile)
+                                .onFailure(ReadXMLFileContentException.class).recoverWithUni(throwable -> Uni.createFrom()
+                                        .failure(new FetchFileException(JobPhaseType.READ_XML_FILE, throwable))
                                 )
-                                .chain(xmlFile -> xSenderMutiny
-                                        // Read file content
-                                        .getXMLContent(xmlFile)
-                                        .onFailure(ReadXMLFileContentException.class).recoverWithUni(throwable -> Uni.createFrom()
-                                                .failure(new FetchFileException(JobPhaseType.READ_XML_FILE, throwable))
-                                        )
-                                        .chain(xmlFileContent -> {
-                                            XMLFileContentEntity xmlFileContentEntity = documentEntity.xmlFileContent;
-                                            if (xmlFileContentEntity == null) {
-                                                xmlFileContentEntity = new XMLFileContentEntity();
-                                                xmlFileContentEntity.document = documentEntity;
-                                                documentEntity.xmlFileContent = xmlFileContentEntity;
-                                            }
-
-                                            xmlFileContentEntity.ruc = xmlFileContent.getRuc();
-                                            xmlFileContentEntity.tipoDocumento = xmlFileContent.getDocumentType();
-                                            xmlFileContentEntity.serieNumero = xmlFileContent.getDocumentID();
-                                            xmlFileContentEntity.bajaCodigoTipoDocumento = xmlFileContent.getVoidedLineDocumentTypeCode();
-
-                                            // Read SUNAT configuration
-                                            return xSenderMutiny.getXSenderConfig(documentEntity.project.id, xmlFileContent.getRuc());
-                                        })
-
-                                        // Send file to SUNAT
-                                        .chain(sunatConfig -> xSenderMutiny.sendToSUNAT(xmlFile, sunatConfig))
-                                        .onFailure(ConnectToSUNATException.class).recoverWithUni(throwable -> Uni.createFrom()
-                                                .failure(new FetchFileException(JobPhaseType.SEND_XML_FILE, throwable))
-                                        )
-                                        .invoke(sunatResponse -> {
-                                            SUNATResponseEntity sunatResponseEntity = documentEntity.sunatResponse;
-                                            if (sunatResponseEntity == null) {
-                                                sunatResponseEntity = new SUNATResponseEntity();
-                                                sunatResponseEntity.document = documentEntity;
-                                                documentEntity.sunatResponse = sunatResponseEntity;
-                                            }
-
-                                            sunatResponseEntity.code = sunatResponse.getCode();
-                                            sunatResponseEntity.ticket = sunatResponse.getTicket();
-                                            sunatResponseEntity.description = sunatResponse.getDescription();
-                                            sunatResponseEntity.status = sunatResponse.getStatus() != null ? sunatResponse.getStatus().toString() : null;
-                                            sunatResponseEntity.notes = sunatResponse.getNotes() != null ? new HashSet<>(sunatResponse.getNotes()) : null;
-                                        })
-
-                                        // Save CDR
-                                        .map(BillServiceModel::getCdr)
-                                        .onItem().ifNotNull().transformToUni(cdrFile -> filesMutiny
-                                                .createFile(cdrFile, false)
-                                                .onFailure(PersistFileException.class).recoverWithUni(throwable -> Uni.createFrom()
-                                                        .failure(new FetchFileException(JobPhaseType.SAVE_CDR, throwable))
-                                                )
-                                                .invoke(cdrFileId -> documentEntity.cdrFileId = cdrFileId)
-                                        )
-                                )
-
-                                .onItemOrFailure().transformToUni((unused, throwable) -> {
-                                    if (throwable instanceof FetchFileException) {
-                                        FetchFileException jobException = (FetchFileException) throwable;
-
-                                        JobErrorEntity jobErrorEntity = documentEntity.jobError;
-                                        if (jobErrorEntity == null) {
-                                            jobErrorEntity = new JobErrorEntity();
-                                            jobErrorEntity.document = documentEntity;
-                                            documentEntity.jobError = jobErrorEntity;
-                                        }
-
-                                        jobErrorEntity.phase = jobException.getPhase();
-
-                                        switch (jobException.getPhase()) {
-                                            case FETCH_XML_FILE: {
-                                                jobErrorEntity.description = "No se pudo descargar el XML para ser procesado";
-                                                jobErrorEntity.recoveryAction = JobRecoveryActionType.RETRY_SEND;
-                                                jobErrorEntity.recoveryActionCount = 1;
-
-                                                break;
-                                            }
-                                            case READ_XML_FILE: {
-                                                jobErrorEntity.description = "El contenido del XML no es válido";
-                                                break;
-                                            }
-                                            case SEND_XML_FILE: {
-                                                jobErrorEntity.description = "No se pudo enviar el XML a la SUNAT";
-                                                jobErrorEntity.recoveryAction = JobRecoveryActionType.RETRY_SEND;
-                                                jobErrorEntity.recoveryActionCount = 1;
-                                                break;
-                                            }
-                                            case SAVE_CDR: {
-                                                jobErrorEntity.description = "No se pudo guardar el CDR en el storage";
-                                                jobErrorEntity.recoveryAction = JobRecoveryActionType.RETRY_FETCH_CDR;
-                                                jobErrorEntity.recoveryActionCount = 1;
-                                                break;
-                                            }
-                                        }
+                                .chain(xmlFileContent -> {
+                                    XMLFileContentEntity xmlFileContentEntity = documentEntity.getXmlFileContent();
+                                    if (xmlFileContentEntity == null) {
+                                        xmlFileContentEntity = new XMLFileContentEntity();
+                                        xmlFileContentEntity.setDocument(documentEntity);
+                                        documentEntity.setXmlFileContent(xmlFileContentEntity);
                                     }
 
-                                    documentEntity.jobInProgress = false;
-                                    return documentEntity.<UBLDocumentEntity>persistAndFlush();
+                                    xmlFileContentEntity.setRuc(xmlFileContent.getRuc());
+                                    xmlFileContentEntity.setTipoDocumento(xmlFileContent.getDocumentType());
+                                    xmlFileContentEntity.setSerieNumero(xmlFileContent.getDocumentID());
+                                    xmlFileContentEntity.setBajaCodigoTipoDocumento(xmlFileContent.getVoidedLineDocumentTypeCode());
+
+                                    // Read SUNAT configuration
+                                    return xSenderMutiny.getXSenderConfig(documentEntity.getProjectId(), xmlFileContent.getRuc());
                                 })
 
+                                // Send file to SUNAT
+                                .chain(sunatConfig -> {
+                                    return xSenderMutiny.sendToSUNAT(xmlFile, sunatConfig);
+                                })
+                                .onFailure(ConnectToSUNATException.class).recoverWithUni(throwable -> Uni.createFrom()
+                                        .failure(new FetchFileException(JobPhaseType.SEND_XML_FILE, throwable))
+                                )
+                                .invoke(sunatResponse -> {
+                                    SUNATResponseEntity sunatResponseEntity = documentEntity.getSunatResponse();
+                                    if (sunatResponseEntity == null) {
+                                        sunatResponseEntity = new SUNATResponseEntity();
+                                        sunatResponseEntity.setDocument(documentEntity);
+                                        documentEntity.setSunatResponse(sunatResponseEntity);
+                                    }
+
+                                    sunatResponseEntity.setCode(sunatResponse.getCode());
+                                    sunatResponseEntity.setTicket(sunatResponse.getTicket());
+                                    sunatResponseEntity.setDescription(sunatResponse.getDescription());
+                                    sunatResponseEntity.setStatus(sunatResponse.getStatus() != null ? sunatResponse.getStatus().toString() : null);
+                                    sunatResponseEntity.setNotes(sunatResponse.getNotes() != null ? new HashSet<>(sunatResponse.getNotes()) : null);
+                                })
+
+                                // Save CDR
+                                .map(BillServiceModel::getCdr)
+                                .onItem().ifNotNull().transformToUni(cdrFile -> filesMutiny
+                                        .createFile(cdrFile, false)
+                                        .onFailure(PersistFileException.class).recoverWithUni(throwable -> Uni.createFrom()
+                                                .failure(new FetchFileException(JobPhaseType.SAVE_CDR, throwable))
+                                        )
+                                        .invoke(cdrFileId -> documentEntity.setCdrFileId(cdrFileId))
+                                )
                         )
-                ))
-                .chain(documentEntity -> {
-                    if (documentEntity.sunatResponse != null && documentEntity.sunatResponse.ticket != null) {
+
+                        .onItemOrFailure().transformToUni((unused, throwable) -> {
+                            if (throwable instanceof FetchFileException) {
+                                FetchFileException jobException = (FetchFileException) throwable;
+
+                                JobErrorEntity jobErrorEntity = documentEntity.getJobError();
+                                if (jobErrorEntity == null) {
+                                    jobErrorEntity = new JobErrorEntity();
+                                    jobErrorEntity.setDocument(documentEntity);
+                                    documentEntity.setJobError(jobErrorEntity);
+                                }
+
+                                jobErrorEntity.setPhase(jobException.getPhase());
+
+                                switch (jobException.getPhase()) {
+                                    case FETCH_XML_FILE: {
+                                        jobErrorEntity.setDescription("No se pudo descargar el XML para ser procesado");
+                                        jobErrorEntity.setRecoveryAction(JobRecoveryActionType.RETRY_SEND);
+                                        jobErrorEntity.setRecoveryActionCount(1);
+
+                                        break;
+                                    }
+                                    case READ_XML_FILE: {
+                                        jobErrorEntity.setDescription("El contenido del XML no es válido");
+                                        break;
+                                    }
+                                    case SEND_XML_FILE: {
+                                        jobErrorEntity.setDescription("No se pudo enviar el XML a la SUNAT");
+                                        jobErrorEntity.setRecoveryAction(JobRecoveryActionType.RETRY_SEND);
+                                        jobErrorEntity.setRecoveryActionCount(1);
+                                        break;
+                                    }
+                                    case SAVE_CDR: {
+                                        jobErrorEntity.setDescription("No se pudo guardar el CDR en el storage");
+                                        jobErrorEntity.setRecoveryAction(JobRecoveryActionType.RETRY_FETCH_CDR);
+                                        jobErrorEntity.setRecoveryActionCount(1);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            documentEntity.setJobInProgress(false);
+                            return documentEntity.<UBLDocumentEntity>persistAndFlush();
+                        })
+
+                );
+
+        return Uni.createFrom().item(documentId)
+                .onItem().delayIt().by(Duration.ofMillis(INITIAL_DELAY))
+                .chain(() -> Panache.withTransaction(() -> documentEntityUni.chain(documentEntity -> {
+                    if (documentEntity.getSunatResponse() != null && documentEntity.getSunatResponse().getTicket() != null) {
                         return schedulerManager.sendVerifyTicketAtSUNAT(documentEntity);
                     } else {
                         return Uni.createFrom().voidItem();
                     }
-                });
+                })));
     }
 
     @ConsumeEvent(VertxScheduler.VERTX_CHECK_TICKET_SCHEDULER_BUS_NAME)
@@ -203,33 +206,33 @@ public class VertxSchedulerConsumer {
                         .retry().withBackOff(Duration.ofSeconds(1)).withJitter(0.2).atMost(3)
 
                         .chain(documentEntity -> xSenderMutiny
-                                .getXSenderConfig(documentEntity.project.id, documentEntity.xmlFileContent.ruc)
+                                .getXSenderConfig(documentEntity.getProjectId(), documentEntity.getXmlFileContent().getRuc())
                                 .chain(sunatConfig -> {
                                     XmlContentModel xmlContentModel = new XmlContentModel();
-                                    xmlContentModel.setRuc(documentEntity.xmlFileContent.ruc);
-                                    xmlContentModel.setDocumentType(documentEntity.xmlFileContent.tipoDocumento);
-                                    xmlContentModel.setDocumentID(documentEntity.xmlFileContent.serieNumero);
-                                    xmlContentModel.setVoidedLineDocumentTypeCode(documentEntity.xmlFileContent.bajaCodigoTipoDocumento);
+                                    xmlContentModel.setRuc(documentEntity.getXmlFileContent().getRuc());
+                                    xmlContentModel.setDocumentType(documentEntity.getXmlFileContent().getTipoDocumento());
+                                    xmlContentModel.setDocumentID(documentEntity.getXmlFileContent().getSerieNumero());
+                                    xmlContentModel.setVoidedLineDocumentTypeCode(documentEntity.getXmlFileContent().getBajaCodigoTipoDocumento());
 
                                     // Send file to SUNAT
                                     return xSenderMutiny
-                                            .verifyTicketAtSUNAT(documentEntity.sunatResponse.ticket, xmlContentModel, sunatConfig)
+                                            .verifyTicketAtSUNAT(documentEntity.getSunatResponse().getTicket(), xmlContentModel, sunatConfig)
                                             .onFailure(ConnectToSUNATException.class).recoverWithUni(throwable -> Uni.createFrom()
                                                     .failure(new FetchFileException(JobPhaseType.VERIFY_TICKET))
                                             )
                                             .invoke(sunatResponse -> {
-                                                SUNATResponseEntity sunatResponseEntity = documentEntity.sunatResponse;
+                                                SUNATResponseEntity sunatResponseEntity = documentEntity.getSunatResponse();
                                                 if (sunatResponseEntity == null) {
                                                     sunatResponseEntity = new SUNATResponseEntity();
-                                                    sunatResponseEntity.document = documentEntity;
-                                                    documentEntity.sunatResponse = sunatResponseEntity;
+                                                    sunatResponseEntity.setDocument(documentEntity);
+                                                    documentEntity.setSunatResponse(sunatResponseEntity);
                                                 }
 
-                                                sunatResponseEntity.code = sunatResponse.getCode();
-                                                sunatResponseEntity.ticket = sunatResponse.getTicket();
-                                                sunatResponseEntity.description = sunatResponse.getDescription();
-                                                sunatResponseEntity.status = sunatResponse.getStatus() != null ? sunatResponse.getStatus().toString() : null;
-                                                sunatResponseEntity.notes = sunatResponse.getNotes() != null ? new HashSet<>(sunatResponse.getNotes()) : null;
+                                                sunatResponseEntity.setCode(sunatResponse.getCode());
+                                                sunatResponseEntity.setTicket(sunatResponse.getTicket());
+                                                sunatResponseEntity.setDescription(sunatResponse.getDescription());
+                                                sunatResponseEntity.setStatus(sunatResponse.getStatus() != null ? sunatResponse.getStatus().toString() : null);
+                                                sunatResponseEntity.setNotes(sunatResponse.getNotes() != null ? new HashSet<>(sunatResponse.getNotes()) : null);
                                             })
 
                                             // Save CDR
@@ -239,7 +242,7 @@ public class VertxSchedulerConsumer {
                                                     .onFailure(PersistFileException.class).recoverWithUni(throwable -> Uni.createFrom()
                                                             .failure(new FetchFileException(JobPhaseType.SAVE_CDR))
                                                     )
-                                                    .invoke(cdrFileId -> documentEntity.cdrFileId = cdrFileId)
+                                                    .invoke(cdrFileId -> documentEntity.setCdrFileId(cdrFileId))
                                             );
                                 })
                                 .map(unused -> documentEntity)
@@ -248,23 +251,23 @@ public class VertxSchedulerConsumer {
                             if (throwable instanceof FetchFileException) {
                                 FetchFileException jobException = (FetchFileException) throwable;
 
-                                JobErrorEntity jobErrorEntity = documentEntity.jobError;
+                                JobErrorEntity jobErrorEntity = documentEntity.getJobError();
                                 if (jobErrorEntity == null) {
                                     jobErrorEntity = new JobErrorEntity();
-                                    jobErrorEntity.document = documentEntity;
-                                    documentEntity.jobError = jobErrorEntity;
+                                    jobErrorEntity.setDocument(documentEntity);
+                                    documentEntity.setJobError(jobErrorEntity);
                                 }
 
-                                jobErrorEntity.phase = jobException.getPhase();
+                                jobErrorEntity.setPhase(jobException.getPhase());
 
                                 if (jobException.getPhase() == JobPhaseType.VERIFY_TICKET) {
-                                    jobErrorEntity.description = "No se pudo verificar el ticket en la SUNAT";
-                                    jobErrorEntity.recoveryAction = JobRecoveryActionType.RETRY_SEND;
-                                    jobErrorEntity.recoveryActionCount = 1;
+                                    jobErrorEntity.setDescription("No se pudo verificar el ticket en la SUNAT");
+                                    jobErrorEntity.setRecoveryAction(JobRecoveryActionType.RETRY_SEND);
+                                    jobErrorEntity.setRecoveryActionCount(1);
                                 }
                             }
 
-                            documentEntity.jobInProgress = false;
+                            documentEntity.setJobInProgress(false);
                             return documentEntity.<UBLDocumentEntity>persist();
                         })
                 ))

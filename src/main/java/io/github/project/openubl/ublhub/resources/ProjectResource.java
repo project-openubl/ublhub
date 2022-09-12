@@ -96,7 +96,7 @@ public class ProjectResource {
                 )
                 .<ProjectEntity>persist()
                 .chain(projectEntity -> {
-                    ComponentOwner owner = getOwner(projectEntity.id);
+                    ComponentOwner owner = getOwner(projectEntity.getId());
                     return defaultKeyProviders.createProviders(owner)
                             .map(unused -> projectEntity);
                 });

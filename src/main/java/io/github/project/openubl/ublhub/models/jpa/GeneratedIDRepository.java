@@ -27,13 +27,13 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class GeneratedIDRepository implements PanacheRepositoryBase<GeneratedIDEntity, String> {
 
-    public Uni<GeneratedIDEntity> getCurrentID(ProjectEntity namespace, String ruc, String documentType) {
+    public Uni<GeneratedIDEntity> getCurrentID(ProjectEntity projectEntity, String ruc, String documentType) {
         Parameters params = Parameters
-                .with("namespaceId", namespace.id)
+                .with("projectId", projectEntity.getId())
                 .and("ruc", ruc)
                 .and("documentType", documentType);
 
-        return find("namespace.id = :namespaceId and ruc = :ruc and documentType = :documentType", params).firstResult();
+        return find("projectId = :projectId and ruc = :ruc and documentType = :documentType", params).firstResult();
     }
 
 }

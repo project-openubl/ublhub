@@ -33,6 +33,7 @@ import io.vertx.core.json.JsonObject;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
@@ -59,21 +60,21 @@ public class XMLGeneratorManager {
         switch (kind) {
             case Invoice:
                 Invoice invoice = document.mapTo(Invoice.class);
-                return getXML(projectEntity, invoice, idGenerator)
+                return getXML(projectEntity, invoice, idGenerator, spec.getId().getConfig())
                         .map(xml -> XMLResult.builder().ruc(invoice.getProveedor().getRuc())
                                 .xml(xml)
                                 .build()
                         );
             case CreditNote:
                 CreditNote creditNote = document.mapTo(CreditNote.class);
-                return getXML(projectEntity, creditNote, idGenerator)
+                return getXML(projectEntity, creditNote, idGenerator, spec.getId().getConfig())
                         .map(xml -> XMLResult.builder().ruc(creditNote.getProveedor().getRuc())
                                 .xml(xml)
                                 .build()
                         );
             case DebitNote:
                 DebitNote debitNote = document.mapTo(DebitNote.class);
-                return getXML(projectEntity, debitNote, idGenerator)
+                return getXML(projectEntity, debitNote, idGenerator, spec.getId().getConfig())
                         .map(xml -> XMLResult.builder().ruc(debitNote.getProveedor().getRuc())
                                 .xml(xml)
                                 .build()
@@ -83,9 +84,8 @@ public class XMLGeneratorManager {
         }
     }
 
-    private Uni<String> getXML(ProjectEntity projectEntity, Invoice invoice, IDGenerator idGenerator) {
-        boolean isFactura = invoice.getSerie().toUpperCase().startsWith("F");
-        return idGenerator.generateInvoiceID(projectEntity, invoice.getProveedor().getRuc(), isFactura)
+    private Uni<String> getXML(ProjectEntity projectEntity, Invoice invoice, IDGenerator idGenerator, Map<String, String> config) {
+        return idGenerator.generateInvoiceID(projectEntity, invoice.getProveedor().getRuc(), config)
                 .invoke(id -> {
                     if (id != null) {
                         invoice.setSerie(id.getSerie());
@@ -102,9 +102,9 @@ public class XMLGeneratorManager {
                 });
     }
 
-    private Uni<String> getXML(ProjectEntity projectEntity, CreditNote creditNote, IDGenerator idGenerator) {
+    private Uni<String> getXML(ProjectEntity projectEntity, CreditNote creditNote, IDGenerator idGenerator, Map<String, String> config) {
         boolean isFactura = creditNote.getComprobanteAfectadoSerieNumero().toUpperCase().startsWith("F");
-        return idGenerator.generateCreditNoteID(projectEntity, creditNote.getProveedor().getRuc(), isFactura)
+        return idGenerator.generateCreditNoteID(projectEntity, creditNote.getProveedor().getRuc(), isFactura, config)
                 .invoke(id -> {
                     if (id != null) {
                         creditNote.setSerie(id.getSerie());
@@ -121,9 +121,9 @@ public class XMLGeneratorManager {
                 });
     }
 
-    private Uni<String> getXML(ProjectEntity projectEntity, DebitNote debitNote, IDGenerator idGenerator) {
+    private Uni<String> getXML(ProjectEntity projectEntity, DebitNote debitNote, IDGenerator idGenerator, Map<String, String> config) {
         boolean isFactura = debitNote.getComprobanteAfectadoSerieNumero().toUpperCase().startsWith("F");
-        return idGenerator.generateDebitNoteID(projectEntity, debitNote.getProveedor().getRuc(), isFactura)
+        return idGenerator.generateDebitNoteID(projectEntity, debitNote.getProveedor().getRuc(), isFactura, config)
                 .invoke(id -> {
                     if (id != null) {
                         debitNote.setSerie(id.getSerie());

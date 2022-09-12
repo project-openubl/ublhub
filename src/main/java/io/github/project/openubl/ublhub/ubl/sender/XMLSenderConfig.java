@@ -16,6 +16,11 @@
  */
 package io.github.project.openubl.ublhub.ubl.sender;
 
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
 public class XMLSenderConfig {
 
     private String facturaUrl;
@@ -24,44 +29,4 @@ public class XMLSenderConfig {
 
     private String username;
     private String password;
-
-    public String getFacturaUrl() {
-        return facturaUrl;
-    }
-
-    public void setFacturaUrl(String facturaUrl) {
-        this.facturaUrl = facturaUrl;
-    }
-
-    public String getGuiaRemisionUrl() {
-        return guiaRemisionUrl;
-    }
-
-    public void setGuiaRemisionUrl(String guiaRemisionUrl) {
-        this.guiaRemisionUrl = guiaRemisionUrl;
-    }
-
-    public String getPercepcionRetencionUrl() {
-        return percepcionRetencionUrl;
-    }
-
-    public void setPercepcionRetencionUrl(String percepcionRetencionUrl) {
-        this.percepcionRetencionUrl = percepcionRetencionUrl;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 }

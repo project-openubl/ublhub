@@ -16,6 +16,11 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.Access;
@@ -24,53 +29,55 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "ubl_document")
 public class UBLDocumentEntity extends BaseEntity {
 
+    @EqualsAndHashCode.Include
     @Id
     @Column(name = "id")
     @Access(AccessType.PROPERTY)
-    public String id;
+    private String id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(foreignKey = @ForeignKey, name = "project_id")
-    public ProjectEntity project;
+    @Column(name = "project_id")
+    private String projectId;
 
     @NotNull
     @Size(max = 255)
     @Column(name = "xml_file_id")
-    public String xmlFileId;
+    private String xmlFileId;
 
     @Size(max = 255)
     @Column(name = "cdr_file_id")
-    public String cdrFileId;
+    private String cdrFileId;
 
     @NotNull
     @Type(type = "org.hibernate.type.YesNoType")
     @Column(name = "job_in_progress")
-    public boolean jobInProgress;
+    private boolean jobInProgress;
 
     @Valid
     @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    public XMLFileContentEntity xmlFileContent;
+    private XMLFileContentEntity xmlFileContent;
 
     @Valid
     @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    public SUNATResponseEntity sunatResponse;
+    private SUNATResponseEntity sunatResponse;
 
     @Valid
     @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    public JobErrorEntity jobError;
+    private JobErrorEntity jobError;
 }

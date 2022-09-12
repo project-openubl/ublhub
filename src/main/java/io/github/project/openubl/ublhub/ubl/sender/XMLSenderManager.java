@@ -18,6 +18,7 @@ package io.github.project.openubl.ublhub.ubl.sender;
 
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
+import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ConnectToSUNATException;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ReadXMLFileContentException;
 import io.github.project.openubl.xmlsenderws.webservices.exceptions.InvalidXMLFileException;
@@ -33,11 +34,11 @@ import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentProvider;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
 
-@ApplicationScoped
+@Dependent
 public class XMLSenderManager {
 
     private static final Logger LOGGER = Logger.getLogger(XMLSenderManager.class);
@@ -72,20 +73,24 @@ public class XMLSenderManager {
         });
     }
 
-    public Uni<XMLSenderConfig> getXSenderConfig(String namespaceId, String ruc) {
-        return companyRepository.findByRuc(namespaceId, ruc)
-                .onItem().ifNotNull().transform(companyEntity -> companyEntity.sunat)
+    public Uni<XMLSenderConfig> getXSenderConfig(String projectId, String ruc) {
+        return companyRepository.findByRuc(projectId, ruc)
+                .onItem().ifNotNull().transform(CompanyEntity::getSunat)
                 .onItem().ifNull().switchTo(() -> projectRepository
-                        .findById(namespaceId)
-                        .map(namespaceEntity -> namespaceEntity.sunat)
+                        .findById(projectId)
+                        .map(projectEntity -> {
+                            return projectEntity.getSunat();
+                        })
                 )
-                .map(sunatEntity -> XMLSenderConfigBuilder.aXMLSenderConfig()
-                        .withFacturaUrl(sunatEntity.sunatUrlFactura)
-                        .withGuiaRemisionUrl(sunatEntity.sunatUrlGuiaRemision)
-                        .withPercepcionRetencionUrl(sunatEntity.sunatUrlPercepcionRetencion)
-                        .withUsername(sunatEntity.sunatUsername)
-                        .withPassword(sunatEntity.sunatPassword)
-                        .build()
+                .map(sunatEntity -> {
+                            return XMLSenderConfig.builder()
+                                    .facturaUrl(sunatEntity.getSunatUrlFactura())
+                                    .guiaRemisionUrl(sunatEntity.getSunatUrlGuiaRemision())
+                                    .percepcionRetencionUrl(sunatEntity.getSunatUrlPercepcionRetencion())
+                                    .username(sunatEntity.getSunatUsername())
+                                    .password(sunatEntity.getSunatPassword())
+                                    .build();
+                        }
                 );
     }
 

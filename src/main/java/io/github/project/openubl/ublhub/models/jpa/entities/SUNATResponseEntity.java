@@ -16,6 +16,12 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -31,36 +37,42 @@ import javax.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "sunat_response")
 public class SUNATResponseEntity extends BaseEntity {
 
+    @EqualsAndHashCode.Include
     @Id
     @Column(name = "id")
-    public String id;
+    private String id;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY)
-    public UBLDocumentEntity document;
+    private UBLDocumentEntity document;
 
     @Size(max = 50)
     @Column(name = "ticket")
-    public String ticket;
+    private String ticket;
 
     @Size(max = 50)
     @Column(name = "status")
-    public String status;
+    private String status;
 
     @Column(name = "code")
-    public Integer code;
+    private Integer code;
 
     @Size(max = 255)
     @Column(name = "description")
-    public String description;
+    private String description;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Column(name = "value")
     @CollectionTable(name = "sunat_response_notes", joinColumns = {@JoinColumn(name = "sunat_response_id")})
-    public Set<@NotNull @Size(max = 255) String> notes = new HashSet<>();
+    private Set<@NotNull @Size(max = 255) String> notes = new HashSet<>();
 
 }

@@ -19,7 +19,15 @@ package io.github.project.openubl.ublhub.resources;
 import io.github.project.openubl.ublhub.AbstractBaseTest;
 import io.github.project.openubl.ublhub.BasicProfileManager;
 import io.github.project.openubl.ublhub.ProfileManager;
+import io.github.project.openubl.ublhub.dto.ComponentDto;
+import io.github.project.openubl.ublhub.dto.DocumentDto;
 import io.github.project.openubl.ublhub.dto.DocumentInputDto;
+import io.github.project.openubl.ublhub.dto.ProjectDto;
+import io.github.project.openubl.ublhub.dto.SunatCredentialsDto;
+import io.github.project.openubl.ublhub.dto.SunatWebServicesDto;
+import io.github.project.openubl.ublhub.keys.GeneratedRsaKeyProviderFactory;
+import io.github.project.openubl.ublhub.keys.KeyProvider;
+import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
 import io.github.project.openubl.xbuilder.content.catalogs.Catalog6;
 import io.github.project.openubl.xbuilder.content.models.common.Cliente;
 import io.github.project.openubl.xbuilder.content.models.common.Proveedor;
@@ -31,18 +39,66 @@ import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
+import org.keycloak.crypto.Algorithm;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 
 @QuarkusTest
 @TestProfile(BasicProfileManager.class)
-@TestHTTPEndpoint(DocumentResourceTest.class)
+@TestHTTPEndpoint(DocumentResource.class)
 public class DocumentResourceTest extends AbstractBaseTest {
 
     final int TIMEOUT = 60;
+
+
+    final static SunatWebServicesDto sunatWebServicesDto = SunatWebServicesDto.builder()
+            .factura("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
+            .guia("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
+            .retencion("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")
+            .build();
+
+    final static SunatCredentialsDto sunatCredentialsDto = SunatCredentialsDto.builder()
+            .username("MODDATOS")
+            .password("MODDATOS")
+            .build();
+
+    final static Invoice invoice = Invoice.builder()
+            .serie("F001")
+            .numero(1)
+            .proveedor(Proveedor.builder()
+                    .ruc("12345678912")
+                    .razonSocial("Softgreen S.A.C.")
+                    .build()
+            )
+            .cliente(Cliente.builder()
+                    .nombre("Carlos Feria")
+                    .numeroDocumentoIdentidad("12121212121")
+                    .tipoDocumentoIdentidad(Catalog6.RUC.toString())
+                    .build()
+            )
+            .detalle(DocumentoDetalle.builder()
+                    .descripcion("Item1")
+                    .cantidad(new BigDecimal(10))
+                    .precio(new BigDecimal(100))
+                    .build()
+            )
+            .detalle(DocumentoDetalle.builder()
+                    .descripcion("Item2")
+                    .cantidad(new BigDecimal(10))
+                    .precio(new BigDecimal(100))
+                    .build()
+            )
+            .build();
 
     @Override
     public Class<?> getTestClass() {
@@ -146,698 +202,333 @@ public class DocumentResourceTest extends AbstractBaseTest {
 //        // Then
 //    }
 
-//    @Test
-//    public void createInvoiceWithDefaultSignAlgorithm() {
-//        // Given
-//        String nsId = "1";
-//
-//        Invoice invoice = Invoice.builder()
-//                .serie("F001")
-//                .numero(1)
-//                .proveedor(Proveedor.builder()
-//                        .ruc("12345678912")
-//                        .razonSocial("Softgreen S.A.C.")
-//                        .build()
-//                )
-//                .cliente(Cliente.builder()
-//                        .nombre("Carlos Feria")
-//                        .numeroDocumentoIdentidad("12121212121")
-//                        .tipoDocumentoIdentidad(Catalog6.RUC.toString())
-//                        .build()
-//                )
-//                .detalle(DocumentoDetalle.builder()
-//                        .descripcion("Item1")
-//                        .cantidad(new BigDecimal(10))
-//                        .precio(new BigDecimal(100))
-//                        .build()
-//                )
-//                .detalle(DocumentoDetalle.builder()
-//                        .descripcion("Item2")
-//                        .cantidad(new BigDecimal(10))
-//                        .precio(new BigDecimal(100))
-//                        .build()
-//                )
-//                .build();
-//
-//        DocumentInputDto inputDto = DocumentInputDto.builder()
-//                .kind(DocumentInputDto.Kind.Invoice)
-//                .spec(DocumentInputDto.Spec.builder()
-//                        .id(null)
-//                        .signature(null)
-//                        .document(JsonObject.mapFrom(invoice))
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        givenAuth("alice")
-//                .contentType(ContentType.JSON)
-//                .body(JsonObject.mapFrom(inputDto).toString())
-//                .when()
-//                .post("/" + nsId + "/documents")
-//                .then()
-//                .statusCode(201)
-//                .body("id", is(notNullValue()),
-//                        "jobInProgress", is(true)
-//                )
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//
-//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isJobInProgress();
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(nullValue()),
-//                        "xmlFileContent.ruc", is("12345678912"),
-//                        "xmlFileContent.serieNumero", is("F001-1"),
-//                        "xmlFileContent.tipoDocumento", is("Invoice")
-//                );
-//    }
+    @Test
+    public void createInvoiceWithDefaultSignAlgorithm() {
+        // Given
+        ProjectDto projectDto = ProjectDto.builder()
+                .name("myproject")
+                .description("my description")
+                .sunatWebServices(sunatWebServicesDto)
+                .sunatCredentials(sunatCredentialsDto)
+                .build();
 
-//    @Test
-//    public void createInvoiceWithCustomSignAlgorithm() {
-//        // Given
-//        String nsId = "1";
-//
-//        InvoiceInputModel input = InvoiceInputModel.Builder.anInvoiceInputModel()
-//                .withSerie("F001")
-//                .withNumero(1)
-//                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
-//                        .withRuc("12345678912")
-//                        .withRazonSocial("Softgreen S.A.C.")
-//                        .build()
-//                )
-//                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
-//                        .withNombre("Carlos Feria")
-//                        .withNumeroDocumentoIdentidad("12121212121")
-//                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
-//                        .build()
-//                )
-//                .withDetalle(Arrays.asList(
-//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-//                                .withDescripcion("Item1")
-//                                .withCantidad(new BigDecimal(10))
-//                                .withPrecioUnitario(new BigDecimal(100))
-//                                .withUnidadMedida("KGM")
-//                                .build(),
-//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-//                                .withDescripcion("Item2")
-//                                .withCantidad(new BigDecimal(10))
-//                                .withPrecioUnitario(new BigDecimal(100))
-//                                .withUnidadMedida("KGM")
-//                                .build())
-//                )
-//                .build();
-//
-//        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
-//                .withKind(KindRepresentation.Invoice)
-//                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
-//                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
-//                                .withName(IDGeneratorType.none)
-//                                .build()
-//                        )
-//                        .withSignature(SignatureGeneratorRepresentation.Builder.aSignatureGeneratorRepresentation()
-//                                .withAlgorithm(Algorithm.RS512)
-//                                .build()
-//                        )
-//                        .withDocument(JsonObject.mapFrom(input))
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .contentType(ContentType.JSON)
-//                .body(JsonObject.mapFrom(template).toString())
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/documents")
-//                .then()
-//                .statusCode(201)
-//                .body("id", is(notNullValue()),
-//                        "jobInProgress", is(true)
-//                )
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//
-//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isJobInProgress();
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(nullValue()),
-//                        "xmlFileContent.ruc", is("12345678912"),
-//                        "xmlFileContent.serieNumero", is("F001-1"),
-//                        "xmlFileContent.tipoDocumento", is("Invoice")
-//                );
-//    }
-//
-//    @Test
-//    public void createInvoiceWithAutoIDGenerator() {
-//        // Given
-//        String nsId = "1";
-//
-//        InvoiceInputModel input = InvoiceInputModel.Builder.anInvoiceInputModel()
-//                .withSerie("F001")
-//                .withNumero(1)
-//                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
-//                        .withRuc("12345678912")
-//                        .withRazonSocial("Softgreen S.A.C.")
-//                        .build()
-//                )
-//                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
-//                        .withNombre("Carlos Feria")
-//                        .withNumeroDocumentoIdentidad("12121212121")
-//                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
-//                        .build()
-//                )
-//                .withDetalle(Arrays.asList(
-//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-//                                .withDescripcion("Item1")
-//                                .withCantidad(new BigDecimal(10))
-//                                .withPrecioUnitario(new BigDecimal(100))
-//                                .withUnidadMedida("KGM")
-//                                .build(),
-//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-//                                .withDescripcion("Item2")
-//                                .withCantidad(new BigDecimal(10))
-//                                .withPrecioUnitario(new BigDecimal(100))
-//                                .withUnidadMedida("KGM")
-//                                .build())
-//                )
-//                .build();
-//
-//        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
-//                .withKind(KindRepresentation.Invoice)
-//                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
-//                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
-//                                .withName(IDGeneratorType.generated)
-//                                .build()
-//                        )
-//                        .withDocument(JsonObject.mapFrom(input))
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .contentType(ContentType.JSON)
-//                .body(JsonObject.mapFrom(template).toString())
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/documents")
-//                .then()
-//                .statusCode(201)
-//                .body("id", is(notNullValue()),
-//                        "jobInProgress", is(true)
-//                )
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//
-//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isJobInProgress();
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(nullValue()),
-//                        "xmlFileContent.ruc", is("12345678912"),
-//                        "xmlFileContent.serieNumero", is("F001-1"),
-//                        "xmlFileContent.tipoDocumento", is("Invoice")
-//                );
-//    }
-//
-////    @Test
-////    public void createInvoiceWithAutoIDGeneratorConfig() {
-////        // Given
-////        String nsId = "1";
-////
-////        InvoiceInputModel input = InvoiceInputModel.Builder.anInvoiceInputModel()
-////                .withSerie("F001")
-////                .withNumero(1)
-////                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
-////                        .withRuc("12345678912")
-////                        .withRazonSocial("Softgreen S.A.C.")
-////                        .build()
-////                )
-////                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
-////                        .withNombre("Carlos Feria")
-////                        .withNumeroDocumentoIdentidad("12121212121")
-////                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
-////                        .build()
-////                )
-////                .withDetalle(Arrays.asList(
-////                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-////                                .withDescripcion("Item1")
-////                                .withCantidad(new BigDecimal(10))
-////                                .withPrecioUnitario(new BigDecimal(100))
-////                                .withUnidadMedida("KGM")
-////                                .build(),
-////                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-////                                .withDescripcion("Item2")
-////                                .withCantidad(new BigDecimal(10))
-////                                .withPrecioUnitario(new BigDecimal(100))
-////                                .withUnidadMedida("KGM")
-////                                .build())
-////                )
-////                .build();
-////
-////        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
-////                .withKind(KindRepresentation.Invoice)
-////                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
-////                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
-////                                .withName(IDGeneratorType.generated)
-////                                .withConfig(new HashMap<>() {{
-////                                    put(GeneratedIDGenerator.SERIE_PROPERTY, "2");
-////                                    put(GeneratedIDGenerator.NUMERO_PROPERTY, "33");
-////                                }})
-////                                .build()
-////                        )
-////                        .withDocument(JsonObject.mapFrom(input))
-////                        .build()
-////                )
-////                .build();
-////
-////        // When
-////        DocumentRepresentation response = given()
-////                .contentType(ContentType.JSON)
-////                .body(JsonObject.mapFrom(template).toString())
-////                .when()
-////                .post("/api/namespaces/" + nsId + "/documents")
-////                .then()
-////                .statusCode(201)
-////                .body("id", is(notNullValue()),
-////                        "jobInProgress", is(true)
-////                )
-////                .extract().body().as(DocumentRepresentation.class);
-////
-////        // Then
-////        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-////            DocumentRepresentation watchResponse = given()
-////                    .contentType(ContentType.JSON)
-////                    .when()
-////
-////                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-////                    .then()
-////                    .statusCode(200)
-////                    .extract().body().as(DocumentRepresentation.class);
-////            return !watchResponse.isJobInProgress();
-////        });
-////
-////        given()
-////                .contentType(ContentType.JSON)
-////                .when()
-////                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-////                .then()
-////                .statusCode(200)
-////                .body("jobInProgress", is(false),
-////                        "jobError", is(nullValue()),
-////                        "xmlFileContent.ruc", is("12345678912"),
-////                        "xmlFileContent.serieNumero", is("F002-33"),
-////                        "xmlFileContent.tipoDocumento", is("Invoice")
-////                );
-////    }
-//
-//    @Test
-//    public void createCreditNoteWithAutoIDGenerator() {
-//        // Given
-//        String nsId = "1";
-//
-//        CreditNoteInputModel input = CreditNoteInputModel.Builder.aCreditNoteInputModel()
-//                .withSerieNumeroComprobanteAfectado("F001-1")
-//                .withDescripcionSustento("Descripción")
-//                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
-//                        .withRuc("12345678912")
-//                        .withRazonSocial("Softgreen S.A.C.")
-//                        .build()
-//                )
-//                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
-//                        .withNombre("Carlos Feria")
-//                        .withNumeroDocumentoIdentidad("12121212121")
-//                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
-//                        .build()
-//                )
-//                .withDetalle(Arrays.asList(
-//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-//                                .withDescripcion("Item1")
-//                                .withCantidad(new BigDecimal(10))
-//                                .withPrecioUnitario(new BigDecimal(100))
-//                                .withUnidadMedida("KGM")
-//                                .build(),
-//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-//                                .withDescripcion("Item2")
-//                                .withCantidad(new BigDecimal(10))
-//                                .withPrecioUnitario(new BigDecimal(100))
-//                                .withUnidadMedida("KGM")
-//                                .build())
-//                )
-//                .build();
-//
-//        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
-//                .withKind(KindRepresentation.CreditNote)
-//                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
-//                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
-//                                .withName(IDGeneratorType.generated)
-//                                .build()
-//                        )
-//                        .withDocument(JsonObject.mapFrom(input))
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .contentType(ContentType.JSON)
-//                .body(JsonObject.mapFrom(template).toString())
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/documents")
-//                .then()
-//                .statusCode(201)
-//                .body("id", is(notNullValue()),
-//                        "jobInProgress", is(true)
-//                )
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isJobInProgress();
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(nullValue()),
-//                        "xmlFileContent.ruc", is("12345678912"),
-//                        "xmlFileContent.serieNumero", is("FC01-1"),
-//                        "xmlFileContent.tipoDocumento", is("CreditNote")
-//                );
-//    }
-//
-//    @Test
-//    public void createDebitNoteWithAutoIDGenerator() {
-//        // Given
-//        String nsId = "1";
-//
-//        DebitNoteInputModel input = DebitNoteInputModel.Builder.aDebitNoteInputModel()
-//                .withSerieNumeroComprobanteAfectado("F001-1")
-//                .withDescripcionSustento("Descripción")
-//                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
-//                        .withRuc("12345678912")
-//                        .withRazonSocial("Softgreen S.A.C.")
-//                        .build()
-//                )
-//                .withCliente(ClienteInputModel.Builder.aClienteInputModel()
-//                        .withNombre("Carlos Feria")
-//                        .withNumeroDocumentoIdentidad("12121212121")
-//                        .withTipoDocumentoIdentidad(Catalog6.RUC.toString())
-//                        .build()
-//                )
-//                .withDetalle(Arrays.asList(
-//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-//                                .withDescripcion("Item1")
-//                                .withCantidad(new BigDecimal(10))
-//                                .withPrecioUnitario(new BigDecimal(100))
-//                                .withUnidadMedida("KGM")
-//                                .build(),
-//                        DocumentLineInputModel.Builder.aDocumentLineInputModel()
-//                                .withDescripcion("Item2")
-//                                .withCantidad(new BigDecimal(10))
-//                                .withPrecioUnitario(new BigDecimal(100))
-//                                .withUnidadMedida("KGM")
-//                                .build())
-//                )
-//                .build();
-//
-//        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
-//                .withKind(KindRepresentation.DebitNote)
-//                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
-//                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
-//                                .withName(IDGeneratorType.generated)
-//                                .build()
-//                        )
-//                        .withDocument(JsonObject.mapFrom(input))
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .contentType(ContentType.JSON)
-//                .body(JsonObject.mapFrom(template).toString())
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/documents")
-//                .then()
-//                .statusCode(201)
-//                .body("id", is(notNullValue()),
-//                        "jobInProgress", is(true)
-//                )
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isJobInProgress();
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(nullValue()),
-//                        "xmlFileContent.ruc", is("12345678912"),
-//                        "xmlFileContent.serieNumero", is("FD01-1"),
-//                        "xmlFileContent.tipoDocumento", is("DebitNote")
-//                );
-//    }
-//
-//    @Test
-//    public void createVoidedDocumentWithAutoIDGenerator() {
-//        // Given
-//        String nsId = "1";
-//
-//        Calendar calendar = Calendar.getInstance();
-//        calendar.set(2019, Calendar.DECEMBER, 1, 20, 30, 59);
-//
-//        VoidedDocumentInputModel input = VoidedDocumentInputModel.Builder.aVoidedDocumentInputModel()
-//                .withNumero(1)
-//                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
-//                        .withRuc("12345678912")
-//                        .withRazonSocial("Softgreen S.A.C.")
-//                        .build()
-//                )
-//                .withDescripcionSustento("mi razon de baja")
-//                .withComprobante(VoidedDocumentLineInputModel.Builder.aVoidedDocumentLineInputModel()
-//                        .withSerieNumero("F001-1")
-//                        .withTipoComprobante(Catalog1.FACTURA.toString())
-//                        .withFechaEmision(calendar.getTimeInMillis())
-//                        .build()
-//                )
-//                .build();
-//
-//        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
-//                .withKind(KindRepresentation.VoidedDocument)
-//                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
-//                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
-//                                .withName(IDGeneratorType.generated)
-//                                .build()
-//                        )
-//                        .withDocument(JsonObject.mapFrom(input))
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .contentType(ContentType.JSON)
-//                .body(JsonObject.mapFrom(template).toString())
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/documents")
-//                .then()
-//                .statusCode(201)
-//                .body("id", is(notNullValue()),
-//                        "jobInProgress", is(true)
-//                )
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isJobInProgress();
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(nullValue()),
-//                        "xmlFileContent.ruc", is("12345678912"),
-//                        "xmlFileContent.serieNumero", is("RA-20191224-1"),
-//                        "xmlFileContent.tipoDocumento", is("VoidedDocuments")
-//                );
-//    }
-//
-//    @Test
-//    public void createSummaryDocumentWithAutoIDGenerator() {
-//        // Given
-//        String nsId = "1";
-//
-//        Calendar calendar = Calendar.getInstance();
-//        calendar.set(2019, Calendar.DECEMBER, 1, 20, 30, 59);
-//
-//        SummaryDocumentInputModel input = SummaryDocumentInputModel.Builder.aSummaryDocumentInputModel()
-//                .withNumero(1)
-//                .withFechaEmisionDeComprobantesAsociados(calendar.getTimeInMillis())
-//                .withProveedor(ProveedorInputModel.Builder.aProveedorInputModel()
-//                        .withRuc("12345678912")
-//                        .withRazonSocial("Softgreen S.A.C.")
-//                        .build()
-//                )
-//                .withDetalle(Collections.singletonList(
-//                        SummaryDocumentLineInputModel.Builder.aSummaryDocumentLineInputModel()
-//                                .withTipoOperacion(Catalog19.ADICIONAR.toString())
-//                                .withComprobante(SummaryDocumentComprobanteInputModel.Builder.aSummaryDocumentComprobanteInputModel()
-//                                        .withTipo(Catalog1.BOLETA.toString())
-//                                        .withSerieNumero("B001-1")
-//                                        .withCliente(ClienteInputModel.Builder.aClienteInputModel()
-//                                                .withNombre("Carlos Feria")
-//                                                .withNumeroDocumentoIdentidad("12345678")
-//                                                .withTipoDocumentoIdentidad(Catalog6.DNI.toString())
-//                                                .build()
-//                                        )
-//                                        .withImpuestos(SummaryDocumentImpuestosInputModel.Builder.aSummaryDocumentImpuestosInputModel()
-//                                                .withIgv(new BigDecimal("100"))
-//                                                .build()
-//                                        )
-//                                        .withValorVenta(SummaryDocumentComprobanteValorVentaInputModel.Builder.aSummaryDocumentComprobanteValorVentaInputModel()
-//                                                .withImporteTotal(new BigDecimal("118"))
-//                                                .withGravado(new BigDecimal("100"))
-//                                                .build()
-//                                        )
-//                                        .build()
-//                                )
-//                                .build()
-//                ))
-//                .build();
-//
-//        InputTemplateRepresentation template = InputTemplateRepresentation.Builder.anInputTemplateRepresentation()
-//                .withKind(KindRepresentation.SummaryDocument)
-//                .withSpec(SpecRepresentation.Builder.aSpecRepresentation()
-//                        .withIdGenerator(IDGeneratorRepresentation.Builder.anIDGeneratorRepresentation()
-//                                .withName(IDGeneratorType.generated)
-//                                .build()
-//                        )
-//                        .withDocument(JsonObject.mapFrom(input))
-//                        .build()
-//                )
-//                .build();
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .contentType(ContentType.JSON)
-//                .body(JsonObject.mapFrom(template).toString())
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/documents")
-//                .then()
-//                .statusCode(201)
-//                .body("id", is(notNullValue()),
-//                        "jobInProgress", is(true)
-//                )
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isJobInProgress();
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(nullValue()),
-//                        "xmlFileContent.ruc", is("12345678912"),
-//                        "xmlFileContent.serieNumero", is("RC-20191224-1"),
-//                        "xmlFileContent.tipoDocumento", is("SummaryDocuments")
-//                );
-//    }
+        String projectId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(projectDto)
+                .when()
+                .post("/")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()))
+                .extract().path("id").toString();
+
+        // When
+        DocumentInputDto inputDto = DocumentInputDto.builder()
+                .kind(DocumentInputDto.Kind.Invoice)
+                .spec(DocumentInputDto.Spec.builder()
+                        .id(null)
+                        .signature(null)
+                        .document(JsonObject.mapFrom(invoice))
+                        .build()
+                )
+                .build();
+
+        // Then
+        String documentId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(JsonObject.mapFrom(inputDto).toString())
+                .when()
+                .post("/" + projectId + "/documents")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()),
+                        "status.inProgress", is(true)
+                )
+                .extract().path("id").toString();
+
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            String inProgress = givenAuth("alice")
+                    .contentType(ContentType.JSON)
+                    .when()
+                    .get("/" + projectId + "/documents/" + documentId)
+                    .then()
+                    .statusCode(200)
+                    .extract().path("status.inProgress").toString();
+            return !Boolean.parseBoolean(inProgress);
+        });
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/documents/" + documentId)
+                .then()
+                .statusCode(200)
+                .body("status.inProgress", is(false),
+                        "status.xmlData.ruc", is("12345678912"),
+                        "status.xmlData.serieNumero", is("F001-1"),
+                        "status.xmlData.tipoDocumento", is("Invoice"),
+                        "status.error", is(nullValue()),
+                        "status.sunat.code", is(0),
+                        "status.sunat.ticket", is(nullValue()),
+                        "status.sunat.status", is("ACEPTADO"),
+                        "status.sunat.description", is("La Factura numero F001-1, ha sido aceptada"),
+                        "status.sunat.hasCdr", is(true),
+                        "status.sunat.notes", is(Collections.emptyList())
+                );
+    }
+
+    @Test
+    public void createInvoiceWithCustomSignAlgorithm() {
+        // Given
+        ProjectDto projectDto = ProjectDto.builder()
+                .name("myproject")
+                .description("my description")
+                .sunatWebServices(sunatWebServicesDto)
+                .sunatCredentials(sunatCredentialsDto)
+                .build();
+
+        String projectId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(projectDto)
+                .when()
+                .post("/")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()))
+                .extract().path("id").toString();
+
+        ComponentDto componentDto = ComponentDto.builder()
+                .name("myKey")
+                .providerId(GeneratedRsaKeyProviderFactory.ID)
+                .config(new HashMap<>() {{
+                    put("active", List.of("true"));
+                    put("algorithm", List.of(Algorithm.RS512));
+                    put("enabled", List.of("true"));
+                    put("keySize", List.of("2048"));
+                    put("priority", List.of("111"));
+                }})
+                .build();
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(componentDto)
+                .when()
+                .post("/" + projectId + "/keys/")
+                .then()
+                .statusCode(201)
+                .body("config.algorithm[0]", is(Algorithm.RS512));
+
+        // When
+        DocumentInputDto inputDto = DocumentInputDto.builder()
+                .kind(DocumentInputDto.Kind.Invoice)
+                .spec(DocumentInputDto.Spec.builder()
+                        .id(null)
+                        .signature(DocumentInputDto.Signature.builder()
+                                .algorithm(Algorithm.RS512)
+                                .build()
+                        )
+                        .document(JsonObject.mapFrom(invoice))
+                        .build()
+                )
+                .build();
+
+        // Then
+        String documentId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(JsonObject.mapFrom(inputDto).toString())
+                .when()
+                .post("/" + projectId + "/documents")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()),
+                        "status.inProgress", is(true)
+                )
+                .extract().path("id").toString();
+
+
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            String inProgress = givenAuth("alice")
+                    .contentType(ContentType.JSON)
+                    .when()
+                    .get("/" + projectId + "/documents/" + documentId)
+                    .then()
+                    .statusCode(200)
+                    .extract().path("status.inProgress").toString();
+            return !Boolean.parseBoolean(inProgress);
+        });
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/documents/" + documentId)
+                .then()
+                .statusCode(200)
+                .body("status.inProgress", is(false),
+                        "status.xmlData.ruc", is("12345678912"),
+                        "status.xmlData.serieNumero", is("F001-1"),
+                        "status.xmlData.tipoDocumento", is("Invoice"),
+                        "status.error", is(nullValue()),
+                        "status.sunat.code", is(0),
+                        "status.sunat.ticket", is(nullValue()),
+                        "status.sunat.status", is("ACEPTADO"),
+                        "status.sunat.description", is("La Factura numero F001-1, ha sido aceptada"),
+                        "status.sunat.hasCdr", is(true),
+                        "status.sunat.notes", is(Collections.emptyList())
+                );
+    }
+
+    @Test
+    public void createInvoiceWithCustomSignAlgorithm_CertificateNotFound() {
+        // Given
+        ProjectDto projectDto = ProjectDto.builder()
+                .name("myproject")
+                .description("my description")
+                .sunatWebServices(sunatWebServicesDto)
+                .sunatCredentials(sunatCredentialsDto)
+                .build();
+
+        String projectId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(projectDto)
+                .when()
+                .post("/")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()))
+                .extract().path("id").toString();
+
+        // When
+        DocumentInputDto inputDto = DocumentInputDto.builder()
+                .kind(DocumentInputDto.Kind.Invoice)
+                .spec(DocumentInputDto.Spec.builder()
+                        .id(null)
+                        .signature(DocumentInputDto.Signature.builder()
+                                .algorithm(Algorithm.RS512)
+                                .build()
+                        )
+                        .document(JsonObject.mapFrom(invoice))
+                        .build()
+                )
+                .build();
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(JsonObject.mapFrom(inputDto).toString())
+                .when()
+                .post("/" + projectId + "/documents")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    public void createInvoiceWithAutoIDGenerator() {
+        // Given
+        ProjectDto projectDto = ProjectDto.builder()
+                .name("myproject")
+                .description("my description")
+                .sunatWebServices(sunatWebServicesDto)
+                .sunatCredentials(sunatCredentialsDto)
+                .build();
+
+        String projectId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(projectDto)
+                .when()
+                .post("/")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()))
+                .extract().path("id").toString();
+
+        // When
+        Invoice invoice = Invoice.builder()
+                .proveedor(Proveedor.builder()
+                        .ruc("12345678912")
+                        .razonSocial("Softgreen S.A.C.")
+                        .build()
+                )
+                .cliente(Cliente.builder()
+                        .nombre("Carlos Feria")
+                        .numeroDocumentoIdentidad("12121212121")
+                        .tipoDocumentoIdentidad(Catalog6.RUC.toString())
+                        .build()
+                )
+                .detalle(DocumentoDetalle.builder()
+                        .descripcion("Item1")
+                        .cantidad(new BigDecimal(10))
+                        .precio(new BigDecimal(100))
+                        .build()
+                )
+                .detalle(DocumentoDetalle.builder()
+                        .descripcion("Item2")
+                        .cantidad(new BigDecimal(10))
+                        .precio(new BigDecimal(100))
+                        .build()
+                )
+                .build();
+
+        DocumentInputDto inputDto = DocumentInputDto.builder()
+                .kind(DocumentInputDto.Kind.Invoice)
+                .spec(DocumentInputDto.Spec.builder()
+                        .id(DocumentInputDto.ID.builder()
+                                .type(IDGeneratorType.generated)
+                                .config(Map.of(
+                                        "isFactura", "true",
+                                        "minSerie", "3",
+                                        "minNumero", "99"
+                                ))
+                                .build()
+                        )
+                        .signature(null)
+                        .document(JsonObject.mapFrom(invoice))
+                        .build()
+                )
+                .build();
+
+        // Then
+        String documentId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(JsonObject.mapFrom(inputDto).toString())
+                .when()
+                .post("/" + projectId + "/documents")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()),
+                        "status.inProgress", is(true)
+                )
+                .extract().path("id").toString();
+
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            String inProgress = givenAuth("alice")
+                    .contentType(ContentType.JSON)
+                    .when()
+                    .get("/" + projectId + "/documents/" + documentId)
+                    .then()
+                    .statusCode(200)
+                    .extract().path("status.inProgress").toString();
+            return !Boolean.parseBoolean(inProgress);
+        });
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/documents/" + documentId)
+                .then()
+                .statusCode(200)
+                .body("status.inProgress", is(false),
+                        "status.xmlData.ruc", is("12345678912"),
+                        "status.xmlData.serieNumero", is("F003-99"),
+                        "status.xmlData.tipoDocumento", is("Invoice"),
+                        "status.error", is(nullValue()),
+                        "status.sunat.code", is(0),
+                        "status.sunat.ticket", is(nullValue()),
+                        "status.sunat.status", is("ACEPTADO"),
+                        "status.sunat.description", is("La Factura numero F003-99, ha sido aceptada"),
+                        "status.sunat.hasCdr", is(true),
+                        "status.sunat.notes", is(Collections.emptyList())
+                );
+    }
 
 //    @Test
 //    public void uploadInvalidImageFile_shouldSetErrorStatus() throws URISyntaxException {

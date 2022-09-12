@@ -45,21 +45,21 @@ import javax.validation.constraints.NotNull;
 public class UserEntity extends PanacheEntity {
 
     @Column(name = "full_name")
-    public String fullName;
+    private String fullName;
 
     @NotNull
     @Username
-    public String username;
+    private String username;
 
     @NotNull
     @Password
-    public String password;
+    private String password;
 
     @Roles
-    public String permissions;
+    private String permissions;
 
     @Version
-    public int version;
+    private int version;
 
     public static Uni<UserEntity> findByUsername(String username) {
         return find("username", username).singleResult();

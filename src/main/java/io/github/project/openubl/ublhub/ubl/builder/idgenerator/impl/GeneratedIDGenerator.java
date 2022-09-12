@@ -33,6 +33,9 @@ import javax.validation.Validator;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -50,6 +53,10 @@ public class GeneratedIDGenerator implements IDGenerator {
 
     @Inject
     GeneratedIDRepository generatedIDRepository;
+
+    public static final String PROP_IS_FACTURA = "isFactura";
+    public static final String PROP_MIN_SERIE = "minSerie";
+    public static final String PROP_MIN_NUMERO = "minNumero";
 
     enum DocumentType {
         INVOICE_FACTURA_TYPE("Invoice_Factura", "F"),
@@ -79,26 +86,34 @@ public class GeneratedIDGenerator implements IDGenerator {
         }
     }
 
-    private Uni<GeneratedIDEntity> generateNextID(ProjectEntity namespace, String ruc, String documentType) {
-        return generatedIDRepository.getCurrentID(namespace, ruc, documentType)
+    private Uni<GeneratedIDEntity> generateNextID(ProjectEntity projectEntity, String ruc, String documentType, int minSerie, int minNumero) {
+        return generatedIDRepository.getCurrentID(projectEntity, ruc, documentType)
                 .onItem().ifNull().continueWith(() -> {
                     GeneratedIDEntity entity = new GeneratedIDEntity();
 
-                    entity.id = UUID.randomUUID().toString();
-                    entity.project = namespace;
-                    entity.ruc = ruc;
-                    entity.documentType = documentType;
-                    entity.serie = 1;
-                    entity.numero = 0;
+                    entity.setId(UUID.randomUUID().toString());
+                    entity.setProjectId(projectEntity.getId());
+                    entity.setRuc(ruc);
+                    entity.setDocumentType(documentType);
+                    entity.setSerie(minSerie);
+                    entity.setNumero(minNumero);
 
                     return entity;
                 })
                 .chain(generatedIDEntity -> {
-                    if (generatedIDEntity.numero > 99_999_999) {
-                        generatedIDEntity.serie++;
-                        generatedIDEntity.numero = 1;
+                    // Prepare min values
+                    if (generatedIDEntity.getSerie() <= minSerie) {
+                        generatedIDEntity.setSerie(minSerie);
+                        if (generatedIDEntity.getNumero() <= minNumero) {
+                            generatedIDEntity.setNumero(minNumero - 1);
+                        }
+                    }
+
+                    if (generatedIDEntity.getNumero() > 99_999_999) {
+                        generatedIDEntity.setSerie(generatedIDEntity.getSerie() + 1);
+                        generatedIDEntity.setNumero(1);
                     } else {
-                        generatedIDEntity.numero++;
+                        generatedIDEntity.setNumero(generatedIDEntity.getNumero() + 1);
                     }
 
                     return generatedIDEntity.persist();
@@ -110,26 +125,26 @@ public class GeneratedIDGenerator implements IDGenerator {
                 .onItem().ifNull().continueWith(() -> {
                     GeneratedIDEntity entity = new GeneratedIDEntity();
 
-                    entity.id = UUID.randomUUID().toString();
-                    entity.project = project;
-                    entity.ruc = ruc;
-                    entity.documentType = documentType;
-                    entity.serie = Integer.parseInt(LocalDateTime
+                    entity.setId(UUID.randomUUID().toString());
+                    entity.setProjectId(project.getId());
+                    entity.setRuc(ruc);
+                    entity.setDocumentType(documentType);
+                    entity.setSerie(Integer.parseInt(LocalDateTime
                             .now(ZoneId.of(timezone))
                             .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-                    );
-                    entity.numero = 0;
+                    ));
+                    entity.setNumero(0);
 
                     return entity;
                 })
                 .chain(generatedIDEntity -> {
                     int yyyyMMdd = Integer.parseInt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
 
-                    if (generatedIDEntity.serie == yyyyMMdd) {
-                        generatedIDEntity.numero++;
+                    if (generatedIDEntity.getSerie() == yyyyMMdd) {
+                        generatedIDEntity.setNumero(generatedIDEntity.getNumero() + 1);
                     } else {
-                        generatedIDEntity.serie = yyyyMMdd;
-                        generatedIDEntity.numero = 1;
+                        generatedIDEntity.setSerie(yyyyMMdd);
+                        generatedIDEntity.setNumero(1);
                     }
 
                     return generatedIDEntity.persist();
@@ -137,7 +152,15 @@ public class GeneratedIDGenerator implements IDGenerator {
     }
 
     @Override
-    public Uni<ID> generateInvoiceID(ProjectEntity project, String ruc, boolean isFactura) {
+    public Uni<ID> generateInvoiceID(ProjectEntity project, String ruc, Map<String, String> config) {
+        if (config == null) {
+            config = Collections.emptyMap();
+        }
+
+        boolean isFactura = Boolean.parseBoolean(config.getOrDefault(PROP_IS_FACTURA, "true"));
+        int minSerie = Integer.parseInt(config.getOrDefault(PROP_MIN_SERIE, "1"));
+        int minNumero = Integer.parseInt(config.getOrDefault(PROP_MIN_NUMERO, "1"));
+
         DocumentType documentType;
         if (isFactura) {
             documentType = DocumentType.INVOICE_FACTURA_TYPE;
@@ -145,16 +168,23 @@ public class GeneratedIDGenerator implements IDGenerator {
             documentType = DocumentType.INVOICE_BOLETA_TYPE;
         }
 
-        return generateNextID(project, ruc, documentType.name)
+        return generateNextID(project, ruc, documentType.name, minSerie, minNumero)
                 .map(generatedIDEntity -> {
-                    String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 3, "0");
-                    int numero = generatedIDEntity.numero;
+                    String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.getSerie()), 3, "0");
+                    int numero = generatedIDEntity.getNumero();
                     return new ID(serie, numero);
                 });
     }
 
     @Override
-    public Uni<ID> generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura) {
+    public Uni<ID> generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
+        if (config == null) {
+            config = Collections.emptyMap();
+        }
+
+        int minSerie = Integer.parseInt(config.getOrDefault(PROP_MIN_SERIE, "1"));
+        int minNumero = Integer.parseInt(config.getOrDefault(PROP_MIN_NUMERO, "1"));
+
         DocumentType documentType;
         if (isFactura) {
             documentType = DocumentType.CREDIT_NOTE_FOR_FACTURA_TYPE;
@@ -162,16 +192,23 @@ public class GeneratedIDGenerator implements IDGenerator {
             documentType = DocumentType.CREDIT_NOTE_FOR_BOLETA_TYPE;
         }
 
-        return generateNextID(project, ruc, documentType.name)
+        return generateNextID(project, ruc, documentType.name, minSerie, minNumero)
                 .map(generatedIDEntity -> {
-                    String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 2, "0");
-                    int numero = generatedIDEntity.numero;
+                    String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.getSerie()), 2, "0");
+                    int numero = generatedIDEntity.getNumero();
                     return new ID(serie, numero);
                 });
     }
 
     @Override
-    public Uni<ID> generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura) {
+    public Uni<ID> generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
+        if (config == null) {
+            config = Collections.emptyMap();
+        }
+
+        int minSerie = Integer.parseInt(config.getOrDefault(PROP_MIN_SERIE, "1"));
+        int minNumero = Integer.parseInt(config.getOrDefault(PROP_MIN_NUMERO, "1"));
+
         DocumentType documentType;
         if (isFactura) {
             documentType = DocumentType.DEBIT_NOTE_FOR_FACTURA_TYPE;
@@ -179,10 +216,10 @@ public class GeneratedIDGenerator implements IDGenerator {
             documentType = DocumentType.DEBIT_NOTE_FOR_BOLETA_TYPE;
         }
 
-        return generateNextID(project, ruc, documentType.name)
+        return generateNextID(project, ruc, documentType.name, minSerie, minNumero)
                 .map(generatedIDEntity -> {
-                    String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.serie), 2, "0");
-                    int numero = generatedIDEntity.numero;
+                    String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.getSerie()), 2, "0");
+                    int numero = generatedIDEntity.getNumero();
                     return new ID(serie, numero);
                 });
     }
@@ -198,8 +235,8 @@ public class GeneratedIDGenerator implements IDGenerator {
 
         return generateNextIDVoidedAndSummaryDocument(project, ruc, documentType.name)
                 .map(generatedIDEntity -> {
-                    String serie = documentType.prefix + "-" + generatedIDEntity.serie;
-                    int numero = generatedIDEntity.numero;
+                    String serie = documentType.prefix + "-" + generatedIDEntity.getSerie();
+                    int numero = generatedIDEntity.getNumero();
                     return new ID(serie, numero);
                 });
     }
@@ -210,8 +247,8 @@ public class GeneratedIDGenerator implements IDGenerator {
 
         return generateNextIDVoidedAndSummaryDocument(project, ruc, documentType.name)
                 .map(generatedIDEntity -> {
-                    String serie = documentType.prefix + "-" + generatedIDEntity.serie;
-                    int numero = generatedIDEntity.numero;
+                    String serie = documentType.prefix + "-" + generatedIDEntity.getSerie();
+                    int numero = generatedIDEntity.getNumero();
                     return new ID(serie, numero);
                 });
     }

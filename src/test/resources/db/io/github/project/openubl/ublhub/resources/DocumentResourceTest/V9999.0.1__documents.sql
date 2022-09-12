@@ -1,5 +1,5 @@
 -- NAMESPACES
-insert into namespace(id, name, description, sunat_username, sunat_password, sunat_url_factura, sunat_url_guia_remision,
+insert into project(id, name, description, sunat_username, sunat_password, sunat_url_factura, sunat_url_guia_remision,
                       sunat_url_percepcion_retencion, created, version)
 values ('1', 'my-namespace1', 'description1', 'username1', 'password1',
         'http://url1', 'http://url11', 'http://url111', CURRENT_TIMESTAMP + INTERVAL '1 day', 1),
@@ -9,7 +9,7 @@ values ('1', 'my-namespace1', 'description1', 'username1', 'password1',
         'http://url3', 'http://url33', 'http://url333', CURRENT_TIMESTAMP + INTERVAL '3 day', 1);
 
 -- COMPANIES
-insert into company(id, ruc, name, namespace_id, sunat_username, sunat_password, sunat_url_factura,
+insert into company(id, ruc, name, project_id, sunat_username, sunat_password, sunat_url_factura,
                     sunat_url_guia_remision, sunat_url_percepcion_retencion, created, version)
 values
 -- Companies in namespace 1
@@ -27,7 +27,7 @@ values
  'http://urlPercepcionRetencion4', CURRENT_TIMESTAMP + INTERVAL '4 day', 1);
 
 -- DOCUMENTS
-insert into ubl_document(id, namespace_id, xml_file_id, job_in_progress, created, version)
+insert into ubl_document(id, project_id, xml_file_id, job_in_progress, created, version)
 values
 -- Documents in namespace 1
 ('11', '1', '/home/ubl.xml', 'N', CURRENT_TIMESTAMP + INTERVAL '1 day', 1),

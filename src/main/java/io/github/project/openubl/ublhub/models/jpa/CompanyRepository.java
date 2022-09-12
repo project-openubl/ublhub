@@ -36,21 +36,21 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
     }
 
     public Uni<CompanyEntity> findById(ProjectEntity project, String companyId) {
-        return findById(project.id, companyId);
+        return findById(project.getId(), companyId);
     }
 
     public Uni<CompanyEntity> findById(String projectId, String companyId) {
         Parameters params = Parameters.with("projectId", projectId).and("companyId", companyId);
-        return find("id = :companyId and project.id = :projectId", params).firstResult();
+        return find("id = :companyId and projectId = :projectId", params).firstResult();
     }
 
     public Uni<CompanyEntity> findByRuc(ProjectEntity project, String ruc) {
-        return findByRuc(project.id, ruc);
+        return findByRuc(project.getId(), ruc);
     }
 
     public Uni<CompanyEntity> findByRuc(String projectId, String ruc) {
         Parameters params = Parameters.with("projectId", projectId).and("ruc", ruc);
-        return find("ruc = :ruc and project.id = :projectId", params).firstResult();
+        return find("ruc = :ruc and projectId = :projectId", params).firstResult();
     }
 
     public Uni<List<CompanyEntity>> listAll(ProjectEntity project) {
@@ -59,10 +59,10 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
     }
 
     public Uni<List<CompanyEntity>> listAll(ProjectEntity project, Sort sort) {
-        Parameters params = Parameters.with("projectId", project.id);
+        Parameters params = Parameters.with("projectId", project.getId());
 
         PanacheQuery<CompanyEntity> query = CompanyEntity
-                .find("From CompanyEntity as c where c.project.id = :projectId", sort, params);
+                .find("From CompanyEntity as c where c.projectId = :projectId", sort, params);
 
         return query.list();
     }
@@ -70,7 +70,7 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
     public Uni<Boolean> deleteByProjectIdAndId(String projectId, String id) {
         Parameters params = Parameters.with("projectId", projectId).and("id", id);
         return CompanyEntity
-                .delete("project.id = :projectId and id = :id", params)
+                .delete("projectId = :projectId and id = :id", params)
                 .map(rowCount -> rowCount > 0);
     }
 }

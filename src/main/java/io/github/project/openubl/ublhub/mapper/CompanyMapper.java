@@ -40,7 +40,6 @@ public abstract class CompanyMapper {
     @Mapping(target = "sunat.sunatUrlPercepcionRetencion", source = "sunatWebServices.retencion")
     @Mapping(target = "sunat.sunatUsername", source = "sunatCredentials.username", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "sunat.sunatPassword", source = "sunatCredentials.password", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "project", source = "sunatCredentials.password", ignore = true)
     public abstract CompanyEntity updateEntityFromDto(CompanyDto dto, @MappingTarget CompanyEntity entity);
 
 }

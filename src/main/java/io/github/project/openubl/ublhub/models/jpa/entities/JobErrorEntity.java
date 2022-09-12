@@ -18,6 +18,11 @@ package io.github.project.openubl.ublhub.models.jpa.entities;
 
 import io.github.project.openubl.ublhub.models.JobPhaseType;
 import io.github.project.openubl.ublhub.models.JobRecoveryActionType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -31,34 +36,40 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "job_error")
 public class JobErrorEntity extends BaseEntity {
 
+    @EqualsAndHashCode.Include
     @Id
     @Column(name = "id")
-    public String id;
+    private String id;
 
     @NotNull
     @MapsId
     @OneToOne(fetch = FetchType.LAZY)
-    public UBLDocumentEntity document;
+    private UBLDocumentEntity document;
 
     @Size(max = 255)
     @Column(name = "description")
-    public String description;
+    private String description;
 
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "phase")
-    public JobPhaseType phase;
+    private JobPhaseType phase;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "recovery_action")
-    public JobRecoveryActionType recoveryAction;
+    private JobRecoveryActionType recoveryAction;
 
     @NotNull
     @Column(name = "recovery_action_count")
-    public int recoveryActionCount;
+    private int recoveryActionCount;
 
 }

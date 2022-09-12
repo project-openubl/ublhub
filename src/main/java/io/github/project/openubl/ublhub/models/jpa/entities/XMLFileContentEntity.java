@@ -16,6 +16,12 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -27,35 +33,41 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "xml_file_content")
 public class XMLFileContentEntity extends BaseEntity {
 
+    @EqualsAndHashCode.Include
     @Id
-    public String id;
+    private String id;
 
     @MapsId
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id")
-    public UBLDocumentEntity document;
+    private UBLDocumentEntity document;
 
     @NotNull
     @Size(max = 11)
     @Column(name = "ruc")
-    public String ruc;
+    private String ruc;
 
     @NotNull
     @Size(max = 50)
     @Column(name = "serie_numero")
-    public String serieNumero;
+    private String serieNumero;
 
     @NotNull
     @Size(max = 50)
     @Column(name = "tipo_documento")
-    public String tipoDocumento;
+    private String tipoDocumento;
 
     @Size(max = 50)
     @Column(name = "baja_codigo_tipo_documento")
-    public String bajaCodigoTipoDocumento;
+    private String bajaCodigoTipoDocumento;
 
 }

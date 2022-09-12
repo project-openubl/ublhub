@@ -50,35 +50,35 @@ public class ComponentEntity extends PanacheEntityBase {
     @Id
     @Column(name = "id", length = 36)
     @Access(AccessType.PROPERTY)
-    public String id;
+    private String id;
 
     @NotNull
     @Size(max = 255)
     @Column(name = "name")
-    public String name;
+    private String name;
 
     @Size(max = 255)
     @Column(name = "provider_type")
-    public String providerType;
+    private String providerType;
 
     @Size(max = 255)
     @Column(name = "provider_id")
-    public String providerId;
+    private String providerId;
 
     @Size(max = 255)
     @Column(name = "parent_id")
-    public String parentId;
+    private String parentId;
 
     @Size(max = 255)
     @Column(name = "sub_type")
-    public String subType;
+    private String subType;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.ALL}, orphanRemoval = true, mappedBy = "component")
-    public Set<ComponentConfigEntity> componentConfigs = new HashSet<>();
+    private Set<ComponentConfigEntity> componentConfigs = new HashSet<>();
 
     @Column(name = "project_id")
-    public String projectId;
+    private String projectId;
 
     @Column(name = "company_id")
-    public String companyId;
+    private String companyId;
 }

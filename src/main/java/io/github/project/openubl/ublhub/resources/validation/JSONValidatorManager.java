@@ -17,7 +17,6 @@
 package io.github.project.openubl.ublhub.resources.validation;
 
 import io.github.project.openubl.ublhub.dto.DocumentInputDto;
-import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.apache.camel.ProducerTemplate;
 
@@ -34,12 +33,15 @@ public class JSONValidatorManager {
         return producerTemplate.requestBody("direct:validate-json-document", jsonObject.toString(), Boolean.class);
     }
 
-    public DocumentInputDto getDocumentInputDtoFromJsonObject(JsonObject jsonObject) {
-        DocumentInputDto input = jsonObject.mapTo(DocumentInputDto.class);
+    public DocumentInputDto getDocumentInputDtoFromJsonObject(JsonObject json) {
+        JsonObject spec = json.getJsonObject("spec");
 
-        JsonObject documentJsonObject = jsonObject.getJsonObject("spec").getJsonObject("document");
-        input.getSpec().setDocument(documentJsonObject);
+        JsonObject document = spec.getJsonObject("document");
+        spec.remove("document");
 
-        return input;
+        DocumentInputDto dto = json.mapTo(DocumentInputDto.class);
+        dto.getSpec().setDocument(document);
+
+        return dto;
     }
 }

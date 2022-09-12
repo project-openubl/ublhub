@@ -49,20 +49,20 @@ public class ComponentConfigEntity extends PanacheEntityBase {
     @Id
     @Column(name = "id", length = 36)
     @Access(AccessType.PROPERTY)
-    public String id;
+    private String id;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "component_id")
-    public ComponentEntity component;
+    private ComponentEntity component;
 
     @Size(max = 255)
     @Column(name = "name")
-    public String name;
+    private String name;
 
     @Nationalized
     @Size(max = 4000)
     @Column(name = "value", length = 4000)
-    public String value;
+    private String value;
 
 }

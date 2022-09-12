@@ -37,25 +37,25 @@ public class SchedulerManager {
     Instance<Scheduler> schedulers;
 
     public Uni<Void> sendDocumentToSUNAT(UBLDocumentEntity documentEntity) {
-        documentEntity.jobInProgress = true;
+        documentEntity.setJobInProgress(true);
         return documentEntity.<UBLDocumentEntity>persistAndFlush()
                 .chain(() -> {
                     SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
                     Annotation annotation = new SchedulerProviderLiteral(providerType);
                     Scheduler scheduler = schedulers.select(annotation).get();
-                    return scheduler.sendDocumentToSUNAT(documentEntity.id);
+                    return scheduler.sendDocumentToSUNAT(documentEntity.getId());
                 });
     }
 
     public Uni<Void> sendVerifyTicketAtSUNAT(UBLDocumentEntity documentEntity) {
-        documentEntity.jobInProgress = true;
+        documentEntity.setJobInProgress(true);
         return documentEntity.<UBLDocumentEntity>persistAndFlush()
                 .chain(() -> {
                     SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
                     Annotation annotation = new SchedulerProviderLiteral(providerType);
 
                     Scheduler scheduler = schedulers.select(annotation).get();
-                    return scheduler.sendVerifyTicketAtSUNAT(documentEntity.id);
+                    return scheduler.sendVerifyTicketAtSUNAT(documentEntity.getId());
                 });
     }
 
