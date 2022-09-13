@@ -50,6 +50,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.github.project.openubl.ublhub.models.JobPhaseType.READ_XML_FILE;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -106,102 +107,98 @@ public class DocumentResourceTest extends AbstractBaseTest {
         return DocumentResourceTest.class;
     }
 
-//    @Test
-//    public void getDocument() {
-//        // Given
-//        String nsId = "1";
-//        String documentId = "11";
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + documentId)
-//                .then()
-//                .statusCode(200)
-//                .body("id", is(documentId),
-//                        "jobInProgress", is(false),
-//                        "created", is(notNullValue()),
-//                        "updated", is(nullValue())
-//                );
-//        // Then
-//    }
-//
-//    @Test
-//    public void getDocumentThatBelongsToOtherNamespace_shouldNotBeAllowed() {
-//        // Given
-//        String nsOwnerId = "1";
-//        String nsToTestId = "2";
-//
-//        String documentId = "11";
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsOwnerId + "/documents/" + documentId)
-//                .then()
-//                .statusCode(200);
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsToTestId + "/documents/" + documentId)
-//                .then()
-//                .statusCode(404);
-//        // Then
-//    }
-//
-//    @Test
-//    public void searchDocuments() {
-//        // Given
-//        String nsId = "1";
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents")
-//                .then()
-//                .statusCode(200)
-//                .body("meta.count", is(2),
-//                        "items.size()", is(2),
-//                        "items[0].id", is("22"),
-//                        "items[1].id", is("11")
-//                );
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents?sort_by=created:asc")
-//                .then()
-//                .statusCode(200)
-//                .body("meta.count", is(2),
-//                        "items.size()", is(2),
-//                        "items[0].id", is("11"),
-//                        "items[1].id", is("22")
-//                );
-//        // Then
-//    }
-//
-//    @Test
-//    public void searchDocuments_filterTextByName() {
-//        // Given
-//        String nsId = "1";
-//
-//        // When
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents?filterText=11")
-//                .then()
-//                .statusCode(200)
-//                .body("meta.count", is(1),
-//                        "items.size()", is(1),
-//                        "items[0].xmlFileContent.serieNumero", is("F-11")
-//                );
-//        // Then
-//    }
+    @Test
+    public void getDocument() {
+        // Given
+        String projectId = "1";
+        String documentId = "11";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/documents/" + documentId)
+                .then()
+                .statusCode(200)
+                .body("id", is(documentId));
+        // Then
+    }
+
+    @Test
+    public void getDocumentThatBelongsToOtherNamespace_shouldNotBeAllowed() {
+        // Given
+        String projectOwnerId = "1";
+        String projectToTestId = "2";
+
+        String documentId = "11";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectOwnerId + "/documents/" + documentId)
+                .then()
+                .statusCode(200);
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectToTestId + "/documents/" + documentId)
+                .then()
+                .statusCode(404);
+        // Then
+    }
+
+    @Test
+    public void searchDocuments() {
+        // Given
+        String projectId = "1";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/documents")
+                .then()
+                .statusCode(200)
+                .body("count", is(2),
+                        "items.size()", is(2),
+                        "items[0].id", is("22"),
+                        "items[1].id", is("11")
+                );
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/documents?sort_by=created:asc")
+                .then()
+                .statusCode(200)
+                .body("count", is(2),
+                        "items.size()", is(2),
+                        "items[0].id", is("11"),
+                        "items[1].id", is("22")
+                );
+        // Then
+    }
+
+    @Test
+    public void searchDocuments_filterTextByName() {
+        // Given
+        String projectId = "1";
+
+        // When
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/documents?filterText=11")
+                .then()
+                .statusCode(200)
+                .body("count", is(1),
+                        "items.size()", is(1),
+                        "items[0].status.xmlData.serieNumero", is("F-11")
+                );
+        // Then
+    }
 
     @Test
     public void createInvoiceWithDefaultSignAlgorithm() {
@@ -549,7 +546,6 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .statusCode(201)
                 .extract().path("id").toString();
 
-        // Then
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
             String inProgress = givenAuth("alice")
                     .contentType(ContentType.JSON)
@@ -561,6 +557,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
             return !Boolean.parseBoolean(inProgress);
         });
 
+        // Then
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
@@ -572,288 +569,48 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 );
     }
 
-//    @Test
-//    public void uploadInvalidXMLFile_shouldSetErrorStatus() throws URISyntaxException {
-//        // Given
-//        String nsId = "1";
-//
-//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/maven.xml").toURI();
-//        File file = new File(fileURI);
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .accept(ContentType.JSON)
-//                .multiPart("file", file, "application/xml")
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/documents/upload")
-//                .then()
-//                .statusCode(200)
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isJobInProgress();
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(notNullValue()),
-//                        "xmlFileContent", is(nullValue())
-//                );
-//    }
+    @Test
+    public void uploadInvalidXMLFile_shouldSetErrorStatus() throws URISyntaxException {
+        // Given
+        String projectId = "1";
 
-//    @Test
-//    public void uploadValidXMLFile_noCompanyRuc_shouldSetErrorStatus() throws URISyntaxException {
-//        // Given
-//        String nsId = "1";
-//
-//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_alterado_22222222222.xml").toURI();
-//        File file = new File(fileURI);
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .accept(ContentType.JSON)
-//                .multiPart("file", file, "application/xml")
-//                .when()
-//                .post("/" + nsId + "/documents/upload")
-//                .then()
-//                .statusCode(200)
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//
-//                    .get("/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.COMPANY_NOT_FOUND);
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(ErrorType.COMPANY_NOT_FOUND.toString()),
-////                        "scheduledDelivery", is(nullValue()),
-////                        "retryCount", is(0),
-//                        
-//                        "xmlFileContent.ruc", is("22222222222"),
-//                        "xmlFileContent.serieNumero", is("F001-1"),
-//                        "xmlFileContent.tipoDocumento", is("Invoice")
-//                );
-//    }
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/maven.xml").toURI();
+        File file = new File(fileURI);
 
-//    @Test
-//    public void uploadValidXMLFile_existingCompanyRuc_wrongUrls_shouldHaveError() throws URISyntaxException {
-//        // Given
-//        String nsId = "2";
-//
-//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_alterado_11111111111.xml").toURI();
-//        File file = new File(fileURI);
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .accept(ContentType.JSON)
-//                .multiPart("file", file, "application/xml")
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/documents/upload")
-//                .then()
-//                .statusCode(200)
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isJobInProgress() && watchResponse.getJobError() != null && watchResponse.getJobError().getPhase().equals(JobPhaseType.SEND_XML_FILE);
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(notNullValue()),
-//                        "xmlFileContent.ruc", is("11111111111"),
-//                        "xmlFileContent.serieNumero", is("F001-1"),
-//                        "xmlFileContent.tipoDocumento", is("Invoice")
-//                );
-//    }
-//
-//    @Test
-//    public void uploadAlteredXMLFile_existingCompanyRuc_validURLs_shouldNotHaveError() throws URISyntaxException {
-//        // Given
-//        String nsId = "1";
-//
-//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_alterado_12345678912.xml").toURI();
-//        File file = new File(fileURI);
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .accept(ContentType.JSON)
-//                .multiPart("file", file, "application/xml")
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/documents/upload")
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(true))
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isJobInProgress();
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(nullValue()),
-//                        "xmlFileContent.ruc", is("12345678912"),
-//                        "xmlFileContent.serieNumero", is("F001-1"),
-//                        "xmlFileContent.tipoDocumento", is("Invoice"),
-//                        "sunatResponse.code", is(2335),
-//                        "sunatResponse.ticket", is(nullValue()),
-//                        "sunatResponse.status", is("RECHAZADO"),
-//                        "sunatResponse.description", is("El documento electrónico ingresado ha sido alterado"),
-//                        "sunatResponse.hasCdr", is(false)
-//                );
-//    }
-//
-//    @Test
-//    public void uploadValidInvoiceXMLFile_existingCompanyRuc_validURLs_shouldNotHaveError() throws URISyntaxException {
-//        // Given
-//        String nsId = "1";
-//
-//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/invoice_12345678912.xml").toURI();
-//        File file = new File(fileURI);
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .accept(ContentType.JSON)
-//                .multiPart("file", file, "application/xml")
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/documents/upload")
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(true))
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isJobInProgress();
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(nullValue()),
-//                        "xmlFileContent.ruc", is("12345678912"),
-//                        "xmlFileContent.serieNumero", is("F001-1"),
-//                        "xmlFileContent.tipoDocumento", is("Invoice"),
-//                        "sunatResponse.code", is(0),
-//                        "sunatResponse.ticket", is(nullValue()),
-//                        "sunatResponse.status", is("ACEPTADO"),
-//                        "sunatResponse.description", is("La Factura numero F001-1, ha sido aceptada"),
-//                        "sunatResponse.hasCdr", is(true)
-//                );
-//    }
-//
-//    @Test
-//    public void uploadValidVoidDocumentXMLFile_existingCompanyRuc_validURLs_shouldNotHaveError() throws URISyntaxException {
-//        // Given
-//        String nsId = "1";
-//
-//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/voided-document_12345678912.xml").toURI();
-//        File file = new File(fileURI);
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .accept(ContentType.JSON)
-//                .multiPart("file", file, "application/xml")
-//                .when()
-//                .post("/api/namespaces/" + nsId + "/documents/upload")
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(true))
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//                    .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return !watchResponse.isJobInProgress();
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/api/namespaces/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(nullValue()),
-//                        "xmlFileContent.ruc", is("12345678912"),
-//                        "xmlFileContent.serieNumero", is("RA-20200328-1"),
-//                        "xmlFileContent.tipoDocumento", is("VoidedDocuments"),
-//                        "sunatResponse.code", is(0),
-//                        "sunatResponse.ticket", is(notNullValue()),
-//                        "sunatResponse.status", is("ACEPTADO"),
-//                        "sunatResponse.description", is("La Comunicacion de baja RA-20200328-1, ha sido aceptada"),
-//                        "sunatResponse.hasCdr", is(true)
-//                );
-//    }
+        // When
+        String documentId = givenAuth("alice")
+                .accept(ContentType.JSON)
+                .multiPart("file", file, "application/xml")
+                .when()
+                .post("/" + projectId + "/upload/document")
+                .then()
+                .statusCode(201)
+                .extract().path("id").toString();
+
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            String inProgress = givenAuth("alice")
+                    .contentType(ContentType.JSON)
+                    .when()
+                    .get("/" + projectId + "/documents/" + documentId)
+                    .then()
+                    .statusCode(200)
+                    .extract().path("status.inProgress").toString();
+            return !Boolean.parseBoolean(inProgress);
+        });
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/documents/" + documentId)
+                .then()
+                .statusCode(200)
+                .body("status.inProgress", is(false),
+                        "status.xmlData", is(nullValue()),
+                        "status.error.phase", is(READ_XML_FILE.toString()),
+                        "status.error.description", is("El contenido del XML no es válido")
+                );
+    }
+
 }
 

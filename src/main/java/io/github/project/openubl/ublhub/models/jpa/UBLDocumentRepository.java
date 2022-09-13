@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.models.jpa;
 
-import io.github.project.openubl.ublhub.models.DocumentFilterModel;
+import io.github.project.openubl.ublhub.models.FilterDocumentBean;
 import io.github.project.openubl.ublhub.models.PageBean;
 import io.github.project.openubl.ublhub.models.SortBean;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
@@ -47,11 +47,11 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
                 .firstResult();
     }
 
-    public UniAndGroup2<List<UBLDocumentEntity>, Long> list(ProjectEntity project, DocumentFilterModel filters, PageBean pageBean, List<SortBean> sortBy) {
+    public UniAndGroup2<List<UBLDocumentEntity>, Long> list(ProjectEntity project, FilterDocumentBean filters, PageBean pageBean, List<SortBean> sortBy) {
         return list(project, null, filters, pageBean, sortBy);
     }
 
-    public UniAndGroup2<List<UBLDocumentEntity>, Long> list(ProjectEntity project, String filterText, DocumentFilterModel filters, PageBean pageBean, List<SortBean> sortBy) {
+    public UniAndGroup2<List<UBLDocumentEntity>, Long> list(ProjectEntity project, String filterText, FilterDocumentBean filters, PageBean pageBean, List<SortBean> sortBy) {
         StringBuilder queryBuilder = new StringBuilder("select distinct d from UBLDocumentEntity d left join d.xmlFileContent x where d.projectId = :projectId");
         Parameters params = Parameters.with("projectId", project.getId());
 

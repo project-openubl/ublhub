@@ -35,10 +35,14 @@ package io.github.project.openubl.ublhub.resources;
 
 import io.github.project.openubl.ublhub.dto.DocumentDto;
 import io.github.project.openubl.ublhub.dto.DocumentInputDto;
+import io.github.project.openubl.ublhub.dto.PageDto;
 import io.github.project.openubl.ublhub.files.FilesMutiny;
 import io.github.project.openubl.ublhub.keys.KeyManager;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import io.github.project.openubl.ublhub.mapper.DocumentMapper;
+import io.github.project.openubl.ublhub.models.FilterDocumentBean;
+import io.github.project.openubl.ublhub.models.PageBean;
+import io.github.project.openubl.ublhub.models.SortBean;
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.UBLDocumentRepository;
@@ -46,6 +50,7 @@ import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.ublhub.resources.exceptions.AbstractBadRequestException;
 import io.github.project.openubl.ublhub.resources.exceptions.NoCertificateToSignFoundException;
+import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
 import io.github.project.openubl.ublhub.resources.validation.JSONValidatorManager;
 import io.github.project.openubl.ublhub.scheduler.SchedulerManager;
 import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorManager;
@@ -54,6 +59,7 @@ import io.github.project.openubl.xbuilder.signature.XMLSigner;
 import io.github.project.openubl.xbuilder.signature.XmlSignatureHelper;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniAndGroup2;
 import io.vertx.core.json.JsonObject;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.MultipartForm;
@@ -69,18 +75,22 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static io.github.project.openubl.ublhub.keys.component.ComponentOwner.OwnerType.company;
 import static io.github.project.openubl.ublhub.keys.component.ComponentOwner.OwnerType.project;
@@ -293,47 +303,59 @@ public class DocumentResource {
         return Panache.withTransaction(() -> restResponseUni);
     }
 
-//    @GET
-//    @Path("/{namespaceId}/documents")
-//    public Uni<Response> getDocuments(
-//            @PathParam("namespaceId") @NotNull String namespaceId,
-//            @QueryParam("ruc") List<String> ruc,
-//            @QueryParam("documentType") List<String> documentType,
-//            @QueryParam("filterText") String filterText,
-//            @QueryParam("offset") @DefaultValue("0") Integer offset,
-//            @QueryParam("limit") @DefaultValue("10") Integer limit,
-//            @QueryParam("sort_by") @DefaultValue("created:desc") List<String> sortBy
-//    ) {
-//        PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
-//        List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, UBLDocumentRepository.SORT_BY_FIELDS);
-//
-//        DocumentFilterModel filters = DocumentFilterModel.DocumentFilterModelBuilder.aDocumentFilterModel()
-//                .withRuc(ruc)
-//                .withDocumentType(documentType)
-//                .build();
-//
-//        return Panache
-//                .withTransaction(() -> projectRepository.findById(namespaceId)
-//                        .onItem().ifNotNull().transformToUni(namespaceEntity -> {
-//                            UniAndGroup2<List<UBLDocumentEntity>, Long> searchResult;
-//                            if (filterText != null && !filterText.trim().isEmpty()) {
-//                                searchResult = documentRepository.list(namespaceEntity, filterText, filters, pageBean, sortBeans);
-//                            } else {
-//                                searchResult = documentRepository.list(namespaceEntity, filters, pageBean, sortBeans);
-//                            }
-//                            return searchResult.asTuple();
-//                        })
-//                )
-//                .onItem().ifNotNull().transform(tuple2 -> Response.ok()
-//                        .entity(EntityToRepresentation.toRepresentation(
-//                                tuple2.getItem1(),
-//                                tuple2.getItem2(),
-//                                EntityToRepresentation::toRepresentation
-//                        ))
-//                        .build()
-//                )
-//                .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
-//    }
+    @GET
+    @Path("/{projectId}/documents")
+    public Uni<RestResponse<PageDto<DocumentDto>>> getDocuments(
+            @PathParam("projectId") @NotNull String projectId,
+            @QueryParam("ruc") List<String> ruc,
+            @QueryParam("documentType") List<String> documentType,
+            @QueryParam("filterText") String filterText,
+            @QueryParam("offset") @DefaultValue("0") Integer offset,
+            @QueryParam("limit") @DefaultValue("10") Integer limit,
+            @QueryParam("sort_by") @DefaultValue("created:desc") List<String> sortBy
+    ) {
+        Function<PageDto<DocumentDto>, RestResponse<PageDto<DocumentDto>>> successResponse = (dto) -> RestResponse.ResponseBuilder
+                .<PageDto<DocumentDto>>create(RestResponse.Status.OK)
+                .entity(dto)
+                .build();
+        Supplier<RestResponse<PageDto<DocumentDto>>> notFoundResponse = () -> RestResponse.ResponseBuilder
+                .<PageDto<DocumentDto>>create(RestResponse.Status.NOT_FOUND)
+                .build();
+
+        PageBean pageBean = ResourceUtils.getPageBean(offset, limit);
+        List<SortBean> sortBeans = ResourceUtils.getSortBeans(sortBy, UBLDocumentRepository.SORT_BY_FIELDS);
+
+        FilterDocumentBean filters = FilterDocumentBean.builder()
+                .ruc(ruc)
+                .documentType(documentType)
+                .build();
+
+        Uni<RestResponse<PageDto<DocumentDto>>> restResponseUni = projectRepository.findById(projectId)
+                .onItem().ifNotNull().transformToUni(projectEntity -> {
+                    UniAndGroup2<List<UBLDocumentEntity>, Long> searchResult;
+                    if (filterText != null && !filterText.trim().isEmpty()) {
+                        searchResult = documentRepository.list(projectEntity, filterText, filters, pageBean, sortBeans);
+                    } else {
+                        searchResult = documentRepository.list(projectEntity, filters, pageBean, sortBeans);
+                    }
+                    return searchResult.asTuple()
+                            .map(objects -> {
+                                Long count = objects.getItem2();
+                                List<DocumentDto> items = objects.getItem1().stream()
+                                        .map(entity -> documentMapper.toDto(entity))
+                                        .collect(Collectors.toList());
+
+                                return PageDto.<DocumentDto>builder()
+                                        .count(count)
+                                        .items(items)
+                                        .build();
+                            })
+                            .map(successResponse);
+                })
+                .onItem().ifNull().continueWith(notFoundResponse);
+
+        return Panache.withTransaction(() -> restResponseUni);
+    }
 
 //    @Transactional(Transactional.TxType.NOT_SUPPORTED)
 //    @POST

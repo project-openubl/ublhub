@@ -17,42 +17,19 @@
 package io.github.project.openubl.ublhub.dto;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @RegisterForReflection
-public class PageRepresentation<T> {
-
-    private Meta meta;
+public class PageDto<T> {
+    private Long count;
     private List<T> items;
-
-    public Meta getMeta() {
-        return meta;
-    }
-
-    public void setMeta(Meta meta) {
-        this.meta = meta;
-    }
-
-    public List<T> getItems() {
-        return items;
-    }
-
-    public void setItems(List<T> items) {
-        this.items = items;
-    }
-
-    @RegisterForReflection
-    public static class Meta {
-        private Long count;
-
-        public Long getCount() {
-            return count;
-        }
-
-        public void setCount(Long count) {
-            this.count = count;
-        }
-    }
-
 }
