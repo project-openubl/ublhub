@@ -32,7 +32,7 @@ public class NoneIDGenerator implements IDGenerator {
 
     @Override
     public Uni<ID> generateInvoiceID(ProjectEntity project, String ruc, Map<String, String> config) {
-        return null;
+        return Uni.createFrom().nullItem();
     }
 
     @Override

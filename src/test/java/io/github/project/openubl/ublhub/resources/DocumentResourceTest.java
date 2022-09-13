@@ -18,15 +18,12 @@ package io.github.project.openubl.ublhub.resources;
 
 import io.github.project.openubl.ublhub.AbstractBaseTest;
 import io.github.project.openubl.ublhub.BasicProfileManager;
-import io.github.project.openubl.ublhub.ProfileManager;
 import io.github.project.openubl.ublhub.dto.ComponentDto;
-import io.github.project.openubl.ublhub.dto.DocumentDto;
 import io.github.project.openubl.ublhub.dto.DocumentInputDto;
 import io.github.project.openubl.ublhub.dto.ProjectDto;
 import io.github.project.openubl.ublhub.dto.SunatCredentialsDto;
 import io.github.project.openubl.ublhub.dto.SunatWebServicesDto;
 import io.github.project.openubl.ublhub.keys.GeneratedRsaKeyProviderFactory;
-import io.github.project.openubl.ublhub.keys.KeyProvider;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
 import io.github.project.openubl.xbuilder.content.catalogs.Catalog6;
 import io.github.project.openubl.xbuilder.content.models.common.Cliente;
@@ -41,13 +38,17 @@ import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
 import org.keycloak.crypto.Algorithm;
 
+import java.io.File;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.project.openubl.ublhub.models.JobPhaseType.READ_XML_FILE;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -530,52 +531,46 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 );
     }
 
-//    @Test
-//    public void uploadInvalidImageFile_shouldSetErrorStatus() throws URISyntaxException {
-//        // Given
-//        String nsId = "1";
-//
-//        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("images/java-jar-icon-59.png").toURI();
-//        File file = new File(fileURI);
-//
-//        // When
-//        DocumentRepresentation response = given()
-//                .accept(ContentType.JSON)
-//                .multiPart("file", file, "application/xml")
-//                .when()
-//                .post("/" + nsId + "/documents/upload")
-//                .then()
-//                .statusCode(200)
-//                .extract().body().as(DocumentRepresentation.class);
-//
-//        // Then
-//        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-//            DocumentRepresentation watchResponse = given()
-//                    .contentType(ContentType.JSON)
-//                    .when()
-//                    .get("/" + nsId + "/documents/" + response.getId())
-//                    .then()
-//                    .statusCode(200)
-//                    .extract().body().as(DocumentRepresentation.class);
-//            return watchResponse.getError() != null && watchResponse.getError().equals(ErrorType.READ_FILE);
-//        });
-//
-//        given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + nsId + "/documents/" + response.getId())
-//                .then()
-//                .statusCode(200)
-//                .body("jobInProgress", is(false),
-//                        "jobError", is(ErrorType.READ_FILE.toString()),
-////                        "scheduledDelivery", is(nullValue()),
-////                        "retryCount", is(0),
-//                        
-//                        "xmlFileContent.ruc", is(nullValue()),
-//                        "xmlFileContent.serieNumero", is(nullValue()),
-//                        "xmlFileContent.tipoDocumento", is(nullValue())
-//                );
-//    }
+    @Test
+    public void uploadInvalidImageFile_shouldSetErrorStatus() throws URISyntaxException {
+        // Given
+        String projectId = "1";
+
+        URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("images/java-icon.png").toURI();
+        File file = new File(fileURI);
+
+        // When
+        String documentId = givenAuth("alice")
+                .accept(ContentType.JSON)
+                .multiPart("file", file, "application/xml")
+                .when()
+                .post("/" + projectId + "/upload/document")
+                .then()
+                .statusCode(201)
+                .extract().path("id").toString();
+
+        // Then
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
+            String inProgress = givenAuth("alice")
+                    .contentType(ContentType.JSON)
+                    .when()
+                    .get("/" + projectId + "/documents/" + documentId)
+                    .then()
+                    .statusCode(200)
+                    .extract().path("status.inProgress").toString();
+            return !Boolean.parseBoolean(inProgress);
+        });
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/documents/" + documentId)
+                .then()
+                .statusCode(200)
+                .body("status.inProgress", is(false),
+                        "status.error.phase", is(READ_XML_FILE.toString())
+                );
+    }
 
 //    @Test
 //    public void uploadInvalidXMLFile_shouldSetErrorStatus() throws URISyntaxException {

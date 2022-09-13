@@ -153,10 +153,6 @@ public class GeneratedIDGenerator implements IDGenerator {
 
     @Override
     public Uni<ID> generateInvoiceID(ProjectEntity project, String ruc, Map<String, String> config) {
-        if (config == null) {
-            config = Collections.emptyMap();
-        }
-
         boolean isFactura = Boolean.parseBoolean(config.getOrDefault(PROP_IS_FACTURA, "true"));
         int minSerie = Integer.parseInt(config.getOrDefault(PROP_MIN_SERIE, "1"));
         int minNumero = Integer.parseInt(config.getOrDefault(PROP_MIN_NUMERO, "1"));
@@ -178,10 +174,6 @@ public class GeneratedIDGenerator implements IDGenerator {
 
     @Override
     public Uni<ID> generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
-        if (config == null) {
-            config = Collections.emptyMap();
-        }
-
         int minSerie = Integer.parseInt(config.getOrDefault(PROP_MIN_SERIE, "1"));
         int minNumero = Integer.parseInt(config.getOrDefault(PROP_MIN_NUMERO, "1"));
 
@@ -202,10 +194,6 @@ public class GeneratedIDGenerator implements IDGenerator {
 
     @Override
     public Uni<ID> generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
-        if (config == null) {
-            config = Collections.emptyMap();
-        }
-
         int minSerie = Integer.parseInt(config.getOrDefault(PROP_MIN_SERIE, "1"));
         int minNumero = Integer.parseInt(config.getOrDefault(PROP_MIN_NUMERO, "1"));
 

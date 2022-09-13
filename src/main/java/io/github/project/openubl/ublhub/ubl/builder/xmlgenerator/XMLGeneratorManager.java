@@ -33,6 +33,7 @@ import io.vertx.core.json.JsonObject;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
@@ -56,25 +57,26 @@ public class XMLGeneratorManager {
         JsonObject document = spec.getDocument();
 
         IDGenerator idGenerator = getIDGenerator(spec.getId());
+        Map<String, String> idConfig = spec.getId() != null && spec.getId().getConfig() != null ? spec.getId().getConfig() : Collections.emptyMap();
 
         switch (kind) {
             case Invoice:
                 Invoice invoice = document.mapTo(Invoice.class);
-                return getXML(projectEntity, invoice, idGenerator, spec.getId().getConfig())
+                return getXML(projectEntity, invoice, idGenerator, idConfig)
                         .map(xml -> XMLResult.builder().ruc(invoice.getProveedor().getRuc())
                                 .xml(xml)
                                 .build()
                         );
             case CreditNote:
                 CreditNote creditNote = document.mapTo(CreditNote.class);
-                return getXML(projectEntity, creditNote, idGenerator, spec.getId().getConfig())
+                return getXML(projectEntity, creditNote, idGenerator, idConfig)
                         .map(xml -> XMLResult.builder().ruc(creditNote.getProveedor().getRuc())
                                 .xml(xml)
                                 .build()
                         );
             case DebitNote:
                 DebitNote debitNote = document.mapTo(DebitNote.class);
-                return getXML(projectEntity, debitNote, idGenerator, spec.getId().getConfig())
+                return getXML(projectEntity, debitNote, idGenerator, idConfig)
                         .map(xml -> XMLResult.builder().ruc(debitNote.getProveedor().getRuc())
                                 .xml(xml)
                                 .build()
