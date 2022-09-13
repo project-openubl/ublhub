@@ -21,18 +21,12 @@ import io.github.project.openubl.ublhub.models.JobRecoveryActionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
+import javax.persistence.Embeddable;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.MapsId;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -40,36 +34,24 @@ import javax.validation.constraints.Size;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
-@Entity
-@Table(name = "job_error")
-public class JobErrorEntity extends BaseEntity {
-
-    @EqualsAndHashCode.Include
-    @Id
-    @Column(name = "id")
-    private String id;
-
-    @NotNull
-    @MapsId
-    @OneToOne(fetch = FetchType.LAZY)
-    private UBLDocumentEntity document;
+@Embeddable
+public class ErrorEntity {
 
     @Size(max = 255)
-    @Column(name = "description")
+    @Column(name = "error_description")
     private String description;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "phase")
+    @Column(name = "error_phase")
     private JobPhaseType phase;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "recovery_action")
+    @Column(name = "error_recovery_action")
     private JobRecoveryActionType recoveryAction;
 
     @NotNull
-    @Column(name = "recovery_action_count")
-    private int recoveryActionCount;
+    @Column(name = "error_count")
+    private int count;
 
 }

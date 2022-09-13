@@ -29,7 +29,7 @@ create table PROJECT
     primary key (id)
 );
 
-create table company
+create table COMPANY
 (
     id                             varchar(255) not null,
     ruc                            varchar(11)  not null,
@@ -47,7 +47,7 @@ create table company
     primary key (id)
 );
 
-create table component
+create table COMPONENT
 (
     id            varchar(36)  not null,
     name          varchar(255) not null,
@@ -60,7 +60,7 @@ create table component
     primary key (id)
 );
 
-create table component_config
+create table COMPONENT_CONFIG
 (
     id           varchar(36) not null,
     name         varchar(255),
@@ -69,65 +69,38 @@ create table component_config
     primary key (id)
 );
 
-create table ubl_document
+create table UBL_DOCUMENT
 (
-    id              varchar(255) not null,
-    job_in_progress char(1)      not null,
-    xml_file_id     varchar(255) not null,
-    cdr_file_id     varchar(255),
-    project_id      varchar(255) not null,
-    created         timestamp    not null,
-    updated         timestamp,
-    version         int4         not null,
+    id                             varchar(255) not null,
+    job_in_progress                char(1)      not null,
+    xml_file_id                    varchar(255) not null,
+    cdr_file_id                    varchar(255),
+    project_id                     varchar(255) not null,
+    created                        timestamp    not null,
+    updated                        timestamp,
+    version                        int4         not null,
+    xml_ruc                        varchar(11),
+    xml_serie_numero               varchar(50),
+    xml_tipo_documento             varchar(50),
+    xml_baja_codigo_tipo_documento varchar(50),
+    sunat_code                     int4,
+    sunat_description              varchar(255),
+    sunat_status                   varchar(50),
+    sunat_ticket                   varchar(50),
+    error_description              varchar(255),
+    error_phase                    varchar(255),
+    error_recovery_action          varchar(255),
+    error_count                    int4,
     primary key (id)
 );
 
-create table xml_file_content
+create table SUNAT_NOTE
 (
-    document_id                varchar(255) not null,
-    ruc                        varchar(11)  not null,
-    serie_numero               varchar(50)  not null,
-    tipo_documento             varchar(50)  not null,
-    baja_codigo_tipo_documento varchar(50),
-    created                    timestamp    not null,
-    updated                    timestamp,
-    version                    int4         not null,
-    primary key (document_id)
+    sunat_note_id varchar(255) not null,
+    value         varchar(255)
 );
 
-create table sunat_response
-(
-    document_id varchar(255) not null,
-    code        int4,
-    description varchar(255),
-    status      varchar(50),
-    ticket      varchar(50),
-    created     timestamp    not null,
-    updated     timestamp,
-    version     int4         not null,
-    primary key (document_id)
-);
-
-create table sunat_response_notes
-(
-    sunat_response_id varchar(255) not null,
-    value             varchar(255)
-);
-
-create table job_error
-(
-    document_id           varchar(255) not null,
-    description           varchar(255),
-    phase                 varchar(255) not null,
-    recovery_action       varchar(255),
-    recovery_action_count int4         not null,
-    created               timestamp    not null,
-    updated               timestamp,
-    version               int4         not null,
-    primary key (document_id)
-);
-
-create table generated_id
+create table GENERATED_ID
 (
     id            varchar(255) not null,
     ruc           varchar(11)  not null,
@@ -141,63 +114,54 @@ create table generated_id
     primary key (id)
 );
 
-alter table if exists project
-drop
-constraint if exists UKeq2y9mghytirkcofquanv5frf;
+alter table if exists PROJECT
+    add constraint uq_project_name unique (name);
 
-alter table if exists project
-    add constraint UKeq2y9mghytirkcofquanv5frf unique (name);
-
-alter table if exists component
-    add constraint FKegknd206umu3ad5to4ekp3aja
+alter table if exists COMPONENT
+    add constraint fk_component_project
     foreign key (project_id)
-    references project;
+    references PROJECT;
 
-alter table if exists component
-    add constraint FKegknd206umu3ad5to4ekp3ajb
+alter table if exists COMPONENT
+    add constraint fk_component_company
     foreign key (company_id)
-    references company;
+    references COMPANY;
 
-alter table if exists component_config
-    add constraint FK30o84r8uoxnh7wlbkw1a5mqje
+alter table if exists COMPONENT_CONFIG
+    add constraint fk_componentconfig_component
     foreign key (component_id)
-    references component;
+    references COMPONENT;
 
-alter table if exists company
-drop
-constraint if exists UKky32sf4btitn1rnwfyy0onr0p;
+alter table if exists COMPANY
+    add constraint uq_company_projectid_ruc unique (project_id, ruc);
 
-alter table if exists company
-    add constraint UKky32sf4btitn1rnwfyy0onr0p unique (project_id, ruc);
-
-
-alter table if exists company
-    add constraint FKqt1bajc7vx7sx166h0i5bdory
+alter table if exists COMPANY
+    add constraint fk_company_project
     foreign key (project_id)
-    references project
+    references PROJECT
     on
 delete
 cascade;
 
-alter table if exists ubl_document
-    add constraint FK8lebpqiju4ech6ftq0h1ur0jq
+alter table if exists UBL_DOCUMENT
+    add constraint fk_ubldocument_project
     foreign key (project_id)
-    references project
+    references PROJECT
     on
 delete
 cascade;
 
-alter table if exists ubl_document_sunat_notes
-    add constraint FK6x9142wv16xao4un5xxgu60by
-    foreign key (ubl_document_id)
-    references ubl_document;
+alter table if exists SUNAT_NOTE
+    add constraint fk_sunatnote_ubldocument
+    foreign key (sunat_note_id)
+    references UBL_DOCUMENT;
 
 
-alter table if exists generated_id
-    add constraint FKuln89tn2t5teiufir1dsq1ka
+alter table if exists GENERATED_ID
+    add constraint fk_generatedid_project
     foreign key (project_id)
-    references project;
+    references PROJECT;
 
-alter table if exists generated_id
-    add constraint UK4hs3cb8j320vu5apl2fb06dde
+alter table if exists GENERATED_ID
+    add constraint uq_generatedid_projectid_ruc_documenttype
     unique (project_id, ruc, document_type);

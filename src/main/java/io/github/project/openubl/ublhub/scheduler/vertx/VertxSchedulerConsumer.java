@@ -22,10 +22,10 @@ import io.github.project.openubl.ublhub.files.exceptions.ReadFileException;
 import io.github.project.openubl.ublhub.models.JobPhaseType;
 import io.github.project.openubl.ublhub.models.JobRecoveryActionType;
 import io.github.project.openubl.ublhub.models.jpa.UBLDocumentRepository;
-import io.github.project.openubl.ublhub.models.jpa.entities.JobErrorEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.ErrorEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.SUNATResponseEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
-import io.github.project.openubl.ublhub.models.jpa.entities.XMLFileContentEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.XMLDataEntity;
 import io.github.project.openubl.ublhub.scheduler.SchedulerManager;
 import io.github.project.openubl.ublhub.scheduler.exceptions.FetchFileException;
 import io.github.project.openubl.ublhub.ubl.sender.XMLSenderManager;
@@ -85,17 +85,16 @@ public class VertxSchedulerConsumer {
                                         .failure(new FetchFileException(JobPhaseType.READ_XML_FILE, throwable))
                                 )
                                 .chain(xmlFileContent -> {
-                                    XMLFileContentEntity xmlFileContentEntity = documentEntity.getXmlFileContent();
-                                    if (xmlFileContentEntity == null) {
-                                        xmlFileContentEntity = new XMLFileContentEntity();
-                                        xmlFileContentEntity.setDocument(documentEntity);
-                                        documentEntity.setXmlFileContent(xmlFileContentEntity);
+                                    XMLDataEntity xmlDataEntity = documentEntity.getXmlData();
+                                    if (xmlDataEntity == null) {
+                                        xmlDataEntity = new XMLDataEntity();
+                                        documentEntity.setXmlData(xmlDataEntity);
                                     }
 
-                                    xmlFileContentEntity.setRuc(xmlFileContent.getRuc());
-                                    xmlFileContentEntity.setTipoDocumento(xmlFileContent.getDocumentType());
-                                    xmlFileContentEntity.setSerieNumero(xmlFileContent.getDocumentID());
-                                    xmlFileContentEntity.setBajaCodigoTipoDocumento(xmlFileContent.getVoidedLineDocumentTypeCode());
+                                    xmlDataEntity.setRuc(xmlFileContent.getRuc());
+                                    xmlDataEntity.setTipoDocumento(xmlFileContent.getDocumentType());
+                                    xmlDataEntity.setSerieNumero(xmlFileContent.getDocumentID());
+                                    xmlDataEntity.setBajaCodigoTipoDocumento(xmlFileContent.getVoidedLineDocumentTypeCode());
 
                                     // Read SUNAT configuration
                                     return xSenderMutiny.getXSenderConfig(documentEntity.getProjectId(), xmlFileContent.getRuc());
@@ -112,7 +111,6 @@ public class VertxSchedulerConsumer {
                                     SUNATResponseEntity sunatResponseEntity = documentEntity.getSunatResponse();
                                     if (sunatResponseEntity == null) {
                                         sunatResponseEntity = new SUNATResponseEntity();
-                                        sunatResponseEntity.setDocument(documentEntity);
                                         documentEntity.setSunatResponse(sunatResponseEntity);
                                     }
 
@@ -138,37 +136,36 @@ public class VertxSchedulerConsumer {
                             if (throwable instanceof FetchFileException) {
                                 FetchFileException jobException = (FetchFileException) throwable;
 
-                                JobErrorEntity jobErrorEntity = documentEntity.getJobError();
-                                if (jobErrorEntity == null) {
-                                    jobErrorEntity = new JobErrorEntity();
-                                    jobErrorEntity.setDocument(documentEntity);
-                                    documentEntity.setJobError(jobErrorEntity);
+                                ErrorEntity errorEntity = documentEntity.getError();
+                                if (errorEntity == null) {
+                                    errorEntity = new ErrorEntity();
+                                    documentEntity.setError(errorEntity);
                                 }
 
-                                jobErrorEntity.setPhase(jobException.getPhase());
+                                errorEntity.setPhase(jobException.getPhase());
 
                                 switch (jobException.getPhase()) {
                                     case FETCH_XML_FILE: {
-                                        jobErrorEntity.setDescription("No se pudo descargar el XML para ser procesado");
-                                        jobErrorEntity.setRecoveryAction(JobRecoveryActionType.RETRY_SEND);
-                                        jobErrorEntity.setRecoveryActionCount(1);
+                                        errorEntity.setDescription("No se pudo descargar el XML para ser procesado");
+                                        errorEntity.setRecoveryAction(JobRecoveryActionType.RETRY_SEND);
+                                        errorEntity.setCount(1);
 
                                         break;
                                     }
                                     case READ_XML_FILE: {
-                                        jobErrorEntity.setDescription("El contenido del XML no es válido");
+                                        errorEntity.setDescription("El contenido del XML no es válido");
                                         break;
                                     }
                                     case SEND_XML_FILE: {
-                                        jobErrorEntity.setDescription("No se pudo enviar el XML a la SUNAT");
-                                        jobErrorEntity.setRecoveryAction(JobRecoveryActionType.RETRY_SEND);
-                                        jobErrorEntity.setRecoveryActionCount(1);
+                                        errorEntity.setDescription("No se pudo enviar el XML a la SUNAT");
+                                        errorEntity.setRecoveryAction(JobRecoveryActionType.RETRY_SEND);
+                                        errorEntity.setCount(1);
                                         break;
                                     }
                                     case SAVE_CDR: {
-                                        jobErrorEntity.setDescription("No se pudo guardar el CDR en el storage");
-                                        jobErrorEntity.setRecoveryAction(JobRecoveryActionType.RETRY_FETCH_CDR);
-                                        jobErrorEntity.setRecoveryActionCount(1);
+                                        errorEntity.setDescription("No se pudo guardar el CDR en el storage");
+                                        errorEntity.setRecoveryAction(JobRecoveryActionType.RETRY_FETCH_CDR);
+                                        errorEntity.setCount(1);
                                         break;
                                     }
                                 }
@@ -206,13 +203,13 @@ public class VertxSchedulerConsumer {
                         .retry().withBackOff(Duration.ofSeconds(1)).withJitter(0.2).atMost(3)
 
                         .chain(documentEntity -> xSenderMutiny
-                                .getXSenderConfig(documentEntity.getProjectId(), documentEntity.getXmlFileContent().getRuc())
+                                .getXSenderConfig(documentEntity.getProjectId(), documentEntity.getXmlData().getRuc())
                                 .chain(sunatConfig -> {
                                     XmlContentModel xmlContentModel = new XmlContentModel();
-                                    xmlContentModel.setRuc(documentEntity.getXmlFileContent().getRuc());
-                                    xmlContentModel.setDocumentType(documentEntity.getXmlFileContent().getTipoDocumento());
-                                    xmlContentModel.setDocumentID(documentEntity.getXmlFileContent().getSerieNumero());
-                                    xmlContentModel.setVoidedLineDocumentTypeCode(documentEntity.getXmlFileContent().getBajaCodigoTipoDocumento());
+                                    xmlContentModel.setRuc(documentEntity.getXmlData().getRuc());
+                                    xmlContentModel.setDocumentType(documentEntity.getXmlData().getTipoDocumento());
+                                    xmlContentModel.setDocumentID(documentEntity.getXmlData().getSerieNumero());
+                                    xmlContentModel.setVoidedLineDocumentTypeCode(documentEntity.getXmlData().getBajaCodigoTipoDocumento());
 
                                     // Send file to SUNAT
                                     return xSenderMutiny
@@ -224,7 +221,6 @@ public class VertxSchedulerConsumer {
                                                 SUNATResponseEntity sunatResponseEntity = documentEntity.getSunatResponse();
                                                 if (sunatResponseEntity == null) {
                                                     sunatResponseEntity = new SUNATResponseEntity();
-                                                    sunatResponseEntity.setDocument(documentEntity);
                                                     documentEntity.setSunatResponse(sunatResponseEntity);
                                                 }
 
@@ -251,19 +247,18 @@ public class VertxSchedulerConsumer {
                             if (throwable instanceof FetchFileException) {
                                 FetchFileException jobException = (FetchFileException) throwable;
 
-                                JobErrorEntity jobErrorEntity = documentEntity.getJobError();
-                                if (jobErrorEntity == null) {
-                                    jobErrorEntity = new JobErrorEntity();
-                                    jobErrorEntity.setDocument(documentEntity);
-                                    documentEntity.setJobError(jobErrorEntity);
+                                ErrorEntity errorEntity = documentEntity.getError();
+                                if (errorEntity == null) {
+                                    errorEntity = new ErrorEntity();
+                                    documentEntity.setError(errorEntity);
                                 }
 
-                                jobErrorEntity.setPhase(jobException.getPhase());
+                                errorEntity.setPhase(jobException.getPhase());
 
                                 if (jobException.getPhase() == JobPhaseType.VERIFY_TICKET) {
-                                    jobErrorEntity.setDescription("No se pudo verificar el ticket en la SUNAT");
-                                    jobErrorEntity.setRecoveryAction(JobRecoveryActionType.RETRY_SEND);
-                                    jobErrorEntity.setRecoveryActionCount(1);
+                                    errorEntity.setDescription("No se pudo verificar el ticket en la SUNAT");
+                                    errorEntity.setRecoveryAction(JobRecoveryActionType.RETRY_SEND);
+                                    errorEntity.setCount(1);
                                 }
                             }
 

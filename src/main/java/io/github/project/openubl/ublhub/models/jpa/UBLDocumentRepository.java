@@ -52,19 +52,19 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
     }
 
     public UniAndGroup2<List<UBLDocumentEntity>, Long> list(ProjectEntity project, String filterText, FilterDocumentBean filters, PageBean pageBean, List<SortBean> sortBy) {
-        StringBuilder queryBuilder = new StringBuilder("select distinct d from UBLDocumentEntity d left join d.xmlFileContent x where d.projectId = :projectId");
+        StringBuilder queryBuilder = new StringBuilder("select d from UBLDocumentEntity d where d.projectId = :projectId");
         Parameters params = Parameters.with("projectId", project.getId());
 
         if (filterText != null && !filterText.trim().isEmpty()) {
-            queryBuilder.append(" and lower(x.serieNumero) like :filterText");
+            queryBuilder.append(" and lower(d.xmlData.serieNumero) like :filterText");
             params = params.and("filterText", "%" + filterText.toLowerCase());
         }
         if (filters.getRuc() != null && !filters.getRuc().isEmpty()) {
-            queryBuilder.append(" and x.ruc in :ruc");
+            queryBuilder.append(" and d.xmlData.ruc in :ruc");
             params = params.and("ruc", filters.getRuc());
         }
         if (filters.getDocumentType() != null && !filters.getDocumentType().isEmpty()) {
-            queryBuilder.append(" and x.documentType in :documentType");
+            queryBuilder.append(" and d.xmlData.tipoDocumento in :documentType");
             params = params.and("documentType", filters.getDocumentType());
         }
 

@@ -25,12 +25,10 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -70,14 +68,14 @@ public class UBLDocumentEntity extends BaseEntity {
     private boolean jobInProgress;
 
     @Valid
-    @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private XMLFileContentEntity xmlFileContent;
+    @Embedded
+    private XMLDataEntity xmlData;
 
     @Valid
-    @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @Embedded
     private SUNATResponseEntity sunatResponse;
 
     @Valid
-    @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private JobErrorEntity jobError;
+    @Embedded
+    private ErrorEntity error;
 }

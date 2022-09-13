@@ -31,12 +31,12 @@ public interface DocumentMapper {
 
     @Mapping(target = "status.inProgress", source = "jobInProgress")
 
-    @Mapping(target = "status.xmlData.ruc", source = "xmlFileContent.ruc")
-    @Mapping(target = "status.xmlData.serieNumero", source = "xmlFileContent.serieNumero")
-    @Mapping(target = "status.xmlData.tipoDocumento", source = "xmlFileContent.tipoDocumento")
+    @Mapping(target = "status.xmlData.ruc", source = "xmlData.ruc")
+    @Mapping(target = "status.xmlData.serieNumero", source = "xmlData.serieNumero")
+    @Mapping(target = "status.xmlData.tipoDocumento", source = "xmlData.tipoDocumento")
 
     @Mapping(target = "status.sunat", source = "sunatResponse")
-    @Mapping(target = "status.error", source = "jobError")
+    @Mapping(target = "status.error", source = "error")
     DocumentDto toDto(UBLDocumentEntity entity);
 
     @AfterMapping

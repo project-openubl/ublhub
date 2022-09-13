@@ -93,7 +93,7 @@ public class DocumentFileResource {
                                 bytesUni = filesMutiny.getFileAsBytesAfterUnzip(fileId);
                             }
 
-                            String filename = documentEntity.getXmlFileContent().getSerieNumero() + (isZipFormatRequested ? ".zip" : ".xml");
+                            String filename = documentEntity.getXmlData().getSerieNumero() + (isZipFormatRequested ? ".zip" : ".xml");
                             String mediaType = isZipFormatRequested ? "application/zip" : MediaType.APPLICATION_XML;
 
                             return bytesUni.map(bytes -> Response.ok(bytes, mediaType)

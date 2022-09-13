@@ -25,6 +25,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
@@ -41,38 +42,27 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
-@Entity
-@Table(name = "sunat_response")
-public class SUNATResponseEntity extends BaseEntity {
-
-    @EqualsAndHashCode.Include
-    @Id
-    @Column(name = "id")
-    private String id;
-
-    @MapsId
-    @OneToOne(fetch = FetchType.LAZY)
-    private UBLDocumentEntity document;
+@Embeddable
+public class SUNATResponseEntity {
 
     @Size(max = 50)
-    @Column(name = "ticket")
+    @Column(name = "sunat_ticket")
     private String ticket;
 
     @Size(max = 50)
-    @Column(name = "status")
+    @Column(name = "sunat_status")
     private String status;
 
-    @Column(name = "code")
+    @Column(name = "sunat_code")
     private Integer code;
 
     @Size(max = 255)
-    @Column(name = "description")
+    @Column(name = "sunat_description")
     private String description;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Column(name = "value")
-    @CollectionTable(name = "sunat_response_notes", joinColumns = {@JoinColumn(name = "sunat_response_id")})
+    @CollectionTable(name = "sunat_note", joinColumns = {@JoinColumn(name = "sunat_note_id")})
     private Set<@NotNull @Size(max = 255) String> notes = new HashSet<>();
 
 }
