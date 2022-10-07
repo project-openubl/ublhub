@@ -38,7 +38,7 @@
         <xbuilder-lib.version>1.2.2.Final</xbuilder-lib.version>
         <xsender-lib.version>3.0.3.Final</xsender-lib.version>
 
-        <keycloak.version>15.0.2</keycloak.version>
+        <keycloak.version>19.0.3</keycloak.version>
         <xmlunit.version>2.6.4</xmlunit.version>
     </properties>
 
