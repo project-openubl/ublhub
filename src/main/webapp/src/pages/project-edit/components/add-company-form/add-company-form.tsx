@@ -27,7 +27,7 @@ import {
   SUNAT_BETA_CREDENTIALS,
   SUNAT_BETA_URLS,
   SUNAT_PROD_URLS,
-} from "shared/components";
+} from "Constants";
 import { getValidatedFromError, getValidatedFromErrorTouched } from "utils/modelUtils";
 
 interface ICompanyForm {

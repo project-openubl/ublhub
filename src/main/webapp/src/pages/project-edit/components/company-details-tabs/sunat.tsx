@@ -39,7 +39,7 @@ import {
   SUNAT_BETA_CREDENTIALS,
   SUNAT_BETA_URLS,
   SUNAT_PROD_URLS,
-} from "shared/components";
+} from "Constants";
 import { useUpdateCompanyMutation } from "queries/companies";
 import { CompanyDto, ProjectDto } from "api/models";
 import { getValidatedFromError, getValidatedFromErrorTouched } from "utils/modelUtils";

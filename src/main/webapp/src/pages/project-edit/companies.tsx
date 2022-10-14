@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import { useTranslation, Trans } from "react-i18next";
 
 import {
@@ -233,7 +233,12 @@ const Companies: React.FC = () => {
                                 SUNAT
                               </Text>
                             </div>
-                            <span>Heredado del Proyecto padre</span>
+                            <span>
+                              Usa{" "}
+                              <Link to="../sunat">
+                                Configuración del Proyecto
+                              </Link>
+                            </span>
                           </div>
                         )}
                       </DataListCell>,

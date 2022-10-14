@@ -14,8 +14,11 @@ import {
 } from "@patternfly/react-core";
 
 import { UnknownResult } from "api/models";
-import { IWebServicesForm, ICredentialsForm } from "shared/components";
 
+import { IWebServicesForm } from "./web-services-form";
+import {
+  ICredentialsForm,
+} from "./credentials-form";
 import { IGeneralForm } from "./add-project-wizard";
 
 interface IReviewProps {

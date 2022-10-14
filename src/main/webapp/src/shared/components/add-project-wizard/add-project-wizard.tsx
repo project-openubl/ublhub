@@ -17,17 +17,19 @@ import {
 import { useCreateProjectMutation } from "queries/projects";
 
 import { ProjectDto } from "api/models";
-import {
-  WebServicesForm,
-  CredentialsForm,
-  IWebServicesForm,
-  ICredentialsForm,
-  SchemaFormWebServices,
-  SchemaFormCredentials,
-} from "shared/components";
 
 import { WizardStepContainer } from "./wizard-step-container";
 import { GeneralForm } from "./general-form";
+import {
+  WebServicesForm,
+  IWebServicesForm,
+  SchemaFormWebServices,
+} from "./web-services-form";
+import {
+  CredentialsForm,
+  ICredentialsForm,
+  SchemaFormCredentials,
+} from "./credentials-form";
 import { Review } from "./review";
 
 enum StepId {

@@ -10,16 +10,12 @@ import {
   getValidatedFromError,
   getValidatedFromErrorTouched,
 } from "utils/modelUtils";
+import { SUNAT_BETA_CREDENTIALS } from "Constants";
 
 export interface ICredentialsForm {
   username: string;
   password: string;
 }
-
-export const SUNAT_BETA_CREDENTIALS: ICredentialsForm = {
-  username: "MODDATOS",
-  password: "MODDATOS",
-};
 
 export const SchemaFormCredentials = object().shape({
   username: string().trim().required().max(250),
@@ -42,7 +38,7 @@ export const CredentialsForm: React.FunctionComponent<
   } = form;
 
   const fillForm = () => {    
-    reset(SUNAT_BETA_CREDENTIALS);
+    reset(SUNAT_BETA_CREDENTIALS, { keepDefaultValues: true });
   };
 
   return (
