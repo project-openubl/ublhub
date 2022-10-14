@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.resources;
 
+import io.github.project.openubl.ublhub.dto.CheckCompanyDto;
 import io.github.project.openubl.ublhub.dto.ProjectDto;
 import io.github.project.openubl.ublhub.keys.DefaultKeyProviders;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
@@ -74,6 +75,26 @@ public class ProjectResource {
                 .type(ComponentOwner.OwnerType.project)
                 .id(projectId)
                 .build();
+    }
+
+    @Operation(summary = "List projects", description = "List all projects")
+    @POST
+    @Path("/check-name")
+    public Uni<RestResponse<String>> checkProjectName(@NotNull @Valid CheckCompanyDto checkCompanyDto) {
+        Supplier<RestResponse<String>> successResponse = () -> ResponseBuilder
+                .<String>create(Status.OK)
+                .entity(checkCompanyDto.getName() + " available")
+                .build();
+        Supplier<RestResponse<String>> conflictResponse = () -> ResponseBuilder
+                .<String>create(Status.CONFLICT)
+                .entity("Name is already taken")
+                .build();
+
+        Uni<RestResponse<String>> restResponseUni = projectRepository.findByName(checkCompanyDto.getName())
+                .onItem().ifNotNull().transform(projectEntity -> conflictResponse.get())
+                .onItem().ifNull().continueWith(successResponse);
+
+        return Panache.withTransaction(() -> restResponseUni);
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write})

@@ -1,9 +1,7 @@
 import { AxiosError } from "axios";
-import * as prettier from "prettier/standalone";
-import * as prettierXmlPlugin from "@prettier/plugin-xml";
 
 export const getBaseApiUrl = (): string => {
-  return (window as any)["SEARCHPE_API_URL"] || "/api";
+  return (window as any)["UBLHUB_API_URL"] || "/api";
 };
 
 // Axios error
@@ -36,14 +34,4 @@ export const getValidatedFromErrorTouched = (
   touched: boolean | undefined
 ): "success" | "warning" | "error" | "default" => {
   return error && touched ? "error" : "default";
-};
-
-//
-
-export const prettifyXML = (data: string) => {
-  return prettier.format(data, {
-    parser: "xml",
-    plugins: [prettierXmlPlugin],
-    xmlWhitespaceSensitivity: "ignore",
-  } as any);
 };

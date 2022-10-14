@@ -27,19 +27,19 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(componentModel = "cdi", builder = @Builder(disableBuilder = true))
 public abstract class ProjectMapper {
 
-    @Mapping(target = "sunatWebServices.factura", source = "sunat.sunatUrlFactura")
-    @Mapping(target = "sunatWebServices.guia", source = "sunat.sunatUrlGuiaRemision")
-    @Mapping(target = "sunatWebServices.retencion", source = "sunat.sunatUrlPercepcionRetencion")
-    @Mapping(target = "sunatCredentials.username", source = "sunat.sunatUsername")
-    @Mapping(target = "sunatCredentials.password", ignore = true)
+    @Mapping(target = "sunat.facturaUrl", source = "sunat.sunatUrlFactura")
+    @Mapping(target = "sunat.guiaUrl", source = "sunat.sunatUrlGuiaRemision")
+    @Mapping(target = "sunat.retencionUrl", source = "sunat.sunatUrlPercepcionRetencion")
+    @Mapping(target = "sunat.username", source = "sunat.sunatUsername")
+    @Mapping(target = "sunat.password", ignore = true)
     public abstract ProjectDto toDto(ProjectEntity entity);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "sunat.sunatUrlFactura", source = "sunatWebServices.factura")
-    @Mapping(target = "sunat.sunatUrlGuiaRemision", source = "sunatWebServices.guia")
-    @Mapping(target = "sunat.sunatUrlPercepcionRetencion", source = "sunatWebServices.retencion")
-    @Mapping(target = "sunat.sunatUsername", source = "sunatCredentials.username", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "sunat.sunatPassword", source = "sunatCredentials.password", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "sunat.sunatUrlFactura", source = "sunat.facturaUrl")
+    @Mapping(target = "sunat.sunatUrlGuiaRemision", source = "sunat.guiaUrl")
+    @Mapping(target = "sunat.sunatUrlPercepcionRetencion", source = "sunat.retencionUrl")
+    @Mapping(target = "sunat.sunatUsername", source = "sunat.username", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "sunat.sunatPassword", source = "sunat.password", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     public abstract ProjectEntity updateEntityFromDto(ProjectDto dto, @MappingTarget ProjectEntity entity);
 
 }

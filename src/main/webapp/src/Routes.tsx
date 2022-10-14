@@ -1,35 +1,71 @@
-import React, { lazy, Suspense } from "react";
-import { Route, Switch, Redirect, RouteProps } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-import { SimplePlaceholder } from "@project-openubl/lib-ui";
-
-import { Paths } from "./Paths";
-
-const Namespaces = lazy(() => import("./pages/namespaces"));
-const Documents = lazy(() => import("./pages/documents"));
+const ProjectList = lazy(() => import("./pages/project-list"));
+const ProjectEdit = lazy(() => import("./pages/project-edit"));
+const ProjectEditGeneral = lazy(() => import("./pages/project-edit/general"));
+const ProjectEditSunat = lazy(() => import("./pages/project-edit/sunat"));
+const ProjectEditCertificates = lazy(() => import("./pages/project-edit/certificates"));
+const ProjectEditCompanies = lazy(() => import("./pages/project-edit/companies"));
 
 export const AppRoutes = () => {
-  const routes: RouteProps[] = [
+  const routes = [
     {
-      component: Namespaces,
-      path: Paths.namespaces,
-      exact: false,
+      Component: ProjectList,
+      path: "/projects",
+      hasDescendant: true,
     },
     {
-      component: Documents,
-      path: Paths.documents,
-      exact: false,
+      Component: ProjectEdit,
+      path: "/projects/:projectId",
+      children: [
+        {
+          Component: () => <Navigate to="general" replace />,
+          path: "",
+        },
+        {
+          Component: ProjectEditGeneral,
+          path: "general",
+        },
+        {
+          Component: ProjectEditSunat,
+          path: "sunat",
+        },
+        {
+          Component: ProjectEditCertificates,
+          path: "certificates",
+        },
+        {
+          Component: ProjectEditCompanies,
+          path: "companies",
+        }       
+      ],
     },
   ];
 
   return (
-    <Suspense fallback={<SimplePlaceholder />}>
-      <Switch>
-        {routes.map(({ path, component, ...rest }, index) => (
-          <Route key={index} path={path} component={component} {...rest} />
+    <Suspense fallback={<span>Loading...</span>}>
+      <Routes>
+        {routes.map(({ path, hasDescendant, Component, children }, index) => (
+          <Route
+            key={index}
+            path={!hasDescendant ? path : `${path}/*`}
+            element={<Component />}
+          >
+            {children?.map(
+              ({ path: childPath, Component: ChildComponent }, childIndex) => (
+                <Route
+                  key={childIndex}
+                  path={childPath}
+                  element={<ChildComponent />}
+                />
+              )
+            )}
+          </Route>
         ))}
-        <Redirect from={Paths.base} to={Paths.namespaces} exact />
-      </Switch>
+        <Route path="/" element={<Navigate to="/projects" />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
     </Suspense>
   );
 };

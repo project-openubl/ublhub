@@ -1,18 +1,19 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import "./index.scss";
+import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+
+import { iniAxios } from "api/axios";
 
 import { QueryClientProvider, QueryClient, QueryCache } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
 
-import { Provider } from "react-redux";
-import configureStore from "./store";
-
 import { PollingContextProvider } from "shared/context";
 
 import i18n from "./i18n";
+
+iniAxios();
 i18n.init();
 
 const queryCache = new QueryCache();
@@ -30,9 +31,7 @@ ReactDOM.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <PollingContextProvider>
-        <Provider store={configureStore()}>
-          <App />
-        </Provider>
+        <App />
         <ReactQueryDevtools initialIsOpen={false} />
       </PollingContextProvider>
     </QueryClientProvider>

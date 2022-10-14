@@ -21,8 +21,7 @@ import io.github.project.openubl.ublhub.BasicProfileManager;
 import io.github.project.openubl.ublhub.dto.ComponentDto;
 import io.github.project.openubl.ublhub.dto.DocumentInputDto;
 import io.github.project.openubl.ublhub.dto.ProjectDto;
-import io.github.project.openubl.ublhub.dto.SunatCredentialsDto;
-import io.github.project.openubl.ublhub.dto.SunatWebServicesDto;
+import io.github.project.openubl.ublhub.dto.SunatDto;
 import io.github.project.openubl.ublhub.keys.GeneratedRsaKeyProviderFactory;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
 import io.github.project.openubl.xbuilder.content.catalogs.Catalog6;
@@ -50,7 +49,6 @@ import java.util.concurrent.TimeUnit;
 
 import static io.github.project.openubl.ublhub.models.JobPhaseType.READ_XML_FILE;
 import static org.awaitility.Awaitility.await;
-import static org.awaitility.Awaitility.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -63,13 +61,10 @@ public class DocumentResourceTest extends AbstractBaseTest {
     final int TIMEOUT = 60;
 
 
-    final static SunatWebServicesDto sunatWebServicesDto = SunatWebServicesDto.builder()
-            .factura("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
-            .guia("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
-            .retencion("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")
-            .build();
-
-    final static SunatCredentialsDto sunatCredentialsDto = SunatCredentialsDto.builder()
+    final static SunatDto sunatDto = SunatDto.builder()
+            .facturaUrl("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
+            .guiaUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
+            .retencionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")
             .username("MODDATOS")
             .password("MODDATOS")
             .build();
@@ -206,8 +201,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         ProjectDto projectDto = ProjectDto.builder()
                 .name("myproject")
                 .description("my description")
-                .sunatWebServices(sunatWebServicesDto)
-                .sunatCredentials(sunatCredentialsDto)
+                .sunat(sunatDto)
                 .build();
 
         String projectId = givenAuth("alice")
@@ -281,8 +275,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         ProjectDto projectDto = ProjectDto.builder()
                 .name("myproject")
                 .description("my description")
-                .sunatWebServices(sunatWebServicesDto)
-                .sunatCredentials(sunatCredentialsDto)
+                .sunat(sunatDto)
                 .build();
 
         String projectId = givenAuth("alice")
@@ -381,8 +374,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         ProjectDto projectDto = ProjectDto.builder()
                 .name("myproject")
                 .description("my description")
-                .sunatWebServices(sunatWebServicesDto)
-                .sunatCredentials(sunatCredentialsDto)
+                .sunat(sunatDto)
                 .build();
 
         String projectId = givenAuth("alice")
@@ -425,8 +417,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         ProjectDto projectDto = ProjectDto.builder()
                 .name("myproject")
                 .description("my description")
-                .sunatWebServices(sunatWebServicesDto)
-                .sunatCredentials(sunatCredentialsDto)
+                .sunat(sunatDto)
                 .build();
 
         String projectId = givenAuth("alice")

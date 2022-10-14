@@ -2,13 +2,16 @@
     "actions": {
         "back": "Atrás",
         "cancel": "Cancelar",
+        "close": "Cerrar",
         "create": "Crear",
         "create-object": "Crear {{what}}",
         "delete": "Eliminar",
         "edit": "Editar",
-        "edit-object": "Editar {{what}}",
         "next": "Siguiente",
         "save": "Guardar"
+    },
+    "info": {
+        "data-saved": "Datos guardados"
     },
     "modal": {
         "confirm-delete": {
@@ -19,22 +22,25 @@
     "terms": {
         "actions": "Acciones",
         "algorithm": "Algoritmo",
+        "beta": "Beta",
+        "certificate": "Certificado",
+        "certificates": "Certificados",
         "companies": "Empresas",
-        "created-on": "Creado en",
+        "company": "Empresa",
         "credentials": "Credenciales",
         "description": "Descripción",
-        "document": "Documento",
         "general": "General",
-        "id": "Id",
-        "keys": "Llaves",
         "kid": "Kid",
         "name": "Nombre",
         "password": "Contraseña",
-        "priority": "Prioridad",
-        "progress": "Progreso",
+        "production": "Producción",
+        "project": "Proyecto",
+        "projects": "Proyectos",
         "provider": "Proveedor",
+        "public-key": "Llave pública",
+        "public-keys": "Llaves públicas",
         "review": "Revisión",
-        "status": "Estado",
+        "ruc": "RUC",
         "type": "Tipo",
         "username": "Usuario",
         "webServices": "Servicios web"

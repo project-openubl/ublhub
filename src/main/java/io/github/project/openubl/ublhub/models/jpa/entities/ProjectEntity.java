@@ -61,7 +61,4 @@ public class ProjectEntity extends BaseEntity {
     @Embedded
     private SunatEntity sunat;
 
-//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "project", orphanRemoval = true, cascade = CascadeType.REMOVE)
-//    private List<CompanyEntity> companies = new ArrayList<>();
-
 }

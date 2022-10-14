@@ -15,67 +15,40 @@ export interface SortByQuery {
   orderDirection: "asc" | "desc";
 }
 
-export interface PageRepresentation<T> {
-  meta: Meta;
-  links: Links;
+export interface PageDto<T> {
+  count: number;
   items: T[];
 }
 
-export interface Meta {
-  offset: number;
-  limit: number;
-  count: number;
-}
-
-export interface Links {
-  first: string;
-  next: string;
-  previous: string;
-  last: string;
-}
-
-export type VersionStatus =
-  | "SCHEDULED"
-  | "DOWNLOADING"
-  | "UNZIPPING"
-  | "IMPORTING"
-  | "ERROR"
-  | "COMPLETED"
-  | "DELETING";
-
-export interface Version {
-  id: number;
-  createdAt: string;
-  updatedAt: string;
-  status: VersionStatus;
-  records: number;
-}
-
-export interface Namespace {
+export interface ProjectDto {
   id?: string;
   name: string;
   description?: string;
-  webServices: {
-    factura: string;
-    guia: string;
-    retenciones: string;
-  };
-  credentials: {
-    username: string;
-    password: string;
-  };
+  sunat: SunatDto;
 }
 
-export interface ServerInfoRepresentation {
-  componentTypes: ComponentTypes;
+export interface CompanyDto {
+  id?: string;
+  ruc: string;
+  name: string;
+  description?: string;
+  sunat?: SunatDto;
 }
 
-export interface KeysMetadataRepresentation {
+export interface SunatDto {
+  facturaUrl: string;
+  guiaUrl: string;
+  retencionUrl: string;
+  username: string;
+  password?: string;
+}
+
+export interface KeysMetadataDto {
   active: { [key: string]: string };
-  keys: KeyMetadataRepresentation[];
+  keys: KeyMetadataDto[];
 }
 
-export interface KeyMetadataRepresentation {
+export interface KeyMetadataDto {
   providerId: string;
   providerPriority: number;
   kid: string;
@@ -85,10 +58,10 @@ export interface KeyMetadataRepresentation {
   publicKey: string;
   certificate: string;
   // This does not come from backend but from UI
-  provider?: ComponentRepresentation;
+  provider?: ComponentDto;
 }
 
-export interface ComponentRepresentation {
+export interface ComponentDto {
   id?: string;
   name: string;
   providerId: string;
@@ -98,21 +71,17 @@ export interface ComponentRepresentation {
   config: { [key: string]: string[] };
 }
 
-export interface ServerInfoRepresentation {
-  componentTypes: ComponentTypes;
-}
-
 export interface ComponentTypes {
-  keyProviders: ComponentTypeRepresentation[];
+  keyProviders: ComponentTypeDto[];
 }
 
-export interface ComponentTypeRepresentation {
+export interface ComponentTypeDto {
   id: string;
   helpText: string;
-  properties: ConfigPropertyRepresentation[];
+  properties: ConfigPropertyDto[];
 }
 
-export interface ConfigPropertyRepresentation {
+export interface ConfigPropertyDto {
   name: string;
   label: string;
   helpText: string;

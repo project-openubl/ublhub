@@ -1,0 +1,19 @@
+{
+    "actions": {
+        "edit-object": "Editar {{what}}"
+    },
+    "info": {
+        "updated": ""
+    },
+    "terms": {
+        "cancel": "",
+        "created-on": "Creado en",
+        "document": "Documento",
+        "id": "Id",
+        "keys": "Llaves",
+        "priority": "Prioridad",
+        "progress": "Progreso",
+        "save": "",
+        "status": "Estado"
+    }
+}

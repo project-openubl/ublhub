@@ -43,10 +43,6 @@ public class ProjectDto {
 
     @NotNull
     @Valid
-    private SunatWebServicesDto sunatWebServices;
-
-    @NotNull
-    @Valid
-    private SunatCredentialsDto sunatCredentials;
-
+    private SunatDto sunat;
+    
 }

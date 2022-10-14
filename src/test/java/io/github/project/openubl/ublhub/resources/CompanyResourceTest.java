@@ -20,9 +20,7 @@ import io.github.project.openubl.ublhub.AbstractBaseTest;
 import io.github.project.openubl.ublhub.BasicProfileManager;
 import io.github.project.openubl.ublhub.dto.CompanyDto;
 import io.github.project.openubl.ublhub.dto.ComponentDto;
-import io.github.project.openubl.ublhub.dto.ProjectDto;
-import io.github.project.openubl.ublhub.dto.SunatCredentialsDto;
-import io.github.project.openubl.ublhub.dto.SunatWebServicesDto;
+import io.github.project.openubl.ublhub.dto.SunatDto;
 import io.github.project.openubl.ublhub.keys.GeneratedRsaKeyProviderFactory;
 import io.github.project.openubl.ublhub.keys.KeyProvider;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
@@ -61,11 +59,11 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .body("id", is(notNullValue()),
                         "name", is("company1"),
                         "ruc", is("11111111111"),
-                        "sunatWebServices.factura", is("http://urlFactura1"),
-                        "sunatWebServices.guia", is("http://urlGuia1"),
-                        "sunatWebServices.retencion", is("http://urlPercepcionRetencion1"),
-                        "sunatCredentials.username", is("username1"),
-                        "sunatCredentials.password", nullValue()
+                        "sunat.facturaUrl", is("http://urlFactura1"),
+                        "sunat.guiaUrl", is("http://urlGuia1"),
+                        "sunat.retencionUrl", is("http://urlPercepcionRetencion1"),
+                        "sunat.username", is("username1"),
+                        "sunat.password", nullValue()
                 );
         // Then
     }
@@ -98,13 +96,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
         CompanyDto companyDto = CompanyDto.builder()
                 .name("My company")
                 .ruc("12345678910")
-                .sunatWebServices(SunatWebServicesDto.builder()
-                        .factura("http://url1.com")
-                        .guia("http://url2.com")
-                        .retencion("http://url3.com")
-                        .build()
-                )
-                .sunatCredentials(SunatCredentialsDto.builder()
+                .sunat(SunatDto.builder()
+                        .facturaUrl("http://url1.com")
+                        .guiaUrl("http://url2.com")
+                        .retencionUrl("http://url3.com")
                         .username("myUsername")
                         .password("myPassword")
                         .build()
@@ -122,11 +117,11 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .body("id", is(notNullValue()),
                         "name", is(companyDto.getName()),
                         "ruc", is(companyDto.getRuc()),
-                        "sunatWebServices.factura", is(companyDto.getSunatWebServices().getFactura()),
-                        "sunatWebServices.guia", is(companyDto.getSunatWebServices().getGuia()),
-                        "sunatWebServices.retencion", is(companyDto.getSunatWebServices().getRetencion()),
-                        "sunatCredentials.username", is(companyDto.getSunatCredentials().getUsername()),
-                        "sunatCredentials.password", nullValue()
+                        "sunat.facturaUrl", is(companyDto.getSunat().getFacturaUrl()),
+                        "sunat.guiaUrl", is(companyDto.getSunat().getGuiaUrl()),
+                        "sunat.retencionUrl", is(companyDto.getSunat().getRetencionUrl()),
+                        "sunat.username", is(companyDto.getSunat().getUsername()),
+                        "sunat.password", nullValue()
                 ).extract().body().as(CompanyDto.class);
 
         // Then
@@ -138,11 +133,11 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .statusCode(200)
                 .body("id", is(response.getId()),
                         "name", is(companyDto.getName()),
-                        "sunatWebServices.factura", is(companyDto.getSunatWebServices().getFactura()),
-                        "sunatWebServices.guia", is(companyDto.getSunatWebServices().getGuia()),
-                        "sunatWebServices.retencion", is(companyDto.getSunatWebServices().getRetencion()),
-                        "sunatCredentials.username", is(companyDto.getSunatCredentials().getUsername()),
-                        "sunatCredentials.password", nullValue()
+                        "sunat.facturaUrl", is(companyDto.getSunat().getFacturaUrl()),
+                        "sunat.guiaUrl", is(companyDto.getSunat().getGuiaUrl()),
+                        "sunat.retencionUrl", is(companyDto.getSunat().getRetencionUrl()),
+                        "sunat.username", is(companyDto.getSunat().getUsername()),
+                        "sunat.password", nullValue()
                 );
     }
 
@@ -154,13 +149,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
         CompanyDto company = CompanyDto.builder()
                 .name("My company")
                 .ruc("11111111111")
-                .sunatWebServices(SunatWebServicesDto.builder()
-                        .factura("http://url1.com")
-                        .guia("http://url2.com")
-                        .retencion("http://url3.com")
-                        .build()
-                )
-                .sunatCredentials(SunatCredentialsDto.builder()
+                .sunat(SunatDto.builder()
+                        .facturaUrl("http://url1.com")
+                        .guiaUrl("http://url2.com")
+                        .retencionUrl("http://url3.com")
                         .username("myUsername")
                         .password("myPassword")
                         .build()
@@ -179,6 +171,43 @@ public class CompanyResourceTest extends AbstractBaseTest {
     }
 
     @Test
+    public void createCompanyWithoutSunatData() {
+        // Given
+        String projectId = "1";
+
+        CompanyDto companyDto = CompanyDto.builder()
+                .name("My company")
+                .ruc("12345678910")
+                .build();
+
+        // When
+        CompanyDto response = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(companyDto)
+                .when()
+                .post("/" + projectId + "/companies")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()),
+                        "name", is(companyDto.getName()),
+                        "ruc", is(companyDto.getRuc()),
+                        "sunat", is(nullValue())
+                ).extract().body().as(CompanyDto.class);
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/companies/" + response.getId())
+                .then()
+                .statusCode(200)
+                .body("id", is(response.getId()),
+                        "name", is(companyDto.getName()),
+                        "sunat", is(nullValue())
+                );
+    }
+
+    @Test
     public void updateCompany() {
         // Given
         String projectId = "1";
@@ -188,13 +217,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .ruc("99999999999")
                 .name("new name")
                 .description("new description")
-                .sunatWebServices(SunatWebServicesDto.builder()
-                        .factura("http://newUrl1.com")
-                        .retencion("http://newUrl2.com")
-                        .guia("http://newUrl3.com")
-                        .build()
-                )
-                .sunatCredentials(SunatCredentialsDto.builder()
+                .sunat(SunatDto.builder()
+                        .facturaUrl("http://newUrl1.com")
+                        .retencionUrl("http://newUrl2.com")
+                        .guiaUrl("http://newUrl3.com")
                         .username("new username")
                         .password("new password")
                         .build()
@@ -212,11 +238,11 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .body("ruc", is(companyDto.getRuc()),
                         "name", is(companyDto.getName()),
                         "description", is(companyDto.getDescription()),
-                        "sunatWebServices.factura", is(companyDto.getSunatWebServices().getFactura()),
-                        "sunatWebServices.retencion", is(companyDto.getSunatWebServices().getRetencion()),
-                        "sunatWebServices.guia", is(companyDto.getSunatWebServices().getGuia()),
-                        "sunatCredentials.username", is(companyDto.getSunatCredentials().getUsername()),
-                        "sunatCredentials.password", is(nullValue())
+                        "sunat.facturaUrl", is(companyDto.getSunat().getFacturaUrl()),
+                        "sunat.retencionUrl", is(companyDto.getSunat().getRetencionUrl()),
+                        "sunat.guiaUrl", is(companyDto.getSunat().getGuiaUrl()),
+                        "sunat.username", is(companyDto.getSunat().getUsername()),
+                        "sunat.password", is(nullValue())
                 );
 
         // Then
@@ -230,11 +256,11 @@ public class CompanyResourceTest extends AbstractBaseTest {
                         "ruc", is(companyDto.getRuc()),
                         "name", is(companyDto.getName()),
                         "description", is(companyDto.getDescription()),
-                        "sunatWebServices.factura", is(companyDto.getSunatWebServices().getFactura()),
-                        "sunatWebServices.retencion", is(companyDto.getSunatWebServices().getRetencion()),
-                        "sunatWebServices.guia", is(companyDto.getSunatWebServices().getGuia()),
-                        "sunatCredentials.username", is(companyDto.getSunatCredentials().getUsername()),
-                        "sunatCredentials.password", is(nullValue())
+                        "sunat.facturaUrl", is(companyDto.getSunat().getFacturaUrl()),
+                        "sunat.retencionUrl", is(companyDto.getSunat().getRetencionUrl()),
+                        "sunat.guiaUrl", is(companyDto.getSunat().getGuiaUrl()),
+                        "sunat.username", is(companyDto.getSunat().getUsername()),
+                        "sunat.password", is(nullValue())
                 );
     }
 
@@ -248,13 +274,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .ruc("99999999999")
                 .name("new name")
                 .description("new description")
-                .sunatWebServices(SunatWebServicesDto.builder()
-                        .factura("http://newUrl1.com")
-                        .retencion("http://newUrl2.com")
-                        .guia("http://newUrl3.com")
-                        .build()
-                )
-                .sunatCredentials(SunatCredentialsDto.builder()
+                .sunat(SunatDto.builder()
+                        .facturaUrl("http://newUrl1.com")
+                        .retencionUrl("http://newUrl2.com")
+                        .guiaUrl("http://newUrl3.com")
                         .username("new username")
                         .password("new password")
                         .build()
@@ -353,13 +376,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .name("mycompany")
                 .description("my description")
                 .ruc("99999999999")
-                .sunatWebServices(SunatWebServicesDto.builder()
-                        .factura("http://url1.com")
-                        .guia("http://url2.com")
-                        .retencion("http://url3.com")
-                        .build()
-                )
-                .sunatCredentials(SunatCredentialsDto.builder()
+                .sunat(SunatDto.builder()
+                        .facturaUrl("http://url1.com")
+                        .guiaUrl("http://url2.com")
+                        .retencionUrl("http://url3.com")
                         .username("myUsername")
                         .password("myPassword")
                         .build()

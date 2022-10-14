@@ -35,11 +35,11 @@ create table COMPANY
     ruc                            varchar(11)  not null,
     name                           varchar(255) not null,
     description                    varchar(255),
-    sunat_username                 varchar(255) not null,
-    sunat_password                 varchar(255) not null,
-    sunat_url_factura              varchar(255) not null,
-    sunat_url_guia_remision        varchar(255) not null,
-    sunat_url_percepcion_retencion varchar(255) not null,
+    sunat_username                 varchar(255),
+    sunat_password                 varchar(255),
+    sunat_url_factura              varchar(255),
+    sunat_url_guia_remision        varchar(255),
+    sunat_url_percepcion_retencion varchar(255),
     project_id                     varchar(255) not null,
     created                        timestamp    not null,
     updated                        timestamp,
@@ -120,17 +120,26 @@ alter table if exists PROJECT
 alter table if exists COMPONENT
     add constraint fk_component_project
     foreign key (project_id)
-    references PROJECT;
+    references PROJECT
+    on
+delete
+cascade;
 
 alter table if exists COMPONENT
     add constraint fk_component_company
     foreign key (company_id)
-    references COMPANY;
+    references COMPANY
+    on
+delete
+cascade;
 
 alter table if exists COMPONENT_CONFIG
     add constraint fk_componentconfig_component
     foreign key (component_id)
-    references COMPONENT;
+    references COMPONENT
+    on
+delete
+cascade;
 
 alter table if exists COMPANY
     add constraint uq_company_projectid_ruc unique (project_id, ruc);
@@ -154,13 +163,19 @@ cascade;
 alter table if exists SUNAT_NOTE
     add constraint fk_sunatnote_ubldocument
     foreign key (sunat_note_id)
-    references UBL_DOCUMENT;
+    references UBL_DOCUMENT
+    on
+delete
+cascade;
 
 
 alter table if exists GENERATED_ID
     add constraint fk_generatedid_project
     foreign key (project_id)
-    references PROJECT;
+    references PROJECT
+    on
+delete
+cascade;
 
 alter table if exists GENERATED_ID
     add constraint uq_generatedid_projectid_ruc_documenttype

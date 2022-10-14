@@ -1,24 +1,26 @@
 import React from "react";
 import { HashRouter } from "react-router-dom";
 
+import {
+  ConfirmationContextProvider,
+  NotificationContextProvider,
+  Notifications,
+} from "@project-openubl/lib-ui";
+
 import { AppRoutes } from "./Routes";
-import "./App.scss";
 
-import { DefaultLayout } from "./shared/components";
-
-import NotificationsPortal from "@redhat-cloud-services/frontend-components-notifications/NotificationPortal";
-import "@redhat-cloud-services/frontend-components-notifications/index.css";
-
-import { ConfirmationContextProvider } from "@project-openubl/lib-ui";
+import { DefaultLayout } from "./layout";
 
 const App: React.FC = () => {
   return (
     <HashRouter>
       <ConfirmationContextProvider>
-        <DefaultLayout>
-          <AppRoutes />
-        </DefaultLayout>
-        <NotificationsPortal />
+        <NotificationContextProvider>
+          <DefaultLayout>
+            <AppRoutes />
+          </DefaultLayout>
+          <Notifications />
+        </NotificationContextProvider>
       </ConfirmationContextProvider>
     </HashRouter>
   );

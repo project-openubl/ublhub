@@ -45,12 +45,7 @@ public class CompanyDto {
     @Size(max = 250)
     private String description;
 
-    @NotNull
     @Valid
-    private SunatWebServicesDto sunatWebServices;
-
-    @NotNull
-    @Valid
-    private SunatCredentialsDto sunatCredentials;
+    private SunatDto sunat;
 
 }
