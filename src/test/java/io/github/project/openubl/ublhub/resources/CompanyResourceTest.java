@@ -418,7 +418,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     }
 
     @Test
-    public void createCompanyKey() {
+    public void createCompanyComponent() {
         // Given
         String projectId = "1";
         String companyId = "11";
@@ -441,7 +441,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/companies/" + companyId + "/keys")
+                .post("/" + projectId + "/companies/" + companyId + "/components")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
@@ -458,7 +458,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     }
 
     @Test
-    public void getCompanyKey() {
+    public void getCompanyComponent() {
         // Given
         String projectId = "1";
         String companyId = "11";
@@ -480,7 +480,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/companies/" + companyId + "/keys")
+                .post("/" + projectId + "/companies/" + companyId + "/components")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()))
@@ -490,7 +490,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/companies/" + companyId + "/keys/" + componentId)
+                .get("/" + projectId + "/companies/" + companyId + "/components/" + componentId)
                 .then()
                 .statusCode(200)
                 .body("id", is(componentId),
@@ -507,7 +507,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     }
 
     @Test
-    public void updateCompanyKey() {
+    public void updateCompanyComponent() {
         // Given
         String projectId = "1";
         String companyId = "11";
@@ -529,7 +529,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/companies/" + companyId + "/keys")
+                .post("/" + projectId + "/companies/" + companyId + "/components")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()))
@@ -551,7 +551,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .when()
                 .body(componentDto)
-                .put("/" + projectId + "/companies/" + companyId + "/keys/" + componentId)
+                .put("/" + projectId + "/companies/" + companyId + "/components/" + componentId)
                 .then()
                 .statusCode(200)
                 .body("id", is(componentId),
@@ -568,7 +568,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     }
 
     @Test
-    public void deleteCompanyKey() {
+    public void deleteCompanyComponent() {
         // Given
         String projectId = "1";
         String companyId = "11";
@@ -590,7 +590,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/companies/" + companyId + "/keys")
+                .post("/" + projectId + "/companies/" + companyId + "/components")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()))
@@ -600,14 +600,14 @@ public class CompanyResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/" + projectId + "/companies/" + companyId + "/keys/" + componentId)
+                .delete("/" + projectId + "/companies/" + companyId + "/components/" + componentId)
                 .then()
                 .statusCode(204);
 
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/companies/" + companyId + "/keys/" + componentId)
+                .get("/" + projectId + "/companies/" + companyId + "/components/" + componentId)
                 .then()
                 .statusCode(404);
     }

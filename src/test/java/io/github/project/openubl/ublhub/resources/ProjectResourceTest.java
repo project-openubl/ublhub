@@ -293,7 +293,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     }
 
     @Test
-    public void createProjectKey() {
+    public void createProjectComponent() {
         // Given
         String projectId = "1";
 
@@ -315,7 +315,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/keys/")
+                .post("/" + projectId + "/components/")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
@@ -332,7 +332,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     }
 
     @Test
-    public void getProjectKey() {
+    public void getProjectComponent() {
         // Given
         String projectId = "1";
 
@@ -353,7 +353,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/keys/")
+                .post("/" + projectId + "/components/")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()))
@@ -363,7 +363,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/keys/" + componentId)
+                .get("/" + projectId + "/components/" + componentId)
                 .then()
                 .statusCode(200)
                 .body("id", is(componentId),
@@ -380,7 +380,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     }
 
     @Test
-    public void updateProjectKey() {
+    public void updateProjectComponent() {
         // Given
         String projectId = "1";
 
@@ -401,7 +401,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/keys/")
+                .post("/" + projectId + "/components/")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()))
@@ -423,7 +423,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .when()
                 .body(componentDto)
-                .put("/" + projectId + "/keys/" + componentId)
+                .put("/" + projectId + "/components/" + componentId)
                 .then()
                 .statusCode(200)
                 .body("id", is(componentId),
@@ -440,7 +440,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     }
 
     @Test
-    public void deleteProjectKey() {
+    public void deleteProjectComponent() {
         // Given
         String projectId = "1";
 
@@ -461,7 +461,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/keys/")
+                .post("/" + projectId + "/components/")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()))
@@ -471,14 +471,14 @@ public class ProjectResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/" + projectId + "/keys/" + componentId)
+                .delete("/" + projectId + "/components/" + componentId)
                 .then()
                 .statusCode(204);
 
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/keys/" + componentId)
+                .get("/" + projectId + "/components/" + componentId)
                 .then()
                 .statusCode(404);
     }

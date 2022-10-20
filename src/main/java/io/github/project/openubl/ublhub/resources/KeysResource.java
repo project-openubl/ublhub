@@ -36,6 +36,7 @@ package io.github.project.openubl.ublhub.resources;
 import io.github.project.openubl.ublhub.dto.ComponentDto;
 import io.github.project.openubl.ublhub.keys.KeyManager;
 import io.github.project.openubl.ublhub.keys.KeyProvider;
+import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import io.github.project.openubl.ublhub.mapper.ComponentMapper;
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
@@ -62,10 +63,12 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -170,7 +173,7 @@ public class KeysResource {
         ComponentOwner owner = getOwnerCompany(companyId);
 
         Uni<RestResponse<KeysMetadataRepresentation>> restResponseUni = companyRepository.findById(projectId, companyId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> getKeys(owner)
+                .onItem().ifNotNull().transformToUni(companyEntity -> getKeys(owner)
                         .map(keyMetadataSuccessResponse)
                 )
                 .onItem().ifNull().continueWith(keyMetadataNotFoundResponse);
@@ -215,11 +218,98 @@ public class KeysResource {
         return r;
     }
 
+    @RolesAllowed({Permission.admin, Permission.project_read})
+    @Operation(summary = "Get project components", description = "List of components")
+    @GET
+    @Path("/{projectId}/components")
+    public Uni<RestResponse<List<ComponentDto>>> getProjectComponents(
+            @PathParam("projectId") @NotNull String projectId,
+            @QueryParam("parent") String parent,
+            @QueryParam("type") String type,
+            @QueryParam("name") String name
+    ) {
+        ComponentOwner owner = getOwnerProject(projectId);
+
+        Uni<RestResponse<List<ComponentDto>>> restResponseUni = projectRepository.findById(projectId)
+                .onItem().ifNotNull().transformToUni(projectEntity -> {
+                    Uni<List<ComponentModel>> components;
+                    if (parent == null && type == null) {
+                        components = componentRepository.getComponents(owner);
+                    } else if (type == null) {
+                        components = componentRepository.getComponents(owner, parent);
+                    } else {
+                        components = componentRepository.getComponents(owner, parent, type);
+                    }
+
+                    return components
+                            .map(componentModels -> componentModels.stream()
+                                    .filter(component -> Objects.isNull(name) || Objects.equals(component.getName(), name))
+                                    .map(model -> componentMapper.toDto(model, false))
+                                    .collect(Collectors.toList())
+                            )
+                            .map(componentDtos -> RestResponse.ResponseBuilder
+                                    .<List<ComponentDto>>create(RestResponse.Status.CREATED)
+                                    .entity(componentDtos)
+                                    .build()
+                            );
+                })
+                .onItem().ifNull().continueWith(() -> RestResponse.ResponseBuilder
+                        .<List<ComponentDto>>create(RestResponse.Status.NOT_FOUND)
+                        .build()
+                );
+
+        return Panache.withTransaction(() -> restResponseUni);
+    }
+
+    @RolesAllowed({Permission.admin, Permission.project_read})
+    @Operation(summary = "Get company components", description = "List of components")
+    @GET
+    @Path("/{projectId}/companies/{companyId}/components")
+    public Uni<RestResponse<List<ComponentDto>>> getCompanyComponents(
+            @PathParam("projectId") @NotNull String projectId,
+            @PathParam("companyId") @NotNull String companyId,
+            @QueryParam("parent") String parent,
+            @QueryParam("type") String type,
+            @QueryParam("name") String name
+    ) {
+        ComponentOwner owner = getOwnerCompany(companyId);
+
+        Uni<RestResponse<List<ComponentDto>>> restResponseUni = companyRepository.findById(projectId, companyId)
+                .onItem().ifNotNull().transformToUni(companyEntity -> {
+                    Uni<List<ComponentModel>> components;
+                    if (parent == null && type == null) {
+                        components = componentRepository.getComponents(owner);
+                    } else if (type == null) {
+                        components = componentRepository.getComponents(owner, parent);
+                    } else {
+                        components = componentRepository.getComponents(owner, parent, type);
+                    }
+
+                    return components
+                            .map(componentModels -> componentModels.stream()
+                                    .filter(component -> Objects.isNull(name) || Objects.equals(component.getName(), name))
+                                    .map(model -> componentMapper.toDto(model, false))
+                                    .collect(Collectors.toList())
+                            )
+                            .map(componentDtos -> RestResponse.ResponseBuilder
+                                    .<List<ComponentDto>>create(RestResponse.Status.CREATED)
+                                    .entity(componentDtos)
+                                    .build()
+                            );
+                })
+                .onItem().ifNull().continueWith(() -> RestResponse.ResponseBuilder
+                        .<List<ComponentDto>>create(RestResponse.Status.NOT_FOUND)
+                        .build()
+                );
+
+        return Panache.withTransaction(() -> restResponseUni);
+    }
+
     @RolesAllowed({Permission.admin, Permission.project_write})
-    @Operation(summary = "Create a project key", description = "Create key")
+    @Operation(summary = "Create a project component", description = "Create component")
     @POST
-    @Path("/{projectId}/keys")
-    public Uni<RestResponse<ComponentDto>> createProjectKey(
+    @Path("/{projectId}/components")
+    public Uni<RestResponse<ComponentDto>> createProjectComponent(
             @PathParam("projectId") @NotNull String projectId,
             ComponentDto componentDto
     ) {
@@ -230,7 +320,7 @@ public class KeysResource {
         ComponentOwner owner = getOwnerProject(projectId);
 
         Uni<RestResponse<ComponentDto>> restResponseUni = projectRepository.findById(projectId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> createKey(owner, componentDto)
+                .onItem().ifNotNull().transformToUni(projectEntity -> createComponent(owner, componentDto)
                         .map(componentDtoCreatedResponse)
                 )
                 .onItem().ifNull().continueWith(componentDtoNotFoundDtoResponse);
@@ -239,22 +329,22 @@ public class KeysResource {
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write})
-    @Operation(summary = "Create a company key", description = "Create key")
+    @Operation(summary = "Create a company component", description = "Create component")
     @POST
-    @Path("/{projectId}/companies/{companyId}/keys")
-    public Uni<RestResponse<ComponentDto>> createCompanyKey(
+    @Path("/{projectId}/companies/{companyId}/components")
+    public Uni<RestResponse<ComponentDto>> createCompanyComponent(
             @PathParam("projectId") @NotNull String projectId,
             @PathParam("companyId") @NotNull String companyId,
             ComponentDto componentDto
     ) {
         componentDto.setId(null);
-        componentDto.setParentId(projectId);
+        componentDto.setParentId(companyId);
         componentDto.setProviderType(KeyProvider.class.getName());
 
         ComponentOwner owner = getOwnerCompany(companyId);
 
         Uni<RestResponse<ComponentDto>> restResponseUni = companyRepository.findById(projectId, companyId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> createKey(owner, componentDto)
+                .onItem().ifNotNull().transformToUni(projectEntity -> createComponent(owner, componentDto)
                         .map(componentDtoCreatedResponse)
                 )
                 .onItem().ifNull().continueWith(componentDtoNotFoundDtoResponse);
@@ -262,24 +352,24 @@ public class KeysResource {
         return Panache.withTransaction(() -> restResponseUni);
     }
 
-    private Uni<ComponentDto> createKey(ComponentOwner owner, ComponentDto componentDto) {
+    private Uni<ComponentDto> createComponent(ComponentOwner owner, ComponentDto componentDto) {
         return componentRepository
                 .addComponentModel(owner, componentMapper.toModel(componentDto))
                 .map(componentModel -> componentMapper.toDto(componentModel, false));
     }
 
     @RolesAllowed({Permission.admin, Permission.project_read})
-    @Operation(summary = "Get project key", description = "Get one key")
+    @Operation(summary = "Get project component", description = "Get one component")
     @GET
-    @Path("/{projectId}/keys/{componentId}")
-    public Uni<RestResponse<ComponentDto>> getProjectKey(
+    @Path("/{projectId}/components/{componentId}")
+    public Uni<RestResponse<ComponentDto>> getProjectComponent(
             @PathParam("projectId") @NotNull String projectId,
             @PathParam("componentId") String componentId
     ) {
         ComponentOwner owner = getOwnerProject(projectId);
 
         Uni<RestResponse<ComponentDto>> restResponseUni = projectRepository.findById(projectId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> getKey(owner, componentId)
+                .onItem().ifNotNull().transformToUni(projectEntity -> getComponent(owner, componentId)
                         .map(dto -> dto != null ? componentDtoOkResponse.apply(dto) : componentDtoNotFoundDtoResponse.get())
                 ).onItem().ifNull().continueWith(componentDtoNotFoundDtoResponse);
 
@@ -287,10 +377,10 @@ public class KeysResource {
     }
 
     @RolesAllowed({Permission.admin, Permission.project_read})
-    @Operation(summary = "Get company key", description = "Get one key")
+    @Operation(summary = "Get company component", description = "Get one component")
     @GET
-    @Path("/{projectId}/companies/{companyId}/keys/{componentId}")
-    public Uni<RestResponse<ComponentDto>> getCompanyKey(
+    @Path("/{projectId}/companies/{companyId}/components/{componentId}")
+    public Uni<RestResponse<ComponentDto>> getCompanyComponent(
             @PathParam("projectId") @NotNull String projectId,
             @PathParam("companyId") @NotNull String companyId,
             @PathParam("componentId") String componentId
@@ -298,24 +388,24 @@ public class KeysResource {
         ComponentOwner owner = getOwnerCompany(companyId);
 
         Uni<RestResponse<ComponentDto>> restResponseUni = companyRepository.findById(projectId, companyId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> getKey(owner, componentId)
+                .onItem().ifNotNull().transformToUni(projectEntity -> getComponent(owner, componentId)
                         .map(dto -> dto != null ? componentDtoOkResponse.apply(dto) : componentDtoNotFoundDtoResponse.get())
                 ).onItem().ifNull().continueWith(componentDtoNotFoundDtoResponse);
 
         return Panache.withTransaction(() -> restResponseUni);
     }
 
-    private Uni<ComponentDto> getKey(ComponentOwner owner, String componentId) {
+    private Uni<ComponentDto> getComponent(ComponentOwner owner, String componentId) {
         return componentRepository
                 .getComponent(owner, componentId)
                 .map(model -> componentMapper.toDto(model, false));
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write})
-    @Operation(summary = "Update project key", description = "Update a key")
+    @Operation(summary = "Update project component", description = "Update a component")
     @PUT
-    @Path("/{projectId}/keys/{componentId}")
-    public Uni<RestResponse<ComponentDto>> updateProjectKey(
+    @Path("/{projectId}/components/{componentId}")
+    public Uni<RestResponse<ComponentDto>> updateProjectComponent(
             @PathParam("projectId") @NotNull String projectId,
             @PathParam("componentId") String componentId,
             ComponentDto componentDto
@@ -323,7 +413,7 @@ public class KeysResource {
         ComponentOwner owner = getOwnerProject(projectId);
 
         Uni<RestResponse<ComponentDto>> restResponseUni = projectRepository.findById(projectId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> updateKey(owner, componentId, componentDto)
+                .onItem().ifNotNull().transformToUni(projectEntity -> updateComponent(owner, componentId, componentDto)
                         .map(componentDtoOkResponse)
                 )
                 .onItem().ifNull().continueWith(componentDtoNotFoundDtoResponse);
@@ -332,10 +422,10 @@ public class KeysResource {
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write})
-    @Operation(summary = "Update company key", description = "Update a key")
+    @Operation(summary = "Update company component", description = "Update a component")
     @PUT
-    @Path("/{projectId}/companies/{companyId}/keys/{componentId}")
-    public Uni<RestResponse<ComponentDto>> updateCompanyKey(
+    @Path("/{projectId}/companies/{companyId}/components/{componentId}")
+    public Uni<RestResponse<ComponentDto>> updateCompanyComponent(
             @PathParam("projectId") @NotNull String projectId,
             @PathParam("companyId") @NotNull String companyId,
             @PathParam("componentId") String componentId,
@@ -344,7 +434,7 @@ public class KeysResource {
         ComponentOwner owner = getOwnerCompany(companyId);
 
         Uni<RestResponse<ComponentDto>> restResponseUni = companyRepository.findById(projectId, companyId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> updateKey(owner, componentId, componentDto)
+                .onItem().ifNotNull().transformToUni(projectEntity -> updateComponent(owner, componentId, componentDto)
                         .map(componentDtoOkResponse)
                 )
                 .onItem().ifNull().continueWith(componentDtoNotFoundDtoResponse);
@@ -352,27 +442,27 @@ public class KeysResource {
         return Panache.withTransaction(() -> restResponseUni);
     }
 
-    public Uni<ComponentDto> updateKey(ComponentOwner owner, String componentId, ComponentDto componentDto) {
+    public Uni<ComponentDto> updateComponent(ComponentOwner owner, String componentId, ComponentDto componentDto) {
         return componentRepository
                 .getComponent(owner, componentId)
-                .map(model -> componentMapper.updateModelFromDto(componentDto, model, false))
+                .map(model -> componentMapper.updateModelFromDto(componentDto, model))
                 .chain(model -> componentRepository.updateComponent(owner, model))
                 .chain(unused -> componentRepository.getComponent(owner, componentId))
                 .map(model -> componentMapper.toDto(model, false));
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write})
-    @Operation(summary = "Delete a project key", description = "Delete a key")
+    @Operation(summary = "Delete a project component", description = "Delete a component")
     @DELETE
-    @Path("/{projectId}/keys/{componentId}")
-    public Uni<RestResponse<Void>> deleteKey(
+    @Path("/{projectId}/components/{componentId}")
+    public Uni<RestResponse<Void>> deleteComponent(
             @PathParam("projectId") @NotNull String projectId,
             @PathParam("componentId") String componentId
     ) {
         ComponentOwner owner = getOwnerProject(projectId);
 
         Uni<RestResponse<Void>> restResponseUni = projectRepository.findById(projectId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> deleteKey(owner, componentId)
+                .onItem().ifNotNull().transformToUni(projectEntity -> deleteComponent(owner, componentId)
                         .map(result -> result ? componentDtoNoContentResponse.get() : componentDtoInternalServerErrorResponse.get())
                 )
                 .onItem().ifNull().continueWith(componentDtoNotFoundVoidResponse);
@@ -381,10 +471,10 @@ public class KeysResource {
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write})
-    @Operation(summary = "Delete a company key", description = "Delete a key")
+    @Operation(summary = "Delete a company component", description = "Delete a component")
     @DELETE
-    @Path("/{projectId}/companies/{companyId}/keys/{componentId}")
-    public Uni<RestResponse<Void>> deleteCompanyKey(
+    @Path("/{projectId}/companies/{companyId}/components/{componentId}")
+    public Uni<RestResponse<Void>> deleteCompanyComponent(
             @PathParam("projectId") @NotNull String projectId,
             @PathParam("companyId") @NotNull String companyId,
             @PathParam("componentId") String componentId
@@ -392,7 +482,7 @@ public class KeysResource {
         ComponentOwner owner = getOwnerCompany(companyId);
 
         Uni<RestResponse<Void>> restResponseUni = companyRepository.findById(projectId, companyId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> deleteKey(owner, componentId)
+                .onItem().ifNotNull().transformToUni(projectEntity -> deleteComponent(owner, componentId)
                         .map(result -> result ? componentDtoNoContentResponse.get() : componentDtoInternalServerErrorResponse.get())
                 )
                 .onItem().ifNull().continueWith(componentDtoNotFoundVoidResponse);
@@ -400,7 +490,7 @@ public class KeysResource {
         return Panache.withTransaction(() -> restResponseUni);
     }
 
-    public Uni<Boolean> deleteKey(ComponentOwner owner, String componentId) {
+    public Uni<Boolean> deleteComponent(ComponentOwner owner, String componentId) {
         return componentRepository
                 .getComponent(owner, componentId)
                 .chain(model -> componentRepository.removeComponent(owner, model));

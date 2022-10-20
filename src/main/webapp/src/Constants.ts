@@ -1,3 +1,5 @@
+export const KEY_PROVIDERS = "keyProviders";
+
 export interface ISunatCredentials {
   username: string;
   password: string;

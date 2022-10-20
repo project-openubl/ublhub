@@ -66,7 +66,7 @@ export interface ComponentDto {
   name: string;
   providerId: string;
   providerType: string;
-  parentId: string;
+  parentId?: string;
   subType?: string;
   config: { [key: string]: string[] };
 }
@@ -85,8 +85,12 @@ export interface ConfigPropertyDto {
   name: string;
   label: string;
   helpText: string;
-  type: string;
+  type: "String" | "boolean" | "List" | "File";
   defaultValue: string;
   options: string[];
   secret: boolean;
+}
+
+export interface ServerInfoDto {
+  componentTypes: { [key: string]: ComponentTypeDto[] };
 }

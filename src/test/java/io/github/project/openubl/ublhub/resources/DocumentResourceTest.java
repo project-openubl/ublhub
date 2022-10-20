@@ -304,7 +304,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/keys/")
+                .post("/" + projectId + "/components/")
                 .then()
                 .statusCode(201)
                 .body("config.algorithm[0]", is(Algorithm.RS512));

@@ -21,6 +21,7 @@ import io.github.project.openubl.ublhub.keys.component.utils.ComponentUtil;
 import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.representations.idm.ComponentExportRepresentation;
+import org.keycloak.representations.idm.ComponentRepresentation;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -44,7 +45,7 @@ public class StripSecretsUtils {
                 ? null
                 : (VAULT_VALUE.matcher(value).matches()
                 ? value
-                : ComponentDto.SECRET_VALUE
+                : ComponentRepresentation.SECRET_VALUE
         );
     }
 
@@ -61,7 +62,7 @@ public class StripSecretsUtils {
             if (configProperty != null) {
                 if (configProperty.isSecret()) {
                     if (next.getValue() == null || next.getValue().isEmpty()) {
-                        next.setValue(Collections.singletonList(ComponentDto.SECRET_VALUE));
+                        next.setValue(Collections.singletonList(ComponentRepresentation.SECRET_VALUE));
                     } else {
                         next.setValue(next.getValue().stream().map(StripSecretsUtils::maskNonVaultValue).collect(Collectors.toList()));
                     }
@@ -86,7 +87,7 @@ public class StripSecretsUtils {
             if (configProperty != null) {
                 if (configProperty.isSecret()) {
                     if (next.getValue() == null || next.getValue().isEmpty()) {
-                        next.setValue(Collections.singletonList(ComponentDto.SECRET_VALUE));
+                        next.setValue(Collections.singletonList(ComponentRepresentation.SECRET_VALUE));
                     } else {
                         next.setValue(next.getValue().stream().map(StripSecretsUtils::maskNonVaultValue).collect(Collectors.toList()));
                     }
@@ -97,8 +98,8 @@ public class StripSecretsUtils {
         }
 
         MultivaluedHashMap<String, ComponentExportRepresentation> sub = rep.getSubComponents();
-        for (Map.Entry<String, List<ComponentExportRepresentation>> ent: sub.entrySet()) {
-            for (ComponentExportRepresentation c: ent.getValue()) {
+        for (Map.Entry<String, List<ComponentExportRepresentation>> ent : sub.entrySet()) {
+            for (ComponentExportRepresentation c : ent.getValue()) {
                 strip(componentUtil, ent.getKey(), c);
             }
         }
