@@ -21,7 +21,11 @@ import {
   Modal,
 } from "@patternfly/react-core";
 
-import { NotificationContext, useConfirmationContext, useModal } from "@project-openubl/lib-ui";
+import {
+  NotificationContext,
+  useConfirmationContext,
+  useModal,
+} from "@project-openubl/lib-ui";
 
 import { useCompaniesQuery, useUpdateCompanyMutation } from "queries/companies";
 import { CompanyDto, ProjectDto } from "api/models";
@@ -159,7 +163,9 @@ export const Sunat: React.FC<ISunatProps> = ({
       {modal.isOpen && (
         <Modal
           variant="medium"
-          title={t("actions.edit-object", { what: t("terms.company") })}
+          title={t("actions.edit-object", {
+            what: t("terms.company").toLowerCase(),
+          })}
           isOpen={modal.isOpen}
           onClose={modal.close}
         >

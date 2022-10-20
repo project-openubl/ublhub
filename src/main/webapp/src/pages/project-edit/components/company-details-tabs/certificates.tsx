@@ -348,10 +348,10 @@ export const Certificates: React.FC<ICertificatesProps> = ({
         title={
           componentFormModal.action === "create"
             ? t("actions.create-object", {
-                what: t("terms.certificate"),
+                what: t("terms.certificate").toLowerCase(),
               })
             : t("actions.edit-object", {
-                what: t("terms.certificate"),
+                what: t("terms.certificate").toLowerCase(),
               })
         }
         isOpen={componentFormModal.isOpen}

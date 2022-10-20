@@ -14,6 +14,12 @@ export const HorizontalNav: React.FC<HorizontalNavProps> = ({ navItems }) => {
     <Tabs
       activeKey={navItems.find((e) => e.path === location.pathname)?.path}
       onSelect={(_, tabKey) => navigate(`${tabKey}`)}
+      isBox
+      inset={{
+        default: "insetNone",
+        md: "insetSm",
+        xl: "insetLg",
+      }}
     >
       {navItems.map((e, index) => (
         <Tab

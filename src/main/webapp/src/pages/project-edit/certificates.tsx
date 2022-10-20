@@ -279,7 +279,7 @@ const Certificates: React.FC = () => {
                     toggleVariant="primary"
                   >
                     {t("actions.create-object", {
-                      what: t("terms.certificate"),
+                      what: t("terms.certificate").toLowerCase(),
                     })}
                   </DropdownToggle>
                 }
@@ -331,10 +331,10 @@ const Certificates: React.FC = () => {
         title={
           componentFormModal.action === "create"
             ? t("actions.create-object", {
-                what: t("terms.certificate"),
+                what: t("terms.certificate").toLowerCase(),
               })
             : t("actions.edit-object", {
-                what: t("terms.certificate"),
+                what: t("terms.certificate").toLowerCase(),
               })
         }
         isOpen={componentFormModal.isOpen}

@@ -205,7 +205,7 @@ const Companies: React.FC = () => {
                         onClick={() => companyModal.open("ADD")}
                       >
                         {t("actions.create-object", {
-                          what: t("terms.company"),
+                          what: t("terms.company").toLowerCase(),
                         })}
                       </Button>
                     </ToolbarItem>
@@ -337,7 +337,9 @@ const Companies: React.FC = () => {
                                 {t("actions.delete")}
                               </DropdownItem>,
                             ]}
-                            menuAppendTo={() => document.getElementById('data-list') as any}
+                            menuAppendTo={() =>
+                              document.getElementById("data-list") as any
+                            }
                           />
                         </DataListAction>
                       </DataListItemRow>
@@ -352,7 +354,9 @@ const Companies: React.FC = () => {
 
       <Modal
         variant="medium"
-        title={t("actions.create-object", { what: t("terms.company") })}
+        title={t("actions.create-object", {
+          what: t("terms.company").toLowerCase(),
+        })}
         isOpen={companyModal.isOpen}
         onClose={companyModal.close}
       >

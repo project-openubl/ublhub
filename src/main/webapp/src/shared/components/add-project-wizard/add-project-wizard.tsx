@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { object, string,  } from "yup";
+import { object, string } from "yup";
 
 import {
   Button,
@@ -236,7 +236,9 @@ export const AddProjectWizard: React.FC<IAddProjectWizardProps> = ({
   return (
     <Wizard
       isOpen
-      title={t("actions.create-object", { what: t("terms.project") })}
+      title={t("actions.create-object", {
+        what: t("terms.project").toLowerCase(),
+      })}
       steps={steps}
       onSubmit={(event) => event.preventDefault()}
       onSave={onSaveForm}

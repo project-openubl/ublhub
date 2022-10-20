@@ -32,8 +32,16 @@ export const CompanyDetailsTabs: React.FC<ICompanyDetailsTabsProps> = ({
 
   return (
     <>
-   
-      <Tabs aria-label="Company details" defaultActiveKey={0} isFilled>
+      <Tabs
+        aria-label="Company details"
+        defaultActiveKey={0}
+        isBox
+        inset={{
+          default: "insetNone",
+          md: "insetSm",
+          xl: "insetLg",
+        }}
+      >
         <Tab
           eventKey={0}
           title={<TabTitleText>{t("terms.general")}</TabTitleText>}

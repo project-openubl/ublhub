@@ -335,7 +335,8 @@ export const ComponentForm: React.FC<IComponentFormProps> = ({
             !isDirty ||
             !isValid ||
             isValidating ||
-            createComponentMutation.isLoading
+            createComponentMutation.isLoading ||
+            updateComponentMutation.isLoading
           }
         >
           {t("actions.save")}
@@ -348,7 +349,9 @@ export const ComponentForm: React.FC<IComponentFormProps> = ({
       <ResolvedQueries
         resultsWithErrorTitles={[
           {
-            result: createComponentMutation,
+            result: !component
+              ? createComponentMutation
+              : updateComponentMutation,
             errorTitle: "Could not save data",
           },
         ]}

@@ -20,9 +20,7 @@ import {
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import { ResolvedQueries } from "@migtools/lib-ui";
-import {
-  NotificationContext
-} from "@project-openubl/lib-ui";
+import { NotificationContext } from "@project-openubl/lib-ui";
 
 import { ProjectDto } from "api/models";
 import { useUpdateProjectMutation } from "queries/projects";
@@ -101,7 +99,7 @@ const General: React.FC = () => {
   };
 
   return (
-    <Card>
+    <Card isPlain>
       <CardBody>
         <Form className={spacing.pbXl}>
           <FormGroup

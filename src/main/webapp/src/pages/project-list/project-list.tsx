@@ -119,7 +119,7 @@ export const ProjectList: React.FC = () => {
         extraData: IExtraData
       ) => {
         const row: ProjectDto = getRow(rowData);
-        navigate(`/projects/${row.id}`);      
+        navigate(`/projects/${row.id}`);
       },
     },
     {
@@ -134,7 +134,7 @@ export const ProjectList: React.FC = () => {
 
         confirmationModal.open({
           title: t("modal.confirm-delete.title", {
-            what: t("terms.project"),
+            what: t("terms.project").toLowerCase(),
           }),
           titleIconVariant: "warning",
           message: (
@@ -163,9 +163,10 @@ export const ProjectList: React.FC = () => {
       <PageSection variant={PageSectionVariants.light}>
         <TextContent>
           <Text component="h1">{t("terms.projects")}</Text>
+          <Text component="p">Lista de Proyectos disponibles.</Text>
         </TextContent>
       </PageSection>
-      <PageSection>
+      <PageSection variant="light" type="wizard">
         <SimpleTableWithToolbar
           hasTopPagination
           hasBottomPagination
@@ -188,14 +189,7 @@ export const ProjectList: React.FC = () => {
           filtersApplied={filterText.trim().length > 0}
           toolbarToggle={
             <ToolbarItem variant="search-filter">
-              <SearchInput
-                value={filterText}
-                onChange={setFilterText}
-                // onSearch={(value) => {
-                //   addFilter("name", value);
-                //   setFilterText("");
-                // }}
-              />
+              <SearchInput value={filterText} onChange={setFilterText} />
             </ToolbarItem>
           }
           toolbarActions={
@@ -207,7 +201,9 @@ export const ProjectList: React.FC = () => {
                   variant={ButtonVariant.primary}
                   onClick={() => modal.open("ADD")}
                 >
-                  {t("actions.create-object", { what: t("terms.project") })}
+                  {t("actions.create-object", {
+                    what: t("terms.project").toLowerCase(),
+                  })}
                 </Button>
               </ToolbarItem>
             </ToolbarGroup>

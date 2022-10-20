@@ -83,7 +83,9 @@ export const General: React.FC<IGeneralProps> = ({
       {modal.isOpen && (
         <Modal
           variant="medium"
-          title={t("actions.edit-object", { what: t("terms.company") })}
+          title={t("actions.edit-object", {
+            what: t("terms.company").toLowerCase(),
+          })}
           isOpen={modal.isOpen}
           onClose={modal.close}
         >

@@ -1,5 +1,5 @@
-import windupLogo from "images/themes/logo.svg";
-import windupNavBrandImage from "images/themes/navbar.svg";
+import ublHubLogo from "images/themes/logo.svg";
+import ublHubNavBrandImage from "images/themes/navbar.svg";
 
 type ThemeType = "ublhub";
 const defaultTheme: ThemeType = "ublhub";
@@ -15,9 +15,9 @@ type ThemeListType = {
 
 const themeList: ThemeListType = {
   ublhub: {
-    name: "Windup",
-    logoSrc: windupLogo,
-    logoNavbarSrc: windupNavBrandImage,
+    name: "UblHub",
+    logoSrc: ublHubLogo,
+    logoNavbarSrc: ublHubNavBrandImage,
   },
 };
 

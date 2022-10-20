@@ -7,7 +7,7 @@ import { useConfirmationContext } from "@project-openubl/lib-ui";
 import { ButtonVariant, PageSection } from "@patternfly/react-core";
 
 import { useProjectsQuery, useDeleteProjectMutation } from "queries/projects";
-import { PageHeader } from "shared/components";
+import { HorizontalNav, PageHeader } from "shared/components";
 
 export const ProjectEdit: React.FC = () => {
   const { t } = useTranslation();
@@ -81,6 +81,10 @@ export const ProjectEdit: React.FC = () => {
           menuActions={[
             { label: t("actions.delete"), callback: onDeleteProject },
           ]}
+        />
+      </PageSection>
+      <PageSection variant="light" type="tabs">
+        <HorizontalNav
           navItems={[
             {
               title: "General",
@@ -101,7 +105,7 @@ export const ProjectEdit: React.FC = () => {
           ]}
         />
       </PageSection>
-      <PageSection>
+      <PageSection variant="light" className="pf-u-p-0">
         <Outlet context={project} />
       </PageSection>
     </>
