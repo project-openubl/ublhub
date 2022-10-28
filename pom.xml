@@ -36,7 +36,8 @@
 
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>2.12.1.Final</quarkus.platform.version>
+        <quarkus.platform.version>2.13.3.Final</quarkus.platform.version>
+        <keycloak.version>18.0.2</keycloak.version>
 
         <maven.compiler.parameters>true</maven.compiler.parameters>
         <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
@@ -128,10 +129,16 @@
             <artifactId>xsender</artifactId>
             <version>3.0.3.Final</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-common</artifactId>
+            <version>${keycloak.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-core</artifactId>
-            <version>15.0.2</version>
+            <version>${keycloak.version}</version>
         </dependency>
 
         <dependency>

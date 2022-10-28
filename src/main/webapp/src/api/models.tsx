@@ -94,3 +94,56 @@ export interface ConfigPropertyDto {
 export interface ServerInfoDto {
   componentTypes: { [key: string]: ComponentTypeDto[] };
 }
+
+export interface DocumentDto {
+  id: string;
+  created: number;
+  updated: number;
+  status: DocumentStatusDto;
+}
+
+export interface DocumentStatusDto {
+  inProgress: boolean;
+  xmlData?: DocumentStatusXMLDataDto;
+  sunat?: DocumentStatusSunatDto;
+  error?: DocumentStatusErrorDto;
+}
+
+export interface DocumentStatusXMLDataDto {
+  ruc: string;
+  serieNumero: string;
+  tipoDocumento: string;
+}
+
+export interface DocumentStatusSunatDto {
+  code: string;
+  ticket: string;
+  status: string;
+  description: string;
+  hasCdr: string;
+  notes: string[];
+}
+
+export interface DocumentStatusErrorDto {
+  phase: string;
+  description: string;
+  recoveryActionCount: string;
+  recoveryAction: string;
+}
+
+export interface DocumentInputDto {
+  kind: "Invoice" | "CreditNote" | "DebitNote";
+  metadata?: {
+    labels: string[];
+  };
+  spec: {
+    id?: {
+      type: "none" | "generated";
+      config: { [key: string]: string }[];
+    };
+    signature?: {
+      algorithm: string;
+    };
+    document: any;
+  };
+}

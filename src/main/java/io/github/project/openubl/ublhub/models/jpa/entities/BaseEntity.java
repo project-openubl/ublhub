@@ -17,6 +17,7 @@
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
+import lombok.Data;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -28,6 +29,7 @@ import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 
+@Data
 @MappedSuperclass
 public abstract class BaseEntity extends PanacheEntityBase {
 

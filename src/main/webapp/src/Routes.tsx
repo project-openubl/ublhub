@@ -5,8 +5,14 @@ const ProjectList = lazy(() => import("./pages/project-list"));
 const ProjectEdit = lazy(() => import("./pages/project-edit"));
 const ProjectEditGeneral = lazy(() => import("./pages/project-edit/general"));
 const ProjectEditSunat = lazy(() => import("./pages/project-edit/sunat"));
-const ProjectEditCertificates = lazy(() => import("./pages/project-edit/certificates"));
-const ProjectEditCompanies = lazy(() => import("./pages/project-edit/companies"));
+const ProjectEditCertificates = lazy(
+  () => import("./pages/project-edit/certificates")
+);
+const ProjectEditCompanies = lazy(
+  () => import("./pages/project-edit/companies")
+);
+
+const DocumentList = lazy(() => import("./pages/document-list"));
 
 export const AppRoutes = () => {
   const routes = [
@@ -38,8 +44,23 @@ export const AppRoutes = () => {
         {
           Component: ProjectEditCompanies,
           path: "companies",
-        }       
+        },
       ],
+    },
+    {
+      Component: ProjectList,
+      path: "/projects",
+      hasDescendant: true,
+    },
+    {
+      Component: DocumentList,
+      path: "/documents",
+      hasDescendant: false,
+    },
+    {
+      Component: DocumentList,
+      path: "/documents/projects/:projectId",
+      hasDescendant: false,
     },
   ];
 

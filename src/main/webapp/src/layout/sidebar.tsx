@@ -1,14 +1,14 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 
 import { Nav, PageSidebar, NavList } from "@patternfly/react-core";
 import { css } from "@patternfly/react-styles";
 
+import { useProjectContext } from "shared/context";
 import { LayoutTheme } from "./layout-constants";
 
 export const SidebarApp: React.FC = () => {
-  const { t } = useTranslation();
+  const { currentContext } = useProjectContext();
 
   const renderPageNav = () => {
     return (
@@ -20,23 +20,23 @@ export const SidebarApp: React.FC = () => {
               css("pf-c-nav__link", isActive ? "pf-m-current" : "")
             }
           >
-            {t("terms.projects")}
+            Proyectos
           </NavLink>
         </NavList>
-        {/* <NavList>
+        <NavList>
           <NavLink
             to={
               !currentContext
-                ? "/issues"
-                : "/issues/applications/" + currentContext.key
+                ? "/documents"
+                : "/documents/projects/" + currentContext.key
             }
             className={({ isActive }) =>
               css("pf-c-nav__link", isActive ? "pf-m-current" : "")
             }
           >
-            Issues
+            Documentos
           </NavLink>
-        </NavList> */}
+        </NavList>
       </Nav>
     );
   };

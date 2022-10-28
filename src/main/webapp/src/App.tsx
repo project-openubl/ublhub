@@ -9,19 +9,30 @@ import {
 
 import { AppRoutes } from "./Routes";
 
+import { ProjectContextProvider } from "shared/context";
+import { useProjectsQuery } from "queries/projects";
 import { DefaultLayout } from "./layout";
 
 const App: React.FC = () => {
+  const projectsQuery = useProjectsQuery();
+
   return (
     <HashRouter>
-      <ConfirmationContextProvider>
-        <NotificationContextProvider>
-          <DefaultLayout>
-            <AppRoutes />
-          </DefaultLayout>
-          <Notifications />
-        </NotificationContextProvider>
-      </ConfirmationContextProvider>
+      <ProjectContextProvider
+        allContexts={(projectsQuery.data || []).map((e) => ({
+          key: e.id!,
+          label: e.name,
+        }))}
+      >
+        <ConfirmationContextProvider>
+          <NotificationContextProvider>
+            <DefaultLayout>
+              <AppRoutes />
+            </DefaultLayout>
+            <Notifications />
+          </NotificationContextProvider>
+        </ConfirmationContextProvider>
+      </ProjectContextProvider>
     </HashRouter>
   );
 };

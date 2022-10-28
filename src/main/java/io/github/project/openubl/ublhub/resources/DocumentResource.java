@@ -82,7 +82,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.List;
@@ -299,6 +304,72 @@ public class DocumentResource {
                     return documentDtoSuccessResponse.apply(dto);
                 })
                 .onItem().ifNull().continueWith(documentDtoNotFoundResponse);
+
+        return Panache.withTransaction(() -> restResponseUni);
+    }
+
+    @GET
+    @Path("/{projectId}/documents/{documentId}/xml")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
+    public Uni<Response> getDocumentXMLFile(
+            @PathParam("projectId") @NotNull String projectId,
+            @PathParam("documentId") @NotNull String documentId,
+            @QueryParam("unzip") @DefaultValue("true") boolean unzip
+    ) {
+        String mediaType = !unzip ? "application/zip" : MediaType.APPLICATION_XML;
+        String fileExtension = !unzip ? ".zip" : ".xml";
+
+        Uni<Response> restResponseUni = documentRepository.findById(projectId, documentId)
+                .onItem().ifNotNull().transformToUni((documentEntity) -> {
+                    String fileName = documentEntity.getXmlData() != null && documentEntity.getXmlData().getSerieNumero() != null ?
+                            documentEntity.getXmlData().getSerieNumero() :
+                            UUID.randomUUID().toString();
+
+                    Uni<byte[]> fileUni = unzip ?
+                            filesMutiny.getFileAsBytesAfterUnzip(documentEntity.getXmlFileId()) :
+                            filesMutiny.getFileAsBytesWithoutUnzipping(documentEntity.getXmlFileId());
+                    return fileUni.map(bytes -> Response
+                            .ok(bytes, mediaType)
+                            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + fileExtension + "\"")
+                            .build());
+                })
+                .onItem().ifNull().continueWith(() -> Response
+                        .status(Response.Status.NOT_FOUND)
+                        .build()
+                );
+
+        return Panache.withTransaction(() -> restResponseUni);
+    }
+
+    @GET
+    @Path("/{projectId}/documents/{documentId}/cdr")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
+    public Uni<Response> getDocumentCdrFile(
+            @PathParam("projectId") @NotNull String projectId,
+            @PathParam("documentId") @NotNull String documentId,
+            @QueryParam("unzip") @DefaultValue("true") boolean unzip
+    ) {
+        String mediaType = !unzip ? "application/zip" : MediaType.APPLICATION_XML;
+        String fileExtension = !unzip ? ".zip" : ".xml";
+
+        Uni<Response> restResponseUni = documentRepository.findById(projectId, documentId)
+                .onItem().ifNotNull().transformToUni((documentEntity) -> {
+                    String fileName = documentEntity.getXmlData() != null && documentEntity.getXmlData().getSerieNumero() != null ?
+                            documentEntity.getXmlData().getSerieNumero() :
+                            UUID.randomUUID().toString();
+
+                    Uni<byte[]> fileUni = unzip ?
+                            filesMutiny.getFileAsBytesAfterUnzip(documentEntity.getCdrFileId()) :
+                            filesMutiny.getFileAsBytesWithoutUnzipping(documentEntity.getCdrFileId());
+                    return fileUni.map(bytes -> Response
+                            .ok(bytes, mediaType)
+                            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "_cdr" + fileExtension + "\"")
+                            .build());
+                })
+                .onItem().ifNull().continueWith(() -> Response
+                        .status(Response.Status.NOT_FOUND)
+                        .build()
+                );
 
         return Panache.withTransaction(() -> restResponseUni);
     }
