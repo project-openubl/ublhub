@@ -1,6 +1,9 @@
 import React from "react";
 import { t } from "i18next";
 
+import { Controller, UseFormReturn } from "react-hook-form";
+import { object, string } from "yup";
+
 import {
   Button,
   Flex,
@@ -12,15 +15,12 @@ import {
 } from "@patternfly/react-core";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
-import { Controller, UseFormReturn } from "react-hook-form";
-import { object, string } from "yup";
-
 import {
   getValidatedFromError,
   getValidatedFromErrorTouched,
 } from "utils/modelUtils";
 
-import { SunatURls, SUNAT_BETA_URLS, SUNAT_PROD_URLS } from "Constants";
+import { SUNAT_BETA_URLS, SUNAT_PROD_URLS, SunatURls } from "Constants";
 
 export interface IWebServicesForm {
   factura: string;
@@ -63,12 +63,18 @@ export const WebServicesForm: React.FunctionComponent<
       <FormSection>
         <Flex>
           <FlexItem>
-            <Button variant="secondary" onClick={() => fillForm(SUNAT_PROD_URLS)}>
+            <Button
+              variant="secondary"
+              onClick={() => fillForm(SUNAT_PROD_URLS)}
+            >
               {t("terms.production")}
             </Button>
           </FlexItem>
           <FlexItem>
-            <Button variant="secondary" onClick={() => fillForm(SUNAT_BETA_URLS)}>
+            <Button
+              variant="secondary"
+              onClick={() => fillForm(SUNAT_BETA_URLS)}
+            >
               {t("terms.beta")}
             </Button>
           </FlexItem>

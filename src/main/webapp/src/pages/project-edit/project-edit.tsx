@@ -1,12 +1,12 @@
 import React, { useMemo } from "react";
 import { Outlet, useMatch, useNavigate } from "react-router-dom";
-import { useTranslation, Trans } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 
 import { useConfirmationContext } from "@project-openubl/lib-ui";
 
 import { ButtonVariant, PageSection } from "@patternfly/react-core";
 
-import { useProjectsQuery, useDeleteProjectMutation } from "queries/projects";
+import { useDeleteProjectMutation, useProjectsQuery } from "queries/projects";
 import { HorizontalNav, PageHeader } from "shared/components";
 
 export const ProjectEdit: React.FC = () => {

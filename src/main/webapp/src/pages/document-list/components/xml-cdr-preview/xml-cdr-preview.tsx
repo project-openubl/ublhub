@@ -1,4 +1,12 @@
 import React from "react";
+
+import {
+  EmptyState,
+  EmptyStateBody,
+  EmptyStateIcon,
+  Title,
+} from "@patternfly/react-core";
+import { DownloadIcon, SpinnerIcon } from "@patternfly/react-icons";
 import {
   CodeEditor,
   CodeEditorControl,
@@ -7,15 +15,7 @@ import {
 
 import { useDocumentXmlCdrQuery } from "queries/documents";
 import { DocumentDto } from "api/models";
-
 import { prettifyXML } from "utils/modelUtils";
-import {
-  EmptyState,
-  EmptyStateBody,
-  EmptyStateIcon,
-  Title,
-} from "@patternfly/react-core";
-import { SpinnerIcon, DownloadIcon } from "@patternfly/react-icons";
 
 interface IXmlCdrPreviewProps {
   projectId: string;

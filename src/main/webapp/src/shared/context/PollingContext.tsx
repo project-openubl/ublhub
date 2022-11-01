@@ -19,25 +19,26 @@ interface IPollingContextProviderProps {
   children: React.ReactNode;
 }
 
-export const PollingContextProvider: React.FunctionComponent<IPollingContextProviderProps> =
-  ({ children }: IPollingContextProviderProps) => {
-    const [isPollingEnabled, setIsPollingEnabled] = React.useState(true);
+export const PollingContextProvider: React.FunctionComponent<
+  IPollingContextProviderProps
+> = ({ children }: IPollingContextProviderProps) => {
+  const [isPollingEnabled, setIsPollingEnabled] = React.useState(true);
 
-    const refetchInterval = !isPollingEnabled ? false : POLLING_INTERVAL;
+  const refetchInterval = !isPollingEnabled ? false : POLLING_INTERVAL;
 
-    return (
-      <PollingContext.Provider
-        value={{
-          isPollingEnabled,
-          refetchInterval,
-          pausePolling: () => setIsPollingEnabled(false),
-          resumePolling: () => setIsPollingEnabled(true),
-        }}
-      >
-        {children}
-      </PollingContext.Provider>
-    );
-  };
+  return (
+    <PollingContext.Provider
+      value={{
+        isPollingEnabled,
+        refetchInterval,
+        pausePolling: () => setIsPollingEnabled(false),
+        resumePolling: () => setIsPollingEnabled(true),
+      }}
+    >
+      {children}
+    </PollingContext.Provider>
+  );
+};
 
 export const usePollingContext = (): IPollingContext =>
   React.useContext(PollingContext);

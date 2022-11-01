@@ -2,23 +2,23 @@ import React, { useReducer } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
-  PageHeader,
+  Avatar,
   Brand,
-  PageHeaderTools,
-  PageHeaderToolsGroup,
-  PageHeaderToolsItem,
   Button,
   ButtonVariant,
-  Avatar,
   Dropdown,
   DropdownItem,
   KebabToggle,
+  PageHeader,
+  PageHeaderTools,
+  PageHeaderToolsGroup,
+  PageHeaderToolsItem,
 } from "@patternfly/react-core";
 import { HelpIcon } from "@patternfly/react-icons";
 
-import { Theme } from "./theme-constants";
-
 import avatarImage from "images/avatar.svg";
+
+import { Theme } from "./theme-constants";
 import { AboutApp } from "./about";
 
 export const HeaderApp: React.FC = () => {

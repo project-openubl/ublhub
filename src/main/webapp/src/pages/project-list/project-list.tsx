@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useTranslation, Trans } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 
 import {
-  useTableControls,
   SimpleTableWithToolbar,
-  useTable,
-  useModal,
   useConfirmationContext,
+  useModal,
+  useTable,
+  useTableControls,
 } from "@project-openubl/lib-ui";
 
 import {
@@ -31,7 +31,7 @@ import {
   sortable,
 } from "@patternfly/react-table";
 
-import { useProjectsQuery, useDeleteProjectMutation } from "queries/projects";
+import { useDeleteProjectMutation, useProjectsQuery } from "queries/projects";
 import { AddProjectWizard } from "shared/components";
 import { ProjectDto } from "api/models";
 

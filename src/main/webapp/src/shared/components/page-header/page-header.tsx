@@ -1,11 +1,11 @@
 import React from "react";
 import {
-  Stack,
-  StackItem,
   Split,
   SplitItem,
-  TextContent,
+  Stack,
+  StackItem,
   Text,
+  TextContent,
 } from "@patternfly/react-core";
 import { BreadCrumbPath } from "./breadcrumb-path";
 import { MenuActions } from "./menu-actions";

@@ -2,11 +2,11 @@ import { useCallback } from "react";
 import axios, { AxiosError } from "axios";
 import * as yup from "yup";
 import {
-  UseQueryResult,
-  useQuery,
-  useQueryClient,
   useMutation,
   UseMutationResult,
+  useQuery,
+  useQueryClient,
+  UseQueryResult,
 } from "react-query";
 
 import { ProjectDto } from "api/models";

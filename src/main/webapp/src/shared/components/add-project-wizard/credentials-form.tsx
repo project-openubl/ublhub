@@ -1,10 +1,18 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Flex, FlexItem, Form, FormGroup, FormSection, TextInput } from "@patternfly/react-core";
-import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
-
 import { Controller, UseFormReturn } from "react-hook-form";
 import { object, string } from "yup";
+
+import {
+  Button,
+  Flex,
+  FlexItem,
+  Form,
+  FormGroup,
+  FormSection,
+  TextInput,
+} from "@patternfly/react-core";
+import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import {
   getValidatedFromError,
@@ -34,10 +42,10 @@ export const CredentialsForm: React.FunctionComponent<
   const {
     control,
     formState: { errors },
-    reset
+    reset,
   } = form;
 
-  const fillForm = () => {    
+  const fillForm = () => {
     reset(SUNAT_BETA_CREDENTIALS, { keepDefaultValues: true });
   };
 

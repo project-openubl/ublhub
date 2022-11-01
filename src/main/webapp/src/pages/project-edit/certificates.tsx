@@ -3,6 +3,14 @@ import { useOutletContext } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 
 import {
+  SimpleTableWithToolbar,
+  useConfirmationContext,
+  useModal,
+  useTable,
+  useTableControls,
+} from "@project-openubl/lib-ui";
+
+import {
   Button,
   ButtonVariant,
   Dropdown,
@@ -23,14 +31,6 @@ import {
   sortable,
   truncate,
 } from "@patternfly/react-table";
-
-import {
-  SimpleTableWithToolbar,
-  useConfirmationContext,
-  useModal,
-  useTable,
-  useTableControls,
-} from "@project-openubl/lib-ui";
 
 import {
   useComponentsQuery,

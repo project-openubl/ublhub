@@ -1,6 +1,6 @@
-import { Tab, Tabs, TabTitleText } from "@patternfly/react-core";
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Tab, Tabs, TabTitleText } from "@patternfly/react-core";
 
 export interface HorizontalNavProps {
   navItems: { title: string; path: string }[];

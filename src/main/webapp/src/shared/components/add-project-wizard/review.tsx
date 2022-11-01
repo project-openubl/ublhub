@@ -4,21 +4,19 @@ import { useTranslation } from "react-i18next";
 import { ResolvedQueries } from "@migtools/lib-ui";
 
 import {
-  TextContent,
-  Text,
-  Form,
   DescriptionList,
+  DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
-  DescriptionListDescription,
+  Form,
+  Text,
+  TextContent,
 } from "@patternfly/react-core";
 
 import { UnknownResult } from "api/models";
 
 import { IWebServicesForm } from "./web-services-form";
-import {
-  ICredentialsForm,
-} from "./credentials-form";
+import { ICredentialsForm } from "./credentials-form";
 import { IGeneralForm } from "./add-project-wizard";
 
 interface IReviewProps {

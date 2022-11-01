@@ -132,6 +132,7 @@ export interface DocumentStatusErrorDto {
 }
 
 export type DocumentInputType = "Invoice" | "CreditNote" | "DebitNote";
+
 export interface DocumentInputDto {
   kind: DocumentInputType;
   metadata?: {

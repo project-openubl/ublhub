@@ -1,6 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 
+import { ResolvedQueries } from "@migtools/lib-ui";
+import { NotificationContext } from "@project-openubl/lib-ui";
+
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { object, string } from "yup";
@@ -13,9 +16,6 @@ import {
   TextArea,
   TextInput,
 } from "@patternfly/react-core";
-
-import { ResolvedQueries } from "@migtools/lib-ui";
-import { NotificationContext } from "@project-openubl/lib-ui";
 
 import { useCompaniesQuery, useUpdateCompanyMutation } from "queries/companies";
 

@@ -1,5 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ResolvedQueries } from "@migtools/lib-ui";
+import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
 
 import {
   ActionGroup,
@@ -14,10 +16,9 @@ import {
 import { CodeEditor, Language } from "@patternfly/react-code-editor";
 import { CodeIcon } from "@patternfly/react-icons";
 
-import { ResolvedQueries } from "@migtools/lib-ui";
-
 import { useCreateDocumentMutation } from "queries/documents";
 import { DocumentDto, DocumentInputType } from "api/models";
+import { buildSchema } from "utils/schemautils";
 
 import DocumentInputSchema from "schemas/DocumentInputDto-schema.json";
 import InvoiceSchema from "schemas/Invoice-schema.json";
@@ -27,9 +28,6 @@ import DebitNoteSchema from "schemas/DebitNote-schema.json";
 import INVOICE from "jsons/invoice.json";
 import CREDIT_NOTE from "jsons/creditNote.json";
 import DEBIT_NOTE from "jsons/debitNote.json";
-
-import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
-import { buildSchema } from "utils/schemautils";
 
 interface IDocumentEditor {
   projectId: string;

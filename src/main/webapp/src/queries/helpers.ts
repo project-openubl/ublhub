@@ -1,5 +1,5 @@
 import { UnknownResult } from "api/models";
-import { UseQueryResult, QueryStatus } from "react-query";
+import { QueryStatus, UseQueryResult } from "react-query";
 
 export const getAggregateQueryStatus = (
   queryResults: UnknownResult[]

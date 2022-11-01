@@ -6,7 +6,7 @@ import reportWebVitals from "./reportWebVitals";
 
 import { iniAxios } from "api/axios";
 
-import { QueryClientProvider, QueryClient, QueryCache } from "react-query";
+import { QueryCache, QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
 
 import { PollingContextProvider } from "shared/context";

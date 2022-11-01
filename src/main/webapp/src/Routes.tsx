@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 const ProjectList = lazy(() => import("./pages/project-list"));
 const ProjectEdit = lazy(() => import("./pages/project-edit"));

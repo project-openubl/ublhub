@@ -21,9 +21,9 @@ import { ProjectDto } from "api/models";
 import { WizardStepContainer } from "./wizard-step-container";
 import { GeneralForm } from "./general-form";
 import {
-  WebServicesForm,
   IWebServicesForm,
   SchemaFormWebServices,
+  WebServicesForm,
 } from "./web-services-form";
 import {
   CredentialsForm,

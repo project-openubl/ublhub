@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 
-import { Nav, PageSidebar, NavList } from "@patternfly/react-core";
+import { Nav, NavList, PageSidebar } from "@patternfly/react-core";
 import { css } from "@patternfly/react-styles";
 
 import { useProjectContext } from "shared/context";

@@ -1,10 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Controller, UseFormReturn } from "react-hook-form";
 
 import { Form, FormGroup, TextArea, TextInput } from "@patternfly/react-core";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
-
-import { Controller, UseFormReturn } from "react-hook-form";
 
 import {
   getValidatedFromError,

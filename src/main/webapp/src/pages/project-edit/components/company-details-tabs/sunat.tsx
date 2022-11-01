@@ -3,6 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import {
+  NotificationContext,
+  useConfirmationContext,
+  useModal,
+} from "@project-openubl/lib-ui";
+
+import {
   Button,
   ButtonVariant,
   Card,
@@ -20,12 +26,6 @@ import {
   HintTitle,
   Modal,
 } from "@patternfly/react-core";
-
-import {
-  NotificationContext,
-  useConfirmationContext,
-  useModal,
-} from "@project-openubl/lib-ui";
 
 import { useCompaniesQuery, useUpdateCompanyMutation } from "queries/companies";
 import { CompanyDto, ProjectDto } from "api/models";

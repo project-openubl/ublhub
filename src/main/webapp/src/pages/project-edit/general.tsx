@@ -3,6 +3,9 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import axios, { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 
+import { ResolvedQueries } from "@migtools/lib-ui";
+import { NotificationContext } from "@project-openubl/lib-ui";
+
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { object, string } from "yup";
@@ -18,9 +21,6 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
-
-import { ResolvedQueries } from "@migtools/lib-ui";
-import { NotificationContext } from "@project-openubl/lib-ui";
 
 import { ProjectDto } from "api/models";
 import { useUpdateProjectMutation } from "queries/projects";

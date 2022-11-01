@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useModal } from "@project-openubl/lib-ui";
 
 import {
   Button,
@@ -15,8 +16,6 @@ import {
   DescriptionListTerm,
   Modal,
 } from "@patternfly/react-core";
-
-import { useModal } from "@project-openubl/lib-ui";
 
 import { useCompaniesQuery } from "queries/companies";
 

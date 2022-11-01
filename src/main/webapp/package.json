@@ -21,9 +21,11 @@
     "axios": "0.21.4",
     "dayjs": "^1.11.5",
     "http-proxy-middleware": "^2.0.6",
+    "husky": "^8.0.1",
     "i18next": "^21.9.1",
     "i18next-http-backend": "^1.4.1",
     "i18next-parser": "^6.5.0",
+    "lint-staged": "^13.0.3",
     "monaco-editor": "0.33.0",
     "prettier": "^2.7.1",
     "react": "17.0.2",
@@ -66,5 +68,15 @@
   "devDependencies": {
     "monaco-editor-webpack-plugin": "7.0.1",
     "react-app-rewired": "^2.2.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write"
+    ]
   }
 }

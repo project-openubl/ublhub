@@ -12,6 +12,16 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from "@patternfly/react-core";
+import {
+  cellWidth,
+  IActions,
+  ICell,
+  IExtraData,
+  IRow,
+  IRowData,
+  sortable,
+  truncate,
+} from "@patternfly/react-table";
 
 import {
   SimpleTableWithToolbar,
@@ -28,16 +38,6 @@ import {
   KeyMetadataDto,
   ProjectDto,
 } from "api/models";
-import {
-  cellWidth,
-  IActions,
-  ICell,
-  IExtraData,
-  IRow,
-  IRowData,
-  sortable,
-  truncate,
-} from "@patternfly/react-table";
 
 import {
   useComponentsQuery,

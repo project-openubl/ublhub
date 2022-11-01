@@ -1,6 +1,15 @@
 import React, { useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
-import { useTranslation, Trans } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
+
+import { useSelectionState } from "@migtools/lib-ui";
+import {
+  ConditionalRender,
+  useConfirmationContext,
+  useModal,
+  useTable,
+  useTableControls,
+} from "@project-openubl/lib-ui";
 
 import {
   Bullseye,
@@ -41,21 +50,12 @@ import {
   ToolbarToggleGroup,
 } from "@patternfly/react-core";
 import {
-  FilterIcon,
   BuildingIcon,
-  InfoAltIcon,
   CheckCircleIcon,
+  FilterIcon,
+  InfoAltIcon,
   InfrastructureIcon,
 } from "@patternfly/react-icons";
-
-import { useSelectionState } from "@migtools/lib-ui";
-import {
-  ConditionalRender,
-  useConfirmationContext,
-  useModal,
-  useTable,
-  useTableControls,
-} from "@project-openubl/lib-ui";
 
 import { CompanyDto, ProjectDto } from "api/models";
 import { useCompaniesQuery, useDeleteCompanyMutation } from "queries/companies";

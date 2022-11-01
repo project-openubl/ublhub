@@ -28,7 +28,10 @@ import {
   SUNAT_BETA_URLS,
   SUNAT_PROD_URLS,
 } from "Constants";
-import { getValidatedFromError, getValidatedFromErrorTouched } from "utils/modelUtils";
+import {
+  getValidatedFromError,
+  getValidatedFromErrorTouched,
+} from "utils/modelUtils";
 
 interface ICompanyForm {
   ruc: string;
@@ -96,32 +99,34 @@ export const AddCompanyForm: React.FC<IAddCompanyFormProps> = ({
           }),
         name: string().trim().required().max(250),
         description: string().trim().max(250),
-        sunat: object().shape({
-          factura: string().trim().max(250),
-          guia: string().trim().max(250),
-          retencion: string().trim().max(250),
-          username: string().trim().max(250),
-          password: string().trim().max(250),
-        }).test("allOrNoneRequired", (value, options) => {
-          const fieldsLength = [
-            value.factura?.length ?? 0,
-            value.guia?.length ?? 0,
-            value.retencion?.length ?? 0,
-            value.username?.length ?? 0,
-            value.password?.length ?? 0,
-          ];
-          const totalLength = fieldsLength.reduce(
-            (partialSum, a) => partialSum + a,
-            0
-          );
+        sunat: object()
+          .shape({
+            factura: string().trim().max(250),
+            guia: string().trim().max(250),
+            retencion: string().trim().max(250),
+            username: string().trim().max(250),
+            password: string().trim().max(250),
+          })
+          .test("allOrNoneRequired", (value, options) => {
+            const fieldsLength = [
+              value.factura?.length ?? 0,
+              value.guia?.length ?? 0,
+              value.retencion?.length ?? 0,
+              value.username?.length ?? 0,
+              value.password?.length ?? 0,
+            ];
+            const totalLength = fieldsLength.reduce(
+              (partialSum, a) => partialSum + a,
+              0
+            );
 
-          return totalLength !== 0 && fieldsLength.some((f) => f === 0)
-            ? options.createError({
-                message: "All or none fields must be filled",
-                path: "sunat"
-              })
-            : true;
-        }),
+            return totalLength !== 0 && fieldsLength.some((f) => f === 0)
+              ? options.createError({
+                  message: "All or none fields must be filled",
+                  path: "sunat",
+                })
+              : true;
+          }),
       })
     ),
     mode: "onChange",
@@ -259,18 +264,23 @@ export const AddCompanyForm: React.FC<IAddCompanyFormProps> = ({
                 >
                   {t("terms.production")}
                 </Button>{" "}
-                <Button variant="secondary" onClick={() => {
-                  reset(
-                    {
-                      ...getValues(),
-                      sunat: {
-                        ...SUNAT_BETA_CREDENTIALS,
-                        ...SUNAT_BETA_URLS,
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    reset(
+                      {
+                        ...getValues(),
+                        sunat: {
+                          ...SUNAT_BETA_CREDENTIALS,
+                          ...SUNAT_BETA_URLS,
+                        },
                       },
-                    },
-                    { keepDirty: true }
-                  );
-                }}>{t("terms.beta")}</Button>
+                      { keepDirty: true }
+                    );
+                  }}
+                >
+                  {t("terms.beta")}
+                </Button>
               </>
             }
           />

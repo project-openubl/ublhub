@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { object, string, boolean, BaseSchema } from "yup";
+import { BaseSchema, boolean, object, string } from "yup";
 
 import { ResolvedQueries } from "@migtools/lib-ui";
 

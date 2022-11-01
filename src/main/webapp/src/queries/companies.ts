@@ -1,5 +1,11 @@
 import axios, { AxiosError } from "axios";
-import { UseQueryResult, useQuery, UseMutationResult, useQueryClient, useMutation } from "react-query";
+import {
+  useMutation,
+  UseMutationResult,
+  useQuery,
+  useQueryClient,
+  UseQueryResult,
+} from "react-query";
 
 import { CompanyDto } from "api/models";
 import { usePollingContext } from "shared/context";
@@ -56,7 +62,6 @@ export const useUpdateCompanyMutation = (
     }
   );
 };
-
 
 export const useDeleteCompanyMutation = (
   projectId: string | null,
