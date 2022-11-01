@@ -5,7 +5,7 @@
       "serie": "F001",
       "numero": 1,
       "proveedor": {
-        "ruc": 12345678912,
+        "ruc": "12345678912",
         "razonSocial": "OpenUBL S.A.C."
       },
       "cliente": {

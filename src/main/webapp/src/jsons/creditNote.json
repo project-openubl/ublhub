@@ -7,7 +7,7 @@
       "comprobanteAfectadoSerieNumero": "F001-1",
       "sustentoDescripcion": "mi sustento",
       "proveedor": {
-        "ruc": 12345678912,
+        "ruc": "12345678912",
         "razonSocial": "OpenUBL S.A.C."
       },
       "cliente": {

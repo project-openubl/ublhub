@@ -131,8 +131,9 @@ export interface DocumentStatusErrorDto {
   recoveryAction: string;
 }
 
+export type DocumentInputType = "Invoice" | "CreditNote" | "DebitNote";
 export interface DocumentInputDto {
-  kind: "Invoice" | "CreditNote" | "DebitNote";
+  kind: DocumentInputType;
   metadata?: {
     labels: string[];
   };

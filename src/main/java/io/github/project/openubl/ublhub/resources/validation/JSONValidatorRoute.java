@@ -28,7 +28,7 @@ public class JSONValidatorRoute extends RouteBuilder {
     public void configure() throws Exception {
         from("direct:validate-json-document")
                 .doTry()
-                    .to("json-validator:document-schema.json")
+                    .to("json-validator:schemas/DocumentInputDto-schema.json")
                     .setBody(constant(true))
                 .doCatch(ValidationException.class)
                     .setBody(constant(false))

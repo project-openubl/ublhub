@@ -1,0 +1,479 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "definitions" : {
+    "Contacto" : {
+      "type" : "object",
+      "properties" : {
+        "email" : {
+          "type" : "string",
+          "description" : "Correo electrónico"
+        },
+        "telefono" : {
+          "type" : "string",
+          "description" : "Número telefónico"
+        }
+      }
+    },
+    "Direccion" : {
+      "type" : "object",
+      "properties" : {
+        "codigoLocal" : {
+          "type" : "string",
+          "description" : "Código de cuatro dígitos asignado por SUNAT, que identifica al establecimiento anexo. Dicho código se genera al momento la respectiva comunicación del establecimiento. Tratándose del domicilio fiscal y en el caso de no poder determinar el lugar de la venta, informar \"0000\"",
+          "minLength" : 4,
+          "maxLength" : 4,
+          "pattern" : "[0-9]+"
+        },
+        "codigoPais" : {
+          "type" : "string",
+          "description" : "Código de 2 dígitos que corresponde al país a la que pertenece la dirección. Ejemplo: PE",
+          "minLength" : 2,
+          "maxLength" : 2
+        },
+        "departamento" : {
+          "type" : "string",
+          "description" : "Nombre del Departamento o Región. Ejemplo: Ayacucho"
+        },
+        "direccion" : {
+          "type" : "string",
+          "description" : "Dirección. Ejemplo: Jirón las piedras 123"
+        },
+        "distrito" : {
+          "type" : "string",
+          "description" : "Nombre del Distrito. Ejemplo: Quinua"
+        },
+        "provincia" : {
+          "type" : "string",
+          "description" : "Nombre de la Provincia. Ejemplo: Huamanga"
+        },
+        "ubigeo" : {
+          "type" : "string",
+          "description" : "Código de 6 dígitos que corresponden al Departamento, Provincia, y Distrito",
+          "minLength" : 6,
+          "maxLength" : 6,
+          "pattern" : "[0-9]+"
+        },
+        "urbanizacion" : {
+          "type" : "string",
+          "description" : "Nombre de la urbanización."
+        }
+      }
+    },
+    "DocumentoRelacionado" : {
+      "type" : "object",
+      "properties" : {
+        "serieNumero" : {
+          "type" : "string"
+        },
+        "tipoDocumento" : {
+          "type" : "string",
+          "description" : "Catalog 12"
+        }
+      },
+      "required" : [ "serieNumero", "tipoDocumento" ]
+    }
+  },
+  "type" : "object",
+  "properties" : {
+    "anticipos" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "comprobanteSerieNumero" : {
+            "type" : "string"
+          },
+          "comprobanteTipo" : {
+            "type" : "string",
+            "description" : "Catalog 12. Tipo de documento del comprobante de anticipo"
+          },
+          "monto" : {
+            "type" : "number",
+            "exclusiveMinimum" : 0
+          },
+          "tipo" : {
+            "type" : "string",
+            "description" : "Catalog 53",
+            "enum" : [ "04", "05", "06" ]
+          }
+        },
+        "required" : [ "comprobanteSerieNumero", "monto", "tipo" ]
+      }
+    },
+    "cliente" : {
+      "type" : "object",
+      "properties" : {
+        "contacto" : {
+          "$ref" : "#/definitions/Contacto"
+        },
+        "direccion" : {
+          "$ref" : "#/definitions/Direccion"
+        },
+        "nombre" : {
+          "type" : "string"
+        },
+        "numeroDocumentoIdentidad" : {
+          "type" : "string"
+        },
+        "tipoDocumentoIdentidad" : {
+          "type" : "string",
+          "description" : "Catalogo 06"
+        }
+      },
+      "required" : [ "nombre", "numeroDocumentoIdentidad", "tipoDocumentoIdentidad" ]
+    },
+    "detalles" : {
+      "minItems" : 1,
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "cantidad" : {
+            "type" : "number",
+            "exclusiveMinimum" : 0
+          },
+          "descripcion" : {
+            "type" : "string",
+            "description" : "Descripcion del bien o servicio"
+          },
+          "icb" : {
+            "type" : "number",
+            "minimum" : 0
+          },
+          "icbAplica" : {
+            "type" : "boolean",
+            "description" : "'true' si ICB is aplicado a este bien o servicio"
+          },
+          "igv" : {
+            "type" : "number",
+            "description" : "Ejemplo 0.18",
+            "minimum" : 0,
+            "maximum" : 1
+          },
+          "igvBaseImponible" : {
+            "type" : "number",
+            "minimum" : 0
+          },
+          "igvTipo" : {
+            "type" : "string",
+            "description" : "Catalogo 07"
+          },
+          "precio" : {
+            "type" : "number",
+            "description" : "Precio sin incluir impuestos",
+            "minimum" : 0
+          },
+          "precioConImpuestos" : {
+            "type" : "boolean",
+            "description" : "Precio incluyendo impuestos"
+          },
+          "precioReferencia" : {
+            "type" : "number",
+            "minimum" : 0
+          },
+          "precioReferenciaTipo" : {
+            "type" : "string",
+            "description" : "Catalog 16"
+          },
+          "totalImpuestos" : {
+            "type" : "number",
+            "minimum" : 0
+          },
+          "unidadMedida" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cantidad", "descripcion" ]
+      }
+    },
+    "detraccion" : {
+      "type" : "object",
+      "properties" : {
+        "cuentaBancaria" : {
+          "type" : "string"
+        },
+        "medioDePago" : {
+          "type" : "string",
+          "description" : "Catalogo 59"
+        },
+        "monto" : {
+          "type" : "number",
+          "exclusiveMinimum" : 0
+        },
+        "porcentaje" : {
+          "type" : "number",
+          "exclusiveMinimum" : 0,
+          "maximum" : 1
+        },
+        "tipoBienDetraido" : {
+          "type" : "string",
+          "description" : "Catalog 54"
+        }
+      },
+      "required" : [ "cuentaBancaria", "medioDePago", "monto", "porcentaje", "tipoBienDetraido" ]
+    },
+    "direccionEntrega" : {
+      "$ref" : "#/definitions/Direccion"
+    },
+    "documentosRelacionados" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/definitions/DocumentoRelacionado"
+      }
+    },
+    "fechaEmision" : {
+      "type" : "string",
+      "description" : "Format: \"YYYY-MM-SS\". Ejemplo: 2022-12-25",
+      "pattern" : "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "fechaVencimiento" : {
+      "type" : "string",
+      "description" : "Ejemplo 2022-12-25",
+      "pattern" : "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "firmante" : {
+      "type" : "object",
+      "properties" : {
+        "razonSocial" : {
+          "type" : "string"
+        },
+        "ruc" : {
+          "type" : "string",
+          "minLength" : 11,
+          "maxLength" : 11,
+          "pattern" : "[0-9]+"
+        }
+      },
+      "required" : [ "razonSocial", "ruc" ],
+      "description" : "Persona que firma electrónicamente el comprobante. Si NULL los datos del proveedor son usados."
+    },
+    "formaDePago" : {
+      "type" : "object",
+      "properties" : {
+        "cuotas" : {
+          "description" : "Cuotas de pago",
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "properties" : {
+              "fechaPago" : {
+                "type" : "string",
+                "description" : "Ejemplo 2022-12-25",
+                "pattern" : "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              "importe" : {
+                "type" : "number",
+                "exclusiveMinimum" : 0
+              }
+            },
+            "required" : [ "fechaPago", "importe" ]
+          }
+        },
+        "tipo" : {
+          "type" : "string",
+          "description" : "CREDITO o CONTADO"
+        },
+        "total" : {
+          "type" : "number",
+          "description" : "Monto total de pago",
+          "minimum" : 0
+        }
+      },
+      "required" : [ "tipo", "total" ],
+      "description" : "Forma de pago: al credito, o al contado"
+    },
+    "guias" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "serieNumero" : {
+            "type" : "string"
+          },
+          "tipoDocumento" : {
+            "type" : "string",
+            "description" : "Catalogo 01"
+          }
+        },
+        "required" : [ "serieNumero", "tipoDocumento" ]
+      }
+    },
+    "horaEmision" : {
+      "type" : "string",
+      "description" : "Format: \"HH:MM:SS\". Ejemplo 12:00:00",
+      "pattern" : "^\\d{2}:\\d{2}:\\d{2}$"
+    },
+    "leyendas" : {
+      "type" : "object"
+    },
+    "moneda" : {
+      "type" : "string",
+      "minLength" : 3,
+      "maxLength" : 3
+    },
+    "numero" : {
+      "type" : "integer",
+      "minimum" : 1,
+      "maximum" : 99999999
+    },
+    "observaciones" : {
+      "type" : "string"
+    },
+    "ordenDeCompra" : {
+      "type" : "string"
+    },
+    "otrosDocumentosTributariosRelacionados" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/definitions/DocumentoRelacionado"
+      }
+    },
+    "percepcion" : {
+      "type" : "object",
+      "properties" : {
+        "monto" : {
+          "type" : "number"
+        },
+        "montoBase" : {
+          "type" : "number"
+        },
+        "montoTotal" : {
+          "type" : "number"
+        },
+        "porcentaje" : {
+          "type" : "number"
+        },
+        "tipo" : {
+          "type" : "string",
+          "description" : "Catalog 53"
+        }
+      },
+      "required" : [ "tipo" ]
+    },
+    "proveedor" : {
+      "type" : "object",
+      "properties" : {
+        "contacto" : {
+          "$ref" : "#/definitions/Contacto"
+        },
+        "direccion" : {
+          "$ref" : "#/definitions/Direccion"
+        },
+        "nombreComercial" : {
+          "type" : "string"
+        },
+        "razonSocial" : {
+          "type" : "string"
+        },
+        "ruc" : {
+          "type" : "string",
+          "minLength" : 11,
+          "maxLength" : 11,
+          "pattern" : "[0-9]+"
+        }
+      },
+      "required" : [ "razonSocial", "ruc" ]
+    },
+    "serie" : {
+      "type" : "string",
+      "minLength" : 4,
+      "pattern" : "^[F|f|B|b].*$"
+    },
+    "tasaIcb" : {
+      "type" : "number",
+      "description" : "Ejemplo: 0.2",
+      "minimum" : 0
+    },
+    "tasaIgv" : {
+      "type" : "number",
+      "description" : "Ejemplo: 0.18",
+      "minimum" : 0,
+      "maximum" : 1
+    },
+    "tipoComprobante" : {
+      "type" : "string",
+      "description" : "Catalogo 01"
+    },
+    "tipoOperacion" : {
+      "type" : "string",
+      "description" : "Catalogo 51"
+    },
+    "totalImporte" : {
+      "type" : "object",
+      "properties" : {
+        "anticipos" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "importe" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "importeConImpuestos" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "importeSinImpuestos" : {
+          "type" : "number",
+          "minimum" : 0
+        }
+      },
+      "required" : [ "anticipos", "importe", "importeConImpuestos", "importeSinImpuestos" ],
+      "description" : "Total importe del comprobante"
+    },
+    "totalImpuestos" : {
+      "type" : "object",
+      "properties" : {
+        "exoneradoBaseImponible" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "exoneradoImporte" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "gratuitoBaseImponible" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "gratuitoImporte" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "gravadoBaseImponible" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "gravadoImporte" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "icbImporte" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "inafectoBaseImponible" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "inafectoImporte" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "ivapBaseImponible" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "ivapImporte" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "total" : {
+          "type" : "number",
+          "minimum" : 0
+        }
+      }
+    }
+  },
+  "required" : [ "cliente", "numero", "proveedor", "serie" ]
+}

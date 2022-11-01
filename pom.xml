@@ -122,12 +122,12 @@
         <dependency>
             <groupId>io.github.project-openubl</groupId>
             <artifactId>quarkus-xbuilder</artifactId>
-            <version>2.0.0-SNAPSHOT</version>
+            <version>2.0.0.Beta1</version>
         </dependency>
         <dependency>
             <groupId>io.github.project-openubl</groupId>
             <artifactId>xsender</artifactId>
-            <version>3.0.3.Final</version>
+            <version>3.0.4.Final</version>
         </dependency>
 
         <dependency>
@@ -475,6 +475,46 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.github.victools</groupId>
+                <artifactId>jsonschema-maven-plugin</artifactId>
+                <version>4.27.0</version>
+                <executions>
+                    <execution>
+                        <id>backend</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <schemaFilePath>src/main/webapp/src/schemas/</schemaFilePath>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>frontend</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <schemaFilePath>src/main/resources/schemas/</schemaFilePath>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <classNames>
+                        <className>io.github.project.openubl.ublhub.dto.DocumentInputDto</className>
+                        <className>io.github.project.openubl.xbuilder.content.models.standard.general.Invoice</className>
+                        <className>io.github.project.openubl.xbuilder.content.models.standard.general.CreditNote</className>
+                        <className>io.github.project.openubl.xbuilder.content.models.standard.general.DebitNote</className>
+                    </classNames>
+                    <modules>
+                        <module>
+                            <name>Jackson</name>
+                            <name>Swagger2</name>
+                        </module>
+                    </modules>
+                </configuration>
             </plugin>
         </plugins>
     </build>

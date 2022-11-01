@@ -47,6 +47,6 @@ public interface DocumentMapper {
     }
 
     default Long dateToLong(Date date) {
-        return date.getTime();
+        return date != null ? date.getTime() : null;
     }
 }

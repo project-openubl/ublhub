@@ -446,7 +446,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .statusCode(201)
                 .body("id", is(notNullValue()),
                         "name", is(componentDto.getName()),
-                        "parentId", is(projectId),
+                        "parentId", is(companyId),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -495,7 +495,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .statusCode(200)
                 .body("id", is(componentId),
                         "name", is(componentDto.getName()),
-                        "parentId", is(projectId),
+                        "parentId", is(companyId),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -556,7 +556,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .statusCode(200)
                 .body("id", is(componentId),
                         "name", is(componentDto.getName()),
-                        "parentId", is(projectId),
+                        "parentId", is(companyId),
                         "providerId", is(GeneratedRsaKeyProviderFactory.ID),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("false"),
