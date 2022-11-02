@@ -61,11 +61,10 @@ import {
   useDocumentsQuery,
 } from "queries/documents";
 
-import { AddProjectWizard } from "shared/components";
 import { ContextOption, ProjectContextSelector } from "shared/context";
 
 import { formatTimestamp } from "utils/dateUtils";
-import { DocumentDto, ProjectDto } from "api/models";
+import { DocumentDto } from "api/models";
 
 import { DocumentEditor } from "./components/document-editor";
 import { XmlCdrPreview } from "./components/xml-cdr-preview";
@@ -237,7 +236,6 @@ export const DocumentList: React.FC = () => {
     navigate("/documents/projects/" + context.key);
   };
 
-  const projectWizardModal = useModal<"ADD", ProjectDto>();
   const documentModal = useModal<"ADD", DocumentDto>();
   const xmlCdrModal = useModal<"xml" | "cdr", DocumentDto>();
 
@@ -377,7 +375,7 @@ export const DocumentList: React.FC = () => {
                       <Button
                         variant="secondary"
                         isInline
-                        onClick={() => projectWizardModal.open("ADD")}
+                        onClick={() => navigate("/projects")}
                       >
                         {t("actions.create-object", {
                           what: t("terms.project").toLowerCase(),
@@ -468,16 +466,6 @@ export const DocumentList: React.FC = () => {
           />
         </ConditionalRender>
       </PageSection>
-
-      {projectWizardModal.isOpen && projectWizardModal.isAction("ADD") && (
-        <AddProjectWizard
-          onSave={(project) => {
-            projectWizardModal.close();
-            navigate(`/documents/projects/${project.id}`);
-          }}
-          onClose={projectWizardModal.close}
-        />
-      )}
 
       <Modal
         variant="large"

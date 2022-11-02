@@ -15,7 +15,7 @@ type ThemeListType = {
 
 const themeList: ThemeListType = {
   ublhub: {
-    name: "UblHub",
+    name: "Ublhub",
     logoSrc: ublHubLogo,
     logoNavbarSrc: ublHubNavBrandImage,
   },

@@ -1,9 +1,11 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import ProjectEditGeneral from "pages/project-edit/general";
+
 const ProjectList = lazy(() => import("./pages/project-list"));
 const ProjectEdit = lazy(() => import("./pages/project-edit"));
-const ProjectEditGeneral = lazy(() => import("./pages/project-edit/general"));
+// const ProjectEditGeneral = lazy(() => import("./pages/project-edit/general"));
 const ProjectEditSunat = lazy(() => import("./pages/project-edit/sunat"));
 const ProjectEditCertificates = lazy(
   () => import("./pages/project-edit/certificates")
