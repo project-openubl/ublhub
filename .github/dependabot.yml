@@ -18,13 +18,11 @@ updates:
       include: "scope"
   # Maintain dependencies from package.json
   - package-ecosystem: "npm"
-    directory: "admin-console/src/main/webapp"
+    directory: "src/main/webapp"
     schedule:
       interval: "daily"
     allow:
       - dependency-name: "@patternfly/*"
         dependency-type: "direct"
-      - dependency-name: "@cypress/*"
-        dependency-type: "direct"
-      - dependency-name: "cypress*"
+      - dependency-name: "react-scripts"
         dependency-type: "direct"

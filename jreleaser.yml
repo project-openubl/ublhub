@@ -15,8 +15,8 @@ project:
 distributions:
   jvm:
     artifacts:
-      - path: artifacts/ublhub-{{projectVersion}}-jvm.tar.gz
-      - path: artifacts/ublhub-{{projectVersion}}-jvm.zip
+      - path: artifacts/ublhub-{{projectVersion}}.tar.gz
+      - path: artifacts/ublhub-{{projectVersion}}.zip
 
 release:
   github:
@@ -29,7 +29,7 @@ release:
 announce:
   zulip:
     active: RELEASE
-    account: carlosthe19916@gmail.com
+    account: release-bot@projectopenubl.zulipchat.com
     apiHost: https://projectopenubl.zulipchat.com/api/v1
     channel: announcements
     subject: '{{projectNameCapitalized}} {{projectVersion}} released!'
@@ -37,4 +37,32 @@ announce:
   twitter:
     active: RELEASE
     status: '🚀 {{projectNameCapitalized}} {{projectVersion}} has been released! {{releaseNotesUrl}}'
-
+  slack:
+    active: RELEASE
+    channel: '#notifications'
+    message: '🚀 {{projectNameCapitalized}} {{projectVersion}} has been released! {{releaseNotesUrl}}'
+  mail:
+    active: RELEASE
+    mimeType: TEXT
+    port: 587
+    auth: true
+    host: smtp.gmail.com
+    username: projectopenubl@gmail.com
+    from: projectopenubl@gmail.com
+    to: projectopenubl@googlegroups.com
+    subject: '{{projectNameCapitalized}} {{projectVersion}} released!'
+    message: |
+      Acabamos de lanzar {{projectNameCapitalized}} {{projectVersion}}!
+      {{changelog}}
+  article:
+    active: RELEASE
+    repository:
+      owner: project-openubl
+      name: website
+      branch: master
+      username: carlosthe19916
+    files:
+      - path: 'release.md'
+        transform: 'blog/{{#f_now}}YYYY-MM-dd{{/f_now}}/{{projectName}}-{{#f_dash}}{{projectVersion}}{{/f_dash}}-released.md'
+      - path: 'openapi.yaml'
+        transform: 'static/openapi/ublhub/openapi.yaml'

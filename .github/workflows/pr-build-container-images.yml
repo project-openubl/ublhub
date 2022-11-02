@@ -7,9 +7,8 @@ jobs:
     if: ${{ github.event_name != 'pull_request' && github.repository_owner != 'project-openubl' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 11
-        uses: actions/setup-java@v2.4.0
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
         with:
           java-version: 11
           distribution: temurin
@@ -20,9 +19,9 @@ jobs:
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
 
-      - name: Build jvm container image
+      - name: Build container image
         run: |
-          mvn -U -B package --file backend/pom.xml -DskipTests \
+          mvn -U -B package --file pom.xml -DskipTests \
           -Dquarkus.container-image.build=true \
           -Dquarkus.container-image.push=true \
           -Dquarkus.container-image.build=true \
@@ -32,4 +31,5 @@ jobs:
           -Dquarkus.container-image.tag=${{ steps.extract_branch.outputs.branch }} \
           -Dquarkus.container-image.username=${{ github.actor }} \
           -Dquarkus.container-image.password=${{ secrets.GITHUB_TOKEN }} \
-          -P admin-console
+          -P ui,${{ matrix.flavor }}
+#          -P native,ui,${{ matrix.flavor }}

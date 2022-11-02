@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": ["Invoice", "CreditNote", "DebitNote"]
+    },
+    "metadata": {
+      "type": ["object", "null"],
+      "properties": {
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "properties": {
+        "document": {
+          "type": "object",
+          "properties": {
+            "map": {
+              "type": "object"
+            }
+          },
+          "description": "Document config"
+        },
+        "id": {
+          "type": ["object", "null"],
+          "properties": {
+            "config": {
+              "type": "object"
+            },
+            "type": {
+              "type": "string",
+              "enum": ["none", "generated"]
+            }
+          },
+          "required": ["type"],
+          "description": "ID Generator config"
+        },
+        "signature": {
+          "type": ["object", "null"],
+          "properties": {
+            "algorithm": {
+              "type": "string",
+              "enum": ["RS256", "RS384", "RS512"]
+            }
+          },
+          "required": ["algorithm"],
+          "description": "XML Signature config"
+        }
+      },
+      "required": ["document"]
+    }
+  },
+  "required": ["kind", "spec"]
+}
