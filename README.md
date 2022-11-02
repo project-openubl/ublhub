@@ -5,7 +5,7 @@
 
 # Ublhub
 
-Microservicio que expone los datos provenientes del `padrón reducido` de la SUNAT.
+Microservicio que administra tus XMLs emitidos a la SUNAT.
 
 ## Ejecutar en modo desarrollo
 
@@ -14,7 +14,7 @@ Microservicio que expone los datos provenientes del `padrón reducido` de la SUN
 Puedes ejecutar la aplicación en modo desarrollo con:
 
 ```shell script
-./mvnw compile quarkus:dev -Pdev -f backend/
+./mvnw compile quarkus:dev
 ```
 
 ### Iniciar UI
@@ -22,13 +22,34 @@ Puedes ejecutar la aplicación en modo desarrollo con:
 Instala las dependencias npm:
 
 ```shell
-yarn --cwd admin-console/src/main/webapp install
+npm install --prefix src/main/webapp
 ```
 
 Inicia la UI en modo desarrollo:
 
 ```shell
-yarn --cwd admin-console/src/main/webapp run start
+npm run start --prefix src/main/webapp
+```
+
+## Desplegar en Minikube
+
+- Instala e inicia una instancia de Minikube
+- Create un namespace `openubl`
+- Create un PVC para la base de datos
+- Despliega Ublhub
+
+```shell
+minikube start
+kubectl create ns openubl
+kubectl create -f src/main/kubernetes/minikube-pvc.yml -n openubl
+eval $(minikube -p minikube docker-env)
+mvn clean package -Dquarkus.kubernetes.deploy=true -Dquarkus.kubernetes.namespace=openubl -DskipTests
+```
+
+Expone Ublhub usando:
+
+```shell
+minikube service ublhub -n openubl
 ```
 
 ## Links

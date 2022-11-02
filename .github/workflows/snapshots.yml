@@ -64,9 +64,9 @@ jobs:
           docker load -i artifacts/ublhub-container-image.tar
           
           # Tag images
-          docker tag quay.io/projectopenubl/ublhub:latest quay.io/projectopenubl/ublhub:early-access      
-          docker tag quay.io/projectopenubl/ublhub:latest ghcr.io/project-openubl/ublhub/searchpe:early-access
+          docker tag quay.io/projectopenubl/ublhub:latest quay.io/projectopenubl/ublhub:early-access
+          docker tag quay.io/projectopenubl/ublhub:latest ghcr.io/project-openubl/ublhub/ublhub:early-access
       - name: Push images to registry
         run: |
-          docker push quay.io/projectopenubl/ublhub:early-access          
-          docker push ghcr.io/project-openubl/ublhub/searchpe:early-access
+          docker push quay.io/projectopenubl/ublhub:early-access
+          docker push ghcr.io/project-openubl/ublhub/ublhub:early-access
