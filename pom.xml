@@ -45,7 +45,7 @@
         <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
 
         <awaitility.version>4.2.0</awaitility.version>
-        <testcontainers.version>1.17.2</testcontainers.version>
+        <testcontainers.version>1.17.5</testcontainers.version>
         <xmlunit.version>2.6.4</xmlunit.version>
 
         <license.dir>${basedir}</license.dir>
