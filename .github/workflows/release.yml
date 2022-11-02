@@ -38,7 +38,7 @@ jobs:
           git config --global user.email "project.openubl.preview.bot@gmail.com"
           git config --global user.name "Project-Openubl Bot"
           git commit --allow-empty -a -m "🏁 Releasing version $RELEASE_VERSION"
-          git push origin HEAD:master     
+          git push origin HEAD:master
 
       - name: Release container images
         run: |
