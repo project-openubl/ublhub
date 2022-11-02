@@ -480,7 +480,7 @@
             <plugin>
                 <groupId>com.github.victools</groupId>
                 <artifactId>jsonschema-maven-plugin</artifactId>
-                <version>4.27.0</version>
+                <version>4.28.0</version>
                 <executions>
                     <execution>
                         <id>backend</id>
