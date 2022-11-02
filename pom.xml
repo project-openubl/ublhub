@@ -24,7 +24,7 @@
 
     <groupId>io.github.project-openubl</groupId>
     <artifactId>ublhub</artifactId>
-    <version>2.0.0.Beta1</version>
+    <version>2.0.0-Beta1</version>
     <description>Facturador para desarrolladores</description>
 
     <properties>
