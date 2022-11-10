@@ -10,7 +10,7 @@ jobs:
         # This is a base64-encoded OAuth token for the "project-openubl-preview-bot" GitHub account, which has no secure access.
         run: echo "::set-output name=GH_TOKEN::`echo 'Z2hwX2Z0VnB1MmdQdXYxSldsMm9nZkoyOFMydzdDTEZvNjBOQXVIZAo=' | base64 -d`"
       - name: Post Container image as PR comment
-        uses: mshick/add-pr-comment@v1
+        uses: mshick/add-pr-comment@v2
         with:
           message: |
             🚀 Container image Preview ✨
