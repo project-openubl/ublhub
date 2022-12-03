@@ -19,8 +19,10 @@ package io.github.project.openubl.ublhub.ubl.sender;
 import io.github.project.openubl.ublhub.BasicProfileManager;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ConnectToSUNATException;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ReadXMLFileContentException;
-import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
-import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
+import io.github.project.openubl.xsender.files.xml.DocumentType;
+import io.github.project.openubl.xsender.files.xml.XmlContent;
+import io.github.project.openubl.xsender.models.Status;
+import io.github.project.openubl.xsender.models.SunatResponse;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
@@ -51,7 +53,7 @@ public class XMLSenderManagerTest {
         byte[] file = null;
 
         // When
-        UniAssertSubscriber<XmlContentModel> subscriber = xmlSenderManager
+        UniAssertSubscriber<XmlContent> subscriber = xmlSenderManager
                 .getXMLContent(file)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
@@ -67,7 +69,7 @@ public class XMLSenderManagerTest {
         byte[] file = Files.readAllBytes(Paths.get(uri));
 
         // When
-        UniAssertSubscriber<XmlContentModel> subscriber = xmlSenderManager
+        UniAssertSubscriber<XmlContent> subscriber = xmlSenderManager
                 .getXMLContent(file)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
@@ -83,13 +85,13 @@ public class XMLSenderManagerTest {
         byte[] file = Files.readAllBytes(Paths.get(uri));
 
         // When
-        UniAssertSubscriber<XmlContentModel> subscriber = xmlSenderManager
+        UniAssertSubscriber<XmlContent> subscriber = xmlSenderManager
                 .getXMLContent(file)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
         // Then
-        XmlContentModel result = subscriber.assertCompleted().getItem();
+        XmlContent result = subscriber.assertCompleted().getItem();
         assertEquals("Invoice", result.getDocumentType());
         assertEquals("F001-1", result.getDocumentID());
         assertEquals("11111111111", result.getRuc());
@@ -111,7 +113,7 @@ public class XMLSenderManagerTest {
                 .build();
 
         // When
-        UniAssertSubscriber<BillServiceModel> subscriber = xmlSenderManager.sendToSUNAT(file, wsConfig)
+        UniAssertSubscriber<SunatResponse> subscriber = xmlSenderManager.sendToSUNAT(file, wsConfig)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -134,17 +136,16 @@ public class XMLSenderManagerTest {
                 .build();
 
         // When
-        UniAssertSubscriber<BillServiceModel> subscriber = xmlSenderManager.sendToSUNAT(file, wsConfig)
+        UniAssertSubscriber<SunatResponse> subscriber = xmlSenderManager.sendToSUNAT(file, wsConfig)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
         // Then
-        BillServiceModel result = subscriber.assertCompleted().getItem();
-        assertEquals(BillServiceModel.Status.RECHAZADO, result.getStatus());
-        assertNotNull(result.getCode());
-        assertNotNull(result.getDescription());
-        assertNull(result.getCdr());
-        assertNull(result.getTicket());
+        SunatResponse result = subscriber.assertCompleted().getItem();
+        assertEquals(Status.RECHAZADO, result.getStatus());
+        assertNotNull(result.getMetadata().getResponseCode());
+        assertNotNull(result.getMetadata().getDescription());
+        assertNull(result.getSunat());
     }
 
     @Test
@@ -160,24 +161,23 @@ public class XMLSenderManagerTest {
                 .password("MODDATOS")
                 .build();
 
-        XmlContentModel xmlContentModel = XmlContentModel.Builder.aXmlContentModel()
-                .withRuc("11111111111")
-                .withDocumentID("F001-1")
-                .withDocumentType("Invoice")
-                .withVoidedLineDocumentTypeCode("01")
+        XmlContent xmlContentModel = XmlContent.builder()
+                .ruc("12345678912")
+                .documentID("RA-20200328-1")
+                .documentType(DocumentType.VOIDED_DOCUMENT)
+                .voidedLineDocumentTypeCode("01")
                 .build();
 
         // When
-        UniAssertSubscriber<BillServiceModel> subscriber = xmlSenderManager.verifyTicketAtSUNAT(ticket, xmlContentModel, wsConfig)
+        UniAssertSubscriber<SunatResponse> subscriber = xmlSenderManager.verifyTicketAtSUNAT(ticket, xmlContentModel, wsConfig)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
         // Then
-        BillServiceModel result = subscriber.assertCompleted().getItem();
-        assertEquals(BillServiceModel.Status.EXCEPCION, result.getStatus());
-        assertNotNull(result.getCode());
-        assertNotNull(result.getDescription());
-        assertNotNull(result.getCdr());
-        assertNotNull(result.getTicket());
+        SunatResponse result = subscriber.assertCompleted().getItem();
+        assertEquals(Status.EXCEPCION, result.getStatus());
+        assertNotNull(result.getMetadata().getResponseCode());
+        assertNotNull(result.getMetadata().getDescription());
+        assertNotNull(result.getSunat().getCdr());
     }
 }

@@ -36,7 +36,7 @@
 
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>2.14.0.Final</quarkus.platform.version>
+        <quarkus.platform.version>2.14.2.Final</quarkus.platform.version>
         <keycloak.version>18.0.2</keycloak.version>
 
         <maven.compiler.parameters>true</maven.compiler.parameters>
@@ -126,8 +126,8 @@
         </dependency>
         <dependency>
             <groupId>io.github.project-openubl</groupId>
-            <artifactId>xsender</artifactId>
-            <version>3.0.4.Final</version>
+            <artifactId>quarkus-xsender</artifactId>
+            <version>4.0.0.Beta4</version>
         </dependency>
 
         <dependency>

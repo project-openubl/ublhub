@@ -21,22 +21,36 @@ import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ConnectToSUNATException;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ReadXMLFileContentException;
-import io.github.project.openubl.xmlsenderws.webservices.exceptions.InvalidXMLFileException;
-import io.github.project.openubl.xmlsenderws.webservices.exceptions.UnsupportedDocumentTypeException;
-import io.github.project.openubl.xmlsenderws.webservices.exceptions.ValidationWebServiceException;
-import io.github.project.openubl.xmlsenderws.webservices.managers.smart.SmartBillServiceModel;
-import io.github.project.openubl.xmlsenderws.webservices.managers.smart.custom.CustomBillServiceConfig;
-import io.github.project.openubl.xmlsenderws.webservices.managers.smart.custom.CustomSmartBillServiceManager;
-import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
-import io.github.project.openubl.xmlsenderws.webservices.xml.DocumentType;
-import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
-import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentProvider;
+import io.github.project.openubl.xsender.Constants;
+import io.github.project.openubl.xsender.camel.utils.CamelData;
+import io.github.project.openubl.xsender.camel.utils.CamelUtils;
+import io.github.project.openubl.xsender.company.CompanyCredentials;
+import io.github.project.openubl.xsender.company.CompanyURLs;
+import io.github.project.openubl.xsender.files.BillServiceFileAnalyzer;
+import io.github.project.openubl.xsender.files.BillServiceXMLFileAnalyzer;
+import io.github.project.openubl.xsender.files.ZipFile;
+import io.github.project.openubl.xsender.files.exceptions.UnsupportedXMLFileException;
+import io.github.project.openubl.xsender.files.xml.DocumentType;
+import io.github.project.openubl.xsender.files.xml.XmlContent;
+import io.github.project.openubl.xsender.files.xml.XmlContentProvider;
+import io.github.project.openubl.xsender.models.Metadata;
+import io.github.project.openubl.xsender.models.Status;
+import io.github.project.openubl.xsender.models.SunatResponse;
+import io.github.project.openubl.xsender.sunat.BillServiceDestination;
 import io.smallrye.mutiny.Uni;
+import org.apache.camel.ProducerTemplate;
 import org.jboss.logging.Logger;
+import org.xml.sax.SAXException;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
+import static io.github.project.openubl.xsender.camel.utils.CamelUtils.getBillServiceCamelData;
 
 @Dependent
 public class XMLSenderManager {
@@ -51,7 +65,21 @@ public class XMLSenderManager {
     @Inject
     ProjectRepository projectRepository;
 
-    public Uni<XmlContentModel> getXMLContent(byte[] file) {
+    @Inject
+    ProducerTemplate producerTemplate;
+
+    static final List<String> validDocumentTypes = Arrays.asList(
+            DocumentType.INVOICE,
+            DocumentType.CREDIT_NOTE,
+            DocumentType.DEBIT_NOTE,
+            DocumentType.VOIDED_DOCUMENT,
+            DocumentType.SUMMARY_DOCUMENT,
+            DocumentType.PERCEPTION,
+            DocumentType.RETENTION,
+            DocumentType.DESPATCH_ADVICE
+    );
+
+    public Uni<XmlContent> getXMLContent(byte[] file) {
         return Uni.createFrom().emitter(uniEmitter -> {
             if (file == null) {
                 uniEmitter.fail(new ReadXMLFileContentException("Null files can not be read"));
@@ -59,8 +87,8 @@ public class XMLSenderManager {
             }
 
             try {
-                XmlContentModel content = XmlContentProvider.getSunatDocument(new ByteArrayInputStream(file));
-                boolean isValidDocumentType = DocumentType.valueFromDocumentType(content.getDocumentType()).isPresent();
+                XmlContent content = XmlContentProvider.getSunatDocument(new ByteArrayInputStream(file));
+                boolean isValidDocumentType = validDocumentTypes.stream().anyMatch(s -> s.equals(content.getDocumentType()));
                 if (isValidDocumentType) {
                     uniEmitter.complete(content);
                 } else {
@@ -94,28 +122,40 @@ public class XMLSenderManager {
                 );
     }
 
-    public Uni<BillServiceModel> sendToSUNAT(byte[] file, XMLSenderConfig wsConfig) {
+    public Uni<SunatResponse> sendToSUNAT(byte[] file, XMLSenderConfig wsConfig) {
         return Uni.createFrom()
                 .emitter(uniEmitter -> {
-                    CustomBillServiceConfig billServiceConfig = new BillServiceConfig(wsConfig.getFacturaUrl(), wsConfig.getGuiaRemisionUrl(), wsConfig.getPercepcionRetencionUrl());
+                    CompanyURLs urls = CompanyURLs.builder()
+                            .invoice(wsConfig.getFacturaUrl())
+                            .perceptionRetention(wsConfig.getPercepcionRetencionUrl())
+                            .despatch(wsConfig.getGuiaRemisionUrl())
+                            .build();
+                    CompanyCredentials credentials = CompanyCredentials.builder()
+                            .username(wsConfig.getUsername())
+                            .password(wsConfig.getPassword())
+                            .build();
 
                     try {
-                        SmartBillServiceModel smartBillServiceModel = CustomSmartBillServiceManager.send(file, wsConfig.getUsername(), wsConfig.getPassword(), billServiceConfig);
-                        uniEmitter.complete(smartBillServiceModel.getBillServiceModel());
-                    } catch (ValidationWebServiceException e) {
-                        // Should not retry
-                        BillServiceModel billServiceModel = new BillServiceModel();
-                        billServiceModel.setCode(e.getSUNATErrorCode());
-                        billServiceModel.setDescription(e.getSUNATErrorMessage(MAX_STRING));
-                        billServiceModel.setStatus(BillServiceModel.Status.RECHAZADO);
+                        BillServiceFileAnalyzer fileAnalyzer = new BillServiceXMLFileAnalyzer(file, urls);
 
-                        uniEmitter.complete(billServiceModel);
-                    } catch (InvalidXMLFileException | UnsupportedDocumentTypeException e) {
-                        // Should not retry
-                        BillServiceModel billServiceModel = new BillServiceModel();
-                        billServiceModel.setDescription("Invalid or unsupported file");
+                        ZipFile zipFile = fileAnalyzer.getZipFile();
+                        BillServiceDestination fileDestination = fileAnalyzer.getSendFileDestination();
+                        CamelData camelFileData = getBillServiceCamelData(zipFile, fileDestination, credentials);
 
-                        uniEmitter.complete(billServiceModel);
+                        SunatResponse sunatResponse = producerTemplate
+                                .requestBodyAndHeaders(Constants.XSENDER_BILL_SERVICE_URI, camelFileData.getBody(), camelFileData.getHeaders(), SunatResponse.class);
+
+                        uniEmitter.complete(sunatResponse);
+                    } catch (ParserConfigurationException | IOException | UnsupportedXMLFileException |
+                             SAXException e) {
+                        SunatResponse sunatResponse = SunatResponse.builder()
+                                .status(Status.RECHAZADO)
+                                .metadata(Metadata.builder()
+                                        .description(e.getMessage())
+                                        .build()
+                                )
+                                .build();
+                        uniEmitter.complete(sunatResponse);
                     } catch (Throwable e) {
                         // Should retry
                         uniEmitter.fail(new ConnectToSUNATException("Could not send file"));
@@ -123,16 +163,30 @@ public class XMLSenderManager {
                 });
     }
 
-    public Uni<BillServiceModel> verifyTicketAtSUNAT(
+    public Uni<SunatResponse> verifyTicketAtSUNAT(
             String ticket,
-            XmlContentModel xmlContentModel,
+            XmlContent xmlContent,
             XMLSenderConfig wsConfig
     ) {
         return Uni.createFrom().emitter(uniEmitter -> {
-            CustomBillServiceConfig billServiceConfig = new BillServiceConfig(wsConfig.getFacturaUrl(), wsConfig.getGuiaRemisionUrl(), wsConfig.getPercepcionRetencionUrl());
             try {
-                BillServiceModel billServiceModel = CustomSmartBillServiceManager.getStatus(ticket, xmlContentModel, wsConfig.getUsername(), wsConfig.getPassword(), billServiceConfig);
-                uniEmitter.complete(billServiceModel);
+                CompanyURLs urls = CompanyURLs.builder()
+                        .invoice(wsConfig.getFacturaUrl())
+                        .perceptionRetention(wsConfig.getPercepcionRetencionUrl())
+                        .despatch(wsConfig.getGuiaRemisionUrl())
+                        .build();
+                CompanyCredentials credentials = CompanyCredentials.builder()
+                        .username(wsConfig.getUsername())
+                        .password(wsConfig.getPassword())
+                        .build();
+
+                BillServiceDestination ticketDestination = BillServiceXMLFileAnalyzer.getTicketDeliveryTarget(urls, xmlContent).orElseThrow(IllegalStateException::new);
+                CamelData camelTicketData = CamelUtils.getBillServiceCamelData(ticket, ticketDestination, credentials);
+
+                SunatResponse sunatResponse = producerTemplate
+                        .requestBodyAndHeaders(Constants.XSENDER_BILL_SERVICE_URI, camelTicketData.getBody(), camelTicketData.getHeaders(), SunatResponse.class);
+
+                uniEmitter.complete(sunatResponse);
             } catch (Throwable e) {
                 uniEmitter.fail(new ConnectToSUNATException("Could not verify ticket"));
             }

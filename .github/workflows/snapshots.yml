@@ -30,8 +30,7 @@ jobs:
           -Dquarkus.container-image.group=projectopenubl \
           -Dquarkus.container-image.name=ublhub \
           -Dquarkus.container-image.tag=latest \
-          -P ui
-#          -P native,ui
+          -P native,ui
       - name: Save container image
         run: docker save -o ublhub-container-image.tar quay.io/projectopenubl/ublhub:latest
       - name: Upload container image
