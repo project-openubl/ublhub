@@ -50,8 +50,7 @@ jobs:
           -Dquarkus.container-image.group=projectopenubl \
           -Dquarkus.container-image.name=ublhub \
           -Dquarkus.container-image.tag=latest \
-          -P ui
-          # -P native,ui
+          -P native,ui
 
           # Identify major version
           major=$(echo "${{ github.event.inputs.version }}" | cut -d. -f1)

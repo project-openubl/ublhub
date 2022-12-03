@@ -31,8 +31,7 @@ import io.github.project.openubl.ublhub.scheduler.exceptions.FetchFileException;
 import io.github.project.openubl.ublhub.ubl.sender.XMLSenderManager;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ConnectToSUNATException;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ReadXMLFileContentException;
-import io.github.project.openubl.xmlsenderws.webservices.providers.BillServiceModel;
-import io.github.project.openubl.xmlsenderws.webservices.xml.XmlContentModel;
+import io.github.project.openubl.xsender.files.xml.XmlContent;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
@@ -114,15 +113,15 @@ public class VertxSchedulerConsumer {
                                         documentEntity.setSunatResponse(sunatResponseEntity);
                                     }
 
-                                    sunatResponseEntity.setCode(sunatResponse.getCode());
-                                    sunatResponseEntity.setTicket(sunatResponse.getTicket());
-                                    sunatResponseEntity.setDescription(sunatResponse.getDescription());
+                                    sunatResponseEntity.setTicket(sunatResponse.getSunat().getTicket());
+                                    sunatResponseEntity.setCode(sunatResponse.getMetadata().getResponseCode());
+                                    sunatResponseEntity.setDescription(sunatResponse.getMetadata().getDescription());
                                     sunatResponseEntity.setStatus(sunatResponse.getStatus() != null ? sunatResponse.getStatus().toString() : null);
-                                    sunatResponseEntity.setNotes(sunatResponse.getNotes() != null ? new HashSet<>(sunatResponse.getNotes()) : null);
+                                    sunatResponseEntity.setNotes(sunatResponse.getMetadata().getNotes() != null ? new HashSet<>(sunatResponse.getMetadata().getNotes()) : null);
                                 })
 
                                 // Save CDR
-                                .map(BillServiceModel::getCdr)
+                                .map(sunatResponse -> sunatResponse.getSunat().getCdr())
                                 .onItem().ifNotNull().transformToUni(cdrFile -> filesMutiny
                                         .createFile(cdrFile, false)
                                         .onFailure(PersistFileException.class).recoverWithUni(throwable -> Uni.createFrom()
@@ -205,7 +204,7 @@ public class VertxSchedulerConsumer {
                         .chain(documentEntity -> xSenderMutiny
                                 .getXSenderConfig(documentEntity.getProjectId(), documentEntity.getXmlData().getRuc())
                                 .chain(sunatConfig -> {
-                                    XmlContentModel xmlContentModel = new XmlContentModel();
+                                    XmlContent xmlContentModel = new XmlContent();
                                     xmlContentModel.setRuc(documentEntity.getXmlData().getRuc());
                                     xmlContentModel.setDocumentType(documentEntity.getXmlData().getTipoDocumento());
                                     xmlContentModel.setDocumentID(documentEntity.getXmlData().getSerieNumero());
@@ -224,15 +223,15 @@ public class VertxSchedulerConsumer {
                                                     documentEntity.setSunatResponse(sunatResponseEntity);
                                                 }
 
-                                                sunatResponseEntity.setCode(sunatResponse.getCode());
-                                                sunatResponseEntity.setTicket(sunatResponse.getTicket());
-                                                sunatResponseEntity.setDescription(sunatResponse.getDescription());
+                                                sunatResponseEntity.setTicket(sunatResponse.getSunat().getTicket());
+                                                sunatResponseEntity.setCode(sunatResponse.getMetadata().getResponseCode());
+                                                sunatResponseEntity.setDescription(sunatResponse.getMetadata().getDescription());
                                                 sunatResponseEntity.setStatus(sunatResponse.getStatus() != null ? sunatResponse.getStatus().toString() : null);
-                                                sunatResponseEntity.setNotes(sunatResponse.getNotes() != null ? new HashSet<>(sunatResponse.getNotes()) : null);
+                                                sunatResponseEntity.setNotes(sunatResponse.getMetadata().getNotes() != null ? new HashSet<>(sunatResponse.getMetadata().getNotes()) : null);
                                             })
 
                                             // Save CDR
-                                            .map(BillServiceModel::getCdr)
+                                            .map(sunatResponse -> sunatResponse.getSunat().getCdr())
                                             .onItem().ifNotNull().transformToUni(cdrFile -> filesMutiny
                                                     .createFile(cdrFile, false)
                                                     .onFailure(PersistFileException.class).recoverWithUni(throwable -> Uni.createFrom()
