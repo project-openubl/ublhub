@@ -46,7 +46,7 @@ jobs:
                     retries: 5
               
                 ublhub:
-                  image: quay.io/projectopenubl/ublhub:early-access
+                  image: quay.io/projectopenubl/ublhub:nightly
                   ports:
                     - 8180:8080
                   environment:
