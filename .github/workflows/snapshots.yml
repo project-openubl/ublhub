@@ -10,8 +10,8 @@ env:
   CI: true
 
 jobs:
-  build-snapshot-container:
-    name: Build Container
+  application-container:
+    name: application Container
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -30,7 +30,8 @@ jobs:
           -Dquarkus.container-image.group=projectopenubl \
           -Dquarkus.container-image.name=ublhub \
           -Dquarkus.container-image.tag=latest \
-          -P native,ui
+          -P native,ui \
+          -f application
       - name: Save container image
         run: docker save -o ublhub-container-image.tar quay.io/projectopenubl/ublhub:latest
       - name: Upload container image
@@ -39,9 +40,9 @@ jobs:
           name: artifacts
           path: ublhub-container-image.tar
 
-  snapshots-container:
-    needs: [ build-snapshot-container ]
-    name: Snapshot container
+  publish-container:
+    needs: [ application-container ]
+    name: Publish container
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3

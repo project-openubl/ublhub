@@ -50,12 +50,12 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Build
-        working-directory: src/main/webapp
+        working-directory: application/src/main/webapp
         run: |
           npm install
           npm run build
       - name: Test
-        working-directory: src/main/webapp
+        working-directory: application/src/main/webapp
         run: npm run test -- --coverage --watchAll=false
 
   helm-tests:
@@ -72,4 +72,4 @@ jobs:
       - name: Helm
         run: |
           mvn process-resources
-          helm lint target/helm/
+          helm lint application/target/helm/
