@@ -468,7 +468,7 @@ export const DocumentList: React.FC = () => {
       </PageSection>
 
       <Modal
-        variant="large"
+        variant="default"
         title="Crear documento"
         disableFocusTrap
         isOpen={documentModal.isOpen}

@@ -35,6 +35,7 @@ package io.github.project.openubl.ublhub.resources;
 
 import io.github.project.openubl.ublhub.dto.DocumentDto;
 import io.github.project.openubl.ublhub.dto.DocumentInputDto;
+import io.github.project.openubl.ublhub.dto.ErrorDto;
 import io.github.project.openubl.ublhub.dto.PageDto;
 import io.github.project.openubl.ublhub.files.FilesMutiny;
 import io.github.project.openubl.ublhub.keys.KeyManager;
@@ -85,9 +86,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.List;
@@ -290,6 +288,91 @@ public class DocumentResource {
 
         return Panache.withTransaction(() -> restResponseUni)
                 .onFailure(AbstractBadRequestException.class).recoverWithItem(() -> documentDtoBadRequestResponse.get());
+    }
+
+    @POST
+    @Path("/{projectId}/enrich-document")
+    public Uni<RestResponse<?>> enrichDocuments(
+            @PathParam("projectId") @NotNull String projectId,
+            @NotNull JsonObject jsonObject
+    ) {
+        Uni<RestResponse<?>> restResponseUni = projectRepository.findById(projectId)
+                .onItem().ifNotNull().transformToUni(projectEntity -> {
+                    Boolean isValid = jsonManager.validateJsonObject(jsonObject);
+                    if (!isValid) {
+                        return Uni.createFrom().item(RestResponse.ResponseBuilder
+                                .<String>create(RestResponse.Status.BAD_REQUEST)
+                                .entity("Invalid document")
+                                .build()
+                        );
+                    }
+
+                    DocumentInputDto documentInputDto = jsonManager.getDocumentInputDtoFromJsonObject(jsonObject);
+                    Uni<?> objectUni = xmlGeneratorManager.enrichDocument(documentInputDto)
+                            .onFailure().recoverWithItem(throwable -> {
+                                String message = throwable.getMessage() != null && !throwable.getMessage().isEmpty() ? throwable.getMessage() : throwable.getCause().getMessage();
+                                return ErrorDto.builder()
+                                        .message(message)
+                                        .build();
+                            });
+
+                    return objectUni.map(object -> {
+                        return RestResponse.ResponseBuilder
+                                .<Object>create(RestResponse.Status.OK)
+                                .entity(object)
+                                .build();
+                    });
+                })
+                .onItem().ifNull().continueWith(documentDtoNotFoundResponse);
+
+        return Panache.withTransaction(() -> restResponseUni)
+                .onFailure(AbstractBadRequestException.class).recoverWithItem(() -> RestResponse.ResponseBuilder
+                        .create(RestResponse.Status.BAD_REQUEST)
+                        .build()
+                );
+    }
+
+    @POST
+    @Path("/{projectId}/render-document")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
+    public Uni<RestResponse<String>> renderDocument(
+            @PathParam("projectId") @NotNull String projectId,
+            @NotNull JsonObject jsonObject
+    ) {
+        Uni<RestResponse<String>> restResponseUni = projectRepository.findById(projectId)
+                .onItem().ifNotNull().transformToUni(projectEntity -> {
+                    Boolean isValid = jsonManager.validateJsonObject(jsonObject);
+                    if (!isValid) {
+                        return Uni.createFrom().item(RestResponse.ResponseBuilder
+                                .<String>create(RestResponse.Status.OK)
+                                .entity("Invalid document, it does not comply with schema")
+                                .build()
+                        );
+                    }
+
+                    DocumentInputDto documentInputDto = jsonManager.getDocumentInputDtoFromJsonObject(jsonObject);
+                    Uni<String> objectUni = xmlGeneratorManager.renderDocument(documentInputDto)
+                            .onFailure().recoverWithItem(throwable -> {
+                                return throwable.getMessage() != null && !throwable.getMessage().isEmpty() ? throwable.getMessage() : throwable.getCause().getMessage();
+                            });
+
+                    return objectUni.map(object -> {
+                        return RestResponse.ResponseBuilder
+                                .<String>create(RestResponse.Status.OK)
+                                .entity(object)
+                                .build();
+                    });
+                })
+                .onItem().ifNull().continueWith(() -> RestResponse.ResponseBuilder
+                        .<String>create(RestResponse.Status.NOT_FOUND)
+                        .build()
+                );
+
+        return Panache.withTransaction(() -> restResponseUni)
+                .onFailure(AbstractBadRequestException.class).recoverWithItem(() -> RestResponse.ResponseBuilder
+                        .<String>create(RestResponse.Status.BAD_REQUEST)
+                        .build()
+                );
     }
 
     @GET

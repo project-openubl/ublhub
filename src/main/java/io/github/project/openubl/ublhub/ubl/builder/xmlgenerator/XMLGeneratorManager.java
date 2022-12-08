@@ -28,6 +28,7 @@ import io.github.project.openubl.xbuilder.content.models.standard.general.Invoic
 import io.github.project.openubl.xbuilder.enricher.ContentEnricher;
 import io.quarkus.qute.Template;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.core.json.JsonObject;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -49,6 +50,82 @@ public class XMLGeneratorManager {
     public IDGenerator getIDGenerator(DocumentInputDto.ID id) {
         IDGeneratorType type = id != null ? id.getType() : IDGeneratorType.none;
         return idGeneratorManager.selectIDGenerator(type);
+    }
+
+    public Uni<Object> enrichDocument(DocumentInputDto inputDto) {
+        DocumentInputDto.Kind kind = inputDto.getKind();
+        DocumentInputDto.Spec spec = inputDto.getSpec();
+        JsonObject document = spec.getDocument();
+
+        switch (kind) {
+            case Invoice: {
+                return Uni.createFrom().item(document)
+                        .map(Unchecked.function(entries -> entries.mapTo(Invoice.class)))
+                        .invoke(input -> {
+                            ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
+                            enricher.enrich(input);
+                        })
+                        .map(input -> input);
+            }
+            case CreditNote: {
+                return Uni.createFrom().item(document)
+                        .map(Unchecked.function(entries -> entries.mapTo(CreditNote.class)))
+                        .invoke(input -> {
+                            ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
+                            enricher.enrich(input);
+                        })
+                        .map(input -> input);
+            }
+            case DebitNote: {
+                return Uni.createFrom().item(document)
+                        .map(Unchecked.function(entries -> entries.mapTo(DebitNote.class)))
+                        .invoke(input -> {
+                            ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
+                            enricher.enrich(input);
+                        })
+                        .map(input -> input);
+            }
+            default:
+                return Uni.createFrom().failure(() -> new IllegalStateException("Document not supported for creating XML"));
+        }
+    }
+
+    public Uni<String> renderDocument(DocumentInputDto inputDto) {
+        DocumentInputDto.Kind kind = inputDto.getKind();
+        DocumentInputDto.Spec spec = inputDto.getSpec();
+        JsonObject document = spec.getDocument();
+
+        switch (kind) {
+            case Invoice: {
+                return Uni.createFrom().item(document)
+                        .map(Unchecked.function(entries -> entries.mapTo(Invoice.class)))
+                        .chain(input -> {
+                            Template template = xBuilder.getTemplate(XBuilder.Type.INVOICE);
+                            CompletionStage<String> xmlCompletionStage = template.data(input).renderAsync();
+                            return Uni.createFrom().completionStage(xmlCompletionStage);
+                        });
+            }
+            case CreditNote: {
+                return Uni.createFrom().item(document)
+                        .map(Unchecked.function(entries -> entries.mapTo(CreditNote.class)))
+                        .chain(input -> {
+                            Template template = xBuilder.getTemplate(XBuilder.Type.CREDIT_NOTE);
+                            CompletionStage<String> xmlCompletionStage = template.data(input).renderAsync();
+                            return Uni.createFrom().completionStage(xmlCompletionStage);
+                        });
+            }
+            case DebitNote: {
+                return Uni.createFrom().item(document)
+                        .map(Unchecked.function(entries -> entries.mapTo(DebitNote.class)))
+                        .chain(input -> {
+                            Template template = xBuilder.getTemplate(XBuilder.Type.DEBIT_NOTE);
+                            CompletionStage<String> xmlCompletionStage = template.data(input).renderAsync();
+                            return Uni.createFrom().completionStage(xmlCompletionStage);
+                        });
+            }
+            default:
+                return Uni.createFrom().failure(() -> new IllegalStateException("Document not supported for creating XML"));
+        }
     }
 
     public Uni<XMLResult> createXMLString(ProjectEntity projectEntity, DocumentInputDto inputDto) {
