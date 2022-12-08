@@ -1,0 +1,51 @@
+{
+    "actions": {
+        "back": "Atrás",
+        "cancel": "Cancelar",
+        "close": "Cerrar",
+        "create": "Crear",
+        "create-object": "Crear {{what}}",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "edit-object": "Editar {{what}}",
+        "next": "Siguiente",
+        "save": "Guardar"
+    },
+    "info": {
+        "data-saved": "Datos guardados"
+    },
+    "modal": {
+        "confirm-delete": {
+            "body": "¿Estas seguro de querer eliminar este(a) <1>{{type}}</1>? Esta acción eliminará <3>{{name}}</3> permanentemente.",
+            "title": "Eliminar {{what}}"
+        }
+    },
+    "terms": {
+        "actions": "Acciones",
+        "algorithm": "Algoritmo",
+        "beta": "Beta",
+        "certificate": "Certificado",
+        "certificates": "Certificados",
+        "companies": "Empresas",
+        "company": "Empresa",
+        "created-on": "Creado en",
+        "credentials": "Credenciales",
+        "description": "Descripción",
+        "document": "Documento",
+        "documents": "Documentos",
+        "general": "General",
+        "kid": "Kid",
+        "name": "Nombre",
+        "password": "Contraseña",
+        "production": "Producción",
+        "project": "Proyecto",
+        "projects": "Proyectos",
+        "provider": "Proveedor",
+        "public-key": "Llave pública",
+        "review": "Revisión",
+        "ruc": "RUC",
+        "type": "Tipo",
+        "username": "Usuario",
+        "webServices": "Servicios web"
+    }
+}

@@ -1,0 +1,58 @@
+---
+replicaCount: 1
+
+image:
+  repository: quay.io/projectopenubl/ublhub
+  pullPolicy: IfNotPresent
+  tag: "${helm.image.tag}"
+
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: { }
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  annotations: { }
+  hosts:
+    - host: chart-example.local
+      paths: [ ]
+  tls: [ ]
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 64Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: { }
+
+tolerations: [ ]
+
+affinity: { }
+
+database:
+  hostname:
+  port: 5432
+  database: ublhub_db
+  username: db_username
+  password: db_password
+
+# Additional environment variables for Ublhub mapped from Secret or ConfigMap
+extraEnvFrom: ""
+
+openshift:
+  enabled: false

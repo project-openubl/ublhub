@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ublhub.fullname" . }}
+  labels:
+    app.openshift.io/runtime: quarkus
+    {{- include "ublhub.labels" . | nindent 4 }}
+  annotations:
+    app.openshift.io/vcs-ref: master
+    app.openshift.io/vcs-uri: https://github.com/project-openubl/ublhub.git
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+replicas: {{ .Values.replicaCount }}
+  {{- end }}
+selector:
+  matchLabels:
+    {{- include "ublhub.selectorLabels" . | nindent 6 }}
+template:
+  metadata:
+  {{- with .Values.podAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 8 }}
+  {{- end }}
+  labels:
+    {{- include "ublhub.selectorLabels" . | nindent 8 }}
+  spec:
+    containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:v{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+          - name: http
+            containerPort: 8080
+            protocol: TCP
+          - name: https
+            containerPort: 8443
+            protocol: TCP
+          - containerPort: 9779
+            name: prometheus
+            protocol: TCP
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+        env:
+          - name: QUARKUS_DATASOURCE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: {{ include "ublhub.fullname" . }}-db
+                optional: false
+          - name: QUARKUS_DATASOURCE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: {{ include "ublhub.fullname" . }}-db
+                optional: false
+          {{- if .Values.database.hostname }}
+          - name: QUARKUS_DATASOURCE_JDBC_URL
+            value: "jdbc:postgresql://{{ .Values.database.hostname }}:{{ .Values.database.port }}/{{ .Values.database.database }}"
+          {{- else }}
+          - name: QUARKUS_DATASOURCE_JDBC_URL
+            value: "jdbc:postgresql://{{ include "ublhub.fullname" . }}-db:{{ .Values.database.port }}/{{ .Values.database.database }}"
+          {{- end }}
+        envFrom:
+          {{- with .Values.extraEnvFrom }}
+            {{- tpl . $ | nindent 12 }}
+            {{- end }}
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /q/health/live
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 10
+          successThreshold: 1
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /q/health/ready
+            port: 8080
+            scheme: HTTP
+        securityContext:
+          privileged: false
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        volumeMounts:
+          - mountPath: /opt/workspace
+            name: workspace
+            readOnly: false
+    volumes:
+      - emptyDir: { }
+        name: workspace
+    {{- with .Values.nodeSelector }}
+    nodeSelector:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+    affinity:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}

@@ -1,0 +1,84 @@
+{
+  "name": "ublhub-ui",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@hookform/resolvers": "^2.9.8",
+    "@migtools/lib-ui": "^8.4.1",
+    "@patternfly/patternfly": "4.221.2",
+    "@patternfly/react-code-editor": "4.82.67",
+    "@patternfly/react-core": "4.264.0",
+    "@patternfly/react-table": "4.111.45",
+    "@prettier/plugin-xml": "^2.2.0",
+    "@project-openubl/lib-ui": "^1.8.1",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "12.1.4",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^16.11.56",
+    "@types/react": "17.0.39",
+    "@types/react-dom": "17.0.11",
+    "axios": "0.21.4",
+    "dayjs": "^1.11.5",
+    "http-proxy-middleware": "^2.0.6",
+    "husky": "^8.0.1",
+    "i18next": "^21.9.1",
+    "i18next-http-backend": "^1.4.1",
+    "i18next-parser": "^6.5.0",
+    "lint-staged": "^13.0.3",
+    "monaco-editor": "0.33.0",
+    "prettier": "^2.7.1",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-hook-form": "^7.36.0",
+    "react-i18next": "^11.18.6",
+    "react-monaco-editor": "0.41.2",
+    "react-query": "^3.39.2",
+    "react-router-dom": "6.3.0",
+    "react-scripts": "5.0.1",
+    "remark-gfm": "^3.0.1",
+    "typescript": "^4.8.2",
+    "usehooks-ts": "^2.9.1",
+    "web-vitals": "^2.1.4",
+    "yaml": "^2.1.3"
+  },
+  "scripts": {
+    "extract": "i18next --config i18next-parser.config.js",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "monaco-editor-webpack-plugin": "7.0.1",
+    "react-app-rewired": "^2.2.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write"
+    ]
+  }
+}
