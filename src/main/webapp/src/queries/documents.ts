@@ -67,6 +67,47 @@ export const useDocumentsQuery = (
   return result;
 };
 
+export const useEnrichDocumentMutation = (
+  projectId: string | null,
+  onSuccess?: (document: DocumentInputDto) => void
+): UseMutationResult<DocumentInputDto, AxiosError, DocumentInputDto> => {
+  return useMutation<DocumentInputDto, AxiosError, DocumentInputDto>(
+    async (documentInput) => {
+      const url = `/projects/${projectId}/enrich-document`;
+      const response = (await axios.post<DocumentDto>(url, documentInput)).data;
+      return {
+        ...documentInput,
+        spec: {
+          ...documentInput.spec,
+          document: response,
+        },
+      };
+    },
+    {
+      onSuccess: (response) => {
+        onSuccess && onSuccess(response);
+      },
+    }
+  );
+};
+
+export const useRenderDocumentMutation = (
+  projectId: string | null,
+  onSuccess?: (document: string) => void
+): UseMutationResult<string, AxiosError, any> => {
+  return useMutation<string, AxiosError, any>(
+    async (documentInput) => {
+      const url = `/projects/${projectId}/render-document`;
+      return (await axios.post<string>(url, documentInput)).data;
+    },
+    {
+      onSuccess: (response) => {
+        onSuccess && onSuccess(response);
+      },
+    }
+  );
+};
+
 export const useCreateDocumentMutation = (
   projectId: string | null,
   onSuccess?: (document: DocumentDto) => void
