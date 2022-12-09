@@ -39,7 +39,7 @@ nb-configuration.xml
 .env
 
 # Distribution
-!src/main/distribution/*
+!application/src/main/distribution/*
 
-workspace/*
-src/jreleaser/templates/article/openapi.*
+application/workspace/*
+jreleaser/templates/article/openapi.*

@@ -97,7 +97,7 @@
 
     <modules>
         <module>application</module>
-        <!--        <module>operator</module>-->
+        <module>operator</module>
     </modules>
 
     <build>
