@@ -32,4 +32,5 @@ jobs:
           -Dquarkus.container-image.username=${{ github.actor }} \
           -Dquarkus.container-image.password=${{ secrets.GITHUB_TOKEN }} \
           -P ui,${{ matrix.flavor }} \
-          -P native,ui,${{ matrix.flavor }}
+          -P native,ui,${{ matrix.flavor }} \
+          -f application

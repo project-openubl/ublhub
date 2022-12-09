@@ -15,8 +15,8 @@ project:
 distributions:
   jvm:
     artifacts:
-      - path: target/distributions/ublhub-{{projectVersion}}.tar.gz
-      - path: target/distributions/ublhub-{{projectVersion}}.zip
+      - path: application/target/distributions/ublhub-{{projectVersion}}.tar.gz
+      - path: application/target/distributions/ublhub-{{projectVersion}}.zip
 
 release:
   github:
