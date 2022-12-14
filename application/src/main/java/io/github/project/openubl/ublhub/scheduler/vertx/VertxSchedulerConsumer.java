@@ -37,6 +37,7 @@ import io.smallrye.common.annotation.Blocking;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import java.util.HashSet;
 
 @RequestScoped
@@ -56,6 +57,7 @@ public class VertxSchedulerConsumer {
     @Inject
     XMLSenderManager xmlSenderManager;
 
+    @Transactional(Transactional.TxType.NEVER)
     @Blocking
     @ConsumeEvent(VertxScheduler.VERTX_SEND_FILE_SCHEDULER_BUS_NAME)
     public void sendFile(String documentId) {
@@ -134,6 +136,7 @@ public class VertxSchedulerConsumer {
         }
     }
 
+    @Transactional(Transactional.TxType.NEVER)
     @Blocking
     @ConsumeEvent(VertxScheduler.VERTX_CHECK_TICKET_SCHEDULER_BUS_NAME)
     public void checkTicket(String documentId) {
