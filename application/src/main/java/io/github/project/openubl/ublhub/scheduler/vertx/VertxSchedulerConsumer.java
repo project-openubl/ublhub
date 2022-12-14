@@ -31,12 +31,12 @@ import io.github.project.openubl.ublhub.ubl.sender.exceptions.ConnectToSUNATExce
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ReadXMLFileContentException;
 import io.github.project.openubl.xsender.files.xml.XmlContent;
 import io.github.project.openubl.xsender.models.SunatResponse;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.common.annotation.Blocking;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import java.util.HashSet;
 
 @RequestScoped
@@ -56,10 +56,12 @@ public class VertxSchedulerConsumer {
     @Inject
     XMLSenderManager xmlSenderManager;
 
-    @Transactional
     @Blocking
     @ConsumeEvent(VertxScheduler.VERTX_SEND_FILE_SCHEDULER_BUS_NAME)
     public void sendFile(String documentId) {
+        QuarkusTransaction.begin();
+
+
         UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
         if (documentEntity == null) {
             throw new IllegalStateException("Document id=" + documentId + " was not found for being sent");
@@ -125,15 +127,20 @@ public class VertxSchedulerConsumer {
         documentEntity.setJobInProgress(false);
         documentEntity.persist();
 
+
+        QuarkusTransaction.commit();
+
         if (documentEntity.getSunatResponse() != null && documentEntity.getSunatResponse().getTicket() != null) {
             schedulerManager.sendVerifyTicketAtSUNAT(documentEntity);
         }
     }
 
-    @Transactional
     @Blocking
     @ConsumeEvent(VertxScheduler.VERTX_CHECK_TICKET_SCHEDULER_BUS_NAME)
     public void checkTicket(String documentId) {
+        QuarkusTransaction.begin();
+
+
         UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
         if (documentEntity == null) {
             throw new IllegalStateException("Document id=" + documentId + " was not found for being sent");
@@ -184,5 +191,8 @@ public class VertxSchedulerConsumer {
         }
 
         documentEntity.persist();
+
+
+        QuarkusTransaction.commit();
     }
 }
