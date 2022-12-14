@@ -33,13 +33,13 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
-import io.github.project.openubl.ublhub.files.FilesMutiny;
+import io.github.project.openubl.ublhub.files.FilesManager;
 import io.github.project.openubl.ublhub.models.jpa.UBLDocumentRepository;
-import io.quarkus.hibernate.reactive.panache.Panache;
-import io.smallrye.mutiny.Uni;
+import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -55,11 +55,12 @@ import javax.ws.rs.core.Response;
 @Path("/namespaces")
 @Produces("application/json")
 @Consumes("application/json")
+@Transactional
 @ApplicationScoped
 public class DocumentFileResource {
 
     @Inject
-    FilesMutiny filesMutiny;
+    FilesManager filesManager;
 
     @Inject
     UBLDocumentRepository documentRepository;
@@ -67,43 +68,39 @@ public class DocumentFileResource {
     @GET
     @Path("/{namespaceId}/document-files/{documentId}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
-    public Uni<Response> getDocumentFile(
+    public Response getDocumentFile(
             @PathParam("namespaceId") @NotNull String namespaceId,
             @PathParam("documentId") @NotNull String documentId,
             @QueryParam("requestedFile") @DefaultValue("ubl") String requestedFile,
             @QueryParam("requestedFormat") @DefaultValue("zip") String requestedFormat
     ) {
-        return Panache
-                .withTransaction(() -> documentRepository.findById(namespaceId, documentId))
-                .onItem().ifNotNull().transformToUni(documentEntity -> Uni.createFrom().item(documentEntity.getXmlFileId())
-                        .onItem().ifNotNull().transformToUni(xmlFileId -> {
-                            String fileId;
-                            if (requestedFile.equals("ubl")) {
-                                fileId = documentEntity.getXmlFileId();
-                            } else {
-                                fileId = documentEntity.getCdrFileId();
-                            }
+        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceId, documentId);
+        if (documentEntity == null || documentEntity.getXmlFileId() == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
 
-                            boolean isZipFormatRequested = requestedFormat.equals("zip");
+        String fileId = documentEntity.getXmlFileId();
+        if (requestedFile.equals("ubl")) {
+            fileId = documentEntity.getXmlFileId();
+        } else {
+            fileId = documentEntity.getCdrFileId();
+        }
 
-                            Uni<byte[]> bytesUni;
-                            if (isZipFormatRequested) {
-                                bytesUni = filesMutiny.getFileAsBytesWithoutUnzipping(fileId);
-                            } else {
-                                bytesUni = filesMutiny.getFileAsBytesAfterUnzip(fileId);
-                            }
+        boolean isZipFormatRequested = requestedFormat.equals("zip");
 
-                            String filename = documentEntity.getXmlData().getSerieNumero() + (isZipFormatRequested ? ".zip" : ".xml");
-                            String mediaType = isZipFormatRequested ? "application/zip" : MediaType.APPLICATION_XML;
+        byte[] bytes;
+        if (isZipFormatRequested) {
+            bytes = filesManager.getFileAsBytesWithoutUnzipping(fileId);
+        } else {
+            bytes = filesManager.getFileAsBytesAfterUnzip(fileId);
+        }
 
-                            return bytesUni.map(bytes -> Response.ok(bytes, mediaType)
-                                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                                    .build()
-                            );
-                        })
-                        .onItem().ifNull().continueWith(() -> Response.status(Response.Status.NOT_FOUND).build())
-                )
-                .onItem().ifNull().continueWith(() -> Response.status(Response.Status.NOT_FOUND).build());
+        String filename = documentEntity.getXmlData().getSerieNumero() + (isZipFormatRequested ? ".zip" : ".xml");
+        String mediaType = isZipFormatRequested ? "application/zip" : MediaType.APPLICATION_XML;
+
+        return Response.ok(bytes, mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .build();
     }
 
 }

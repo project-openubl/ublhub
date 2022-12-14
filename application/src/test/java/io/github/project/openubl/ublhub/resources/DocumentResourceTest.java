@@ -599,7 +599,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .body("status.inProgress", is(false),
                         "status.xmlData", is(nullValue()),
                         "status.error.phase", is(READ_XML_FILE.toString()),
-                        "status.error.description", is("El contenido del XML no es válido")
+                        "status.error.description", is("No se pudo leer XML")
                 );
     }
 

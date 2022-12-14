@@ -52,8 +52,7 @@ public abstract class AbstractBaseTest {
         String username = config.getValue("quarkus.datasource.username", String.class);
         String password = config.getValue("quarkus.datasource.password", String.class);
 
-        String jdbcReactiveUrl = config.getValue("quarkus.datasource.reactive.url", String.class);
-        String jdbcUrl = jdbcReactiveUrl.replace("vertx-reactive", "jdbc");
+        String jdbcUrl = config.getValue("quarkus.datasource.jdbc.url", String.class);
 
         // Flyway
         final String packageName = getTestClass().getName();

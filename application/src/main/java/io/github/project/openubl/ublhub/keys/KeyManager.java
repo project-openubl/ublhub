@@ -23,7 +23,6 @@ import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderLiteral;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyType;
 import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import io.smallrye.mutiny.Uni;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -58,52 +57,32 @@ public class KeyManager {
     @Any
     Instance<KeyProviderFactory<?>> keyProviderFactories;
 
-    public Uni<Optional<KeyWrapper>> getActiveKeyWithoutFallback(ComponentOwner owner, KeyUse use, String algorithm) {
-        return getProviders(owner)
-                .chain(keyProviders -> Uni.createFrom().<Optional<KeyWrapper>>emitter(emitter -> {
-                    KeyWrapper activeKey = getActiveKey(keyProviders, owner, use, algorithm);
-                    if (activeKey != null) {
-                        emitter.complete(Optional.of(activeKey));
-                    } else {
-                        emitter.complete(Optional.empty());
-                    }
-                }))
-                .chain(keyWrapper -> {
-                    if (keyWrapper.isPresent()) {
-                        return Uni.createFrom().item(keyWrapper);
-                    } else {
-                        return Uni.createFrom().item(Optional.empty());
-                    }
-                });
+    public KeyWrapper getActiveKeyWithoutFallback(ComponentOwner owner, KeyUse use, String algorithm) {
+        List<KeyProvider> keyProviders = getProviders(owner);
+
+        return getActiveKey(keyProviders, owner, use, algorithm);
     }
 
-    public Uni<KeyWrapper> getActiveKey(ComponentOwner owner, KeyUse use, String algorithm) {
-        return getProviders(owner).chain(keyProviders -> {
-            KeyWrapper activeKey = getActiveKey(keyProviders, owner, use, algorithm);
-            if (activeKey != null) {
-                return Uni.createFrom().item(activeKey);
-            }
+    public KeyWrapper getActiveKey(ComponentOwner owner, KeyUse use, String algorithm) {
+        List<KeyProvider> keyProviders = getProviders(owner);
 
-            logger.debugv("Failed to find active key, trying fallback: owner={0} algorithm={1} use={2}", owner, algorithm, use.name());
+        KeyWrapper activeKey = getActiveKey(keyProviders, owner, use, algorithm);
+        if (activeKey != null) {
+            return activeKey;
+        }
 
-            List<Uni<Boolean>> collect = keyProviderFactories.stream()
-                    .map(keyProviderFactory -> (Uni<Boolean>) keyProviderFactory.createFallbackKeys(owner, use, algorithm))
-                    .collect(Collectors.toList());
+        logger.debugv("Failed to find active key, trying fallback: owner={0} algorithm={1} use={2}", owner, algorithm, use.name());
 
-            return Uni.combine().all().unis(collect)
-                    .combinedWith(listOfResults -> {
-                        List<Boolean> results = (List<Boolean>) listOfResults;
-                        return results.stream().anyMatch(aBoolean -> Objects.equals(aBoolean, true));
-                    })
-                    .chain(isPresent -> isPresent
-                            ? getProviders(owner).map(providers -> getActiveKey(providers, owner, use, algorithm))
-                            : Uni.createFrom().nullItem()
-                    )
-                    .onItem().ifNull().failWith(() -> {
-                        logger.errorv("Failed to create fallback key for realm: owner={0} algorithm={1} use={2}", owner, algorithm, use.name());
-                        return new RuntimeException("Failed to find key: owner=" + owner + " algorithm=" + algorithm + " use=" + use.name());
-                    });
-        });
+        boolean isPresent = keyProviderFactories.stream()
+                .anyMatch(keyProviderFactory -> keyProviderFactory.createFallbackKeys(owner, use, algorithm));
+
+        if (isPresent) {
+            List<KeyProvider> providers = getProviders(owner);
+            return getActiveKey(providers, owner, use, algorithm);
+        } else {
+            logger.errorv("Failed to create fallback key for realm: owner={0} algorithm={1} use={2}", owner, algorithm, use.name());
+            throw  new RuntimeException("Failed to find key: owner=" + owner + " algorithm=" + algorithm + " use=" + use.name());
+        }
     }
 
     private KeyWrapper getActiveKey(List<KeyProvider> providers, ComponentOwner owner, KeyUse use, String algorithm) {
@@ -121,68 +100,65 @@ public class KeyManager {
         return null;
     }
 
-    public Uni<KeyWrapper> getKey(ComponentOwner owner, String kid, KeyUse use, String algorithm) {
+    public KeyWrapper getKey(ComponentOwner owner, String kid, KeyUse use, String algorithm) {
         if (kid == null) {
             logger.warnv("kid is null, can't find public key: owner={0}", owner);
-            return Uni.createFrom().nullItem();
+            return null;
         }
 
-        return getProviders(owner).map(keyProviders -> {
-            for (KeyProvider p : keyProviders) {
-                Optional<KeyWrapper> keyWrapper = p.getKeys().stream()
-                        .filter(key -> Objects.equals(key.getKid(), kid) && key.getStatus().isEnabled() && matches(key, use, algorithm))
-                        .peek(key -> {
-                            if (logger.isTraceEnabled()) {
-                                logger.tracev("Found key: owner={0} kid={1} algorithm={2} use={3}", owner, key.getKid(), algorithm, use.name());
-                            }
-                        })
-                        .findFirst();
-                if (keyWrapper.isPresent()) {
-                    return keyWrapper.get();
-                }
-            }
+        List<KeyProvider> keyProviders = getProviders(owner);
 
-            if (logger.isTraceEnabled()) {
-                logger.tracev("Failed to find public key: owner={0} kid={1} algorithm={2} use={3}", owner, kid, algorithm, use.name());
+        for (KeyProvider p : keyProviders) {
+            Optional<KeyWrapper> keyWrapper = p.getKeys().stream()
+                    .filter(key -> Objects.equals(key.getKid(), kid) && key.getStatus().isEnabled() && matches(key, use, algorithm))
+                    .peek(key -> {
+                        if (logger.isTraceEnabled()) {
+                            logger.tracev("Found key: owner={0} kid={1} algorithm={2} use={3}", owner, key.getKid(), algorithm, use.name());
+                        }
+                    })
+                    .findFirst();
+            if (keyWrapper.isPresent()) {
+                return keyWrapper.get();
             }
+        }
 
-            return null;
-        });
+        if (logger.isTraceEnabled()) {
+            logger.tracev("Failed to find public key: owner={0} kid={1} algorithm={2} use={3}", owner, kid, algorithm, use.name());
+        }
+
+        return null;
     }
 
-    public Uni<List<KeyWrapper>> getKeys(ComponentOwner owner, KeyUse use, String algorithm) {
-        return getProviders(owner).map(keyProviders -> keyProviders.stream()
+    public List<KeyWrapper> getKeys(ComponentOwner owner, KeyUse use, String algorithm) {
+        return getProviders(owner).stream()
                 .flatMap(keyProvider -> keyProvider.getKeys().stream().filter(key -> key.getStatus().isEnabled() && matches(key, use, algorithm)))
-                .collect(Collectors.toList())
-        );
+                .collect(Collectors.toList());
     }
 
-    public Uni<List<KeyWrapper>> getKeys(ComponentOwner owner) {
-        return getProviders(owner).map(keyProviders -> keyProviders.stream()
+    public List<KeyWrapper> getKeys(ComponentOwner owner) {
+        return getProviders(owner).stream()
                 .flatMap(keyProvider -> keyProvider.getKeys().stream())
-                .collect(Collectors.toList())
-        );
+                .collect(Collectors.toList());
     }
 
     private boolean matches(KeyWrapper key, KeyUse use, String algorithm) {
         return use.equals(key.getUse()) && key.getAlgorithm().equals(algorithm);
     }
 
-    private Uni<List<KeyProvider>> getProviders(ComponentOwner owner) {
+    private List<KeyProvider> getProviders(ComponentOwner owner) {
         return componentRepository.getComponents(owner, owner.getId(), KeyProvider.class.getName())
-                .map(componentModels -> componentModels.stream()
-                        .sorted(new ProviderComparator())
-                        .map(c -> {
-                            RsaKeyType rsaKeyType = RsaKeyType.findByProviderId(c.getProviderId()).orElseThrow(() -> new IllegalArgumentException("Invalid provider:" + c.getProviderId()));
-                            Annotation componentProviderLiteral = new ComponentProviderLiteral(KeyProvider.class);
-                            Annotation rsaKeyProviderLiteral = new RsaKeyProviderLiteral(rsaKeyType);
-                            KeyProviderFactory<?> factory = keyProviderFactories.select(componentProviderLiteral, rsaKeyProviderLiteral).get();
+                .stream()
+                .sorted(new ProviderComparator())
+                .map(c -> {
+                    RsaKeyType rsaKeyType = RsaKeyType.findByProviderId(c.getProviderId()).orElseThrow(() -> new IllegalArgumentException("Invalid provider:" + c.getProviderId()));
+                    Annotation componentProviderLiteral = new ComponentProviderLiteral(KeyProvider.class);
+                    Annotation rsaKeyProviderLiteral = new RsaKeyProviderLiteral(rsaKeyType);
+                    KeyProviderFactory<?> factory = keyProviderFactories.select(componentProviderLiteral, rsaKeyProviderLiteral).get();
 
-                            return factory.create(owner, c);
-                        })
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList())
-                );
+                    return factory.create(owner, c);
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private static class ProviderComparator implements Comparator<ComponentModel> {

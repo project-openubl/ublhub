@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.Data;
 
 import javax.persistence.Column;

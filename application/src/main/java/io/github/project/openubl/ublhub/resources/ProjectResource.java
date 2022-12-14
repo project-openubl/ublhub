@@ -24,9 +24,7 @@ import io.github.project.openubl.ublhub.mapper.ProjectMapper;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.security.Permission;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.panache.common.Sort;
-import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -34,6 +32,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -56,6 +55,7 @@ import static org.jboss.resteasy.reactive.RestResponse.Status;
 @Path("/projects")
 @Produces("application/json")
 @Consumes("application/json")
+@Transactional
 @ApplicationScoped
 public class ProjectResource {
 
@@ -80,7 +80,7 @@ public class ProjectResource {
     @Operation(summary = "List projects", description = "List all projects")
     @POST
     @Path("/check-name")
-    public Uni<RestResponse<String>> checkProjectName(@NotNull @Valid CheckCompanyDto checkCompanyDto) {
+    public RestResponse<String> checkProjectName(@NotNull @Valid CheckCompanyDto checkCompanyDto) {
         Supplier<RestResponse<String>> successResponse = () -> ResponseBuilder
                 .<String>create(Status.OK)
                 .entity(checkCompanyDto.getName() + " available")
@@ -90,18 +90,19 @@ public class ProjectResource {
                 .entity("Name is already taken")
                 .build();
 
-        Uni<RestResponse<String>> restResponseUni = projectRepository.findByName(checkCompanyDto.getName())
-                .onItem().ifNotNull().transform(projectEntity -> conflictResponse.get())
-                .onItem().ifNull().continueWith(successResponse);
+        ProjectEntity projectEntity = projectRepository.findByName(checkCompanyDto.getName());
+        if (projectEntity != null) {
+            return successResponse.get();
+        }
 
-        return Panache.withTransaction(() -> restResponseUni);
+        return conflictResponse.get();
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Create project", description = "Create a project")
     @POST
     @Path("/")
-    public Uni<RestResponse<ProjectDto>> createProject(@NotNull @Valid ProjectDto projectDto) {
+    public RestResponse<ProjectDto> createProject(@NotNull @Valid ProjectDto projectDto) {
         Function<ProjectDto, RestResponse<ProjectDto>> successResponse = (dto) -> ResponseBuilder
                 .<ProjectDto>create(Status.CREATED)
                 .entity(dto)
@@ -110,48 +111,40 @@ public class ProjectResource {
                 .<ProjectDto>create(Status.CONFLICT)
                 .build();
 
-        Uni<ProjectEntity> createEntityUni = projectMapper.updateEntityFromDto(projectDto, ProjectEntity
-                        .builder()
-                        .id(UUID.randomUUID().toString())
-                        .build()
-                )
-                .<ProjectEntity>persist()
-                .chain(projectEntity -> {
-                    ComponentOwner owner = getOwner(projectEntity.getId());
-                    return defaultKeyProviders.createProviders(owner)
-                            .map(unused -> projectEntity);
-                });
+        ProjectEntity projectEntity = projectRepository.findByName(projectDto.getName());
+        if (projectEntity != null) {
+            return errorResponse.apply(projectEntity);
+        }
 
-        Uni<RestResponse<ProjectDto>> createResponseUni = projectRepository.findByName(projectDto.getName())
-                .onItem().ifNotNull().transform(errorResponse)
-                .onItem().ifNull().switchTo(() -> createEntityUni
-                        .map(entity -> projectMapper.toDto(entity))
-                        .map(successResponse)
-                );
+        projectEntity = projectMapper.updateEntityFromDto(projectDto, ProjectEntity.builder()
+                .id(UUID.randomUUID().toString())
+                .build()
+        );
+        projectEntity.persist();
 
-        return Panache.withTransaction(() -> createResponseUni);
+        ComponentOwner owner = getOwner(projectEntity.getId());
+        defaultKeyProviders.createProviders(owner);
+
+        return successResponse.apply(projectMapper.toDto(projectEntity));
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
     @Operation(summary = "List projects", description = "List all projects")
     @GET
     @Path("/")
-    public Uni<List<ProjectDto>> getProjects() {
+    public List<ProjectDto> getProjects() {
         Sort sort = Sort.by(ProjectRepository.SortByField.created.toString(), Sort.Direction.Descending);
-        Uni<List<ProjectDto>> responseUni = projectRepository
-                .listAll(sort)
-                .map(entities -> entities.stream()
-                        .map(entity -> projectMapper.toDto(entity))
-                        .collect(Collectors.toList())
-                );
-        return Panache.withTransaction(() -> responseUni);
+        return projectRepository.listAll(sort)
+                .stream()
+                .map(entity -> projectMapper.toDto(entity))
+                .collect(Collectors.toList());
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
     @Operation(summary = "Get project", description = "Get one project")
     @GET
     @Path("/{projectId}")
-    public Uni<RestResponse<ProjectDto>> getProject(@PathParam("projectId") @NotNull String projectId) {
+    public RestResponse<ProjectDto> getProject(@PathParam("projectId") @NotNull String projectId) {
         Function<ProjectDto, RestResponse<ProjectDto>> successResponse = dto -> ResponseBuilder
                 .<ProjectDto>create(Status.OK)
                 .entity(dto)
@@ -160,21 +153,20 @@ public class ProjectResource {
                 .<ProjectDto>create(Status.NOT_FOUND)
                 .build();
 
-        Uni<RestResponse<ProjectDto>> restResponseUni = projectRepository.findById(projectId)
-                .onItem().ifNotNull().transform(projectEntity -> {
-                    ProjectDto projectDto = projectMapper.toDto(projectEntity);
-                    return successResponse.apply(projectDto);
-                })
-                .onItem().ifNull().continueWith(notFoundResponse);
+        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        if (projectEntity == null) {
+            return notFoundResponse.get();
+        }
 
-        return Panache.withTransaction(() -> restResponseUni);
+        ProjectDto projectDto = projectMapper.toDto(projectEntity);
+        return successResponse.apply(projectDto);
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Update project", description = "Update one project")
     @PUT
     @Path("/{projectId}")
-    public Uni<RestResponse<ProjectDto>> updateProject(
+    public RestResponse<ProjectDto> updateProject(
             @PathParam("projectId") @NotNull String projectId,
             @NotNull ProjectDto projectDto
     ) {
@@ -186,21 +178,22 @@ public class ProjectResource {
                 .<ProjectDto>create(Status.NOT_FOUND)
                 .build();
 
-        Uni<RestResponse<ProjectDto>> restResponseUni = projectRepository.findById(projectId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> projectMapper
-                        .updateEntityFromDto(projectDto, projectEntity).<ProjectEntity>persist()
-                        .map(entity -> projectMapper.toDto(entity))
-                        .map(successResponse))
-                .onItem().ifNull().continueWith(notFoundResponse);
+        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        if (projectEntity == null) {
+            return notFoundResponse.get();
+        }
 
-        return Panache.withTransaction(() -> restResponseUni);
+        projectMapper.updateEntityFromDto(projectDto, projectEntity);
+        projectEntity.persist();
+
+        return successResponse.apply(projectMapper.toDto(projectEntity));
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Delete project", description = "Delete one project")
     @DELETE
     @Path("/{projectId}")
-    public Uni<RestResponse<Void>> deleteProject(@PathParam("projectId") @NotNull String projectId) {
+    public RestResponse<Void> deleteProject(@PathParam("projectId") @NotNull String projectId) {
         Supplier<RestResponse<Void>> successResponse = () -> ResponseBuilder
                 .<Void>create(Status.NO_CONTENT)
                 .build();
@@ -208,11 +201,9 @@ public class ProjectResource {
                 .<Void>create(Status.NOT_FOUND)
                 .build();
 
-        Uni<RestResponse<Void>> restResponseUni = projectRepository.deleteById(projectId)
-                .map(result -> result ? successResponse : notFoundResponse)
-                .map(Supplier::get);
-
-        return Panache.withTransaction(() -> restResponseUni);
+        boolean result = projectRepository.deleteById(projectId);
+        Supplier<RestResponse<Void>> response = result ? successResponse : notFoundResponse;
+        return response.get();
     }
 
 }

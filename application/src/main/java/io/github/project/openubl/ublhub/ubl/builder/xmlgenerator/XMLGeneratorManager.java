@@ -19,6 +19,7 @@ package io.github.project.openubl.ublhub.ubl.builder.xmlgenerator;
 import io.github.project.openubl.quarkus.xbuilder.XBuilder;
 import io.github.project.openubl.ublhub.dto.DocumentInputDto;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
+import io.github.project.openubl.ublhub.ubl.builder.idgenerator.ID;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGenerator;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorManager;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
@@ -27,8 +28,6 @@ import io.github.project.openubl.xbuilder.content.models.standard.general.DebitN
 import io.github.project.openubl.xbuilder.content.models.standard.general.Invoice;
 import io.github.project.openubl.xbuilder.enricher.ContentEnricher;
 import io.quarkus.qute.Template;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.core.json.JsonObject;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -36,7 +35,6 @@ import javax.inject.Inject;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 public class XMLGeneratorManager {
@@ -52,83 +50,61 @@ public class XMLGeneratorManager {
         return idGeneratorManager.selectIDGenerator(type);
     }
 
-    public Uni<Object> enrichDocument(DocumentInputDto inputDto) {
+    public Object enrichDocument(DocumentInputDto inputDto) {
+        DocumentInputDto.Kind kind = inputDto.getKind();
+        DocumentInputDto.Spec spec = inputDto.getSpec();
+        JsonObject document = spec.getDocument();
+
+        ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
+
+        switch (kind) {
+            case Invoice: {
+                Invoice invoice = document.mapTo(Invoice.class);
+                enricher.enrich(invoice);
+                return invoice;
+            }
+            case CreditNote: {
+                CreditNote creditNote = document.mapTo(CreditNote.class);
+                enricher.enrich(creditNote);
+                return creditNote;
+            }
+            case DebitNote: {
+                DebitNote debitNote = document.mapTo(DebitNote.class);
+                enricher.enrich(debitNote);
+                return debitNote;
+            }
+            default:
+                throw new IllegalStateException("Document not supported for creating XML");
+        }
+    }
+
+    public String renderDocument(DocumentInputDto inputDto) {
         DocumentInputDto.Kind kind = inputDto.getKind();
         DocumentInputDto.Spec spec = inputDto.getSpec();
         JsonObject document = spec.getDocument();
 
         switch (kind) {
             case Invoice: {
-                return Uni.createFrom().item(document)
-                        .map(Unchecked.function(entries -> entries.mapTo(Invoice.class)))
-                        .invoke(input -> {
-                            ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
-                            enricher.enrich(input);
-                        })
-                        .map(input -> input);
+                Invoice invoice = document.mapTo(Invoice.class);
+                Template template = xBuilder.getTemplate(XBuilder.Type.INVOICE);
+                return template.data(invoice).render();
             }
             case CreditNote: {
-                return Uni.createFrom().item(document)
-                        .map(Unchecked.function(entries -> entries.mapTo(CreditNote.class)))
-                        .invoke(input -> {
-                            ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
-                            enricher.enrich(input);
-                        })
-                        .map(input -> input);
+                CreditNote creditNote = document.mapTo(CreditNote.class);
+                Template template = xBuilder.getTemplate(XBuilder.Type.CREDIT_NOTE);
+                return template.data(creditNote).render();
             }
             case DebitNote: {
-                return Uni.createFrom().item(document)
-                        .map(Unchecked.function(entries -> entries.mapTo(DebitNote.class)))
-                        .invoke(input -> {
-                            ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
-                            enricher.enrich(input);
-                        })
-                        .map(input -> input);
+                DebitNote debitNote = document.mapTo(DebitNote.class);
+                Template template = xBuilder.getTemplate(XBuilder.Type.DEBIT_NOTE);
+                return template.data(debitNote).render();
             }
             default:
-                return Uni.createFrom().failure(() -> new IllegalStateException("Document not supported for creating XML"));
+                throw new IllegalStateException("Document not supported for creating XML");
         }
     }
 
-    public Uni<String> renderDocument(DocumentInputDto inputDto) {
-        DocumentInputDto.Kind kind = inputDto.getKind();
-        DocumentInputDto.Spec spec = inputDto.getSpec();
-        JsonObject document = spec.getDocument();
-
-        switch (kind) {
-            case Invoice: {
-                return Uni.createFrom().item(document)
-                        .map(Unchecked.function(entries -> entries.mapTo(Invoice.class)))
-                        .chain(input -> {
-                            Template template = xBuilder.getTemplate(XBuilder.Type.INVOICE);
-                            CompletionStage<String> xmlCompletionStage = template.data(input).renderAsync();
-                            return Uni.createFrom().completionStage(xmlCompletionStage);
-                        });
-            }
-            case CreditNote: {
-                return Uni.createFrom().item(document)
-                        .map(Unchecked.function(entries -> entries.mapTo(CreditNote.class)))
-                        .chain(input -> {
-                            Template template = xBuilder.getTemplate(XBuilder.Type.CREDIT_NOTE);
-                            CompletionStage<String> xmlCompletionStage = template.data(input).renderAsync();
-                            return Uni.createFrom().completionStage(xmlCompletionStage);
-                        });
-            }
-            case DebitNote: {
-                return Uni.createFrom().item(document)
-                        .map(Unchecked.function(entries -> entries.mapTo(DebitNote.class)))
-                        .chain(input -> {
-                            Template template = xBuilder.getTemplate(XBuilder.Type.DEBIT_NOTE);
-                            CompletionStage<String> xmlCompletionStage = template.data(input).renderAsync();
-                            return Uni.createFrom().completionStage(xmlCompletionStage);
-                        });
-            }
-            default:
-                return Uni.createFrom().failure(() -> new IllegalStateException("Document not supported for creating XML"));
-        }
-    }
-
-    public Uni<XMLResult> createXMLString(ProjectEntity projectEntity, DocumentInputDto inputDto) {
+    public XMLResult createXMLString(ProjectEntity projectEntity, DocumentInputDto inputDto) {
         DocumentInputDto.Kind kind = inputDto.getKind();
         DocumentInputDto.Spec spec = inputDto.getSpec();
         JsonObject document = spec.getDocument();
@@ -137,85 +113,76 @@ public class XMLGeneratorManager {
         Map<String, String> idConfig = spec.getId() != null && spec.getId().getConfig() != null ? spec.getId().getConfig() : Collections.emptyMap();
 
         switch (kind) {
-            case Invoice:
+            case Invoice: {
                 Invoice invoice = document.mapTo(Invoice.class);
-                return getXML(projectEntity, invoice, idGenerator, idConfig)
-                        .map(xml -> XMLResult.builder().ruc(invoice.getProveedor().getRuc())
-                                .xml(xml)
-                                .build()
-                        );
-            case CreditNote:
+                String xml = getXML(projectEntity, invoice, idGenerator, idConfig);
+                return XMLResult.builder()
+                        .ruc(invoice.getProveedor().getRuc())
+                        .xml(xml)
+                        .build();
+            }
+            case CreditNote: {
                 CreditNote creditNote = document.mapTo(CreditNote.class);
-                return getXML(projectEntity, creditNote, idGenerator, idConfig)
-                        .map(xml -> XMLResult.builder().ruc(creditNote.getProveedor().getRuc())
-                                .xml(xml)
-                                .build()
-                        );
-            case DebitNote:
+                String xml = getXML(projectEntity, creditNote, idGenerator, idConfig);
+                return XMLResult.builder()
+                        .ruc(creditNote.getProveedor().getRuc())
+                        .xml(xml)
+                        .build();
+            }
+            case DebitNote: {
                 DebitNote debitNote = document.mapTo(DebitNote.class);
-                return getXML(projectEntity, debitNote, idGenerator, idConfig)
-                        .map(xml -> XMLResult.builder().ruc(debitNote.getProveedor().getRuc())
-                                .xml(xml)
-                                .build()
-                        );
+                String xml = getXML(projectEntity, debitNote, idGenerator, idConfig);
+                return XMLResult.builder()
+                        .ruc(debitNote.getProveedor().getRuc())
+                        .xml(xml)
+                        .build();
+            }
             default:
-                return Uni.createFrom().failure(() -> new IllegalStateException("Document not supported for creating XML"));
+                throw new IllegalStateException("Document not supported for creating XML");
         }
     }
 
-    private Uni<String> getXML(ProjectEntity projectEntity, Invoice invoice, IDGenerator idGenerator, Map<String, String> config) {
-        return idGenerator.generateInvoiceID(projectEntity, invoice.getProveedor().getRuc(), config)
-                .invoke(id -> {
-                    if (id != null) {
-                        invoice.setSerie(id.getSerie());
-                        invoice.setNumero(id.getNumero());
-                    }
+    private String getXML(ProjectEntity projectEntity, Invoice invoice, IDGenerator idGenerator, Map<String, String> config) {
+        ID id = idGenerator.generateInvoiceID(projectEntity, invoice.getProveedor().getRuc(), config);
+        if (id != null) {
+            invoice.setSerie(id.getSerie());
+            invoice.setNumero(id.getNumero());
+        }
 
-                    ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
-                    enricher.enrich(invoice);
-                })
-                .chain(() -> {
-                    Template template = xBuilder.getTemplate(XBuilder.Type.INVOICE);
-                    CompletionStage<String> xmlCompletionStage = template.data(invoice).renderAsync();
-                    return Uni.createFrom().completionStage(xmlCompletionStage);
-                });
+        ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
+        enricher.enrich(invoice);
+
+        Template template = xBuilder.getTemplate(XBuilder.Type.INVOICE);
+        return template.data(invoice).render();
     }
 
-    private Uni<String> getXML(ProjectEntity projectEntity, CreditNote creditNote, IDGenerator idGenerator, Map<String, String> config) {
+    private String getXML(ProjectEntity projectEntity, CreditNote creditNote, IDGenerator idGenerator, Map<String, String> config) {
         boolean isFactura = creditNote.getComprobanteAfectadoSerieNumero().toUpperCase().startsWith("F");
-        return idGenerator.generateCreditNoteID(projectEntity, creditNote.getProveedor().getRuc(), isFactura, config)
-                .invoke(id -> {
-                    if (id != null) {
-                        creditNote.setSerie(id.getSerie());
-                        creditNote.setNumero(id.getNumero());
-                    }
+        ID id = idGenerator.generateCreditNoteID(projectEntity, creditNote.getProveedor().getRuc(), isFactura, config);
+        if (id != null) {
+            creditNote.setSerie(id.getSerie());
+            creditNote.setNumero(id.getNumero());
+        }
 
-                    ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
-                    enricher.enrich(creditNote);
-                })
-                .chain(() -> {
-                    Template template = xBuilder.getTemplate(XBuilder.Type.CREDIT_NOTE);
-                    CompletionStage<String> xmlCompletionStage = template.data(creditNote).renderAsync();
-                    return Uni.createFrom().completionStage(xmlCompletionStage);
-                });
+        ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
+        enricher.enrich(creditNote);
+
+        Template template = xBuilder.getTemplate(XBuilder.Type.CREDIT_NOTE);
+        return template.data(creditNote).render();
     }
 
-    private Uni<String> getXML(ProjectEntity projectEntity, DebitNote debitNote, IDGenerator idGenerator, Map<String, String> config) {
+    private String getXML(ProjectEntity projectEntity, DebitNote debitNote, IDGenerator idGenerator, Map<String, String> config) {
         boolean isFactura = debitNote.getComprobanteAfectadoSerieNumero().toUpperCase().startsWith("F");
-        return idGenerator.generateDebitNoteID(projectEntity, debitNote.getProveedor().getRuc(), isFactura, config)
-                .invoke(id -> {
-                    if (id != null) {
-                        debitNote.setSerie(id.getSerie());
-                        debitNote.setNumero(id.getNumero());
-                    }
+        ID id = idGenerator.generateDebitNoteID(projectEntity, debitNote.getProveedor().getRuc(), isFactura, config);
+        if (id != null) {
+            debitNote.setSerie(id.getSerie());
+            debitNote.setNumero(id.getNumero());
+        }
 
-                    ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
-                    enricher.enrich(debitNote);
-                })
-                .chain(() -> {
-                    Template template = xBuilder.getTemplate(XBuilder.Type.DEBIT_NOTE);
-                    CompletionStage<String> xmlCompletionStage = template.data(debitNote).renderAsync();
-                    return Uni.createFrom().completionStage(xmlCompletionStage);
-                });
+        ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
+        enricher.enrich(debitNote);
+
+        Template template = xBuilder.getTemplate(XBuilder.Type.DEBIT_NOTE);
+        return template.data(debitNote).render();
     }
 }

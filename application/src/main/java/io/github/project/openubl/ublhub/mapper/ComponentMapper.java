@@ -17,7 +17,6 @@
 package io.github.project.openubl.ublhub.mapper;
 
 import io.github.project.openubl.ublhub.dto.ComponentDto;
-import io.github.project.openubl.ublhub.keys.Attributes;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.utils.StripSecretsUtils;
 import org.keycloak.representations.idm.ComponentRepresentation;

@@ -17,18 +17,19 @@
 package io.github.project.openubl.ublhub.models.jpa;
 
 import io.github.project.openubl.ublhub.models.PageBean;
+import io.github.project.openubl.ublhub.models.SearchBean;
 import io.github.project.openubl.ublhub.models.SortBean;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
-import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.groups.UniAndGroup2;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.transaction.Transactional;
 import java.util.List;
 
+@Transactional
 @ApplicationScoped
 public class ProjectRepository implements PanacheRepositoryBase<ProjectEntity, String> {
 
@@ -39,22 +40,21 @@ public class ProjectRepository implements PanacheRepositoryBase<ProjectEntity, S
 
     public static final String[] SORT_BY_FIELDS = {SortByField.name.toString(), SortByField.created.toString()};
 
-    public Uni<ProjectEntity> findByName(String name) {
+    public ProjectEntity findByName(String name) {
         return find("name", name).firstResult();
     }
 
-    public UniAndGroup2<List<ProjectEntity>, Long> list(PageBean pageBean, List<SortBean> sortBy) {
+    public SearchBean<ProjectEntity> list(PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
         PanacheQuery<ProjectEntity> query = ProjectEntity
                 .find("From ProjectEntity as n", sort)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
-
-        return Uni.combine().all().unis(query.list(), query.count());
+        return new SearchBean<>(query.count(), query.list());
     }
 
-    public UniAndGroup2<List<ProjectEntity>, Long> list(String filterText, PageBean pageBean, List<SortBean> sortBy) {
+    public SearchBean<ProjectEntity> list(String filterText, PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
@@ -66,13 +66,12 @@ public class ProjectRepository implements PanacheRepositoryBase<ProjectEntity, S
                 )
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
-        return Uni.combine().all().unis(query.list(), query.count());
+        return new SearchBean<>(query.count(), query.list());
     }
 
     @Override
-    public Uni<Boolean> deleteById(String id) {
-        return ProjectEntity
-                .delete("id", id)
-                .map(rowCount -> rowCount > 0);
+    public boolean deleteById(String id) {
+        long rows = ProjectEntity.delete("id", id);
+        return rows > 0;
     }
 }

@@ -21,7 +21,6 @@ import io.github.project.openubl.ublhub.ubl.builder.idgenerator.ID;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGenerator;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorProvider;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
-import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.Map;
@@ -31,27 +30,27 @@ import java.util.Map;
 public class NoneIDGenerator implements IDGenerator {
 
     @Override
-    public Uni<ID> generateInvoiceID(ProjectEntity project, String ruc, Map<String, String> config) {
-        return Uni.createFrom().nullItem();
+    public ID generateInvoiceID(ProjectEntity project, String ruc, Map<String, String> config) {
+        return null;
     }
 
     @Override
-    public Uni<ID> generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
-        return Uni.createFrom().nullItem();
+    public ID generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
+        return null;
     }
 
     @Override
-    public Uni<ID> generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
-        return Uni.createFrom().nullItem();
+    public ID generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
+        return null;
     }
 
     @Override
-    public Uni<ID> generateVoidedDocumentID(ProjectEntity project, String ruc, boolean isPercepcionRetencionOrGuia) {
-        return Uni.createFrom().nullItem();
+    public ID generateVoidedDocumentID(ProjectEntity project, String ruc, boolean isPercepcionRetencionOrGuia) {
+        return null;
     }
 
     @Override
-    public Uni<ID> generateSummaryDocumentID(ProjectEntity project, String ruc) {
-        return Uni.createFrom().nullItem();
+    public ID generateSummaryDocumentID(ProjectEntity project, String ruc) {
+        return null;
     }
 }

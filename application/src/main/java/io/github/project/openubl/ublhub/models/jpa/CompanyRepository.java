@@ -18,15 +18,16 @@ package io.github.project.openubl.ublhub.models.jpa;
 
 import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
-import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
-import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.transaction.Transactional;
 import java.util.List;
 
+@Transactional
 @ApplicationScoped
 public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, String> {
 
@@ -35,30 +36,30 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
         created
     }
 
-    public Uni<CompanyEntity> findById(ProjectEntity project, String companyId) {
+    public CompanyEntity findById(ProjectEntity project, String companyId) {
         return findById(project.getId(), companyId);
     }
 
-    public Uni<CompanyEntity> findById(String projectId, String companyId) {
+    public CompanyEntity findById(String projectId, String companyId) {
         Parameters params = Parameters.with("projectId", projectId).and("companyId", companyId);
         return find("id = :companyId and projectId = :projectId", params).firstResult();
     }
 
-    public Uni<CompanyEntity> findByRuc(ProjectEntity project, String ruc) {
+    public CompanyEntity findByRuc(ProjectEntity project, String ruc) {
         return findByRuc(project.getId(), ruc);
     }
 
-    public Uni<CompanyEntity> findByRuc(String projectId, String ruc) {
+    public CompanyEntity findByRuc(String projectId, String ruc) {
         Parameters params = Parameters.with("projectId", projectId).and("ruc", ruc);
         return find("ruc = :ruc and projectId = :projectId", params).firstResult();
     }
 
-    public Uni<List<CompanyEntity>> listAll(ProjectEntity project) {
+    public List<CompanyEntity> listAll(ProjectEntity project) {
         Sort sort = Sort.by(CompanyRepository.SortByField.created.toString(), Sort.Direction.Descending);
         return listAll(project, sort);
     }
 
-    public Uni<List<CompanyEntity>> listAll(ProjectEntity project, Sort sort) {
+    public List<CompanyEntity> listAll(ProjectEntity project, Sort sort) {
         Parameters params = Parameters.with("projectId", project.getId());
 
         PanacheQuery<CompanyEntity> query = CompanyEntity
@@ -67,10 +68,10 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
         return query.list();
     }
 
-    public Uni<Boolean> deleteByProjectIdAndId(String projectId, String id) {
+    public boolean deleteByProjectIdAndId(String projectId, String id) {
         Parameters params = Parameters.with("projectId", projectId).and("id", id);
-        return CompanyEntity
-                .delete("projectId = :projectId and id = :id", params)
-                .map(rowCount -> rowCount > 0);
+        long rows = CompanyEntity
+                .delete("projectId = :projectId and id = :id", params);
+        return rows > 0;
     }
 }

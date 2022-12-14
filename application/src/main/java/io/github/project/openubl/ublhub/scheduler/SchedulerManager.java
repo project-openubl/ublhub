@@ -17,10 +17,11 @@
 package io.github.project.openubl.ublhub.scheduler;
 
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
-import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -36,27 +37,23 @@ public class SchedulerManager {
     @Any
     Instance<Scheduler> schedulers;
 
-    public Uni<Void> sendDocumentToSUNAT(UBLDocumentEntity documentEntity) {
-        documentEntity.setJobInProgress(true);
-        return documentEntity.<UBLDocumentEntity>persistAndFlush()
-                .chain(() -> {
-                    SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
-                    Annotation annotation = new SchedulerProviderLiteral(providerType);
-                    Scheduler scheduler = schedulers.select(annotation).get();
-                    return scheduler.sendDocumentToSUNAT(documentEntity.getId());
-                });
+    public void watchDocuments(@Observes(during = TransactionPhase.AFTER_SUCCESS) UBLDocumentEntity entity) {
+        sendDocumentToSUNAT(entity);
     }
 
-    public Uni<Void> sendVerifyTicketAtSUNAT(UBLDocumentEntity documentEntity) {
-        documentEntity.setJobInProgress(true);
-        return documentEntity.<UBLDocumentEntity>persistAndFlush()
-                .chain(() -> {
-                    SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
-                    Annotation annotation = new SchedulerProviderLiteral(providerType);
+    public void sendDocumentToSUNAT(UBLDocumentEntity documentEntity) {
+        SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
+        Annotation annotation = new SchedulerProviderLiteral(providerType);
+        Scheduler scheduler = schedulers.select(annotation).get();
+        scheduler.sendDocumentToSUNAT(documentEntity.getId());
+    }
 
-                    Scheduler scheduler = schedulers.select(annotation).get();
-                    return scheduler.sendVerifyTicketAtSUNAT(documentEntity.getId());
-                });
+    public void sendVerifyTicketAtSUNAT(UBLDocumentEntity documentEntity) {
+        SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
+        Annotation annotation = new SchedulerProviderLiteral(providerType);
+
+        Scheduler scheduler = schedulers.select(annotation).get();
+        scheduler.sendVerifyTicketAtSUNAT(documentEntity.getId());
     }
 
 }
