@@ -19,6 +19,7 @@ package io.github.project.openubl.ublhub.ubl.sender;
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
+import io.github.project.openubl.ublhub.models.jpa.entities.SunatEntity;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ConnectToSUNATException;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ReadXMLFileContentException;
 import io.github.project.openubl.xsender.Constants;
@@ -37,7 +38,6 @@ import io.github.project.openubl.xsender.models.Metadata;
 import io.github.project.openubl.xsender.models.Status;
 import io.github.project.openubl.xsender.models.SunatResponse;
 import io.github.project.openubl.xsender.sunat.BillServiceDestination;
-import io.smallrye.mutiny.Uni;
 import org.apache.camel.ProducerTemplate;
 import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
@@ -56,8 +56,6 @@ import static io.github.project.openubl.xsender.camel.utils.CamelUtils.getBillSe
 public class XMLSenderManager {
 
     private static final Logger LOGGER = Logger.getLogger(XMLSenderManager.class);
-
-    static final int MAX_STRING = 250;
 
     @Inject
     CompanyRepository companyRepository;
@@ -79,117 +77,100 @@ public class XMLSenderManager {
             DocumentType.DESPATCH_ADVICE
     );
 
-    public Uni<XmlContent> getXMLContent(byte[] file) {
-        return Uni.createFrom().emitter(uniEmitter -> {
-            if (file == null) {
-                uniEmitter.fail(new ReadXMLFileContentException("Null files can not be read"));
-                return;
+    public XmlContent getXMLContent(byte[] file) throws ReadXMLFileContentException {
+        if (file == null) {
+            throw new ReadXMLFileContentException("Null files can not be read");
+        }
+
+        try {
+            XmlContent content = XmlContentProvider.getSunatDocument(new ByteArrayInputStream(file));
+            boolean isValidDocumentType = validDocumentTypes.stream().anyMatch(s -> s.equals(content.getDocumentType()));
+            if (isValidDocumentType) {
+                return content;
+            } else {
+                throw new ReadXMLFileContentException("Invalid document type=" + content.getDocumentType());
             }
-
-            try {
-                XmlContent content = XmlContentProvider.getSunatDocument(new ByteArrayInputStream(file));
-                boolean isValidDocumentType = validDocumentTypes.stream().anyMatch(s -> s.equals(content.getDocumentType()));
-                if (isValidDocumentType) {
-                    uniEmitter.complete(content);
-                } else {
-                    uniEmitter.fail(new ReadXMLFileContentException("Invalid document type=" + content.getDocumentType()));
-                }
-            } catch (Throwable e) {
-                LOGGER.error(e);
-                uniEmitter.fail(new ReadXMLFileContentException(e));
-            }
-        });
+        } catch (Throwable e) {
+            LOGGER.error(e);
+            throw new ReadXMLFileContentException(e);
+        }
     }
 
-    public Uni<XMLSenderConfig> getXSenderConfig(String projectId, String ruc) {
-        return companyRepository.findByRuc(projectId, ruc)
-                .onItem().ifNotNull().transform(CompanyEntity::getSunat)
-                .onItem().ifNull().switchTo(() -> projectRepository
-                        .findById(projectId)
-                        .map(projectEntity -> {
-                            return projectEntity.getSunat();
-                        })
-                )
-                .map(sunatEntity -> {
-                            return XMLSenderConfig.builder()
-                                    .facturaUrl(sunatEntity.getSunatUrlFactura())
-                                    .guiaRemisionUrl(sunatEntity.getSunatUrlGuiaRemision())
-                                    .percepcionRetencionUrl(sunatEntity.getSunatUrlPercepcionRetencion())
-                                    .username(sunatEntity.getSunatUsername())
-                                    .password(sunatEntity.getSunatPassword())
-                                    .build();
-                        }
-                );
+    public XMLSenderConfig getXSenderConfig(String projectId, String ruc) {
+        CompanyEntity companyEntity = companyRepository.findByRuc(projectId, ruc);
+
+        SunatEntity sunatEntity;
+        if (companyEntity != null) {
+            sunatEntity = companyEntity.getSunat();
+        } else {
+            sunatEntity = projectRepository.findById(projectId).getSunat();
+        }
+
+        return XMLSenderConfig.builder()
+                .facturaUrl(sunatEntity.getSunatUrlFactura())
+                .guiaRemisionUrl(sunatEntity.getSunatUrlGuiaRemision())
+                .percepcionRetencionUrl(sunatEntity.getSunatUrlPercepcionRetencion())
+                .username(sunatEntity.getSunatUsername())
+                .password(sunatEntity.getSunatPassword())
+                .build();
     }
 
-    public Uni<SunatResponse> sendToSUNAT(byte[] file, XMLSenderConfig wsConfig) {
-        return Uni.createFrom()
-                .emitter(uniEmitter -> {
-                    CompanyURLs urls = CompanyURLs.builder()
-                            .invoice(wsConfig.getFacturaUrl())
-                            .perceptionRetention(wsConfig.getPercepcionRetencionUrl())
-                            .despatch(wsConfig.getGuiaRemisionUrl())
-                            .build();
-                    CompanyCredentials credentials = CompanyCredentials.builder()
-                            .username(wsConfig.getUsername())
-                            .password(wsConfig.getPassword())
-                            .build();
+    public SunatResponse sendToSUNAT(byte[] file, XMLSenderConfig wsConfig) throws ConnectToSUNATException {
+        CompanyURLs urls = CompanyURLs.builder()
+                .invoice(wsConfig.getFacturaUrl())
+                .perceptionRetention(wsConfig.getPercepcionRetencionUrl())
+                .despatch(wsConfig.getGuiaRemisionUrl())
+                .build();
+        CompanyCredentials credentials = CompanyCredentials.builder()
+                .username(wsConfig.getUsername())
+                .password(wsConfig.getPassword())
+                .build();
 
-                    try {
-                        BillServiceFileAnalyzer fileAnalyzer = new BillServiceXMLFileAnalyzer(file, urls);
+        try {
+            BillServiceFileAnalyzer fileAnalyzer = new BillServiceXMLFileAnalyzer(file, urls);
 
-                        ZipFile zipFile = fileAnalyzer.getZipFile();
-                        BillServiceDestination fileDestination = fileAnalyzer.getSendFileDestination();
-                        CamelData camelFileData = getBillServiceCamelData(zipFile, fileDestination, credentials);
+            ZipFile zipFile = fileAnalyzer.getZipFile();
+            BillServiceDestination fileDestination = fileAnalyzer.getSendFileDestination();
+            CamelData camelFileData = getBillServiceCamelData(zipFile, fileDestination, credentials);
 
-                        SunatResponse sunatResponse = producerTemplate
-                                .requestBodyAndHeaders(Constants.XSENDER_BILL_SERVICE_URI, camelFileData.getBody(), camelFileData.getHeaders(), SunatResponse.class);
-
-                        uniEmitter.complete(sunatResponse);
-                    } catch (ParserConfigurationException | IOException | UnsupportedXMLFileException |
-                             SAXException e) {
-                        SunatResponse sunatResponse = SunatResponse.builder()
-                                .status(Status.RECHAZADO)
-                                .metadata(Metadata.builder()
-                                        .description(e.getMessage())
-                                        .build()
-                                )
-                                .build();
-                        uniEmitter.complete(sunatResponse);
-                    } catch (Throwable e) {
-                        // Should retry
-                        uniEmitter.fail(new ConnectToSUNATException("Could not send file"));
-                    }
-                });
+            return producerTemplate
+                    .requestBodyAndHeaders(Constants.XSENDER_BILL_SERVICE_URI, camelFileData.getBody(), camelFileData.getHeaders(), SunatResponse.class);
+        } catch (ParserConfigurationException | IOException | UnsupportedXMLFileException | SAXException e) {
+            return SunatResponse.builder()
+                    .status(Status.RECHAZADO)
+                    .metadata(Metadata.builder()
+                            .description(e.getMessage())
+                            .build()
+                    )
+                    .build();
+        } catch (Throwable e) {
+            // Should retry
+            throw new ConnectToSUNATException("Could not send file");
+        }
     }
 
-    public Uni<SunatResponse> verifyTicketAtSUNAT(
+    public SunatResponse verifyTicketAtSUNAT(
             String ticket,
             XmlContent xmlContent,
             XMLSenderConfig wsConfig
-    ) {
-        return Uni.createFrom().emitter(uniEmitter -> {
-            try {
-                CompanyURLs urls = CompanyURLs.builder()
-                        .invoice(wsConfig.getFacturaUrl())
-                        .perceptionRetention(wsConfig.getPercepcionRetencionUrl())
-                        .despatch(wsConfig.getGuiaRemisionUrl())
-                        .build();
-                CompanyCredentials credentials = CompanyCredentials.builder()
-                        .username(wsConfig.getUsername())
-                        .password(wsConfig.getPassword())
-                        .build();
+    ) throws ConnectToSUNATException {
+        CompanyURLs urls = CompanyURLs.builder()
+                .invoice(wsConfig.getFacturaUrl())
+                .perceptionRetention(wsConfig.getPercepcionRetencionUrl())
+                .despatch(wsConfig.getGuiaRemisionUrl())
+                .build();
+        CompanyCredentials credentials = CompanyCredentials.builder()
+                .username(wsConfig.getUsername())
+                .password(wsConfig.getPassword())
+                .build();
+        try {
+            BillServiceDestination ticketDestination = BillServiceXMLFileAnalyzer.getTicketDeliveryTarget(urls, xmlContent).orElseThrow(IllegalStateException::new);
+            CamelData camelTicketData = CamelUtils.getBillServiceCamelData(ticket, ticketDestination, credentials);
 
-                BillServiceDestination ticketDestination = BillServiceXMLFileAnalyzer.getTicketDeliveryTarget(urls, xmlContent).orElseThrow(IllegalStateException::new);
-                CamelData camelTicketData = CamelUtils.getBillServiceCamelData(ticket, ticketDestination, credentials);
-
-                SunatResponse sunatResponse = producerTemplate
-                        .requestBodyAndHeaders(Constants.XSENDER_BILL_SERVICE_URI, camelTicketData.getBody(), camelTicketData.getHeaders(), SunatResponse.class);
-
-                uniEmitter.complete(sunatResponse);
-            } catch (Throwable e) {
-                uniEmitter.fail(new ConnectToSUNATException("Could not verify ticket"));
-            }
-        });
+            return producerTemplate
+                    .requestBodyAndHeaders(Constants.XSENDER_BILL_SERVICE_URI, camelTicketData.getBody(), camelTicketData.getHeaders(), SunatResponse.class);
+        } catch (Throwable e) {
+            throw new ConnectToSUNATException("Could not verify ticket");
+        }
     }
 }

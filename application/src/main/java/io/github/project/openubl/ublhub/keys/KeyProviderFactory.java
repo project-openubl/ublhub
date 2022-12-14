@@ -19,14 +19,13 @@ package io.github.project.openubl.ublhub.keys;
 import io.github.project.openubl.ublhub.keys.component.ComponentFactory;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
-import io.smallrye.mutiny.Uni;
 import org.keycloak.crypto.KeyUse;
 
 public interface KeyProviderFactory<T extends KeyProvider> extends ComponentFactory<T, KeyProvider> {
 
     T create(ComponentOwner owner, ComponentModel model);
 
-    default Uni<Boolean> createFallbackKeys(ComponentOwner owner, KeyUse keyUse, String algorithm) {
-        return Uni.createFrom().item(false);
+    default boolean createFallbackKeys(ComponentOwner owner, KeyUse keyUse, String algorithm) {
+        return false;
     }
 }

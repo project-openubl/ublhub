@@ -14,14 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.files.exceptions;
+package io.github.project.openubl.ublhub.models;
 
-public class ReadFileException extends Exception {
-    public ReadFileException(Throwable e) {
-        super(e);
-    }
+import java.util.List;
 
-    public ReadFileException(String message) {
-        super(message);
-    }
+public record SearchBean<T>(long count, List<T> list) {
 }

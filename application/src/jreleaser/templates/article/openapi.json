@@ -57,11 +57,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "OK",
-            "content" : {
-              "text/xml" : { },
-              "application/octet-stream" : { }
-            }
+            "description" : "OK"
           }
         }
       }
@@ -259,15 +255,8 @@
           }
         } ],
         "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            }
+          "204" : {
+            "description" : "No Content"
           },
           "401" : {
             "description" : "Not Authorized"
@@ -485,15 +474,8 @@
           }
         } ],
         "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            }
+          "204" : {
+            "description" : "No Content"
           },
           "401" : {
             "description" : "Not Authorized"
@@ -764,15 +746,8 @@
           }
         } ],
         "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            }
+          "204" : {
+            "description" : "No Content"
           },
           "401" : {
             "description" : "Not Authorized"
@@ -1053,15 +1028,8 @@
           }
         } ],
         "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            }
+          "204" : {
+            "description" : "No Content"
           },
           "401" : {
             "description" : "Not Authorized"
@@ -1243,11 +1211,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "OK",
-            "content" : {
-              "text/xml" : { },
-              "application/octet-stream" : { }
-            }
+            "description" : "OK"
           }
         }
       }
@@ -1279,11 +1243,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "OK",
-            "content" : {
-              "text/xml" : { },
-              "application/octet-stream" : { }
-            }
+            "description" : "OK"
           }
         }
       }
@@ -1619,7 +1579,7 @@
         "type" : "object"
       },
       "JobPhaseType" : {
-        "enum" : [ "FETCH_XML_FILE", "READ_XML_FILE", "SEND_XML_FILE", "SAVE_CDR", "VERIFY_TICKET" ],
+        "enum" : [ "READ_XML_FILE", "SEND_XML_FILE", "VERIFY_TICKET" ],
         "type" : "string"
       },
       "JobRecoveryActionType" : {

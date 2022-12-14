@@ -24,22 +24,17 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 @WebServlet("/auth-switch")
 public class AuthSwitchServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        try {
-            long currentNumberOfUsers = UserEntity.count().subscribe().asCompletionStage().get();
-            if (currentNumberOfUsers > 0) {
-                resp.sendRedirect("login.html");
-            } else {
-                resp.sendRedirect("signup.html");
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
+        long currentNumberOfUsers = UserEntity.count();
+        if (currentNumberOfUsers > 0) {
+            resp.sendRedirect("login.html");
+        } else {
+            resp.sendRedirect("signup.html");
         }
     }
 

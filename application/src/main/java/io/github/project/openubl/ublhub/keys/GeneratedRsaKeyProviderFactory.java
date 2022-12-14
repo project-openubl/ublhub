@@ -25,7 +25,6 @@ import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderType;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderType;
 import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyType;
 import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
-import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 import org.keycloak.common.util.CertificateUtils;
 import org.keycloak.common.util.KeyUtils;
@@ -93,7 +92,7 @@ public class GeneratedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactor
     }
 
     @Override
-    public Uni<Boolean> createFallbackKeys(ComponentOwner owner, KeyUse keyUse, String algorithm) {
+    public boolean createFallbackKeys(ComponentOwner owner, KeyUse keyUse, String algorithm) {
         if (keyUse.equals(KeyUse.SIG) && isSupportedRsaAlgorithm(algorithm)) {
             ComponentModel generated = new ComponentModel();
             generated.setName("fallback-" + algorithm);
@@ -106,9 +105,10 @@ public class GeneratedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactor
             config.putSingle(Attributes.ALGORITHM_KEY, algorithm);
             generated.setConfig(config);
 
-            return componentRepository.addComponentModel(owner, generated).map(c -> true);
+            componentRepository.addComponentModel(owner, generated);
+            return true;
         } else {
-            return Uni.createFrom().item(false);
+            return false;
         }
     }
 

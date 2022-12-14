@@ -17,20 +17,19 @@
 package io.github.project.openubl.ublhub.ubl.builder.idgenerator;
 
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
-import io.smallrye.mutiny.Uni;
 
 import java.util.Map;
 
 public interface IDGenerator {
 
-    Uni<ID> generateInvoiceID(ProjectEntity project, String ruc, Map<String, String> config);
+    ID generateInvoiceID(ProjectEntity project, String ruc, Map<String, String> config);
 
-    Uni<ID> generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config);
+    ID generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config);
 
-    Uni<ID> generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config);
+    ID generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config);
 
-    Uni<ID> generateVoidedDocumentID(ProjectEntity project, String ruc, boolean isPercepcionRetencionOrGuia);
+    ID generateVoidedDocumentID(ProjectEntity project, String ruc, boolean isPercepcionRetencionOrGuia);
 
-    Uni<ID> generateSummaryDocumentID(ProjectEntity project, String ruc);
+    ID generateSummaryDocumentID(ProjectEntity project, String ruc);
 
 }

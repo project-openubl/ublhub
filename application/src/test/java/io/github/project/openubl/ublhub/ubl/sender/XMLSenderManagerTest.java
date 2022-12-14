@@ -25,7 +25,6 @@ import io.github.project.openubl.xsender.models.Status;
 import io.github.project.openubl.xsender.models.SunatResponse;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
-import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -53,13 +52,9 @@ public class XMLSenderManagerTest {
         byte[] file = null;
 
         // When
-        UniAssertSubscriber<XmlContent> subscriber = xmlSenderManager
-                .getXMLContent(file)
-                .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
-
-        // Then
-        subscriber.assertFailedWith(ReadXMLFileContentException.class);
+        Assertions.assertThrows(ReadXMLFileContentException.class, () -> {
+            xmlSenderManager.getXMLContent(file);
+        });
     }
 
     @Test
@@ -69,29 +64,21 @@ public class XMLSenderManagerTest {
         byte[] file = Files.readAllBytes(Paths.get(uri));
 
         // When
-        UniAssertSubscriber<XmlContent> subscriber = xmlSenderManager
-                .getXMLContent(file)
-                .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
-
-        // Then
-        subscriber.assertFailedWith(ReadXMLFileContentException.class);
+        Assertions.assertThrows(ReadXMLFileContentException.class, () -> {
+            xmlSenderManager.getXMLContent(file);
+        });
     }
 
     @Test
-    public void getXMLContent_validXMLFile() throws URISyntaxException, IOException {
+    public void getXMLContent_validXMLFile() throws URISyntaxException, IOException, ReadXMLFileContentException {
         // Given
         URI uri = XMLSenderManagerTest.class.getClassLoader().getResource("xml/invoice_alterado_11111111111.xml").toURI();
         byte[] file = Files.readAllBytes(Paths.get(uri));
 
         // When
-        UniAssertSubscriber<XmlContent> subscriber = xmlSenderManager
-                .getXMLContent(file)
-                .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
+        XmlContent result = xmlSenderManager.getXMLContent(file);
 
         // Then
-        XmlContent result = subscriber.assertCompleted().getItem();
         assertEquals("Invoice", result.getDocumentType());
         assertEquals("F001-1", result.getDocumentID());
         assertEquals("11111111111", result.getRuc());
@@ -113,16 +100,13 @@ public class XMLSenderManagerTest {
                 .build();
 
         // When
-        UniAssertSubscriber<SunatResponse> subscriber = xmlSenderManager.sendToSUNAT(file, wsConfig)
-                .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
-
-        // Then
-        subscriber.assertFailedWith(ConnectToSUNATException.class);
+        Assertions.assertThrows(ConnectToSUNATException.class, () -> {
+            xmlSenderManager.sendToSUNAT(file, wsConfig);
+        });
     }
 
     @Test
-    public void sendToSUNAT_validUrls() throws URISyntaxException, IOException {
+    public void sendToSUNAT_validUrls() throws URISyntaxException, IOException, ConnectToSUNATException {
         // Given
         URI uri = XMLSenderManagerTest.class.getClassLoader().getResource("xml/invoice_alterado_12345678912.xml").toURI();
         byte[] file = Files.readAllBytes(Paths.get(uri));
@@ -136,12 +120,9 @@ public class XMLSenderManagerTest {
                 .build();
 
         // When
-        UniAssertSubscriber<SunatResponse> subscriber = xmlSenderManager.sendToSUNAT(file, wsConfig)
-                .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
+        SunatResponse result = xmlSenderManager.sendToSUNAT(file, wsConfig);
 
         // Then
-        SunatResponse result = subscriber.assertCompleted().getItem();
         assertEquals(Status.RECHAZADO, result.getStatus());
         assertNotNull(result.getMetadata().getResponseCode());
         assertNotNull(result.getMetadata().getDescription());
@@ -149,7 +130,7 @@ public class XMLSenderManagerTest {
     }
 
     @Test
-    public void verifyTicketAtSUNAT() {
+    public void verifyTicketAtSUNAT() throws ConnectToSUNATException {
         // Given
         String ticket = "123456789";
 
@@ -169,12 +150,9 @@ public class XMLSenderManagerTest {
                 .build();
 
         // When
-        UniAssertSubscriber<SunatResponse> subscriber = xmlSenderManager.verifyTicketAtSUNAT(ticket, xmlContentModel, wsConfig)
-                .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
+        SunatResponse result = xmlSenderManager.verifyTicketAtSUNAT(ticket, xmlContentModel, wsConfig);
 
         // Then
-        SunatResponse result = subscriber.assertCompleted().getItem();
         assertEquals(Status.EXCEPCION, result.getStatus());
         assertNotNull(result.getMetadata().getResponseCode());
         assertNotNull(result.getMetadata().getDescription());

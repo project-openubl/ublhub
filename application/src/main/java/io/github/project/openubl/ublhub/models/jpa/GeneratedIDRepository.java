@@ -18,16 +18,17 @@ package io.github.project.openubl.ublhub.models.jpa;
 
 import io.github.project.openubl.ublhub.models.jpa.entities.GeneratedIDEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
-import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
-import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.transaction.Transactional;
 
+@Transactional
 @ApplicationScoped
 public class GeneratedIDRepository implements PanacheRepositoryBase<GeneratedIDEntity, String> {
 
-    public Uni<GeneratedIDEntity> getCurrentID(ProjectEntity projectEntity, String ruc, String documentType) {
+    public GeneratedIDEntity getCurrentID(ProjectEntity projectEntity, String ruc, String documentType) {
         Parameters params = Parameters
                 .with("projectId", projectEntity.getId())
                 .and("ruc", ruc)

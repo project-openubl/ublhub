@@ -18,15 +18,14 @@ package io.github.project.openubl.ublhub.models.jpa;
 
 import io.github.project.openubl.ublhub.models.FilterDocumentBean;
 import io.github.project.openubl.ublhub.models.PageBean;
+import io.github.project.openubl.ublhub.models.SearchBean;
 import io.github.project.openubl.ublhub.models.SortBean;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
-import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.groups.UniAndGroup2;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.List;
@@ -36,22 +35,22 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
 
     public static final String[] SORT_BY_FIELDS = {"created"};
 
-    public Uni<UBLDocumentEntity> findById(ProjectEntity project, String id) {
+    public UBLDocumentEntity findById(ProjectEntity project, String id) {
         return findById(project.getId(), id);
     }
 
-    public Uni<UBLDocumentEntity> findById(String projectId, String id) {
+    public UBLDocumentEntity findById(String projectId, String id) {
         Parameters params = Parameters.with("projectId", projectId).and("id", id);
         return UBLDocumentEntity
                 .find("From UBLDocumentEntity as d where d.projectId = :projectId and d.id = :id", params)
                 .firstResult();
     }
 
-    public UniAndGroup2<List<UBLDocumentEntity>, Long> list(ProjectEntity project, FilterDocumentBean filters, PageBean pageBean, List<SortBean> sortBy) {
+    public SearchBean<UBLDocumentEntity> list(ProjectEntity project, FilterDocumentBean filters, PageBean pageBean, List<SortBean> sortBy) {
         return list(project, null, filters, pageBean, sortBy);
     }
 
-    public UniAndGroup2<List<UBLDocumentEntity>, Long> list(ProjectEntity project, String filterText, FilterDocumentBean filters, PageBean pageBean, List<SortBean> sortBy) {
+    public SearchBean<UBLDocumentEntity> list(ProjectEntity project, String filterText, FilterDocumentBean filters, PageBean pageBean, List<SortBean> sortBy) {
         StringBuilder queryBuilder = new StringBuilder("select d from UBLDocumentEntity d where d.projectId = :projectId");
         Parameters params = Parameters.with("projectId", project.getId());
 
@@ -75,6 +74,6 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
                 .find(queryBuilder.toString(), sort, params)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
 
-        return Uni.combine().all().unis(query.list(), query.count());
+        return new SearchBean<>(query.count(), query.list());
     }
 }

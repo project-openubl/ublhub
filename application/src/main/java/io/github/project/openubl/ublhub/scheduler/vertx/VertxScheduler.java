@@ -18,7 +18,6 @@ package io.github.project.openubl.ublhub.scheduler.vertx;
 
 import io.github.project.openubl.ublhub.scheduler.Scheduler;
 import io.github.project.openubl.ublhub.scheduler.SchedulerProvider;
-import io.smallrye.mutiny.Uni;
 import io.vertx.core.eventbus.EventBus;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -35,15 +34,13 @@ public class VertxScheduler implements Scheduler {
     EventBus eventBus;
 
     @Override
-    public Uni<Void> sendDocumentToSUNAT(String documentId) {
+    public void sendDocumentToSUNAT(String documentId) {
         eventBus.send(VERTX_SEND_FILE_SCHEDULER_BUS_NAME, documentId);
-        return Uni.createFrom().voidItem();
     }
 
     @Override
-    public Uni<Void> sendVerifyTicketAtSUNAT(String documentId) {
+    public void sendVerifyTicketAtSUNAT(String documentId) {
         eventBus.send(VERTX_CHECK_TICKET_SCHEDULER_BUS_NAME, documentId);
-        return Uni.createFrom().voidItem();
     }
 
 }

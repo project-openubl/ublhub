@@ -19,7 +19,6 @@ package io.github.project.openubl.ublhub.keys;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
-import io.smallrye.mutiny.Uni;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.crypto.KeyUse;
 
@@ -33,18 +32,14 @@ public class DefaultKeyProviders {
     @Inject
     ComponentRepository componentRepository;
 
-    public Uni<Void> createProviders(ComponentOwner owner) {
-        return hasProvider(owner, "rsa-generated").chain(hasProvider -> {
-            if (!hasProvider) {
-                return createRsaKeyProvider("rsa-generated", KeyUse.SIG, owner)
-                        .chain(c -> Uni.createFrom().voidItem());
-            } else {
-                return Uni.createFrom().voidItem();
-            }
-        });
+    public void createProviders(ComponentOwner owner) {
+        boolean hasProvider = hasProvider(owner, "rsa-generated");
+        if (!hasProvider) {
+            createRsaKeyProvider("rsa-generated", KeyUse.SIG, owner);
+        }
     }
 
-    private Uni<ComponentModel> createRsaKeyProvider(String name, KeyUse keyUse, ComponentOwner owner) {
+    private ComponentModel createRsaKeyProvider(String name, KeyUse keyUse, ComponentOwner owner) {
         ComponentModel generated = new ComponentModel();
         generated.setName(name);
         generated.setParentId(owner.getId());
@@ -59,11 +54,8 @@ public class DefaultKeyProviders {
         return componentRepository.addComponentModel(owner, generated);
     }
 
-    protected Uni<Boolean> hasProvider(ComponentOwner owner, String providerId) {
-        return componentRepository.getComponents(owner, owner.getId(), KeyProvider.class.getName())
-                .map(componentModels -> componentModels
-                        .stream()
-                        .anyMatch(component -> Objects.equals(component.getProviderId(), providerId))
-                );
+    protected boolean hasProvider(ComponentOwner owner, String providerId) {
+        return componentRepository.getComponents(owner, owner.getId(), KeyProvider.class.getName()).stream()
+                .anyMatch(component -> Objects.equals(component.getProviderId(), providerId));
     }
 }

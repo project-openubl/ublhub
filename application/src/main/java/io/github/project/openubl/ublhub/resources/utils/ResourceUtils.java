@@ -33,7 +33,7 @@ public class ResourceUtils {
     public static List<NameValuePair> buildNameValuePairs(Integer offset, Integer limit, List<SortBean> sortBeans) {
         List<NameValuePair> queryParameters = new ArrayList<>();
         if (offset != null) {
-            queryParameters.add(new BasicNameValuePair("offset", String.valueOf(offset)));
+            queryParameters.add(new BasicNameValuePair("count", String.valueOf(offset)));
         }
         if (limit != null) {
             queryParameters.add(new BasicNameValuePair("limit", String.valueOf(limit)));

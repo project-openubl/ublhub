@@ -19,7 +19,6 @@ package io.github.project.openubl.ublhub.security;
 import io.github.project.openubl.ublhub.dto.UserDto;
 import io.github.project.openubl.ublhub.models.jpa.entities.UserEntity;
 import io.github.project.openubl.ublhub.services.UserService;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
@@ -28,6 +27,12 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.io.IOException;
@@ -35,12 +40,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 @WebServlet("/j_security_signup")
 public class SignupServlet extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(SignupServlet.class);
+
+    @Inject
+    UserTransaction tx;
 
     @Inject
     Validator validator;
@@ -72,12 +79,21 @@ public class SignupServlet extends HttpServlet {
         Set<ConstraintViolation<UserDto>> violations = validator.validate(userDto);
         if (violations.isEmpty()) {
             try {
-                userCreated = Panache.withTransaction(() -> UserEntity.count()
-                        .map(currentNumberOfUsers -> currentNumberOfUsers == 0 ? null : currentNumberOfUsers)
-                        .onItem().ifNotNull().transformToUni(aLong -> userService.create(userDto))
-                ).subscribe().asCompletionStage().get();
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException(e);
+                tx.begin();
+
+                long currentNumberOfUsers = UserEntity.count();
+                if (currentNumberOfUsers == 0) {
+                    userCreated = userService.create(userDto);
+                }
+
+                tx.commit();
+            } catch (NotSupportedException | HeuristicRollbackException | HeuristicMixedException | RollbackException |
+                     SystemException e) {
+                try {
+                    tx.rollback();
+                } catch (SystemException se) {
+                    LOGGER.error(se);
+                }
             }
         }
 
@@ -86,5 +102,7 @@ public class SignupServlet extends HttpServlet {
         } else {
             resp.sendRedirect("signup-error.html");
         }
+
     }
 }
+

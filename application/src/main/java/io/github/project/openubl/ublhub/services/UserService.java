@@ -17,11 +17,8 @@
 package io.github.project.openubl.ublhub.services;
 
 import io.github.project.openubl.ublhub.dto.UserDto;
-import io.github.project.openubl.ublhub.dto.UserPasswordChangeDto;
 import io.github.project.openubl.ublhub.models.jpa.entities.UserEntity;
 import io.quarkus.elytron.security.common.BcryptUtil;
-import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;
-import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.transaction.Transactional;
@@ -30,17 +27,17 @@ import javax.transaction.Transactional;
 @ApplicationScoped
 public class UserService {
 
-    @ReactiveTransactional
-    public Uni<UserEntity> create(UserDto dto) {
+    public UserEntity create(UserDto dto) {
         UserEntity user = new UserEntity();
         user.setFullName(dto.getFullName());
         user.setUsername(dto.getUsername());
         user.setPassword(BcryptUtil.bcryptHash(dto.getPassword()));
         user.setPermissions(String.join(",", dto.getPermissions()));
-        return user.persist();
+        user.persist();
+        return user;
     }
 
-    public Uni<UserEntity> update(UserEntity entity, UserDto dto) {
+    public UserEntity update(UserEntity entity, UserDto dto) {
         entity.setFullName(dto.getFullName());
         entity.setUsername(dto.getUsername());
         if (dto.getPassword() != null) {
@@ -49,12 +46,8 @@ public class UserService {
         if (dto.getPermissions() != null) {
             entity.setPermissions(String.join(",", dto.getPermissions()));
         }
-        return entity.persist();
-    }
-
-    public Uni<UserEntity> changePassword(UserEntity entity, UserPasswordChangeDto dto) {
-        entity.setPassword(BcryptUtil.bcryptHash(dto.getNewPassword()));
-        return entity.persist();
+        entity.persist();
+        return entity;
     }
 
 }

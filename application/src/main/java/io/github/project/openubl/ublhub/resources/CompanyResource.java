@@ -42,15 +42,14 @@ import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.security.Permission;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.panache.common.Sort;
-import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -74,6 +73,7 @@ import static io.github.project.openubl.ublhub.keys.component.ComponentOwner.Own
 @Path("/projects")
 @Produces("application/json")
 @Consumes("application/json")
+@Transactional
 @ApplicationScoped
 public class CompanyResource {
 
@@ -103,7 +103,7 @@ public class CompanyResource {
     @Operation(summary = "Get company", description = "Get one company")
     @GET
     @Path("/{projectId}/companies/{companyId}")
-    public Uni<RestResponse<CompanyDto>> getCompany(
+    public RestResponse<CompanyDto> getCompany(
             @PathParam("projectId") @NotNull String projectId,
             @PathParam("companyId") @NotNull String companyId
     ) {
@@ -115,21 +115,20 @@ public class CompanyResource {
                 .<CompanyDto>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
-        Uni<RestResponse<CompanyDto>> restResponseUni = companyRepository.findById(projectId, companyId)
-                .onItem().ifNotNull().transform(companyEntity -> {
-                    CompanyDto companyDto = companyMapper.toDto(companyEntity);
-                    return successResponse.apply(companyDto);
-                })
-                .onItem().ifNull().continueWith(notFoundResponse);
+        CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
+        if (companyEntity == null) {
+            return notFoundResponse.get();
+        }
 
-        return Panache.withTransaction(() -> restResponseUni);
+        CompanyDto companyDto = companyMapper.toDto(companyEntity);
+        return successResponse.apply(companyDto);
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Create company", description = "Create a company")
     @POST
     @Path("/{projectId}/companies")
-    public Uni<RestResponse<CompanyDto>> createCompany(
+    public RestResponse<CompanyDto> createCompany(
             @PathParam("projectId") @NotNull String projectId,
             @NotNull @Valid CompanyDto companyDto
     ) {
@@ -144,40 +143,35 @@ public class CompanyResource {
                 .<CompanyDto>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
+        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        if (projectEntity == null) {
+            return notFoundResponse.get();
+        }
 
-        Function<ProjectEntity, Uni<CompanyEntity>> createEntityUni = projectEntity -> companyMapper
-                .updateEntityFromDto(companyDto, CompanyEntity.builder()
-                        .projectId(projectEntity.getId())
-                        .id(UUID.randomUUID().toString())
-                        .build()
-                )
-                .<CompanyEntity>persist()
-                .chain(companyEntity -> {
-                    ComponentOwner owner = getOwner(companyEntity.getId());
-                    return defaultKeyProviders.createProviders(owner)
-                            .map(unused -> companyEntity);
-                });
+        CompanyEntity companyEntity = companyRepository.findByRuc(projectEntity, companyDto.getRuc());
+        if (companyEntity != null) {
+            return conflictResponse.apply(companyEntity);
+        }
 
-        Uni<RestResponse<CompanyDto>> restResponseUni = projectRepository.findById(projectId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> companyRepository
-                        .findByRuc(projectEntity, companyDto.getRuc())
-                        .onItem().ifNotNull().transform(conflictResponse)
-                        .onItem().ifNull().switchTo(() -> createEntityUni
-                                .apply(projectEntity)
-                                .map(companyEntity -> companyMapper.toDto(companyEntity))
-                                .map(successResponse)
-                        )
-                )
-                .onItem().ifNull().continueWith(notFoundResponse);
+        companyEntity = companyMapper.updateEntityFromDto(companyDto, CompanyEntity.builder()
+                .projectId(projectEntity.getId())
+                .id(UUID.randomUUID().toString())
+                .build()
+        );
+        companyEntity.persist();
 
-        return Panache.withTransaction(() -> restResponseUni);
+        ComponentOwner owner = getOwner(companyEntity.getId());
+        defaultKeyProviders.createProviders(owner);
+
+        CompanyDto response = companyMapper.toDto(companyEntity);
+        return successResponse.apply(response);
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Update company", description = "Update one company")
     @PUT
     @Path("/{projectId}/companies/{companyId}")
-    public Uni<RestResponse<CompanyDto>> updateCompany(
+    public RestResponse<CompanyDto> updateCompany(
             @PathParam("projectId") @NotNull String projectId,
             @PathParam("companyId") @NotNull String companyId,
             @NotNull CompanyDto companyDto
@@ -190,21 +184,23 @@ public class CompanyResource {
                 .<CompanyDto>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
-        Uni<RestResponse<CompanyDto>> restResponseUni = companyRepository.findById(projectId, companyId)
-                .onItem().ifNotNull().transformToUni(companyEntity -> companyMapper
-                        .updateEntityFromDto(companyDto, companyEntity).<CompanyEntity>persist()
-                        .map(entity -> companyMapper.toDto(entity))
-                        .map(successResponse))
-                .onItem().ifNull().continueWith(notFoundResponse);
+        CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
+        if (companyEntity == null) {
+            return notFoundResponse.get();
+        }
 
-        return Panache.withTransaction(() -> restResponseUni);
+        companyMapper.updateEntityFromDto(companyDto, companyEntity);
+        companyEntity.persist();
+
+        CompanyDto response = companyMapper.toDto(companyEntity);
+        return successResponse.apply(response);
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Delete company", description = "Delete one company")
     @DELETE
     @Path("/{projectId}/companies/{companyId}")
-    public Uni<RestResponse<Void>> deleteCompany(
+    public RestResponse<Void> deleteCompany(
             @PathParam("projectId") @NotNull String projectId,
             @PathParam("companyId") @NotNull String companyId
     ) {
@@ -215,17 +211,15 @@ public class CompanyResource {
                 .<Void>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
-        Uni<RestResponse<Void>> restResponseUni = companyRepository.deleteByProjectIdAndId(projectId, companyId)
-                .map(result -> result ? successResponse.get() : notFoundResponse.get());
-
-        return Panache.withTransaction(() -> restResponseUni);
+        boolean result = companyRepository.deleteByProjectIdAndId(projectId, companyId);
+        return result ? successResponse.get() : notFoundResponse.get();
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
     @Operation(summary = "List companies", description = "List all companies")
     @GET
     @Path("/{projectId}/companies")
-    public Uni<RestResponse<List<CompanyDto>>> getCompanies(@PathParam("projectId") @NotNull String projectId) {
+    public RestResponse<List<CompanyDto>> getCompanies(@PathParam("projectId") @NotNull String projectId) {
         Function<List<CompanyDto>, RestResponse<List<CompanyDto>>> successResponse = dtos -> RestResponse.ResponseBuilder
                 .<List<CompanyDto>>create(RestResponse.Status.OK)
                 .entity(dtos)
@@ -237,18 +231,16 @@ public class CompanyResource {
 
         Sort sort = Sort.by(CompanyRepository.SortByField.created.toString(), Sort.Direction.Descending);
 
-        Uni<RestResponse<List<CompanyDto>>> restResponseUni = projectRepository.findById(projectId)
-                .onItem().ifNotNull().transformToUni(projectEntity -> companyRepository
-                        .listAll(projectEntity, sort)
-                        .map(entities -> entities.stream()
-                                .map(entity -> companyMapper.toDto(entity))
-                                .collect(Collectors.toList())
-                        )
-                        .map(successResponse)
-                )
-                .onItem().ifNull().continueWith(notFoundResponse);
+        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        if (projectEntity == null) {
+            return notFoundResponse.get();
+        }
 
-        return Panache.withTransaction(() -> restResponseUni);
+        List<CompanyDto> companyDtos = companyRepository.listAll(projectEntity, sort)
+                .stream()
+                .map(entity -> companyMapper.toDto(entity))
+                .collect(Collectors.toList());
+        return successResponse.apply(companyDtos);
     }
 
 }

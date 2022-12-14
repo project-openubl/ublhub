@@ -28,7 +28,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -43,7 +42,6 @@ import java.util.List;
 @Path("/server-info")
 @Produces("application/json")
 @Consumes("application/json")
-@Transactional
 @ApplicationScoped
 public class ServerInfoResource {
 

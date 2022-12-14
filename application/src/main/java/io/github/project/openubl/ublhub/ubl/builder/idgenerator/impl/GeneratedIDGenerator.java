@@ -23,7 +23,6 @@ import io.github.project.openubl.ublhub.ubl.builder.idgenerator.ID;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGenerator;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorProvider;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
-import io.smallrye.mutiny.Uni;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -84,73 +83,69 @@ public class GeneratedIDGenerator implements IDGenerator {
         }
     }
 
-    private Uni<GeneratedIDEntity> generateNextID(ProjectEntity projectEntity, String ruc, String documentType, int minSerie, int minNumero) {
-        return generatedIDRepository.getCurrentID(projectEntity, ruc, documentType)
-                .onItem().ifNull().continueWith(() -> {
-                    GeneratedIDEntity entity = new GeneratedIDEntity();
+    private GeneratedIDEntity generateNextID(ProjectEntity projectEntity, String ruc, String documentType, int minSerie, int minNumero) {
+        GeneratedIDEntity entity = generatedIDRepository.getCurrentID(projectEntity, ruc, documentType);
+        if (entity == null) {
+            entity = new GeneratedIDEntity();
 
-                    entity.setId(UUID.randomUUID().toString());
-                    entity.setProjectId(projectEntity.getId());
-                    entity.setRuc(ruc);
-                    entity.setDocumentType(documentType);
-                    entity.setSerie(minSerie);
-                    entity.setNumero(minNumero);
+            entity.setId(UUID.randomUUID().toString());
+            entity.setProjectId(projectEntity.getId());
+            entity.setRuc(ruc);
+            entity.setDocumentType(documentType);
+            entity.setSerie(minSerie);
+            entity.setNumero(minNumero);
+        }
 
-                    return entity;
-                })
-                .chain(generatedIDEntity -> {
-                    // Prepare min values
-                    if (generatedIDEntity.getSerie() <= minSerie) {
-                        generatedIDEntity.setSerie(minSerie);
-                        if (generatedIDEntity.getNumero() <= minNumero) {
-                            generatedIDEntity.setNumero(minNumero - 1);
-                        }
-                    }
+        // Prepare min values
+        if (entity.getSerie() <= minSerie) {
+            entity.setSerie(minSerie);
+            if (entity.getNumero() <= minNumero) {
+                entity.setNumero(minNumero - 1);
+            }
+        }
 
-                    if (generatedIDEntity.getNumero() > 99_999_999) {
-                        generatedIDEntity.setSerie(generatedIDEntity.getSerie() + 1);
-                        generatedIDEntity.setNumero(1);
-                    } else {
-                        generatedIDEntity.setNumero(generatedIDEntity.getNumero() + 1);
-                    }
+        if (entity.getNumero() > 99_999_999) {
+            entity.setSerie(entity.getSerie() + 1);
+            entity.setNumero(1);
+        } else {
+            entity.setNumero(entity.getNumero() + 1);
+        }
 
-                    return generatedIDEntity.persist();
-                });
+        entity.persist();
+        return entity;
     }
 
-    private Uni<GeneratedIDEntity> generateNextIDVoidedAndSummaryDocument(ProjectEntity project, String ruc, String documentType) {
-        return generatedIDRepository.getCurrentID(project, ruc, documentType)
-                .onItem().ifNull().continueWith(() -> {
-                    GeneratedIDEntity entity = new GeneratedIDEntity();
+    private GeneratedIDEntity generateNextIDVoidedAndSummaryDocument(ProjectEntity project, String ruc, String documentType) {
+        GeneratedIDEntity entity = generatedIDRepository.getCurrentID(project, ruc, documentType);
+        if (entity == null) {
+            entity = new GeneratedIDEntity();
 
-                    entity.setId(UUID.randomUUID().toString());
-                    entity.setProjectId(project.getId());
-                    entity.setRuc(ruc);
-                    entity.setDocumentType(documentType);
-                    entity.setSerie(Integer.parseInt(LocalDateTime
-                            .now(ZoneId.of(timezone))
-                            .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-                    ));
-                    entity.setNumero(0);
+            entity.setId(UUID.randomUUID().toString());
+            entity.setProjectId(project.getId());
+            entity.setRuc(ruc);
+            entity.setDocumentType(documentType);
+            entity.setSerie(Integer.parseInt(LocalDateTime
+                    .now(ZoneId.of(timezone))
+                    .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+            ));
+            entity.setNumero(0);
+        }
 
-                    return entity;
-                })
-                .chain(generatedIDEntity -> {
-                    int yyyyMMdd = Integer.parseInt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+        int yyyyMMdd = Integer.parseInt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
 
-                    if (generatedIDEntity.getSerie() == yyyyMMdd) {
-                        generatedIDEntity.setNumero(generatedIDEntity.getNumero() + 1);
-                    } else {
-                        generatedIDEntity.setSerie(yyyyMMdd);
-                        generatedIDEntity.setNumero(1);
-                    }
+        if (entity.getSerie() == yyyyMMdd) {
+            entity.setNumero(entity.getNumero() + 1);
+        } else {
+            entity.setSerie(yyyyMMdd);
+            entity.setNumero(1);
+        }
 
-                    return generatedIDEntity.persist();
-                });
+        entity.persist();
+        return entity;
     }
 
     @Override
-    public Uni<ID> generateInvoiceID(ProjectEntity project, String ruc, Map<String, String> config) {
+    public ID generateInvoiceID(ProjectEntity project, String ruc, Map<String, String> config) {
         boolean isFactura = Boolean.parseBoolean(config.getOrDefault(PROP_IS_FACTURA, "true"));
         int minSerie = Integer.parseInt(config.getOrDefault(PROP_MIN_SERIE, "1"));
         int minNumero = Integer.parseInt(config.getOrDefault(PROP_MIN_NUMERO, "1"));
@@ -162,16 +157,15 @@ public class GeneratedIDGenerator implements IDGenerator {
             documentType = DocumentType.INVOICE_BOLETA_TYPE;
         }
 
-        return generateNextID(project, ruc, documentType.name, minSerie, minNumero)
-                .map(generatedIDEntity -> {
-                    String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.getSerie()), 3, "0");
-                    int numero = generatedIDEntity.getNumero();
-                    return new ID(serie, numero);
-                });
+        GeneratedIDEntity generatedIDEntity = generateNextID(project, ruc, documentType.name, minSerie, minNumero);
+
+        String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.getSerie()), 3, "0");
+        int numero = generatedIDEntity.getNumero();
+        return new ID(serie, numero);
     }
 
     @Override
-    public Uni<ID> generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
+    public ID generateCreditNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
         int minSerie = Integer.parseInt(config.getOrDefault(PROP_MIN_SERIE, "1"));
         int minNumero = Integer.parseInt(config.getOrDefault(PROP_MIN_NUMERO, "1"));
 
@@ -182,16 +176,15 @@ public class GeneratedIDGenerator implements IDGenerator {
             documentType = DocumentType.CREDIT_NOTE_FOR_BOLETA_TYPE;
         }
 
-        return generateNextID(project, ruc, documentType.name, minSerie, minNumero)
-                .map(generatedIDEntity -> {
-                    String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.getSerie()), 2, "0");
-                    int numero = generatedIDEntity.getNumero();
-                    return new ID(serie, numero);
-                });
+        GeneratedIDEntity generatedIDEntity = generateNextID(project, ruc, documentType.name, minSerie, minNumero);
+
+        String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.getSerie()), 2, "0");
+        int numero = generatedIDEntity.getNumero();
+        return new ID(serie, numero);
     }
 
     @Override
-    public Uni<ID> generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
+    public ID generateDebitNoteID(ProjectEntity project, String ruc, boolean isFactura, Map<String, String> config) {
         int minSerie = Integer.parseInt(config.getOrDefault(PROP_MIN_SERIE, "1"));
         int minNumero = Integer.parseInt(config.getOrDefault(PROP_MIN_NUMERO, "1"));
 
@@ -202,16 +195,15 @@ public class GeneratedIDGenerator implements IDGenerator {
             documentType = DocumentType.DEBIT_NOTE_FOR_BOLETA_TYPE;
         }
 
-        return generateNextID(project, ruc, documentType.name, minSerie, minNumero)
-                .map(generatedIDEntity -> {
-                    String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.getSerie()), 2, "0");
-                    int numero = generatedIDEntity.getNumero();
-                    return new ID(serie, numero);
-                });
+        GeneratedIDEntity generatedIDEntity = generateNextID(project, ruc, documentType.name, minSerie, minNumero);
+
+        String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.getSerie()), 2, "0");
+        int numero = generatedIDEntity.getNumero();
+        return new ID(serie, numero);
     }
 
     @Override
-    public Uni<ID> generateVoidedDocumentID(ProjectEntity project, String ruc, boolean isPercepcionRetencionOrGuia) {
+    public ID generateVoidedDocumentID(ProjectEntity project, String ruc, boolean isPercepcionRetencionOrGuia) {
         DocumentType documentType;
         if (isPercepcionRetencionOrGuia) {
             documentType = DocumentType.VOIDED_DOCUMENT_PERCEPCION_RETENCION_GUIA_TYPE;
@@ -219,24 +211,22 @@ public class GeneratedIDGenerator implements IDGenerator {
             documentType = DocumentType.VOIDED_GENERIC_TYPE;
         }
 
-        return generateNextIDVoidedAndSummaryDocument(project, ruc, documentType.name)
-                .map(generatedIDEntity -> {
-                    String serie = documentType.prefix + "-" + generatedIDEntity.getSerie();
-                    int numero = generatedIDEntity.getNumero();
-                    return new ID(serie, numero);
-                });
+        GeneratedIDEntity generatedIDEntity = generateNextIDVoidedAndSummaryDocument(project, ruc, documentType.name);
+
+        String serie = documentType.prefix + "-" + generatedIDEntity.getSerie();
+        int numero = generatedIDEntity.getNumero();
+        return new ID(serie, numero);
     }
 
     @Override
-    public Uni<ID> generateSummaryDocumentID(ProjectEntity project, String ruc) {
+    public ID generateSummaryDocumentID(ProjectEntity project, String ruc) {
         DocumentType documentType = DocumentType.SUMMARY_DOCUMENT_TYPE;
 
-        return generateNextIDVoidedAndSummaryDocument(project, ruc, documentType.name)
-                .map(generatedIDEntity -> {
-                    String serie = documentType.prefix + "-" + generatedIDEntity.getSerie();
-                    int numero = generatedIDEntity.getNumero();
-                    return new ID(serie, numero);
-                });
+        GeneratedIDEntity generatedIDEntity = generateNextIDVoidedAndSummaryDocument(project, ruc, documentType.name);
+
+        String serie = documentType.prefix + "-" + generatedIDEntity.getSerie();
+        int numero = generatedIDEntity.getNumero();
+        return new ID(serie, numero);
     }
 
 }

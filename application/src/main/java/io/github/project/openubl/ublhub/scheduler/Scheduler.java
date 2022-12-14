@@ -16,12 +16,10 @@
  */
 package io.github.project.openubl.ublhub.scheduler;
 
-import io.smallrye.mutiny.Uni;
-
 public interface Scheduler {
 
-    Uni<Void> sendDocumentToSUNAT(String documentId);
+    void sendDocumentToSUNAT(String documentId);
 
-    Uni<Void> sendVerifyTicketAtSUNAT(String documentId);
+    void sendVerifyTicketAtSUNAT(String documentId);
 
 }

@@ -46,9 +46,6 @@ paths:
       responses:
         "200":
           description: OK
-          content:
-            text/xml: {}
-            application/octet-stream: {}
   /api/api/projects:
     get:
       tags:
@@ -201,12 +198,8 @@ paths:
         schema:
           type: string
       responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
+        "204":
+          description: No Content
         "401":
           description: Not Authorized
         "403":
@@ -379,12 +372,8 @@ paths:
         schema:
           type: string
       responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
+        "204":
+          description: No Content
         "401":
           description: Not Authorized
         "403":
@@ -590,12 +579,8 @@ paths:
         schema:
           type: string
       responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
+        "204":
+          description: No Content
         "401":
           description: Not Authorized
         "403":
@@ -811,12 +796,8 @@ paths:
         schema:
           type: string
       responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
+        "204":
+          description: No Content
         "401":
           description: Not Authorized
         "403":
@@ -946,9 +927,6 @@ paths:
       responses:
         "200":
           description: OK
-          content:
-            text/xml: {}
-            application/octet-stream: {}
   /api/api/projects/{projectId}/documents/{documentId}/xml:
     get:
       tags:
@@ -972,9 +950,6 @@ paths:
       responses:
         "200":
           description: OK
-          content:
-            text/xml: {}
-            application/octet-stream: {}
   /api/api/projects/{projectId}/enrich-document:
     post:
       tags:
@@ -1202,10 +1177,8 @@ components:
       type: object
     JobPhaseType:
       enum:
-      - FETCH_XML_FILE
       - READ_XML_FILE
       - SEND_XML_FILE
-      - SAVE_CDR
       - VERIFY_TICKET
       type: string
     JobRecoveryActionType:
