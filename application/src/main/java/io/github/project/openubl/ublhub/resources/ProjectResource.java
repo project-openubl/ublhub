@@ -91,7 +91,7 @@ public class ProjectResource {
                 .build();
 
         ProjectEntity projectEntity = projectRepository.findByName(checkCompanyDto.getName());
-        if (projectEntity != null) {
+        if (projectEntity == null) {
             return successResponse.get();
         }
 

@@ -5,7 +5,7 @@ CREATE TABLE APP_USER
     username    VARCHAR(250) NOT NULL,
     password    VARCHAR(250) NOT NULL,
     permissions VARCHAR(250),
-    version     int8         NOT NULL,
+    version     int4         NOT NULL,
     PRIMARY KEY (id)
 );
 
