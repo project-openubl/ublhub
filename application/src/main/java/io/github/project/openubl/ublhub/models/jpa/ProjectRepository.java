@@ -31,7 +31,7 @@ import java.util.List;
 
 @Transactional
 @ApplicationScoped
-public class ProjectRepository implements PanacheRepositoryBase<ProjectEntity, String> {
+public class ProjectRepository implements PanacheRepositoryBase<ProjectEntity, Long> {
 
     public enum SortByField {
         name,
@@ -70,7 +70,7 @@ public class ProjectRepository implements PanacheRepositoryBase<ProjectEntity, S
     }
 
     @Override
-    public boolean deleteById(String id) {
+    public boolean deleteById(Long id) {
         long rows = ProjectEntity.delete("id", id);
         return rows > 0;
     }

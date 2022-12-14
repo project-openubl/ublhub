@@ -23,7 +23,7 @@
     "description" : "Auto generated value"
   } ],
   "paths" : {
-    "/api/api/namespaces/{namespaceId}/document-files/{documentId}" : {
+    "/api/api/namespaces/{projectId}/document-files/{documentId}" : {
       "get" : {
         "tags" : [ "Document File Resource" ],
         "parameters" : [ {
@@ -31,14 +31,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
-          "name" : "namespaceId",
+          "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "requestedFile",
@@ -170,7 +172,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -206,7 +209,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "requestBody" : {
@@ -251,7 +255,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -282,7 +287,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -321,7 +327,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "requestBody" : {
@@ -368,14 +375,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -411,14 +420,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "requestBody" : {
@@ -463,14 +474,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -501,14 +514,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "name",
@@ -520,7 +535,8 @@
           "name" : "parent",
           "in" : "query",
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "type",
@@ -565,14 +581,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "requestBody" : {
@@ -619,21 +637,24 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "componentId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -669,21 +690,24 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "componentId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "requestBody" : {
@@ -728,21 +752,24 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "componentId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -773,14 +800,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -818,7 +847,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "name",
@@ -830,7 +860,8 @@
           "name" : "parent",
           "in" : "query",
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "type",
@@ -875,7 +906,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "requestBody" : {
@@ -922,14 +954,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -965,14 +999,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "requestBody" : {
@@ -1017,14 +1053,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -1053,7 +1091,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "documentType",
@@ -1126,7 +1165,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "requestBody" : {
@@ -1160,14 +1200,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -1192,14 +1234,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "unzip",
@@ -1224,14 +1268,16 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "projectId",
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         }, {
           "name" : "unzip",
@@ -1256,7 +1302,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "requestBody" : {
@@ -1292,7 +1339,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -1328,7 +1376,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "requestBody" : {
@@ -1367,7 +1416,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           }
         } ],
         "requestBody" : {
@@ -1432,7 +1482,8 @@
         "type" : "object",
         "properties" : {
           "id" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           },
           "ruc" : {
             "maxLength" : 11,
@@ -1455,7 +1506,8 @@
         "type" : "object",
         "properties" : {
           "id" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           },
           "name" : {
             "type" : "string"
@@ -1467,7 +1519,8 @@
             "type" : "string"
           },
           "parentId" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           },
           "subType" : {
             "type" : "string"
@@ -1542,7 +1595,8 @@
         "type" : "object",
         "properties" : {
           "id" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           },
           "created" : {
             "format" : "int64",
@@ -1663,7 +1717,8 @@
         "type" : "object",
         "properties" : {
           "id" : {
-            "type" : "string"
+            "format" : "int64",
+            "type" : "integer"
           },
           "name" : {
             "type" : "string"

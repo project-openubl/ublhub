@@ -45,7 +45,7 @@ public class CompanyEntity extends BaseEntity {
     @Id
     @Column(name = "id")
     @Access(AccessType.PROPERTY)
-    private String id;
+    private Long id;
 
     @NotNull
     @Size(max = 11)
@@ -66,6 +66,6 @@ public class CompanyEntity extends BaseEntity {
 
     @NotNull
     @Column(name = "project_id")
-    private String projectId;
+    private Long projectId;
 
 }

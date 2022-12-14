@@ -48,9 +48,9 @@ public class ComponentEntity extends PanacheEntityBase {
 
     @EqualsAndHashCode.Include
     @Id
-    @Column(name = "id", length = 36)
+    @Column(name = "id")
     @Access(AccessType.PROPERTY)
-    private String id;
+    private Long id;
 
     @NotNull
     @Size(max = 255)
@@ -65,9 +65,8 @@ public class ComponentEntity extends PanacheEntityBase {
     @Column(name = "provider_id")
     private String providerId;
 
-    @Size(max = 255)
     @Column(name = "parent_id")
-    private String parentId;
+    private Long parentId;
 
     @Size(max = 255)
     @Column(name = "sub_type")
@@ -77,8 +76,8 @@ public class ComponentEntity extends PanacheEntityBase {
     private Set<ComponentConfigEntity> componentConfigs = new HashSet<>();
 
     @Column(name = "project_id")
-    private String projectId;
+    private Long projectId;
 
     @Column(name = "company_id")
-    private String companyId;
+    private Long companyId;
 }

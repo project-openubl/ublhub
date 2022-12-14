@@ -18,8 +18,8 @@ package io.github.project.openubl.ublhub.scheduler;
 
 public interface Scheduler {
 
-    void sendDocumentToSUNAT(String documentId);
+    void sendDocumentToSUNAT(Long documentId);
 
-    void sendVerifyTicketAtSUNAT(String documentId);
+    void sendVerifyTicketAtSUNAT(Long documentId);
 
 }

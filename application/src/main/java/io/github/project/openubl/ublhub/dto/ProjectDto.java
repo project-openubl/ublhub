@@ -33,7 +33,7 @@ import javax.validation.constraints.Size;
 @RegisterForReflection
 public class ProjectDto {
 
-    private String id;
+    private Long id;
 
     @NotNull
     private String name;

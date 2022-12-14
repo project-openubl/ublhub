@@ -33,7 +33,7 @@ import javax.validation.constraints.Size;
 @RegisterForReflection
 public class CompanyDto {
 
-    private String id;
+    private Long id;
 
     @NotNull
     @Size(min = 11, max = 11)

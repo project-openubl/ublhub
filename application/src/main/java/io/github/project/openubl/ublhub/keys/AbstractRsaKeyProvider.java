@@ -63,7 +63,7 @@ public abstract class AbstractRsaKeyProvider implements KeyProvider {
     protected KeyWrapper createKeyWrapper(KeyPair keyPair, X509Certificate certificate) {
         KeyWrapper key = new KeyWrapper();
 
-        key.setProviderId(model.getId());
+        key.setProviderId(model.getId().toString());
         key.setProviderPriority(model.get("priority", 0L));
 
         key.setKid(KeyUtils.createKeyId(keyPair.getPublic()));

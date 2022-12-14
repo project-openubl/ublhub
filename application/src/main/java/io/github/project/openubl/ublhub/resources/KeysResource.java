@@ -33,6 +33,7 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
+import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.ublhub.dto.ComponentDto;
 import io.github.project.openubl.ublhub.keys.KeyManager;
 import io.github.project.openubl.ublhub.keys.KeyProvider;
@@ -102,6 +103,9 @@ public class KeysResource {
     @Inject
     KeyManager keyManager;
 
+    @Inject
+    TsidFactory tsidFactory;
+    
     Function<KeysMetadataRepresentation, RestResponse<KeysMetadataRepresentation>> keyMetadataSuccessResponse = dto -> RestResponse.ResponseBuilder
             .<KeysMetadataRepresentation>create(RestResponse.Status.OK)
             .entity(dto)
@@ -132,14 +136,14 @@ public class KeysResource {
             .<Void>create(RestResponse.Status.INTERNAL_SERVER_ERROR)
             .build();
 
-    private ComponentOwner getOwnerProject(String projectId) {
+    private ComponentOwner getOwnerProject(Long projectId) {
         return ComponentOwner.builder()
                 .type(project)
                 .id(projectId)
                 .build();
     }
 
-    private ComponentOwner getOwnerCompany(String companyId) {
+    private ComponentOwner getOwnerCompany(Long companyId) {
         return ComponentOwner.builder()
                 .type(company)
                 .id(companyId)
@@ -151,7 +155,7 @@ public class KeysResource {
     @GET
     @Path("/{projectId}/keys")
     public RestResponse<KeysMetadataRepresentation> getProjectKeys(
-            @PathParam("projectId") @NotNull String projectId
+            @PathParam("projectId") @NotNull Long projectId
     ) {
         ProjectEntity projectEntity = projectRepository.findById(projectId);
         if (projectEntity == null) {
@@ -168,8 +172,8 @@ public class KeysResource {
     @GET
     @Path("/{projectId}/companies/{companyId}/keys")
     public RestResponse<KeysMetadataRepresentation> getCompanyKeys(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("companyId") @NotNull String companyId
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("companyId") @NotNull Long companyId
     ) {
         CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
         if (companyEntity == null) {
@@ -222,8 +226,8 @@ public class KeysResource {
     @GET
     @Path("/{projectId}/components")
     public RestResponse<List<ComponentDto>> getProjectComponents(
-            @PathParam("projectId") @NotNull String projectId,
-            @QueryParam("parent") String parent,
+            @PathParam("projectId") @NotNull Long projectId,
+            @QueryParam("parent") Long parent,
             @QueryParam("type") String type,
             @QueryParam("name") String name
     ) {
@@ -262,9 +266,9 @@ public class KeysResource {
     @GET
     @Path("/{projectId}/companies/{companyId}/components")
     public RestResponse<List<ComponentDto>> getCompanyComponents(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("companyId") @NotNull String companyId,
-            @QueryParam("parent") String parent,
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("companyId") @NotNull Long companyId,
+            @QueryParam("parent") Long parent,
             @QueryParam("type") String type,
             @QueryParam("name") String name
     ) {
@@ -302,7 +306,7 @@ public class KeysResource {
     @POST
     @Path("/{projectId}/components")
     public RestResponse<ComponentDto> createProjectComponent(
-            @PathParam("projectId") @NotNull String projectId,
+            @PathParam("projectId") @NotNull Long projectId,
             ComponentDto componentDto
     ) {
         ProjectEntity projectEntity = projectRepository.findById(projectId);
@@ -325,8 +329,8 @@ public class KeysResource {
     @POST
     @Path("/{projectId}/companies/{companyId}/components")
     public RestResponse<ComponentDto> createCompanyComponent(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("companyId") @NotNull String companyId,
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("companyId") @NotNull Long companyId,
             ComponentDto componentDto
     ) {
         CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
@@ -354,8 +358,8 @@ public class KeysResource {
     @GET
     @Path("/{projectId}/components/{componentId}")
     public RestResponse<ComponentDto> getProjectComponent(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("componentId") String componentId
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("componentId") Long componentId
     ) {
         ProjectEntity projectEntity = projectRepository.findById(projectId);
         if (projectEntity == null) {
@@ -373,9 +377,9 @@ public class KeysResource {
     @GET
     @Path("/{projectId}/companies/{companyId}/components/{componentId}")
     public RestResponse<ComponentDto> getCompanyComponent(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("companyId") @NotNull String companyId,
-            @PathParam("componentId") String componentId
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("companyId") @NotNull Long companyId,
+            @PathParam("componentId") Long componentId
     ) {
         CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
         if (companyEntity == null) {
@@ -388,7 +392,7 @@ public class KeysResource {
         return componentDto != null ? componentDtoOkResponse.apply(componentDto) : componentDtoNotFoundDtoResponse.get();
     }
 
-    private ComponentDto getComponent(ComponentOwner owner, String componentId) {
+    private ComponentDto getComponent(ComponentOwner owner, Long componentId) {
         ComponentModel model = componentRepository.getComponent(owner, componentId);
         return componentMapper.toDto(model, false);
     }
@@ -398,8 +402,8 @@ public class KeysResource {
     @PUT
     @Path("/{projectId}/components/{componentId}")
     public RestResponse<ComponentDto> updateProjectComponent(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("componentId") String componentId,
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("componentId") Long componentId,
             ComponentDto componentDto
     ) {
         ProjectEntity projectEntity = projectRepository.findById(projectId);
@@ -418,9 +422,9 @@ public class KeysResource {
     @PUT
     @Path("/{projectId}/companies/{companyId}/components/{componentId}")
     public RestResponse<ComponentDto> updateCompanyComponent(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("companyId") @NotNull String companyId,
-            @PathParam("componentId") String componentId,
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("companyId") @NotNull Long companyId,
+            @PathParam("componentId") Long componentId,
             ComponentDto componentDto
     ) {
         CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
@@ -434,7 +438,7 @@ public class KeysResource {
         return componentDtoOkResponse.apply(response);
     }
 
-    public ComponentDto updateComponent(ComponentOwner owner, String componentId, ComponentDto componentDto) {
+    public ComponentDto updateComponent(ComponentOwner owner, Long componentId, ComponentDto componentDto) {
         ComponentModel model = componentRepository.getComponent(owner, componentId);
         model = componentMapper.updateModelFromDto(componentDto, model);
 
@@ -449,8 +453,8 @@ public class KeysResource {
     @DELETE
     @Path("/{projectId}/components/{componentId}")
     public RestResponse<Void> deleteComponent(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("componentId") String componentId
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("componentId") Long componentId
     ) {
         ProjectEntity projectEntity = projectRepository.findById(projectId);
         if (projectEntity == null) {
@@ -468,9 +472,9 @@ public class KeysResource {
     @DELETE
     @Path("/{projectId}/companies/{companyId}/components/{componentId}")
     public RestResponse<Void> deleteCompanyComponent(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("companyId") @NotNull String companyId,
-            @PathParam("componentId") String componentId
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("companyId") @NotNull Long companyId,
+            @PathParam("componentId") Long componentId
     ) {
         CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
         if (companyEntity == null) {
@@ -483,7 +487,7 @@ public class KeysResource {
         return result ? componentDtoNoContentResponse.get() : componentDtoInternalServerErrorResponse.get();
     }
 
-    public boolean deleteComponent(ComponentOwner owner, String componentId) {
+    public boolean deleteComponent(ComponentOwner owner, Long componentId) {
         ComponentModel model = componentRepository.getComponent(owner, componentId);
         return componentRepository.removeComponent(owner, model);
     }

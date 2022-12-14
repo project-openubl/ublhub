@@ -34,12 +34,12 @@ public class VertxScheduler implements Scheduler {
     EventBus eventBus;
 
     @Override
-    public void sendDocumentToSUNAT(String documentId) {
+    public void sendDocumentToSUNAT(Long documentId) {
         eventBus.send(VERTX_SEND_FILE_SCHEDULER_BUS_NAME, documentId);
     }
 
     @Override
-    public void sendVerifyTicketAtSUNAT(String documentId) {
+    public void sendVerifyTicketAtSUNAT(Long documentId) {
         eventBus.send(VERTX_CHECK_TICKET_SCHEDULER_BUS_NAME, documentId);
     }
 

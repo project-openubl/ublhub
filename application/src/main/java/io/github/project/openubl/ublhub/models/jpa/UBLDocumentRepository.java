@@ -31,15 +31,15 @@ import javax.enterprise.context.ApplicationScoped;
 import java.util.List;
 
 @ApplicationScoped
-public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentEntity, String> {
+public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentEntity, Long> {
 
     public static final String[] SORT_BY_FIELDS = {"created"};
 
-    public UBLDocumentEntity findById(ProjectEntity project, String id) {
+    public UBLDocumentEntity findById(ProjectEntity project, Long id) {
         return findById(project.getId(), id);
     }
 
-    public UBLDocumentEntity findById(String projectId, String id) {
+    public UBLDocumentEntity findById(Long projectId, Long id) {
         Parameters params = Parameters.with("projectId", projectId).and("id", id);
         return UBLDocumentEntity
                 .find("From UBLDocumentEntity as d where d.projectId = :projectId and d.id = :id", params)

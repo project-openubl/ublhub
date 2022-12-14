@@ -60,7 +60,7 @@ public class VertxSchedulerConsumer {
     @Transactional(Transactional.TxType.NEVER)
     @Blocking
     @ConsumeEvent(VertxScheduler.VERTX_SEND_FILE_SCHEDULER_BUS_NAME)
-    public void sendFile(String documentId) {
+    public void sendFile(Long documentId) {
         QuarkusTransaction.begin();
 
         UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
@@ -139,7 +139,7 @@ public class VertxSchedulerConsumer {
     @Transactional(Transactional.TxType.NEVER)
     @Blocking
     @ConsumeEvent(VertxScheduler.VERTX_CHECK_TICKET_SCHEDULER_BUS_NAME)
-    public void checkTicket(String documentId) {
+    public void checkTicket(Long documentId) {
         QuarkusTransaction.begin();
 
         UBLDocumentEntity documentEntity = documentRepository.findById(documentId);

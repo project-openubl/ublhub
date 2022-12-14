@@ -26,7 +26,7 @@ import javax.transaction.Transactional;
 
 @Transactional
 @ApplicationScoped
-public class GeneratedIDRepository implements PanacheRepositoryBase<GeneratedIDEntity, String> {
+public class GeneratedIDRepository implements PanacheRepositoryBase<GeneratedIDEntity, Long> {
 
     public GeneratedIDEntity getCurrentID(ProjectEntity projectEntity, String ruc, String documentType) {
         Parameters params = Parameters

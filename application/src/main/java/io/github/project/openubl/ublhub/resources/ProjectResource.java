@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.resources;
 
+import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.ublhub.dto.CheckCompanyDto;
 import io.github.project.openubl.ublhub.dto.ProjectDto;
 import io.github.project.openubl.ublhub.keys.DefaultKeyProviders;
@@ -44,7 +45,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -70,7 +70,10 @@ public class ProjectResource {
     @Inject
     DefaultKeyProviders defaultKeyProviders;
 
-    private ComponentOwner getOwner(String projectId) {
+    @Inject
+    TsidFactory tsidFactory;
+
+    private ComponentOwner getOwner(Long projectId) {
         return ComponentOwner.builder()
                 .type(ComponentOwner.OwnerType.project)
                 .id(projectId)
@@ -117,7 +120,7 @@ public class ProjectResource {
         }
 
         projectEntity = projectMapper.updateEntityFromDto(projectDto, ProjectEntity.builder()
-                .id(UUID.randomUUID().toString())
+                .id(tsidFactory.create().toLong())
                 .build()
         );
         projectEntity.persist();
@@ -144,7 +147,7 @@ public class ProjectResource {
     @Operation(summary = "Get project", description = "Get one project")
     @GET
     @Path("/{projectId}")
-    public RestResponse<ProjectDto> getProject(@PathParam("projectId") @NotNull String projectId) {
+    public RestResponse<ProjectDto> getProject(@PathParam("projectId") @NotNull Long projectId) {
         Function<ProjectDto, RestResponse<ProjectDto>> successResponse = dto -> ResponseBuilder
                 .<ProjectDto>create(Status.OK)
                 .entity(dto)
@@ -167,7 +170,7 @@ public class ProjectResource {
     @PUT
     @Path("/{projectId}")
     public RestResponse<ProjectDto> updateProject(
-            @PathParam("projectId") @NotNull String projectId,
+            @PathParam("projectId") @NotNull Long projectId,
             @NotNull ProjectDto projectDto
     ) {
         Function<ProjectDto, RestResponse<ProjectDto>> successResponse = dto -> ResponseBuilder
@@ -193,7 +196,7 @@ public class ProjectResource {
     @Operation(summary = "Delete project", description = "Delete one project")
     @DELETE
     @Path("/{projectId}")
-    public RestResponse<Void> deleteProject(@PathParam("projectId") @NotNull String projectId) {
+    public RestResponse<Void> deleteProject(@PathParam("projectId") @NotNull Long projectId) {
         Supplier<RestResponse<Void>> successResponse = () -> ResponseBuilder
                 .<Void>create(Status.NO_CONTENT)
                 .build();
