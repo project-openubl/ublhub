@@ -72,6 +72,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
@@ -139,6 +140,9 @@ public class DocumentResource {
 
     @Inject
     DocumentMapper documentMapper;
+
+    @Inject
+    Event<UBLDocumentEntity> sendBillEvent;
 
     Function<DocumentDto, RestResponse<DocumentDto>> documentDtoCreatedResponse = (dto) -> RestResponse.ResponseBuilder
             .<DocumentDto>create(RestResponse.Status.CREATED)
@@ -214,9 +218,10 @@ public class DocumentResource {
         documentEntity.setId(UUID.randomUUID().toString());
         documentEntity.setXmlFileId(fileSavedId);
         documentEntity.setProjectId(projectEntity.getId());
+        documentEntity.setJobInProgress(true);
         documentEntity.persist();
 
-        schedulerManager.sendDocumentToSUNAT(documentEntity);
+        sendBillEvent.fire(documentEntity);
         return documentEntity;
     }
 
@@ -259,7 +264,9 @@ public class DocumentResource {
         Document document;
         try {
             document = createAndSignXML(projectEntity, documentInputDto);
-        } catch (NoCertificateToSignFoundException | MarshalException | InvalidAlgorithmParameterException | NoSuchAlgorithmException | IOException | ParserConfigurationException | XMLSignatureException | SAXException e) {
+        } catch (NoCertificateToSignFoundException | MarshalException | InvalidAlgorithmParameterException |
+                 NoSuchAlgorithmException | IOException | ParserConfigurationException | XMLSignatureException |
+                 SAXException e) {
             return RestResponse.ResponseBuilder
                     .<DocumentDto>create(RestResponse.Status.BAD_REQUEST)
                     .build();

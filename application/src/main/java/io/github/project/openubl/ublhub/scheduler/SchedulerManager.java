@@ -20,6 +20,8 @@ import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -35,10 +37,11 @@ public class SchedulerManager {
     @Any
     Instance<Scheduler> schedulers;
 
-    public void sendDocumentToSUNAT(UBLDocumentEntity documentEntity) {
-        documentEntity.setJobInProgress(true);
-        documentEntity.persistAndFlush();
+    public void watchDocuments(@Observes(during = TransactionPhase.AFTER_SUCCESS) UBLDocumentEntity entity) {
+        sendDocumentToSUNAT(entity);
+    }
 
+    public void sendDocumentToSUNAT(UBLDocumentEntity documentEntity) {
         SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
         Annotation annotation = new SchedulerProviderLiteral(providerType);
         Scheduler scheduler = schedulers.select(annotation).get();
@@ -46,9 +49,6 @@ public class SchedulerManager {
     }
 
     public void sendVerifyTicketAtSUNAT(UBLDocumentEntity documentEntity) {
-        documentEntity.setJobInProgress(true);
-        documentEntity.persistAndFlush();
-
         SchedulerProvider.Type providerType = SchedulerProvider.Type.valueOf(schedulerType.toUpperCase());
         Annotation annotation = new SchedulerProviderLiteral(providerType);
 

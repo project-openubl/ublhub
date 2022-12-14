@@ -61,7 +61,6 @@ public class VertxSchedulerConsumer {
     public void sendFile(String documentId) {
         QuarkusTransaction.begin();
 
-
         UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
         if (documentEntity == null) {
             throw new IllegalStateException("Document id=" + documentId + " was not found for being sent");
@@ -124,13 +123,13 @@ public class VertxSchedulerConsumer {
             errorEntity.setCount(1);
         }
 
-        documentEntity.setJobInProgress(false);
+        boolean shouldVerifyTicket = documentEntity.getSunatResponse() != null && documentEntity.getSunatResponse().getTicket() != null;
+        documentEntity.setJobInProgress(shouldVerifyTicket);
         documentEntity.persist();
-
 
         QuarkusTransaction.commit();
 
-        if (documentEntity.getSunatResponse() != null && documentEntity.getSunatResponse().getTicket() != null) {
+        if (shouldVerifyTicket) {
             schedulerManager.sendVerifyTicketAtSUNAT(documentEntity);
         }
     }
@@ -139,7 +138,6 @@ public class VertxSchedulerConsumer {
     @ConsumeEvent(VertxScheduler.VERTX_CHECK_TICKET_SCHEDULER_BUS_NAME)
     public void checkTicket(String documentId) {
         QuarkusTransaction.begin();
-
 
         UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
         if (documentEntity == null) {
@@ -191,8 +189,6 @@ public class VertxSchedulerConsumer {
         }
 
         documentEntity.persist();
-
-
         QuarkusTransaction.commit();
     }
 }
