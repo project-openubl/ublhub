@@ -1482,8 +1482,7 @@
         "type" : "object",
         "properties" : {
           "id" : {
-            "format" : "int64",
-            "type" : "integer"
+            "type" : "string"
           },
           "ruc" : {
             "maxLength" : 11,
@@ -1506,8 +1505,7 @@
         "type" : "object",
         "properties" : {
           "id" : {
-            "format" : "int64",
-            "type" : "integer"
+            "type" : "string"
           },
           "name" : {
             "type" : "string"
@@ -1519,8 +1517,7 @@
             "type" : "string"
           },
           "parentId" : {
-            "format" : "int64",
-            "type" : "integer"
+            "type" : "string"
           },
           "subType" : {
             "type" : "string"
@@ -1595,8 +1592,7 @@
         "type" : "object",
         "properties" : {
           "id" : {
-            "format" : "int64",
-            "type" : "integer"
+            "type" : "string"
           },
           "created" : {
             "format" : "int64",
@@ -1717,8 +1713,7 @@
         "type" : "object",
         "properties" : {
           "id" : {
-            "format" : "int64",
-            "type" : "integer"
+            "type" : "string"
           },
           "name" : {
             "type" : "string"

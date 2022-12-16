@@ -33,7 +33,7 @@ import java.util.List;
 @RegisterForReflection
 public class DocumentDto {
 
-    private Long id;
+    private String id;
     private Long created;
     private Long updated;
     private Status status;

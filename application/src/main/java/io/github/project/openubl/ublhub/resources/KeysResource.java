@@ -315,7 +315,7 @@ public class KeysResource {
         }
 
         componentDto.setId(null);
-        componentDto.setParentId(projectId);
+        componentDto.setParentId(projectId.toString());
         componentDto.setProviderType(KeyProvider.class.getName());
 
         ComponentOwner owner = getOwnerProject(projectId);
@@ -339,7 +339,7 @@ public class KeysResource {
         }
 
         componentDto.setId(null);
-        componentDto.setParentId(companyId);
+        componentDto.setParentId(companyId.toString());
         componentDto.setProviderType(KeyProvider.class.getName());
 
         ComponentOwner owner = getOwnerCompany(companyId);

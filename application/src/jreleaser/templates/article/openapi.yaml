@@ -1129,8 +1129,7 @@ components:
       type: object
       properties:
         id:
-          format: int64
-          type: integer
+          type: string
         ruc:
           maxLength: 11
           minLength: 11
@@ -1146,8 +1145,7 @@ components:
       type: object
       properties:
         id:
-          format: int64
-          type: integer
+          type: string
         name:
           type: string
         providerId:
@@ -1155,8 +1153,7 @@ components:
         providerType:
           type: string
         parentId:
-          format: int64
-          type: integer
+          type: string
         subType:
           type: string
         config:
@@ -1205,8 +1202,7 @@ components:
       type: object
       properties:
         id:
-          format: int64
-          type: integer
+          type: string
         created:
           format: int64
           type: integer
@@ -1297,8 +1293,7 @@ components:
       type: object
       properties:
         id:
-          format: int64
-          type: integer
+          type: string
         name:
           type: string
         description:

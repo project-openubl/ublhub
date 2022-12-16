@@ -32,11 +32,11 @@ import java.util.Map;
 @RegisterForReflection
 public class ComponentDto {
 
-    private Long id;
+    private String id;
     private String name;
     private String providerId;
     private String providerType;
-    private Long parentId;
+    private String parentId;
     private String subType;
     private Map<String, List<String>> config;
 
