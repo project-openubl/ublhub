@@ -16,10 +16,13 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -50,6 +53,7 @@ public class SUNATResponseEntity {
     @Column(name = "sunat_code")
     private Integer code;
 
+    @Setter(AccessLevel.NONE)
     @Size(max = 255)
     @Column(name = "sunat_description")
     private String description;
@@ -59,4 +63,11 @@ public class SUNATResponseEntity {
     @CollectionTable(name = "sunat_note", joinColumns = {@JoinColumn(name = "sunat_note_id")})
     private Set<@NotNull @Size(max = 255) String> notes = new HashSet<>();
 
+    public void setDescription(String description) {
+        if (description == null) {
+            this.description = description;
+        } else {
+            this.description = StringUtils.truncate(description, 255);
+        }
+    }
 }

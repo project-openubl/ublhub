@@ -18,7 +18,7 @@ servers:
 - url: http://0.0.0.0:8080
   description: Auto generated value
 paths:
-  /api/api/namespaces/{namespaceId}/document-files/{documentId}:
+  /api/api/namespaces/{projectId}/document-files/{documentId}:
     get:
       tags:
       - Document File Resource
@@ -27,12 +27,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
-      - name: namespaceId
+          format: int64
+          type: integer
+      - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: requestedFile
         in: query
         schema:
@@ -131,7 +133,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       responses:
         "200":
           description: OK
@@ -162,7 +165,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       requestBody:
         content:
           application/json:
@@ -196,7 +200,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       responses:
         "204":
           description: No Content
@@ -222,7 +227,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       responses:
         "200":
           description: OK
@@ -255,7 +261,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       requestBody:
         content:
           application/json:
@@ -290,12 +297,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       responses:
         "200":
           description: OK
@@ -326,12 +335,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       requestBody:
         content:
           application/json:
@@ -365,12 +376,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       responses:
         "204":
           description: No Content
@@ -396,12 +409,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: name
         in: query
         schema:
@@ -409,7 +424,8 @@ paths:
       - name: parent
         in: query
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: type
         in: query
         schema:
@@ -444,12 +460,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       requestBody:
         content:
           application/json:
@@ -484,17 +502,20 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: componentId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       responses:
         "200":
           description: OK
@@ -523,17 +544,20 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: componentId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       requestBody:
         content:
           application/json:
@@ -567,17 +591,20 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: componentId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       responses:
         "204":
           description: No Content
@@ -603,12 +630,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       responses:
         "200":
           description: OK
@@ -638,7 +667,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: name
         in: query
         schema:
@@ -646,7 +676,8 @@ paths:
       - name: parent
         in: query
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: type
         in: query
         schema:
@@ -681,7 +712,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       requestBody:
         content:
           application/json:
@@ -716,12 +748,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       responses:
         "200":
           description: OK
@@ -750,12 +784,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       requestBody:
         content:
           application/json:
@@ -789,12 +825,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       responses:
         "204":
           description: No Content
@@ -818,7 +856,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: documentType
         in: query
         schema:
@@ -869,7 +908,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       requestBody:
         content:
           application/json:
@@ -891,12 +931,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       responses:
         "200":
           description: OK
@@ -913,12 +955,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: unzip
         in: query
         schema:
@@ -936,12 +980,14 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: projectId
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       - name: unzip
         in: query
         schema:
@@ -959,7 +1005,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       requestBody:
         content:
           application/json:
@@ -983,7 +1030,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       responses:
         "200":
           description: OK
@@ -1011,7 +1059,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       requestBody:
         content:
           application/json:
@@ -1036,7 +1085,8 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          format: int64
+          type: integer
       requestBody:
         content:
           multipart/form-data:

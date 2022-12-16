@@ -33,6 +33,7 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
+import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.ublhub.dto.DocumentDto;
 import io.github.project.openubl.ublhub.dto.DocumentInputDto;
 import io.github.project.openubl.ublhub.dto.ErrorDto;
@@ -144,6 +145,9 @@ public class DocumentResource {
     @Inject
     Event<UBLDocumentEntity> sendBillEvent;
 
+    @Inject
+    TsidFactory tsidFactory;
+
     Function<DocumentDto, RestResponse<DocumentDto>> documentDtoCreatedResponse = (dto) -> RestResponse.ResponseBuilder
             .<DocumentDto>create(RestResponse.Status.CREATED)
             .entity(dto)
@@ -164,7 +168,7 @@ public class DocumentResource {
         public FileUpload file;
     }
 
-    private ComponentOwner getOwner(String companyId) {
+    private ComponentOwner getOwner(Long companyId) {
         return ComponentOwner.builder()
                 .type(company)
                 .id(companyId)
@@ -215,7 +219,7 @@ public class DocumentResource {
 
     public UBLDocumentEntity createAndScheduleSend(ProjectEntity projectEntity, String fileSavedId) {
         UBLDocumentEntity documentEntity = new UBLDocumentEntity();
-        documentEntity.setId(UUID.randomUUID().toString());
+        documentEntity.setId(tsidFactory.create().toLong());
         documentEntity.setXmlFileId(fileSavedId);
         documentEntity.setProjectId(projectEntity.getId());
         documentEntity.setJobInProgress(true);
@@ -229,7 +233,7 @@ public class DocumentResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Path("/{projectId}/upload/document")
     public RestResponse<DocumentDto> uploadXML(
-            @PathParam("projectId") @NotNull String projectId,
+            @PathParam("projectId") @NotNull Long projectId,
             @MultipartForm UploadFormData formData
     ) throws FileNotFoundException {
         ProjectEntity projectEntity = projectRepository.findById(projectId);
@@ -247,7 +251,7 @@ public class DocumentResource {
     @POST
     @Path("/{projectId}/documents")
     public RestResponse<DocumentDto> createDocument(
-            @PathParam("projectId") @NotNull String projectId,
+            @PathParam("projectId") @NotNull Long projectId,
             @NotNull JsonObject jsonObject
     ) throws Exception {
         ProjectEntity projectEntity = projectRepository.findById(projectId);
@@ -282,7 +286,7 @@ public class DocumentResource {
     @POST
     @Path("/{projectId}/enrich-document")
     public RestResponse<?> enrichDocuments(
-            @PathParam("projectId") @NotNull String projectId,
+            @PathParam("projectId") @NotNull Long projectId,
             @NotNull JsonObject jsonObject
     ) {
         ProjectEntity projectEntity = projectRepository.findById(projectId);
@@ -323,7 +327,7 @@ public class DocumentResource {
     @Path("/{projectId}/render-document")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
     public RestResponse<String> renderDocument(
-            @PathParam("projectId") @NotNull String projectId,
+            @PathParam("projectId") @NotNull Long projectId,
             @NotNull JsonObject jsonObject
     ) {
         ProjectEntity projectEntity = projectRepository.findById(projectId);
@@ -359,8 +363,8 @@ public class DocumentResource {
     @GET
     @Path("/{projectId}/documents/{documentId}")
     public RestResponse<DocumentDto> getDocument(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("documentId") @NotNull String documentId
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("documentId") @NotNull Long documentId
     ) {
         UBLDocumentEntity documentEntity = documentRepository.findById(projectId, documentId);
         if (documentEntity == null) {
@@ -375,8 +379,8 @@ public class DocumentResource {
     @Path("/{projectId}/documents/{documentId}/xml")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
     public Response getDocumentXMLFile(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("documentId") @NotNull String documentId,
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("documentId") @NotNull Long documentId,
             @QueryParam("unzip") @DefaultValue("true") boolean unzip
     ) {
         String mediaType = !unzip ? "application/zip" : MediaType.APPLICATION_XML;
@@ -407,8 +411,8 @@ public class DocumentResource {
     @Path("/{projectId}/documents/{documentId}/cdr")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
     public Response getDocumentCdrFile(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("documentId") @NotNull String documentId,
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("documentId") @NotNull Long documentId,
             @QueryParam("unzip") @DefaultValue("true") boolean unzip
     ) {
         String mediaType = !unzip ? "application/zip" : MediaType.APPLICATION_XML;
@@ -438,7 +442,7 @@ public class DocumentResource {
     @GET
     @Path("/{projectId}/documents")
     public RestResponse<PageDto<DocumentDto>> getDocuments(
-            @PathParam("projectId") @NotNull String projectId,
+            @PathParam("projectId") @NotNull Long projectId,
             @QueryParam("ruc") List<String> ruc,
             @QueryParam("documentType") List<String> documentType,
             @QueryParam("filterText") String filterText,

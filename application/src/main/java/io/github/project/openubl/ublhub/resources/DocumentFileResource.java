@@ -66,15 +66,15 @@ public class DocumentFileResource {
     UBLDocumentRepository documentRepository;
 
     @GET
-    @Path("/{namespaceId}/document-files/{documentId}")
+    @Path("/{projectId}/document-files/{documentId}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
     public Response getDocumentFile(
-            @PathParam("namespaceId") @NotNull String namespaceId,
-            @PathParam("documentId") @NotNull String documentId,
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("documentId") @NotNull Long documentId,
             @QueryParam("requestedFile") @DefaultValue("ubl") String requestedFile,
             @QueryParam("requestedFormat") @DefaultValue("zip") String requestedFormat
     ) {
-        UBLDocumentEntity documentEntity = documentRepository.findById(namespaceId, documentId);
+        UBLDocumentEntity documentEntity = documentRepository.findById(projectId, documentId);
         if (documentEntity == null || documentEntity.getXmlFileId() == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }

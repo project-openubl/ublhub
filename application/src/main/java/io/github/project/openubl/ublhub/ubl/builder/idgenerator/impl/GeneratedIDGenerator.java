@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.ubl.builder.idgenerator.impl;
 
+import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.ublhub.models.jpa.GeneratedIDRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.GeneratedIDEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
@@ -33,7 +34,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import java.util.UUID;
 
 @ApplicationScoped
 @IDGeneratorProvider(IDGeneratorType.generated)
@@ -50,6 +50,9 @@ public class GeneratedIDGenerator implements IDGenerator {
 
     @Inject
     GeneratedIDRepository generatedIDRepository;
+
+    @Inject
+    TsidFactory tsidFactory;
 
     public static final String PROP_IS_FACTURA = "isFactura";
     public static final String PROP_MIN_SERIE = "minSerie";
@@ -88,7 +91,7 @@ public class GeneratedIDGenerator implements IDGenerator {
         if (entity == null) {
             entity = new GeneratedIDEntity();
 
-            entity.setId(UUID.randomUUID().toString());
+            entity.setId(tsidFactory.create().toLong());
             entity.setProjectId(projectEntity.getId());
             entity.setRuc(ruc);
             entity.setDocumentType(documentType);
@@ -120,7 +123,7 @@ public class GeneratedIDGenerator implements IDGenerator {
         if (entity == null) {
             entity = new GeneratedIDEntity();
 
-            entity.setId(UUID.randomUUID().toString());
+            entity.setId(tsidFactory.create().toLong());
             entity.setProjectId(project.getId());
             entity.setRuc(ruc);
             entity.setDocumentType(documentType);

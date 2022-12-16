@@ -31,7 +31,7 @@ import java.util.Set;
 @RegisterForReflection
 public class UserDto {
 
-    private Long id;
+    private String id;
     private String fullName;
 
     @Pattern(regexp = "^[a-zA-Z0-9._-]{3,}$")

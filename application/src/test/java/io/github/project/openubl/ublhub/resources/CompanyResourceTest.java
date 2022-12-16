@@ -91,7 +91,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void createCompany() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         CompanyDto companyDto = CompanyDto.builder()
                 .name("My company")
@@ -144,7 +144,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void create2CompaniesWithSameRuc_shouldNotBeAllowed() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         CompanyDto company = CompanyDto.builder()
                 .name("My company")
@@ -173,7 +173,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void createCompanyWithoutSunatData() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         CompanyDto companyDto = CompanyDto.builder()
                 .name("My company")
@@ -210,8 +210,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void updateCompany() {
         // Given
-        String projectId = "1";
-        String companyId = "11";
+        Long projectId = 1L;
+        Long companyId = 11L;
 
         CompanyDto companyDto = CompanyDto.builder()
                 .ruc("99999999999")
@@ -252,7 +252,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .get("/" + projectId + "/companies/" + companyId)
                 .then()
                 .statusCode(200)
-                .body("id", is(companyId),
+                .body("id", is(companyId.toString()),
                         "ruc", is(companyDto.getRuc()),
                         "name", is(companyDto.getName()),
                         "description", is(companyDto.getDescription()),
@@ -266,7 +266,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
 
     @Test
     public void updateCompanyWithIncorrectProject_shouldNotBeAllowed() {
-        String projectId = "1";
+        Long projectId = 1L;
         String companyId = "33";
 
         // Given
@@ -298,8 +298,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void deleteCompany() {
         // Given
-        String projectId = "1";
-        String companyId = "11";
+        Long projectId = 1L;
+        Long companyId = 11L;
 
         // When
         givenAuth("alice")
@@ -321,7 +321,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void deleteCompanyByIncorrectProject_shouldNotBeAllowed() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
         String companyId = "33";
 
         // When
@@ -337,7 +337,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void getCompanies() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         // When
         givenAuth("alice")
@@ -371,7 +371,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void getCompanyKeys() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
         CompanyDto companyDto = CompanyDto.builder()
                 .name("mycompany")
                 .description("my description")
@@ -420,8 +420,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void createCompanyComponent() {
         // Given
-        String projectId = "1";
-        String companyId = "11";
+        Long projectId = 1L;
+        Long companyId = 11L;
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -446,7 +446,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .statusCode(201)
                 .body("id", is(notNullValue()),
                         "name", is(componentDto.getName()),
-                        "parentId", is(companyId),
+                        "parentId", is(companyId.toString()),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -460,8 +460,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void getCompanyComponent() {
         // Given
-        String projectId = "1";
-        String companyId = "11";
+        Long projectId = 1L;
+        Long companyId = 11L;
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -495,7 +495,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .statusCode(200)
                 .body("id", is(componentId),
                         "name", is(componentDto.getName()),
-                        "parentId", is(companyId),
+                        "parentId", is(companyId.toString()),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -509,8 +509,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void updateCompanyComponent() {
         // Given
-        String projectId = "1";
-        String companyId = "11";
+        Long projectId = 1L;
+        Long companyId = 11L;
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -556,7 +556,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .statusCode(200)
                 .body("id", is(componentId),
                         "name", is(componentDto.getName()),
-                        "parentId", is(companyId),
+                        "parentId", is(companyId.toString()),
                         "providerId", is(GeneratedRsaKeyProviderFactory.ID),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("false"),
@@ -570,8 +570,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void deleteCompanyComponent() {
         // Given
-        String projectId = "1";
-        String companyId = "11";
+        Long projectId = 1L;
+        Long companyId = 11L;
 
         // When
         ComponentDto componentDto = ComponentDto.builder()

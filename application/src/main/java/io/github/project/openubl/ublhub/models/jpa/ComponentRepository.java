@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.models.jpa;
 
+import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.ublhub.keys.component.ComponentFactory;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
@@ -30,17 +31,19 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static io.github.project.openubl.ublhub.keys.component.ComponentOwner.OwnerType.project;
 
 @Transactional
 @ApplicationScoped
-public class ComponentRepository implements PanacheRepositoryBase<ComponentEntity, String> {
+public class ComponentRepository implements PanacheRepositoryBase<ComponentEntity, Long> {
 
     @Inject
     ComponentUtil componentUtil;
+
+    @Inject
+    TsidFactory tsidFactory;
 
     private String getOwnerFieldName(ComponentOwner owner) {
         return owner.getType().equals(project) ? "projectId" : "companyId";
@@ -60,7 +63,7 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
 
         ComponentEntity c = new ComponentEntity();
         if (model.getId() == null) {
-            c.setId(UUID.randomUUID().toString());
+            c.setId(tsidFactory.create().toLong());
         } else {
             c.setId(model.getId());
         }
@@ -95,7 +98,7 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
             }
             for (String val : vals) {
                 ComponentConfigEntity config = new ComponentConfigEntity();
-                config.setId(UUID.randomUUID().toString());
+                config.setId(tsidFactory.create().toLong());
                 config.setName(key);
                 config.setValue(val);
                 config.setComponent(c);
@@ -123,7 +126,7 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
         return ComponentEntity.deleteById(component.getId());
     }
 
-    public long removeComponents(ComponentOwner owner, String parentId) {
+    public long removeComponents(ComponentOwner owner, Long parentId) {
         String query = new StringBuilder(getOwnerFieldName(owner)).append(" = :ownerId")
                 .append(" and parentId = :parentId")
                 .toString();
@@ -143,7 +146,7 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                 .collect(Collectors.toList());
     }
 
-    public List<ComponentModel> getComponents(ComponentOwner owner, String parentId) {
+    public List<ComponentModel> getComponents(ComponentOwner owner, Long parentId) {
         String query = new StringBuilder("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs")
                 .append(" WHERE c.").append(getOwnerFieldName(owner)).append(" = :ownerId")
                 .append(" and c.parentId = :parentId")
@@ -156,7 +159,7 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                 .collect(Collectors.toList());
     }
 
-    public List<ComponentModel> getComponents(ComponentOwner owner, String parentId, String providerType) {
+    public List<ComponentModel> getComponents(ComponentOwner owner, Long parentId, String providerType) {
         String query = new StringBuilder("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs")
                 .append(" WHERE c.").append(getOwnerFieldName(owner)).append(" = :ownerId")
                 .append(" and c.parentId = :parentId")
@@ -171,7 +174,7 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
                 .collect(Collectors.toList());
     }
 
-    public ComponentModel getComponent(ComponentOwner owner, String id) {
+    public ComponentModel getComponent(ComponentOwner owner, Long id) {
         String query = new StringBuilder("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs")
                 .append(" WHERE c.").append(getOwnerFieldName(owner)).append(" = :ownerId")
                 .append(" and c.id = :id")

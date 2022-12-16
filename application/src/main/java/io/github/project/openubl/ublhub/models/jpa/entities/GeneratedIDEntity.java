@@ -46,7 +46,7 @@ public class GeneratedIDEntity extends BaseEntity {
     @Id
     @Column(name = "id")
     @Access(AccessType.PROPERTY)
-    private String id;
+    private Long id;
 
     @NotNull
     @Size(max = 11)
@@ -70,7 +70,7 @@ public class GeneratedIDEntity extends BaseEntity {
 
     @NotNull
     @Column(name = "project_id")
-    private String projectId;
+    private Long projectId;
 
     @Version
     @Column(name = "version")

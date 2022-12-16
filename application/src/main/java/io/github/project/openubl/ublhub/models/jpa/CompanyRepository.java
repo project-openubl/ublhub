@@ -29,18 +29,18 @@ import java.util.List;
 
 @Transactional
 @ApplicationScoped
-public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, String> {
+public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, Long> {
 
     public enum SortByField {
         name,
         created
     }
 
-    public CompanyEntity findById(ProjectEntity project, String companyId) {
+    public CompanyEntity findById(ProjectEntity project, Long companyId) {
         return findById(project.getId(), companyId);
     }
 
-    public CompanyEntity findById(String projectId, String companyId) {
+    public CompanyEntity findById(Long projectId, Long companyId) {
         Parameters params = Parameters.with("projectId", projectId).and("companyId", companyId);
         return find("id = :companyId and projectId = :projectId", params).firstResult();
     }
@@ -49,7 +49,7 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
         return findByRuc(project.getId(), ruc);
     }
 
-    public CompanyEntity findByRuc(String projectId, String ruc) {
+    public CompanyEntity findByRuc(Long projectId, String ruc) {
         Parameters params = Parameters.with("projectId", projectId).and("ruc", ruc);
         return find("ruc = :ruc and projectId = :projectId", params).firstResult();
     }
@@ -68,7 +68,7 @@ public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, S
         return query.list();
     }
 
-    public boolean deleteByProjectIdAndId(String projectId, String id) {
+    public boolean deleteByProjectIdAndId(Long projectId, Long id) {
         Parameters params = Parameters.with("projectId", projectId).and("id", id);
         long rows = CompanyEntity
                 .delete("projectId = :projectId and id = :id", params);

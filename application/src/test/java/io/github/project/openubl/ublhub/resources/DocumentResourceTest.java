@@ -105,8 +105,8 @@ public class DocumentResourceTest extends AbstractBaseTest {
     @Test
     public void getDocument() {
         // Given
-        String projectId = "1";
-        String documentId = "11";
+        Long projectId = 1L;
+        Long documentId = 11L;
 
         // When
         givenAuth("alice")
@@ -115,7 +115,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/" + projectId + "/documents/" + documentId)
                 .then()
                 .statusCode(200)
-                .body("id", is(documentId));
+                .body("id", is(documentId.toString()));
         // Then
     }
 
@@ -125,7 +125,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         String projectOwnerId = "1";
         String projectToTestId = "2";
 
-        String documentId = "11";
+        Long documentId = 11L;
 
         // When
         givenAuth("alice")
@@ -147,7 +147,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
     @Test
     public void searchDocuments() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         // When
         givenAuth("alice")
@@ -179,7 +179,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
     @Test
     public void searchDocuments_filterTextByName() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         // When
         givenAuth("alice")
@@ -522,7 +522,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
     @Test
     public void uploadInvalidImageFile_shouldSetErrorStatus() throws URISyntaxException {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("images/java-icon.png").toURI();
         File file = new File(fileURI);
@@ -563,7 +563,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
     @Test
     public void uploadInvalidXMLFile_shouldSetErrorStatus() throws URISyntaxException {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/maven.xml").toURI();
         File file = new File(fileURI);

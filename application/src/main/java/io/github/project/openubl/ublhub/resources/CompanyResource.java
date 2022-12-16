@@ -33,6 +33,7 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
+import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.ublhub.dto.CompanyDto;
 import io.github.project.openubl.ublhub.keys.DefaultKeyProviders;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
@@ -63,7 +64,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -92,7 +92,10 @@ public class CompanyResource {
     @Inject
     DefaultKeyProviders defaultKeyProviders;
 
-    private ComponentOwner getOwner(String companyId) {
+    @Inject
+    TsidFactory tsidFactory;
+
+    private ComponentOwner getOwner(Long companyId) {
         return ComponentOwner.builder()
                 .type(company)
                 .id(companyId)
@@ -104,8 +107,8 @@ public class CompanyResource {
     @GET
     @Path("/{projectId}/companies/{companyId}")
     public RestResponse<CompanyDto> getCompany(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("companyId") @NotNull String companyId
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("companyId") @NotNull Long companyId
     ) {
         Function<CompanyDto, RestResponse<CompanyDto>> successResponse = dto -> RestResponse.ResponseBuilder
                 .<CompanyDto>create(RestResponse.Status.OK)
@@ -129,7 +132,7 @@ public class CompanyResource {
     @POST
     @Path("/{projectId}/companies")
     public RestResponse<CompanyDto> createCompany(
-            @PathParam("projectId") @NotNull String projectId,
+            @PathParam("projectId") @NotNull Long projectId,
             @NotNull @Valid CompanyDto companyDto
     ) {
         Function<CompanyDto, RestResponse<CompanyDto>> successResponse = (dto) -> RestResponse.ResponseBuilder
@@ -155,7 +158,7 @@ public class CompanyResource {
 
         companyEntity = companyMapper.updateEntityFromDto(companyDto, CompanyEntity.builder()
                 .projectId(projectEntity.getId())
-                .id(UUID.randomUUID().toString())
+                .id(tsidFactory.create().toLong())
                 .build()
         );
         companyEntity.persist();
@@ -172,8 +175,8 @@ public class CompanyResource {
     @PUT
     @Path("/{projectId}/companies/{companyId}")
     public RestResponse<CompanyDto> updateCompany(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("companyId") @NotNull String companyId,
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("companyId") @NotNull Long companyId,
             @NotNull CompanyDto companyDto
     ) {
         Function<CompanyDto, RestResponse<CompanyDto>> successResponse = dto -> RestResponse.ResponseBuilder
@@ -201,8 +204,8 @@ public class CompanyResource {
     @DELETE
     @Path("/{projectId}/companies/{companyId}")
     public RestResponse<Void> deleteCompany(
-            @PathParam("projectId") @NotNull String projectId,
-            @PathParam("companyId") @NotNull String companyId
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("companyId") @NotNull Long companyId
     ) {
         Supplier<RestResponse<Void>> successResponse = () -> RestResponse.ResponseBuilder
                 .<Void>create(RestResponse.Status.NO_CONTENT)
@@ -219,7 +222,7 @@ public class CompanyResource {
     @Operation(summary = "List companies", description = "List all companies")
     @GET
     @Path("/{projectId}/companies")
-    public RestResponse<List<CompanyDto>> getCompanies(@PathParam("projectId") @NotNull String projectId) {
+    public RestResponse<List<CompanyDto>> getCompanies(@PathParam("projectId") @NotNull Long projectId) {
         Function<List<CompanyDto>, RestResponse<List<CompanyDto>>> successResponse = dtos -> RestResponse.ResponseBuilder
                 .<List<CompanyDto>>create(RestResponse.Status.OK)
                 .entity(dtos)

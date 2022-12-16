@@ -173,7 +173,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     @Test
     public void updateProject() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
         ProjectDto projectDto = ProjectDto.builder()
                 .name("new name")
                 .description("my description")
@@ -195,7 +195,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .put("/" + projectId)
                 .then()
                 .statusCode(200)
-                .body("id", is(projectId),
+                .body("id", is(projectId.toString()),
                         "name", is(projectDto.getName()),
                         "description", is(projectDto.getDescription()),
                         "sunat.facturaUrl", is(projectDto.getSunat().getFacturaUrl()),
@@ -212,7 +212,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .get("/" + projectId)
                 .then()
                 .statusCode(200)
-                .body("id", is(projectId),
+                .body("id", is(projectId.toString()),
                         "name", is(projectDto.getName()),
                         "description", is(projectDto.getDescription()),
                         "sunat.facturaUrl", is(projectDto.getSunat().getFacturaUrl()),
@@ -226,7 +226,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     @Test
     public void deleteProject() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         // When
         givenAuth("alice")
@@ -295,7 +295,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     @Test
     public void createProjectComponent() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -320,7 +320,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .statusCode(201)
                 .body("id", is(notNullValue()),
                         "name", is(componentDto.getName()),
-                        "parentId", is(projectId),
+                        "parentId", is(projectId.toString()),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -334,7 +334,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     @Test
     public void getProjectComponent() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -366,9 +366,9 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .get("/" + projectId + "/components/" + componentId)
                 .then()
                 .statusCode(200)
-                .body("id", is(componentId),
+                .body("id", is(componentId.toString()),
                         "name", is(componentDto.getName()),
-                        "parentId", is(projectId),
+                        "parentId", is(projectId.toString()),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -382,7 +382,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     @Test
     public void updateProjectComponent() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -428,7 +428,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .statusCode(200)
                 .body("id", is(componentId),
                         "name", is(componentDto.getName()),
-                        "parentId", is(projectId),
+                        "parentId", is(projectId.toString()),
                         "providerId", is(GeneratedRsaKeyProviderFactory.ID),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("false"),
@@ -442,7 +442,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     @Test
     public void deleteProjectComponent() {
         // Given
-        String projectId = "1";
+        Long projectId = 1L;
 
         // When
         ComponentDto componentDto = ComponentDto.builder()

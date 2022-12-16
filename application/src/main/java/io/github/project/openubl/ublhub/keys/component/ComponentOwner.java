@@ -23,7 +23,7 @@ import lombok.Data;
 @Builder
 public class ComponentOwner {
 
-    private String id;
+    private Long id;
     private OwnerType type;
 
     public enum OwnerType {

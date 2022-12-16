@@ -46,7 +46,7 @@ public class ProjectEntity extends BaseEntity {
     @Id
     @Column(name = "id")
     @Access(AccessType.PROPERTY)
-    private String id;
+    private Long id;
 
     @NotNull
     @Size(max = 255)

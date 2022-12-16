@@ -47,9 +47,9 @@ public class ComponentConfigEntity extends PanacheEntityBase {
 
     @EqualsAndHashCode.Include
     @Id
-    @Column(name = "id", length = 36)
+    @Column(name = "id")
     @Access(AccessType.PROPERTY)
-    private String id;
+    private Long id;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

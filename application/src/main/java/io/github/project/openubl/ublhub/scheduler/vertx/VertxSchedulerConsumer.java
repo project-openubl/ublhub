@@ -60,7 +60,7 @@ public class VertxSchedulerConsumer {
     @Transactional(Transactional.TxType.NEVER)
     @Blocking
     @ConsumeEvent(VertxScheduler.VERTX_SEND_FILE_SCHEDULER_BUS_NAME)
-    public void sendFile(String documentId) {
+    public void sendFile(Long documentId) {
         QuarkusTransaction.begin();
 
         UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
@@ -95,11 +95,11 @@ public class VertxSchedulerConsumer {
                 documentEntity.setSunatResponse(new SUNATResponseEntity());
             }
 
-            documentEntity.getSunatResponse().setTicket(sunatResponse.getSunat().getTicket());
             documentEntity.getSunatResponse().setCode(sunatResponse.getMetadata().getResponseCode());
             documentEntity.getSunatResponse().setDescription(sunatResponse.getMetadata().getDescription());
             documentEntity.getSunatResponse().setStatus(sunatResponse.getStatus() != null ? sunatResponse.getStatus().toString() : null);
             documentEntity.getSunatResponse().setNotes(sunatResponse.getMetadata().getNotes() != null ? new HashSet<>(sunatResponse.getMetadata().getNotes()) : null);
+            documentEntity.getSunatResponse().setTicket(sunatResponse.getSunat() != null ? sunatResponse.getSunat().getTicket() : null);
 
             // Save CDR
             if (sunatResponse.getSunat() != null && sunatResponse.getSunat().getCdr() != null) {
@@ -139,7 +139,7 @@ public class VertxSchedulerConsumer {
     @Transactional(Transactional.TxType.NEVER)
     @Blocking
     @ConsumeEvent(VertxScheduler.VERTX_CHECK_TICKET_SCHEDULER_BUS_NAME)
-    public void checkTicket(String documentId) {
+    public void checkTicket(Long documentId) {
         QuarkusTransaction.begin();
 
         UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
@@ -163,11 +163,11 @@ public class VertxSchedulerConsumer {
                 documentEntity.setSunatResponse(new SUNATResponseEntity());
             }
 
-            documentEntity.getSunatResponse().setTicket(sunatResponse.getSunat().getTicket());
             documentEntity.getSunatResponse().setCode(sunatResponse.getMetadata().getResponseCode());
             documentEntity.getSunatResponse().setDescription(sunatResponse.getMetadata().getDescription());
             documentEntity.getSunatResponse().setStatus(sunatResponse.getStatus() != null ? sunatResponse.getStatus().toString() : null);
             documentEntity.getSunatResponse().setNotes(sunatResponse.getMetadata().getNotes() != null ? new HashSet<>(sunatResponse.getMetadata().getNotes()) : null);
+            documentEntity.getSunatResponse().setTicket(sunatResponse.getSunat().getTicket() != null ? sunatResponse.getSunat().getTicket() : null);
 
             // Save CDR
             if (sunatResponse.getSunat() != null && sunatResponse.getSunat().getCdr() != null) {

@@ -96,7 +96,7 @@ public class XMLSenderManager {
         }
     }
 
-    public XMLSenderConfig getXSenderConfig(String projectId, String ruc) {
+    public XMLSenderConfig getXSenderConfig(Long projectId, String ruc) {
         CompanyEntity companyEntity = companyRepository.findByRuc(projectId, ruc);
 
         SunatEntity sunatEntity;

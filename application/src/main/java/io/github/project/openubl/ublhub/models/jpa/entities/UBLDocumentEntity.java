@@ -47,11 +47,11 @@ public class UBLDocumentEntity extends BaseEntity {
     @Id
     @Column(name = "id")
     @Access(AccessType.PROPERTY)
-    private String id;
+    private Long id;
 
     @NotNull
     @Column(name = "project_id")
-    private String projectId;
+    private Long projectId;
 
     @NotNull
     @Size(max = 255)
