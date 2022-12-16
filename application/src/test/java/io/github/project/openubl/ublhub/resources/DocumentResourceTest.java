@@ -115,7 +115,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .get("/" + projectId + "/documents/" + documentId)
                 .then()
                 .statusCode(200)
-                .body("id", is(documentId.intValue()));
+                .body("id", is(documentId.toString()));
         // Then
     }
 
@@ -158,8 +158,8 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .statusCode(200)
                 .body("count", is(2),
                         "items.size()", is(2),
-                        "items[0].id", is(22),
-                        "items[1].id", is(11)
+                        "items[0].id", is("22"),
+                        "items[1].id", is("11")
                 );
 
         givenAuth("alice")
@@ -170,8 +170,8 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .statusCode(200)
                 .body("count", is(2),
                         "items.size()", is(2),
-                        "items[0].id", is(11),
-                        "items[1].id", is(22)
+                        "items[0].id", is("11"),
+                        "items[1].id", is("22")
                 );
         // Then
     }

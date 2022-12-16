@@ -195,7 +195,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .put("/" + projectId)
                 .then()
                 .statusCode(200)
-                .body("id", is(projectId.intValue()),
+                .body("id", is(projectId.toString()),
                         "name", is(projectDto.getName()),
                         "description", is(projectDto.getDescription()),
                         "sunat.facturaUrl", is(projectDto.getSunat().getFacturaUrl()),
@@ -212,7 +212,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .get("/" + projectId)
                 .then()
                 .statusCode(200)
-                .body("id", is(projectId.intValue()),
+                .body("id", is(projectId.toString()),
                         "name", is(projectDto.getName()),
                         "description", is(projectDto.getDescription()),
                         "sunat.facturaUrl", is(projectDto.getSunat().getFacturaUrl()),
@@ -320,7 +320,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .statusCode(201)
                 .body("id", is(notNullValue()),
                         "name", is(componentDto.getName()),
-                        "parentId", is(projectId.intValue()),
+                        "parentId", is(projectId.toString()),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -366,9 +366,9 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .get("/" + projectId + "/components/" + componentId)
                 .then()
                 .statusCode(200)
-                .body("id", is(Long.valueOf(componentId)),
+                .body("id", is(componentId.toString()),
                         "name", is(componentDto.getName()),
-                        "parentId", is(projectId.intValue()),
+                        "parentId", is(projectId.toString()),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -426,9 +426,9 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .put("/" + projectId + "/components/" + componentId)
                 .then()
                 .statusCode(200)
-                .body("id", is(Long.valueOf(componentId)),
+                .body("id", is(componentId),
                         "name", is(componentDto.getName()),
-                        "parentId", is(projectId.intValue()),
+                        "parentId", is(projectId.toString()),
                         "providerId", is(GeneratedRsaKeyProviderFactory.ID),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("false"),

@@ -252,7 +252,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .get("/" + projectId + "/companies/" + companyId)
                 .then()
                 .statusCode(200)
-                .body("id", is(companyId.intValue()),
+                .body("id", is(companyId.toString()),
                         "ruc", is(companyDto.getRuc()),
                         "name", is(companyDto.getName()),
                         "description", is(companyDto.getDescription()),
@@ -446,7 +446,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .statusCode(201)
                 .body("id", is(notNullValue()),
                         "name", is(componentDto.getName()),
-                        "parentId", is(companyId.intValue()),
+                        "parentId", is(companyId.toString()),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -493,9 +493,9 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .get("/" + projectId + "/companies/" + companyId + "/components/" + componentId)
                 .then()
                 .statusCode(200)
-                .body("id", is(Long.parseLong(componentId)),
+                .body("id", is(componentId),
                         "name", is(componentDto.getName()),
-                        "parentId", is(companyId.intValue()),
+                        "parentId", is(companyId.toString()),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -554,9 +554,9 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .put("/" + projectId + "/companies/" + companyId + "/components/" + componentId)
                 .then()
                 .statusCode(200)
-                .body("id", is(Long.valueOf(componentId)),
+                .body("id", is(componentId),
                         "name", is(componentDto.getName()),
-                        "parentId", is(companyId.intValue()),
+                        "parentId", is(companyId.toString()),
                         "providerId", is(GeneratedRsaKeyProviderFactory.ID),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("false"),
