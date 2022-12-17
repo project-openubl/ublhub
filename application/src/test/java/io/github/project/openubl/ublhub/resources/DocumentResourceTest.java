@@ -27,7 +27,7 @@ import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
 import io.github.project.openubl.xbuilder.content.catalogs.Catalog6;
 import io.github.project.openubl.xbuilder.content.models.common.Cliente;
 import io.github.project.openubl.xbuilder.content.models.common.Proveedor;
-import io.github.project.openubl.xbuilder.content.models.standard.general.DocumentoDetalle;
+import io.github.project.openubl.xbuilder.content.models.standard.general.DocumentoVentaDetalle;
 import io.github.project.openubl.xbuilder.content.models.standard.general.Invoice;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -83,13 +83,13 @@ public class DocumentResourceTest extends AbstractBaseTest {
                     .tipoDocumentoIdentidad(Catalog6.RUC.toString())
                     .build()
             )
-            .detalle(DocumentoDetalle.builder()
+            .detalle(DocumentoVentaDetalle.builder()
                     .descripcion("Item1")
                     .cantidad(new BigDecimal(10))
                     .precio(new BigDecimal(100))
                     .build()
             )
-            .detalle(DocumentoDetalle.builder()
+            .detalle(DocumentoVentaDetalle.builder()
                     .descripcion("Item2")
                     .cantidad(new BigDecimal(10))
                     .precio(new BigDecimal(100))
@@ -443,13 +443,13 @@ public class DocumentResourceTest extends AbstractBaseTest {
                         .tipoDocumentoIdentidad(Catalog6.RUC.toString())
                         .build()
                 )
-                .detalle(DocumentoDetalle.builder()
+                .detalle(DocumentoVentaDetalle.builder()
                         .descripcion("Item1")
                         .cantidad(new BigDecimal(10))
                         .precio(new BigDecimal(100))
                         .build()
                 )
-                .detalle(DocumentoDetalle.builder()
+                .detalle(DocumentoVentaDetalle.builder()
                         .descripcion("Item2")
                         .cantidad(new BigDecimal(10))
                         .precio(new BigDecimal(100))

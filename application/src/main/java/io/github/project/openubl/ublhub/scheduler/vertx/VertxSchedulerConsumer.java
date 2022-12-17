@@ -39,6 +39,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.util.HashSet;
+import java.util.Optional;
 
 @RequestScoped
 public class VertxSchedulerConsumer {
@@ -95,11 +96,13 @@ public class VertxSchedulerConsumer {
                 documentEntity.setSunatResponse(new SUNATResponseEntity());
             }
 
-            documentEntity.getSunatResponse().setCode(sunatResponse.getMetadata().getResponseCode());
-            documentEntity.getSunatResponse().setDescription(sunatResponse.getMetadata().getDescription());
             documentEntity.getSunatResponse().setStatus(sunatResponse.getStatus() != null ? sunatResponse.getStatus().toString() : null);
-            documentEntity.getSunatResponse().setNotes(sunatResponse.getMetadata().getNotes() != null ? new HashSet<>(sunatResponse.getMetadata().getNotes()) : null);
             documentEntity.getSunatResponse().setTicket(sunatResponse.getSunat() != null ? sunatResponse.getSunat().getTicket() : null);
+            Optional.ofNullable(sunatResponse.getMetadata()).ifPresent(metadata -> {
+                documentEntity.getSunatResponse().setCode(metadata.getResponseCode());
+                documentEntity.getSunatResponse().setDescription(metadata.getDescription());
+                documentEntity.getSunatResponse().setNotes(metadata.getNotes() != null ? new HashSet<>(metadata.getNotes()) : null);
+            });
 
             // Save CDR
             if (sunatResponse.getSunat() != null && sunatResponse.getSunat().getCdr() != null) {
@@ -163,11 +166,13 @@ public class VertxSchedulerConsumer {
                 documentEntity.setSunatResponse(new SUNATResponseEntity());
             }
 
-            documentEntity.getSunatResponse().setCode(sunatResponse.getMetadata().getResponseCode());
-            documentEntity.getSunatResponse().setDescription(sunatResponse.getMetadata().getDescription());
             documentEntity.getSunatResponse().setStatus(sunatResponse.getStatus() != null ? sunatResponse.getStatus().toString() : null);
-            documentEntity.getSunatResponse().setNotes(sunatResponse.getMetadata().getNotes() != null ? new HashSet<>(sunatResponse.getMetadata().getNotes()) : null);
             documentEntity.getSunatResponse().setTicket(sunatResponse.getSunat().getTicket() != null ? sunatResponse.getSunat().getTicket() : null);
+            Optional.ofNullable(sunatResponse.getMetadata()).ifPresent(metadata -> {
+                documentEntity.getSunatResponse().setCode(metadata.getResponseCode());
+                documentEntity.getSunatResponse().setDescription(metadata.getDescription());
+                documentEntity.getSunatResponse().setNotes(metadata.getNotes() != null ? new HashSet<>(metadata.getNotes()) : null);
+            });
 
             // Save CDR
             if (sunatResponse.getSunat() != null && sunatResponse.getSunat().getCdr() != null) {

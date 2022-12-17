@@ -32,4 +32,7 @@ public interface IDGenerator {
 
     ID generateSummaryDocumentID(ProjectEntity project, String ruc);
 
+    ID generatePerceptionID(ProjectEntity project, String ruc, Map<String, String> config);
+    ID generateRetentionID(ProjectEntity project, String ruc, Map<String, String> config);
+
 }

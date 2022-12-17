@@ -69,8 +69,7 @@
           "type" : "string",
           "description" : "Catalog 12"
         }
-      },
-      "required" : [ "serieNumero", "tipoDocumento" ]
+      }
     }
   },
   "type" : "object",
@@ -96,8 +95,7 @@
             "description" : "Catalog 53",
             "enum" : [ "04", "05", "06" ]
           }
-        },
-        "required" : [ "comprobanteSerieNumero", "monto", "tipo" ]
+        }
       }
     },
     "cliente" : {
@@ -119,8 +117,7 @@
           "type" : "string",
           "description" : "Catalogo 06"
         }
-      },
-      "required" : [ "nombre", "numeroDocumentoIdentidad", "tipoDocumentoIdentidad" ]
+      }
     },
     "detalles" : {
       "minItems" : 1,
@@ -146,9 +143,8 @@
           },
           "igv" : {
             "type" : "number",
-            "description" : "Ejemplo 0.18",
-            "minimum" : 0,
-            "maximum" : 1
+            "description" : "Monto total de IGV",
+            "minimum" : 0
           },
           "igvBaseImponible" : {
             "type" : "number",
@@ -182,8 +178,7 @@
           "unidadMedida" : {
             "type" : "string"
           }
-        },
-        "required" : [ "cantidad", "descripcion" ]
+        }
       }
     },
     "detraccion" : {
@@ -209,8 +204,7 @@
           "type" : "string",
           "description" : "Catalog 54"
         }
-      },
-      "required" : [ "cuentaBancaria", "medioDePago", "monto", "porcentaje", "tipoBienDetraido" ]
+      }
     },
     "direccionEntrega" : {
       "$ref" : "#/definitions/Direccion"
@@ -244,7 +238,6 @@
           "pattern" : "[0-9]+"
         }
       },
-      "required" : [ "razonSocial", "ruc" ],
       "description" : "Persona que firma electrónicamente el comprobante. Si NULL los datos del proveedor son usados."
     },
     "formaDePago" : {
@@ -265,8 +258,7 @@
                 "type" : "number",
                 "exclusiveMinimum" : 0
               }
-            },
-            "required" : [ "fechaPago", "importe" ]
+            }
           }
         },
         "tipo" : {
@@ -279,7 +271,6 @@
           "minimum" : 0
         }
       },
-      "required" : [ "tipo", "total" ],
       "description" : "Forma de pago: al credito, o al contado"
     },
     "guias" : {
@@ -294,8 +285,7 @@
             "type" : "string",
             "description" : "Catalogo 01"
           }
-        },
-        "required" : [ "serieNumero", "tipoDocumento" ]
+        }
       }
     },
     "horaEmision" : {
@@ -347,8 +337,7 @@
           "type" : "string",
           "description" : "Catalog 53"
         }
-      },
-      "required" : [ "tipo" ]
+      }
     },
     "proveedor" : {
       "type" : "object",
@@ -371,8 +360,7 @@
           "maxLength" : 11,
           "pattern" : "[0-9]+"
         }
-      },
-      "required" : [ "razonSocial", "ruc" ]
+      }
     },
     "serie" : {
       "type" : "string",
@@ -418,7 +406,6 @@
           "minimum" : 0
         }
       },
-      "required" : [ "anticipos", "importe", "importeConImpuestos", "importeSinImpuestos" ],
       "description" : "Total importe del comprobante"
     },
     "totalImpuestos" : {
@@ -474,6 +461,5 @@
         }
       }
     }
-  },
-  "required" : [ "cliente", "numero", "proveedor", "serie" ]
+  }
 }

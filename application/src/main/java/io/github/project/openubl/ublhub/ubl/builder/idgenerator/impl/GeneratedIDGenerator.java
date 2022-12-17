@@ -67,7 +67,9 @@ public class GeneratedIDGenerator implements IDGenerator {
         DEBIT_NOTE_FOR_BOLETA_TYPE("DebitNote_Boleta", "BD"),
         VOIDED_GENERIC_TYPE("VoidedDocument", "RA"),
         VOIDED_DOCUMENT_PERCEPCION_RETENCION_GUIA_TYPE("VoidedDocument", "RR"),
-        SUMMARY_DOCUMENT_TYPE("SummaryDocument", "RC");
+        SUMMARY_DOCUMENT_TYPE("SummaryDocument", "RC"),
+        PERCEPTION("Perception", "P"),
+        RETENTION("Retention", "R");
 
         private final String name;
         private final String prefix;
@@ -228,6 +230,32 @@ public class GeneratedIDGenerator implements IDGenerator {
         GeneratedIDEntity generatedIDEntity = generateNextIDVoidedAndSummaryDocument(project, ruc, documentType.name);
 
         String serie = documentType.prefix + "-" + generatedIDEntity.getSerie();
+        int numero = generatedIDEntity.getNumero();
+        return new ID(serie, numero);
+    }
+
+    @Override
+    public ID generatePerceptionID(ProjectEntity project, String ruc, Map<String, String> config) {
+        int minSerie = Integer.parseInt(config.getOrDefault(PROP_MIN_SERIE, "1"));
+        int minNumero = Integer.parseInt(config.getOrDefault(PROP_MIN_NUMERO, "1"));
+
+        DocumentType documentType = DocumentType.PERCEPTION;
+        GeneratedIDEntity generatedIDEntity = generateNextID(project, ruc, documentType.name, minSerie, minNumero);
+
+        String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.getSerie()), 3, "0");
+        int numero = generatedIDEntity.getNumero();
+        return new ID(serie, numero);
+    }
+
+    @Override
+    public ID generateRetentionID(ProjectEntity project, String ruc, Map<String, String> config) {
+        int minSerie = Integer.parseInt(config.getOrDefault(PROP_MIN_SERIE, "1"));
+        int minNumero = Integer.parseInt(config.getOrDefault(PROP_MIN_NUMERO, "1"));
+
+        DocumentType documentType = DocumentType.RETENTION;
+        GeneratedIDEntity generatedIDEntity = generateNextID(project, ruc, documentType.name, minSerie, minNumero);
+
+        String serie = documentType.prefix + StringUtils.leftPad(String.valueOf(generatedIDEntity.getSerie()), 3, "0");
         int numero = generatedIDEntity.getNumero();
         return new ID(serie, numero);
     }

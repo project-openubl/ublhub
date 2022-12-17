@@ -1,0 +1,59 @@
+{
+  "kind": "SummaryDocuments",
+  "spec": {
+    "document": {
+      "numero": 1,
+      "fechaEmision": "2019-12-24",
+      "fechaEmisionComprobantes": "2019-12-22",
+      "proveedor": {
+        "ruc": "12345678912",
+        "razonSocial": "Softgreen S.A.C."
+      },
+      "comprobantes": [
+        {
+          "tipoOperacion": "1",
+          "comprobante": {
+            "tipoComprobante": "03",
+            "serieNumero": "B001-1",
+            "cliente": {
+              "tipoDocumentoIdentidad": "1",
+              "numeroDocumentoIdentidad": "12345678",
+              "nombre": "Carlos Feria"
+            },
+            "valorVenta": {
+              "importeTotal": 120,
+              "gravado": 120
+            },
+            "impuestos": {
+              "igv": 18,
+              "icb": 2
+            }
+          }
+        },
+        {
+          "tipoOperacion": "1",
+          "comprobante": {
+            "tipoComprobante": "07",
+            "serieNumero": "BC02-2",
+            "cliente": {
+              "tipoDocumentoIdentidad": "1",
+              "numeroDocumentoIdentidad": "12345678",
+              "nombre": "Carlos Feria"
+            },
+            "valorVenta": {
+              "importeTotal": 118,
+              "gravado": 118
+            },
+            "impuestos": {
+              "igv": 18
+            },
+            "comprobanteAfectado": {
+              "tipoComprobante": "03",
+              "serieNumero": "B002-2"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

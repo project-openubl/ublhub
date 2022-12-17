@@ -55,7 +55,11 @@ public class DocumentInputDto {
     public enum Kind {
         Invoice,
         CreditNote,
-        DebitNote;
+        DebitNote,
+        VoidedDocuments,
+        SummaryDocuments,
+        Perception,
+        Retention;
     }
 
     @Data
