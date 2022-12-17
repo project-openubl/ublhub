@@ -25,7 +25,7 @@ export const SUNAT_PROD_URLS: SunatURls = {
 
 export const SUNAT_BETA_URLS: SunatURls = {
   factura: "https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService",
-  guia: "https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService",
+  guia: "https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService",
   retencion:
-    "https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService",
+    "https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService",
 };

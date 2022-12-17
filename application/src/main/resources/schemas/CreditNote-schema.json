@@ -81,8 +81,7 @@
           "type" : "string",
           "description" : "Catalogo 06"
         }
-      },
-      "required" : [ "nombre", "numeroDocumentoIdentidad", "tipoDocumentoIdentidad" ]
+      }
     },
     "comprobanteAfectadoSerieNumero" : {
       "type" : "string"
@@ -115,9 +114,8 @@
           },
           "igv" : {
             "type" : "number",
-            "description" : "Ejemplo 0.18",
-            "minimum" : 0,
-            "maximum" : 1
+            "description" : "Monto total de IGV",
+            "minimum" : 0
           },
           "igvBaseImponible" : {
             "type" : "number",
@@ -151,8 +149,7 @@
           "unidadMedida" : {
             "type" : "string"
           }
-        },
-        "required" : [ "cantidad", "descripcion" ]
+        }
       }
     },
     "documentosRelacionados" : {
@@ -167,8 +164,7 @@
             "type" : "string",
             "description" : "Catalog 12"
           }
-        },
-        "required" : [ "serieNumero", "tipoDocumento" ]
+        }
       }
     },
     "fechaEmision" : {
@@ -189,7 +185,6 @@
           "pattern" : "[0-9]+"
         }
       },
-      "required" : [ "razonSocial", "ruc" ],
       "description" : "Persona que firma electrónicamente el comprobante. Si NULL los datos del proveedor son usados."
     },
     "guias" : {
@@ -204,8 +199,7 @@
             "type" : "string",
             "description" : "Catalogo 01"
           }
-        },
-        "required" : [ "serieNumero", "tipoDocumento" ]
+        }
       }
     },
     "horaEmision" : {
@@ -250,8 +244,7 @@
           "maxLength" : 11,
           "pattern" : "[0-9]+"
         }
-      },
-      "required" : [ "razonSocial", "ruc" ]
+      }
     },
     "serie" : {
       "type" : "string",
@@ -291,8 +284,7 @@
           "type" : "number",
           "minimum" : 0
         }
-      },
-      "required" : [ "importe", "importeConImpuestos", "importeSinImpuestos" ]
+      }
     },
     "totalImpuestos" : {
       "type" : "object",
@@ -347,6 +339,5 @@
         }
       }
     }
-  },
-  "required" : [ "cliente", "comprobanteAfectadoSerieNumero", "numero", "proveedor", "serie", "sustentoDescripcion" ]
+  }
 }

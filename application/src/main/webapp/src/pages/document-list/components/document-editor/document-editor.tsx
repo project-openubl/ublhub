@@ -36,10 +36,18 @@ import DocumentInputSchema from "schemas/DocumentInputDto-schema.json";
 import InvoiceSchema from "schemas/Invoice-schema.json";
 import CreditNoteSchema from "schemas/CreditNote-schema.json";
 import DebitNoteSchema from "schemas/DebitNote-schema.json";
+import VoidedDocumentsSchema from "schemas/VoidedDocuments-schema.json";
+import SummaryDocumentsSchema from "schemas/SummaryDocuments-schema.json";
+import PerceptionSchema from "schemas/Perception-schema.json";
+import RetentionSchema from "schemas/Retention-schema.json";
 
 import INVOICE from "jsons/invoice.json";
 import CREDIT_NOTE from "jsons/creditNote.json";
 import DEBIT_NOTE from "jsons/debitNote.json";
+import VOIDED_DOCUMENTS from "jsons/voidedDocuments.json";
+import SUMMARY_DOCUMENTS from "jsons/summaryDocuments.json";
+import PERCEPTION from "jsons/perception.json";
+import RETENTION from "jsons/retention.json";
 
 const EDITOR_HEIGHT = "500px";
 
@@ -169,6 +177,54 @@ export const DocumentEditor: React.FC<IDocumentEditor> = ({
                 uri: "http://myserver/foo-schema.json",
                 fileMatch: ["*"],
                 schema: buildSchema(DebitNoteSchema),
+              },
+            ],
+          });
+          break;
+        case "VoidedDocuments":
+          monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+            ...monaco.languages.json.jsonDefaults.diagnosticsOptions,
+            schemas: [
+              {
+                uri: "http://myserver/foo-schema.json",
+                fileMatch: ["*"],
+                schema: buildSchema(VoidedDocumentsSchema),
+              },
+            ],
+          });
+          break;
+        case "SummaryDocuments":
+          monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+            ...monaco.languages.json.jsonDefaults.diagnosticsOptions,
+            schemas: [
+              {
+                uri: "http://myserver/foo-schema.json",
+                fileMatch: ["*"],
+                schema: buildSchema(SummaryDocumentsSchema),
+              },
+            ],
+          });
+          break;
+        case "Perception":
+          monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+            ...monaco.languages.json.jsonDefaults.diagnosticsOptions,
+            schemas: [
+              {
+                uri: "http://myserver/foo-schema.json",
+                fileMatch: ["*"],
+                schema: buildSchema(PerceptionSchema),
+              },
+            ],
+          });
+          break;
+        case "Retention":
+          monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+            ...monaco.languages.json.jsonDefaults.diagnosticsOptions,
+            schemas: [
+              {
+                uri: "http://myserver/foo-schema.json",
+                fileMatch: ["*"],
+                schema: buildSchema(RetentionSchema),
               },
             ],
           });
@@ -306,6 +362,30 @@ export const DocumentEditor: React.FC<IDocumentEditor> = ({
                       onClick={() => onSetDefaultCode(DEBIT_NOTE)}
                     >
                       Debit Note
+                    </Button>
+                    <Button
+                      variant="link"
+                      onClick={() => onSetDefaultCode(VOIDED_DOCUMENTS)}
+                    >
+                      Voided Documents
+                    </Button>
+                    <Button
+                      variant="link"
+                      onClick={() => onSetDefaultCode(SUMMARY_DOCUMENTS)}
+                    >
+                      Summary Documents
+                    </Button>
+                    <Button
+                      variant="link"
+                      onClick={() => onSetDefaultCode(PERCEPTION)}
+                    >
+                      Perception
+                    </Button>
+                    <Button
+                      variant="link"
+                      onClick={() => onSetDefaultCode(RETENTION)}
+                    >
+                      Retention
                     </Button>
                   </EmptyStateSecondaryActions>
                 </EmptyState>

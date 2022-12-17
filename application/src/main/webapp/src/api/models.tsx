@@ -131,7 +131,14 @@ export interface DocumentStatusErrorDto {
   recoveryAction: string;
 }
 
-export type DocumentInputType = "Invoice" | "CreditNote" | "DebitNote";
+export type DocumentInputType =
+  | "Invoice"
+  | "CreditNote"
+  | "DebitNote"
+  | "VoidedDocuments"
+  | "SummaryDocuments"
+  | "Perception"
+  | "Retention";
 
 export interface DocumentInputDto {
   kind: DocumentInputType;

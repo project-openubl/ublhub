@@ -53,4 +53,14 @@ public class NoneIDGenerator implements IDGenerator {
     public ID generateSummaryDocumentID(ProjectEntity project, String ruc) {
         return null;
     }
+
+    @Override
+    public ID generatePerceptionID(ProjectEntity project, String ruc, Map<String, String> config) {
+        return null;
+    }
+
+    @Override
+    public ID generateRetentionID(ProjectEntity project, String ruc, Map<String, String> config) {
+        return null;
+    }
 }

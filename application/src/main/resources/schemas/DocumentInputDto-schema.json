@@ -4,7 +4,7 @@
   "properties" : {
     "kind" : {
       "type" : "string",
-      "enum" : [ "Invoice", "CreditNote", "DebitNote" ]
+      "enum" : [ "Invoice", "CreditNote", "DebitNote", "VoidedDocuments", "SummaryDocuments", "Perception", "Retention" ]
     },
     "metadata" : {
       "type" : [ "object", "null" ],

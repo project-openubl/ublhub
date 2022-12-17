@@ -1,0 +1,36 @@
+{
+  "kind": "Retention",
+  "spec": {
+    "document": {
+      "serie": "R001",
+      "numero": 1,
+      "fechaEmision": "2022-01-31",
+      "tipoRegimen": "01",
+      "tipoRegimenPorcentaje": 3,
+      "importeTotalRetenido": 10,
+      "importeTotalPagado": 200,
+      "observacion": "Mis observaciones",
+      "proveedor": {
+        "ruc": "12345678912",
+        "razonSocial": "Softgreen S.A.C."
+      },
+      "cliente": {
+        "tipoDocumentoIdentidad": "6",
+        "numeroDocumentoIdentidad": "12121212121",
+        "nombre": "Carlos Feria"
+      },
+      "operacion": {
+        "numeroOperacion": 1,
+        "fechaOperacion": "2022-01-31",
+        "importeOperacion": 100,
+        "comprobante": {
+          "moneda": "PEN",
+          "tipoComprobante": "01",
+          "serieNumero": "F001-1",
+          "fechaEmision": "2022-01-31",
+          "importeTotal": 210
+        }
+      }
+    }
+  }
+}

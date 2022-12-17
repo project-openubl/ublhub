@@ -23,9 +23,14 @@ import io.github.project.openubl.ublhub.ubl.builder.idgenerator.ID;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGenerator;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorManager;
 import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
+import io.github.project.openubl.xbuilder.content.catalogs.Catalog1;
 import io.github.project.openubl.xbuilder.content.models.standard.general.CreditNote;
 import io.github.project.openubl.xbuilder.content.models.standard.general.DebitNote;
 import io.github.project.openubl.xbuilder.content.models.standard.general.Invoice;
+import io.github.project.openubl.xbuilder.content.models.sunat.baja.VoidedDocuments;
+import io.github.project.openubl.xbuilder.content.models.sunat.percepcionretencion.Perception;
+import io.github.project.openubl.xbuilder.content.models.sunat.percepcionretencion.Retention;
+import io.github.project.openubl.xbuilder.content.models.sunat.resumen.SummaryDocuments;
 import io.github.project.openubl.xbuilder.enricher.ContentEnricher;
 import io.quarkus.qute.Template;
 import io.vertx.core.json.JsonObject;
@@ -73,6 +78,26 @@ public class XMLGeneratorManager {
                 enricher.enrich(debitNote);
                 return debitNote;
             }
+            case VoidedDocuments: {
+                VoidedDocuments voidedDocuments = document.mapTo(VoidedDocuments.class);
+                enricher.enrich(voidedDocuments);
+                return voidedDocuments;
+            }
+            case SummaryDocuments: {
+                SummaryDocuments summaryDocuments = document.mapTo(SummaryDocuments.class);
+                enricher.enrich(summaryDocuments);
+                return summaryDocuments;
+            }
+            case Perception: {
+                Perception perception = document.mapTo(Perception.class);
+                enricher.enrich(perception);
+                return perception;
+            }
+            case Retention: {
+                Retention perception = document.mapTo(Retention.class);
+                enricher.enrich(perception);
+                return perception;
+            }
             default:
                 throw new IllegalStateException("Document not supported for creating XML");
         }
@@ -98,6 +123,26 @@ public class XMLGeneratorManager {
                 DebitNote debitNote = document.mapTo(DebitNote.class);
                 Template template = xBuilder.getTemplate(XBuilder.Type.DEBIT_NOTE);
                 return template.data(debitNote).render();
+            }
+            case VoidedDocuments: {
+                VoidedDocuments voidedDocuments = document.mapTo(VoidedDocuments.class);
+                Template template = xBuilder.getTemplate(XBuilder.Type.VOIDED_DOCUMENTS);
+                return template.data(voidedDocuments).render();
+            }
+            case SummaryDocuments: {
+                SummaryDocuments summaryDocuments = document.mapTo(SummaryDocuments.class);
+                Template template = xBuilder.getTemplate(XBuilder.Type.SUMMARY_DOCUMENTS);
+                return template.data(summaryDocuments).render();
+            }
+            case Perception: {
+                Perception perception = document.mapTo(Perception.class);
+                Template template = xBuilder.getTemplate(XBuilder.Type.PERCEPTION);
+                return template.data(perception).render();
+            }
+            case Retention: {
+                Retention retention = document.mapTo(Retention.class);
+                Template template = xBuilder.getTemplate(XBuilder.Type.RETENTION);
+                return template.data(retention).render();
             }
             default:
                 throw new IllegalStateException("Document not supported for creating XML");
@@ -134,6 +179,38 @@ public class XMLGeneratorManager {
                 String xml = getXML(projectEntity, debitNote, idGenerator, idConfig);
                 return XMLResult.builder()
                         .ruc(debitNote.getProveedor().getRuc())
+                        .xml(xml)
+                        .build();
+            }
+            case VoidedDocuments: {
+                VoidedDocuments voidedDocuments = document.mapTo(VoidedDocuments.class);
+                String xml = getXML(projectEntity, voidedDocuments, idGenerator, idConfig);
+                return XMLResult.builder()
+                        .ruc(voidedDocuments.getProveedor().getRuc())
+                        .xml(xml)
+                        .build();
+            }
+            case SummaryDocuments: {
+                SummaryDocuments summaryDocuments = document.mapTo(SummaryDocuments.class);
+                String xml = getXML(projectEntity, summaryDocuments, idGenerator, idConfig);
+                return XMLResult.builder()
+                        .ruc(summaryDocuments.getProveedor().getRuc())
+                        .xml(xml)
+                        .build();
+            }
+            case Perception: {
+                Perception perception = document.mapTo(Perception.class);
+                String xml = getXML(projectEntity, perception, idGenerator, idConfig);
+                return XMLResult.builder()
+                        .ruc(perception.getProveedor().getRuc())
+                        .xml(xml)
+                        .build();
+            }
+            case Retention: {
+                Retention retention = document.mapTo(Retention.class);
+                String xml = getXML(projectEntity, retention, idGenerator, idConfig);
+                return XMLResult.builder()
+                        .ruc(retention.getProveedor().getRuc())
                         .xml(xml)
                         .build();
             }
@@ -184,5 +261,66 @@ public class XMLGeneratorManager {
 
         Template template = xBuilder.getTemplate(XBuilder.Type.DEBIT_NOTE);
         return template.data(debitNote).render();
+    }
+
+    private String getXML(ProjectEntity projectEntity, VoidedDocuments voidedDocuments, IDGenerator idGenerator, Map<String, String> config) {
+        boolean isPercepcionRetencionOrGuia = voidedDocuments.getComprobantes().stream().anyMatch(voidedDocumentsItem -> {
+            return voidedDocumentsItem.getTipoComprobante().equals(Catalog1.PERCEPCION.getCode()) ||
+                    voidedDocumentsItem.getTipoComprobante().equals(Catalog1.RETENCION.getCode()) ||
+                    voidedDocumentsItem.getTipoComprobante().equals(Catalog1.GUIA_REMISION_TRANSPORTISTA.getCode());
+        });
+        ID id = idGenerator.generateVoidedDocumentID(projectEntity, voidedDocuments.getProveedor().getRuc(), isPercepcionRetencionOrGuia);
+        if (id != null) {
+//            voidedDocuments.setSerie(id.getSerie());
+            voidedDocuments.setNumero(id.getNumero());
+        }
+
+        ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
+        enricher.enrich(voidedDocuments);
+
+        Template template = xBuilder.getTemplate(XBuilder.Type.VOIDED_DOCUMENTS);
+        return template.data(voidedDocuments).render();
+    }
+
+    private String getXML(ProjectEntity projectEntity, SummaryDocuments summaryDocuments, IDGenerator idGenerator, Map<String, String> config) {
+        ID id = idGenerator.generateSummaryDocumentID(projectEntity, summaryDocuments.getProveedor().getRuc());
+        if (id != null) {
+//            voidedDocuments.setSerie(id.getSerie());
+            summaryDocuments.setNumero(id.getNumero());
+        }
+
+        ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
+        enricher.enrich(summaryDocuments);
+
+        Template template = xBuilder.getTemplate(XBuilder.Type.SUMMARY_DOCUMENTS);
+        return template.data(summaryDocuments).render();
+    }
+
+    private String getXML(ProjectEntity projectEntity, Perception perception, IDGenerator idGenerator, Map<String, String> config) {
+        ID id = idGenerator.generatePerceptionID(projectEntity, perception.getProveedor().getRuc(), config);
+        if (id != null) {
+            perception.setSerie(id.getSerie());
+            perception.setNumero(id.getNumero());
+        }
+
+        ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
+        enricher.enrich(perception);
+
+        Template template = xBuilder.getTemplate(XBuilder.Type.PERCEPTION);
+        return template.data(perception).render();
+    }
+
+    private String getXML(ProjectEntity projectEntity, Retention retention, IDGenerator idGenerator, Map<String, String> config) {
+        ID id = idGenerator.generateRetentionID(projectEntity, retention.getProveedor().getRuc(), config);
+        if (id != null) {
+            retention.setSerie(id.getSerie());
+            retention.setNumero(id.getNumero());
+        }
+
+        ContentEnricher enricher = new ContentEnricher(xBuilder.getDefaults(), LocalDate::now);
+        enricher.enrich(retention);
+
+        Template template = xBuilder.getTemplate(XBuilder.Type.RETENTION);
+        return template.data(retention).render();
     }
 }
