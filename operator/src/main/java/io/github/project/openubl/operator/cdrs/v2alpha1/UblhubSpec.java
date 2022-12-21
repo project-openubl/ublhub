@@ -72,9 +72,17 @@ public class UblhubSpec {
     @JsonPropertyDescription("In this section you can configure Oidc settings.")
     private OidcSpec oidcSpec;
 
-    @JsonProperty("sunat")
-    @JsonPropertyDescription("In this section you can configure SUNAT settings.")
-    private SunatSpec sunatSpec;
+    @JsonProperty("storage")
+    @JsonPropertyDescription("In this section you can configure the Storage.")
+    private StorageSpec storageSpec;
+
+    @JsonProperty("xbuilder")
+    @JsonPropertyDescription("XBuilder settings.")
+    private XBuilderSpec xBuilderSpec;
+
+    @JsonProperty("xsender")
+    @JsonPropertyDescription("XSender settings.")
+    private XSenderSpec xSenderSpec;
 
     @Data
     @Builder
@@ -152,12 +160,78 @@ public class UblhubSpec {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class SunatSpec {
-        @JsonPropertyDescription("Padron Reducido Url.")
-        private String padronReducidoUrl;
+    public static class StorageSpec {
+        public enum Type {
+            filesystem,
+            s3
+        }
 
-        @JsonPropertyDescription("Cron for downloading the Padron Reducido.")
-        private String padronReducidoCron;
+        @JsonPropertyDescription("Typo of chosen storage.")
+        private Type type;
+
+        @JsonProperty("filesystem")
+        @JsonPropertyDescription("Filesystem settings.")
+        private StorageFilesystemSpec filesystemSpec;
+
+        @JsonProperty("s3")
+        @JsonPropertyDescription("Filesystem settings.")
+        private StorageS3Spec s3Spec;
     }
 
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class StorageFilesystemSpec {
+        @JsonPropertyDescription("Size of the PVC to create.")
+        private String size;
+    }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class StorageS3Spec {
+        @JsonPropertyDescription("Only if you are using Minio, otherwise leave it empty")
+        private String host;
+
+        @JsonPropertyDescription("Only if you are using Minio, otherwise leave it empty")
+        private String healthUrl;
+
+        @JsonPropertyDescription("Region")
+        private String region;
+
+        @JsonPropertyDescription("Bucket")
+        private String bucket;
+
+        @JsonPropertyDescription("Access key id")
+        private String accessKeyId;
+
+        @JsonPropertyDescription("Secret access key")
+        private String secretAccessKey;
+    }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class XBuilderSpec {
+        @JsonPropertyDescription("Default currency")
+        private String moneda = "PEN";
+
+        @JsonPropertyDescription("Default IGV")
+        private String igvTasa;
+
+        @JsonPropertyDescription("Default ICB")
+        private String icbTasa;
+    }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class XSenderSpec {
+        @JsonPropertyDescription("Enable logging feature")
+        private Boolean enableLoggingFeature = false;
+    }
 }

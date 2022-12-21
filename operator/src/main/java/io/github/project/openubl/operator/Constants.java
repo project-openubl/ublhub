@@ -16,6 +16,8 @@
  */
 package io.github.project.openubl.operator;
 
+import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubSpec;
+
 import java.util.Map;
 
 public class Constants {
@@ -44,6 +46,7 @@ public class Constants {
     public static final String INGRESS_SUFFIX = "-" + UBLHUB_NAME + "-ingress";
     public static final String SECRET_SUFFIX = "-" + UBLHUB_NAME + "-secret";
     public static final String DEPLOYMENT_SUFFIX = "-" + UBLHUB_NAME + "-deployment";
+    public static final String PVC_SUFFIX = "-" + UBLHUB_NAME + "-pvc";
 
     public static final String BASIC_AUTH_SECRET_SUFFIX = "-basic-auth";
 
@@ -56,6 +59,14 @@ public class Constants {
 
 
     public static final String CERTIFICATES_FOLDER = "/mnt/certificates";
-    public static final String WORKSPACES_FOLDER = "/mnt/workspace";
+    public static final String STORAGE_FOLDER = "/mnt/ublhub-storage";
 
+    public static final UblhubSpec.XBuilderSpec defaultXBuilderConfig = UblhubSpec.XBuilderSpec.builder()
+            .moneda("PEN")
+            .igvTasa("0.18")
+            .icbTasa("0.4")
+            .build();
+    public static final UblhubSpec.XSenderSpec defaultXSenderConfig = UblhubSpec.XSenderSpec.builder()
+            .enableLoggingFeature(false)
+            .build();
 }

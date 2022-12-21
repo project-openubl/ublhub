@@ -29,7 +29,7 @@ import javax.interceptor.Interceptor;
 @ApplicationScoped
 public class DisabledAuthController extends AuthorizationController {
 
-    @ConfigProperty(name = "ublhub.disable.authorization")
+    @ConfigProperty(name = "openubl.ublhub.disable.authorization")
     boolean disableAuthorization;
 
     @Override

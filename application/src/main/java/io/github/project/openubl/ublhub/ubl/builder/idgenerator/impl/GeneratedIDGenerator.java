@@ -42,7 +42,7 @@ public class GeneratedIDGenerator implements IDGenerator {
     public static final String SERIE_PROPERTY = "serie";
     public static final String NUMERO_PROPERTY = "numero";
 
-    @ConfigProperty(name = "openubl.xbuilder.timezone")
+    @ConfigProperty(name = "openubl.ublhub.timezone")
     String timezone;
 
     @Inject
