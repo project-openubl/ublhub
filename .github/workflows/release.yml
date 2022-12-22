@@ -79,30 +79,30 @@ jobs:
           # Push images
           docker image push --all-tags quay.io/projectopenubl/ublhub
 
-  helm:
-    needs: [ prepare ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: master
-      - uses: actions/setup-java@v3
-        with:
-          java-version: 17
-          distribution: temurin
-          cache: maven
-      - uses: azure/setup-helm@v3
-      - name: Release Helm
-        run: |
-          mvn package -DskipTests
-          mvn process-resources
-          
-          helm plugin install https://github.com/chartmuseum/helm-push
-          helm repo add \
-          --username ${{ secrets.GITLAB_REGISTRY_USERNAME }} \
-          --password ${{ secrets.GITLAB_REGISTRY_TOKEN }} \
-          openubl https://gitlab.com/api/v4/projects/36554180/packages/helm/stable
-          helm cm-push --force application/target/helm openubl
+#  helm:
+#    needs: [ prepare ]
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#        with:
+#          ref: master
+#      - uses: actions/setup-java@v3
+#        with:
+#          java-version: 17
+#          distribution: temurin
+#          cache: maven
+#      - uses: azure/setup-helm@v3
+#      - name: Release Helm
+#        run: |
+#          mvn package -DskipTests
+#          mvn process-resources
+#
+#          helm plugin install https://github.com/chartmuseum/helm-push
+#          helm repo add \
+#          --username ${{ secrets.GITLAB_REGISTRY_USERNAME }} \
+#          --password ${{ secrets.GITLAB_REGISTRY_TOKEN }} \
+#          openubl https://gitlab.com/api/v4/projects/36554180/packages/helm/stable
+#          helm cm-push --force application/target/helm openubl
 
   operator:
     needs: [ prepare ]
@@ -187,7 +187,7 @@ jobs:
           github_pat: ${{ secrets.GH_PAT }}
 
   release:
-    needs: [ application, helm, publish-operator ]
+    needs: [ application, publish-operator ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
