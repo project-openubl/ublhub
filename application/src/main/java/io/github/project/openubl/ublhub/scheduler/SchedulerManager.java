@@ -30,7 +30,7 @@ import java.lang.annotation.Annotation;
 @ApplicationScoped
 public class SchedulerManager {
 
-    @ConfigProperty(name = "openubl.scheduler.type")
+    @ConfigProperty(name = "openubl.ublhub.scheduler.type")
     String schedulerType;
 
     @Inject

@@ -22,6 +22,7 @@ import io.github.project.openubl.operator.Config;
 import io.github.project.openubl.operator.Constants;
 import io.github.project.openubl.operator.cdrs.v2alpha1.Ublhub;
 import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubDeployment;
+import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubFileStoragePVC;
 import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubIngress;
 import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubSecretBasicAuth;
 import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubService;
@@ -40,6 +41,7 @@ import java.util.Map;
 import static io.javaoperatorsdk.operator.api.reconciler.Constants.WATCH_CURRENT_NAMESPACE;
 
 @ControllerConfiguration(namespaces = WATCH_CURRENT_NAMESPACE, name = "ublhub", dependents = {
+        @Dependent(name = "pvc", type = UblhubFileStoragePVC.class),
         @Dependent(name = "secret", type = UblhubSecretBasicAuth.class),
         @Dependent(name = "deployment", type = UblhubDeployment.class),
         @Dependent(name = "service", type = UblhubService.class),

@@ -25,7 +25,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class TsidUtil {
 
-    @ConfigProperty(name = "ublhub.tsid.bytes")
+    @ConfigProperty(name = "openubl.ublhub.tsid.bytes")
     int tsidBytes;
 
     @Produces

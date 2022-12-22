@@ -19,6 +19,7 @@ package io.github.project.openubl.operator.controllers;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.SecretKeySelector;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
@@ -26,6 +27,7 @@ import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.github.project.openubl.operator.Constants;
 import io.github.project.openubl.operator.cdrs.v2alpha1.Ublhub;
+import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubFileStoragePVC;
 import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubSecretBasicAuth;
 import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubService;
 import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubSpec;
@@ -62,8 +64,9 @@ public class UblhubDistConfigurator {
         configureDatabase();
         configureBasicAuth();
         configureOidc();
-//        configureSunat();
-//        configureWorkspace();
+        configureXBuilder();
+        configureXSender();
+        configureStorage();
 
         allEnvVars.add(new EnvVarBuilder()
                 .withName("QUARKUS_PROFILE")
@@ -173,35 +176,72 @@ public class UblhubDistConfigurator {
         allProfiles.add(Constants.PROFILE_OIDC);
     }
 
-//    private void configureSunat() {
-//        List<EnvVar> envVars = optionMapper(cr.getSpec().getSunatSpec())
-//                .mapOption("UBLHUB_SUNAT_PADRONREDUCIDOURL", UblhubSpec.SunatSpec::getPadronReducidoUrl)
-//                .mapOption("UBLHUB_SCHEDULED_CRON", UblhubSpec.SunatSpec::getPadronReducidoCron)
-//                .getEnvVars();
-//
-//        allEnvVars.addAll(envVars);
-//    }
+    private void configureXBuilder() {
+        UblhubSpec.XBuilderSpec xBuilderSpec = cr.getSpec().getXBuilderSpec() != null ?
+                cr.getSpec().getXBuilderSpec() : Constants.defaultXBuilderConfig;
 
-//    private void configureWorkspace() {
-//        var volume = new VolumeBuilder()
-//                .withName("ublhub-workspace")
-//                .withNewEmptyDir()
-//                .endEmptyDir()
-//                .build();
-//
-//        var volumeMount = new VolumeMountBuilder()
-//                .withName(volume.getName())
-//                .withMountPath(Constants.WORKSPACES_FOLDER)
-//                .build();
-//
-//        allEnvVars.add(new EnvVarBuilder()
-//                .withName("UBLHUB_WORKSPACE_DIRECTORY")
-//                .withValue(Constants.WORKSPACES_FOLDER)
-//                .build()
-//        );
-//        allVolumes.add(volume);
-//        allVolumeMounts.add(volumeMount);
-//    }
+        List<EnvVar> envVars = optionMapper(xBuilderSpec)
+                .mapOption("QUARKUS_XBUILDER_MONEDA", UblhubSpec.XBuilderSpec::getMoneda)
+                .mapOption("QUARKUS_XBUILDER_UNIDAD_MEDIDA", "NIU")
+                .mapOption("QUARKUS_XBUILDER_IGV_TASA", UblhubSpec.XBuilderSpec::getIgvTasa)
+                .mapOption("QUARKUS_XBUILDER_ICB_TASA", UblhubSpec.XBuilderSpec::getIcbTasa)
+                .getEnvVars();
+
+        allEnvVars.addAll(envVars);
+    }
+
+    private void configureXSender() {
+        UblhubSpec.XSenderSpec xSenderSpec = cr.getSpec().getXSenderSpec() != null ?
+                cr.getSpec().getXSenderSpec() : Constants.defaultXSenderConfig;
+
+        List<EnvVar> envVars = optionMapper(xSenderSpec)
+                .mapOption("QUARKUS_XSENDER_ENABLE_LOGGING_FEATURE", UblhubSpec.XSenderSpec::getEnableLoggingFeature)
+                .getEnvVars();
+
+        allEnvVars.addAll(envVars);
+    }
+
+    private void configureStorage() {
+        UblhubSpec.StorageSpec storageSpec = cr.getSpec().getStorageSpec();
+        switch (storageSpec.getType()) {
+            case filesystem -> {
+                var volume = new VolumeBuilder()
+                        .withName("ublhub-storage")
+                        .withPersistentVolumeClaim(new PersistentVolumeClaimVolumeSourceBuilder()
+                                .withClaimName(UblhubFileStoragePVC.getPersistentVolumeClaimName(cr))
+                                .build()
+                        )
+                        .build();
+
+                var volumeMount = new VolumeMountBuilder()
+                        .withName(volume.getName())
+                        .withMountPath(Constants.STORAGE_FOLDER)
+                        .build();
+
+                List<EnvVar> filesystemEnvVars = optionMapper(cr.getSpec().getStorageSpec())
+                        .mapOption("OPENUBL_STORAGE_TYPE", UblhubSpec.StorageSpec.Type.filesystem)
+                        .mapOption("OPENUBL_STORAGE_FILESYSTEM_FOLDER", Constants.STORAGE_FOLDER)
+                        .getEnvVars();
+
+                allVolumes.add(volume);
+                allVolumeMounts.add(volumeMount);
+
+                allEnvVars.addAll(filesystemEnvVars);
+            }
+            case s3 -> {
+                List<EnvVar> envVars = optionMapper(cr.getSpec().getStorageSpec())
+                        .mapOption("OPENUBL_STORAGE_S3_HEALTH_URL", spec -> spec.getS3Spec().getHealthUrl())
+                        .mapOption("OPENUBL_STORAGE_S3_HOST", spec -> spec.getS3Spec().getHost())
+                        .mapOption("OPENUBL_STORAGE_S3_REGION", spec -> spec.getS3Spec().getRegion())
+                        .mapOption("OPENUBL_STORAGE_S3_BUCKET", spec -> spec.getS3Spec().getBucket())
+                        .mapOption("OPENUBL_STORAGE_S3_ACCESS_KEY_ID", spec -> spec.getS3Spec().getAccessKeyId())
+                        .mapOption("OPENUBL_STORAGE_S3_SECRET_ACCESS_KEY", spec -> spec.getS3Spec().getSecretAccessKey())
+                        .getEnvVars();
+
+                allEnvVars.addAll(envVars);
+            }
+        }
+    }
 
     private <T> OptionMapper<T> optionMapper(T optionSpec) {
         return new OptionMapper<>(optionSpec);
