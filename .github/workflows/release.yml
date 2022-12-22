@@ -66,7 +66,7 @@ jobs:
           -Dquarkus.container-image.name=ublhub \
           -Dquarkus.container-image.tag=latest \
           -P native,ui \
-          -f application
+          -pl application
 
           # Identify major version
           major=$(echo "${{ github.event.inputs.version }}" | cut -d. -f1)
@@ -136,7 +136,7 @@ jobs:
           -Dquarkus.operator-sdk.bundle.channels=alpha \
           -Doperator.ublhub.image=quay.io/projectopenubl/ublhub:v${{ github.event.inputs.version }} \
           -P native \
-          -f operator
+          -pl operator
 
           # Tag images
           docker tag quay.io/projectopenubl/ublhub-operator:latest quay.io/projectopenubl/ublhub-operator:v${{ github.event.inputs.version }}
@@ -167,7 +167,7 @@ jobs:
           -Doperator.ublhub.image=quay.io/projectopenubl/ublhub:v${{ github.event.inputs.version }} \
           -Dquarkus.operator-sdk.bundle.package-name=ublhub-operator \
           -Dquarkus.operator-sdk.bundle.channels=alpha \
-          -f operator
+          -pl operator
 
           groovy scripts/enrichCSV.groovy \
           operator/target/bundle/ublhub-operator/manifests/ublhub-operator.clusterserviceversion.yaml \
@@ -200,7 +200,7 @@ jobs:
           distribution: temurin
           cache: maven
       - name: Build distribution
-        run: mvn package -DskipTests -P ui,distribution -f application
+        run: mvn package -DskipTests -P ui,distribution -pl application
 
       - name: JReleaser - release
         uses: jreleaser/release-action@v2
