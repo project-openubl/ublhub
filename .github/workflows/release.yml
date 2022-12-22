@@ -140,7 +140,7 @@ jobs:
           docker image push --all-tags quay.io/projectopenubl/ublhub-operator
 
   publish-operator:
-    needs: [ operator ]
+    needs: [ application, operator ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -181,7 +181,7 @@ jobs:
           github_pat: ${{ secrets.GH_PAT }}
 
   release:
-    needs: [ application, publish-operator ]
+    needs: [ publish-operator ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
