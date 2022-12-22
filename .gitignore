@@ -42,4 +42,4 @@ nb-configuration.xml
 !application/src/main/distribution/*
 
 application/workspace/*
-jreleaser/templates/article/openapi.*
+src/jreleaser/templates/article/openapi.*
