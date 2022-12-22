@@ -58,18 +58,18 @@ jobs:
         working-directory: application/src/main/webapp
         run: npm run test -- --coverage --watchAll=false
 
-  helm-tests:
-    name: Helm Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
-        with:
-          java-version: 17
-          distribution: temurin
-          cache: maven
-      - uses: azure/setup-helm@v3
-      - name: Helm
-        run: |
-          mvn process-resources
-          helm lint application/target/helm/
+#  helm-tests:
+#    name: Helm Tests
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#      - uses: actions/setup-java@v3
+#        with:
+#          java-version: 17
+#          distribution: temurin
+#          cache: maven
+#      - uses: azure/setup-helm@v3
+#      - name: Helm
+#        run: |
+#          mvn process-resources
+#          helm lint application/target/helm/
