@@ -13,7 +13,7 @@ Microservicio que administra tus XMLs emitidos a la SUNAT.
 ## Links
 
 - [Documentación](https://project-openubl.github.io)
-- [Discusiones](https://github.com/project-openubl/searchpe/discussions)
+- [Discusiones](https://github.com/project-openubl/ublhub/discussions)
 
 ## License
 
