@@ -45,6 +45,12 @@ import io.quarkiverse.operatorsdk.bundle.runtime.SharedCSVMetadata;
                         "key": "password"
                       },
                       "url": "jdbc:postgresql://postgresql-primary.default.svc:5432/ublhubdb"
+                    },
+                    "storage": {
+                      "type": "filesystem",
+                      "filesystem": {
+                        "size": "1Gi"
+                      }
                     }
                   }
                 }]

@@ -90,19 +90,19 @@ mvn clean package \
 -Dquarkus.container-image.build=true \
 -Dquarkus.container-image.push=false \
 -Dquarkus.container-image.registry=quay.io \
--Dquarkus.container-image.group=projectopenubl \
+-Dquarkus.container-image.group=$USER \
 -Dquarkus.container-image.name=ublhub-operator \
--Dquarkus.container-image.tag=nightly \
 -Dquarkus.operator-sdk.bundle.package-name=ublhub-operator \
 -Dquarkus.operator-sdk.bundle.channels=alpha \
+-Dquarkus.application.version=test \
 -P native
-podman push quay.io/projectopenubl/ublhub-operator:nightly
+podman push quay.io/$USER/ublhub-operator:test
 ```
 
 Create bundle:
 
 ```shell
-BUNDLE_IMAGE=quay.io/$USER/ublhub-operator-bundle:nightly
+BUNDLE_IMAGE=quay.io/$USER/ublhub-operator-bundle:test
 podman build -t $BUNDLE_IMAGE -f target/bundle/ublhub-operator/bundle.Dockerfile target/bundle/ublhub-operator
 podman push $BUNDLE_IMAGE
 ```
@@ -110,7 +110,7 @@ podman push $BUNDLE_IMAGE
 Create catalog image:
 
 ```shell
-CATALOG_IMAGE=quay.io/$USER/ublhub-operator-catalog:nightly
+CATALOG_IMAGE=quay.io/$USER/ublhub-operator-catalog:test
 opm index add \
     --bundles $BUNDLE_IMAGE \
     --tag $CATALOG_IMAGE \

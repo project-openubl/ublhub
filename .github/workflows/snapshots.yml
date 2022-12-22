@@ -31,7 +31,7 @@ jobs:
           -Dquarkus.container-image.name=ublhub \
           -Dquarkus.container-image.tag=latest \
           -P native,ui \
-          -f application
+          -pl application
       - name: Save container image
         run: docker save -o ublhub-container-image.tar quay.io/projectopenubl/ublhub:latest
       - name: Upload container image
@@ -60,7 +60,7 @@ jobs:
           -Dquarkus.container-image.name=ublhub-operator \
           -Dquarkus.container-image.tag=latest \
           -P native \
-          -f operator
+          -pl operator
       - name: Save container image
         run: docker save -o ublhub-operator-container-image.tar quay.io/projectopenubl/ublhub-operator:latest
       - name: Upload container image
