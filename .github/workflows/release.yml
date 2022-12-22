@@ -11,11 +11,6 @@ on:
         description: "Next version"
         default: "E.g. 5.0.0-SNAPSHOT"
         required: false
-      skip_publish_operator:
-        description: Whether or not skip the publication of the operator
-        type: boolean
-        default: false
-        required: false
 
 jobs:
   prepare:
@@ -145,7 +140,6 @@ jobs:
           docker image push --all-tags quay.io/projectopenubl/ublhub-operator
 
   publish-operator:
-    if: ${{ github.event.inputs.skip_publish_operator == false }}
     needs: [ operator ]
     runs-on: ubuntu-latest
     steps:
