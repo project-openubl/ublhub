@@ -61,6 +61,8 @@ public class Constants {
     public static final String CERTIFICATES_FOLDER = "/mnt/certificates";
     public static final String STORAGE_FOLDER = "/mnt/ublhub-storage";
 
+    public static final String STORAGE_MIN_SIZE = "100Mi";
+
     public static final UblhubSpec.XBuilderSpec defaultXBuilderConfig = UblhubSpec.XBuilderSpec.builder()
             .moneda("PEN")
             .igvTasa("0.18")

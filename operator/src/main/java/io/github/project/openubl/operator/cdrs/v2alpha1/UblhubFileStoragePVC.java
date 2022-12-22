@@ -57,10 +57,15 @@ public class UblhubFileStoragePVC extends CRUDKubernetesDependentResource<Persis
     }
 
     private PersistentVolumeClaimSpec getPersistentVolumeClaimSpec(Ublhub cr) {
+        boolean isFileSystemStorage = cr.getSpec().getStorageSpec() != null && cr.getSpec().getStorageSpec().getType().equals(UblhubSpec.StorageSpec.Type.filesystem);
+        Quantity storageSize = isFileSystemStorage ?
+                new Quantity(cr.getSpec().getStorageSpec().getFilesystemSpec().getSize()) :
+                new Quantity(Constants.STORAGE_MIN_SIZE);
+
         return new PersistentVolumeClaimSpecBuilder()
                 .withAccessModes("ReadWriteOnce")
                 .withResources(new ResourceRequirementsBuilder()
-                        .addToRequests("storage", new Quantity(cr.getSpec().getStorageSpec().getFilesystemSpec().getSize()))
+                        .addToRequests("storage", storageSize)
                         .build()
                 )
                 .build();
