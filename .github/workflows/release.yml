@@ -166,7 +166,7 @@ jobs:
           -pl operator
 
           groovy scripts/enrichCSV.groovy operator/target/bundle/ublhub-operator/manifests/ublhub-operator.clusterserviceversion.yaml ${{ github.event.inputs.version }}
-          sed -i "/  annotations: ''/d" ./operator/target/bundle/searchpe-operator/manifests/searchpe-operator.clusterserviceversion.yaml
+          sed -i "/  annotations: ''/d" ./operator/target/bundle/ublhub-operator/manifests/ublhub-operator.clusterserviceversion.yaml
       - name: Create PR community-operators
         uses: project-openubl/.github/actions/pull-request-operator@master
         with:
