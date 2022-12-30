@@ -100,6 +100,7 @@ export const ProjectContextSelector: React.FC<IProjectContextSelectorProps> = ({
 
   return (
     <ContextSelector
+      ouiaId="project-context-selector"
       isOpen={isSelectorOpen}
       toggleText={currentContext?.label}
       onToggle={toggleSelector}

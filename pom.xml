@@ -125,6 +125,7 @@
                                 <exclude>**/.mvn/**</exclude>
                                 <exclude>.github/**</exclude>
                                 <exclude>**/workspace/**</exclude>
+                                <exclude>scripts/**</exclude>
                             </excludes>
                         </licenseSet>
                     </licenseSets>

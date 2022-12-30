@@ -58,6 +58,249 @@ jobs:
         working-directory: application/src/main/webapp
         run: npm run test -- --coverage --watchAll=false
 
+  application-container:
+    name: Application container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: temurin
+          cache: maven
+      - name: Build container image
+        run: |
+          mvn -U -B package --file pom.xml -DskipTests \
+          -Dquarkus.native.container-build=true \
+          -Dquarkus.container-image.push=false \
+          -Dquarkus.container-image.build=true \
+          -Dquarkus.container-image.registry=localhost:5000 \
+          -Dquarkus.container-image.group="" \
+          -Dquarkus.container-image.name=ublhub \
+          -Dquarkus.container-image.tag=0.0.0 \
+          -P native,ui \
+          -pl application
+      - name: Save container image
+        run: docker save -o ublhub-application-container-image.tar localhost:5000/ublhub:0.0.0
+      - name: Upload container image
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: ublhub-application-container-image.tar
+
+  operator-container:
+    name: Operator container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: temurin
+          cache: maven
+      - name: Build container image
+        run: |
+          mvn -U -B package --file pom.xml -DskipTests \
+          -Dquarkus.native.container-build=true \
+          -Dquarkus.container-image.push=false \
+          -Dquarkus.container-image.build=true \
+          -Dquarkus.container-image.registry=localhost:5000 \
+          -Dquarkus.container-image.group="" \
+          -Dquarkus.container-image.name=ublhub-operator \
+          -Dquarkus.container-image.tag=0.0.0 \
+          -P native \
+          -pl operator
+      - name: Save container image
+        run: docker save -o ublhub-operator-container-image.tar localhost:5000/ublhub-operator:0.0.0
+      - name: Upload container image
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: ublhub-operator-container-image.tar
+
+  catalog-container:
+    name: Catalog container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: temurin
+          cache: maven
+      - name: Setup OLM CLIs
+        run: |
+          export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
+          export OS=$(uname | awk '{print tolower($0)}')
+          
+          # Opm
+          export OPERATOR_SDK_DL_URL=https://github.com/operator-framework/operator-registry/releases/download/v1.26.2
+          curl -LO ${OPERATOR_SDK_DL_URL}/${OS}-${ARCH}-opm
+          chmod +x ${OS}-${ARCH}-opm && sudo mv ${OS}-${ARCH}-opm /usr/local/bin/opm
+      - name: Setup other tools
+        run: |
+          sudo apt-get install -y groovy
+      - name: Build container image
+        run: |
+          mvn -U -B package --file pom.xml -DskipTests \
+          -Dquarkus.native.container-build=false \
+          -Dquarkus.container-image.push=false \
+          -Dquarkus.container-image.build=false \
+          -Dquarkus.container-image.registry=localhost:5000 \
+          -Dquarkus.container-image.group="" \
+          -Dquarkus.container-image.name=ublhub-operator \
+          -Dquarkus.operator-sdk.bundle.package-name=ublhub-operator \
+          -Dquarkus.operator-sdk.bundle.channels=alpha \
+          -Dquarkus.application.version=0.0.0 \
+          -Dquarkus.kubernetes.image-pull-policy=if-not-present \
+          -Dquarkus.kubernetes.env.vars.operator-ublhub-image=localhost:5000/ublhub:0.0.0 \
+          -Dquarkus.kubernetes.env.vars.operator-ublhub-image-pull-policy=IfNotPresent \
+          -pl operator
+          
+          groovy scripts/enrichCSV.groovy operator/target/bundle/ublhub-operator/manifests/ublhub-operator.clusterserviceversion.yaml 0.0.0
+          sed -i "/  annotations: ''/d" ./operator/target/bundle/ublhub-operator/manifests/ublhub-operator.clusterserviceversion.yaml
+      - name: Init local Registry
+        run: |
+          docker run -d -p 5000:5000 --name registry registry:2
+          sleep 5
+      - name: Create bundle image
+        run: |
+          # Bundle
+          BUNDLE_IMAGE=localhost:5000/ublhub-operator-bundle:0.0.0
+          docker build -t $BUNDLE_IMAGE -f operator/target/bundle/ublhub-operator/bundle.Dockerfile operator/target/bundle/ublhub-operator
+          docker push $BUNDLE_IMAGE
+          
+          # Catalog
+          CATALOG_IMAGE=localhost:5000/ublhub-operator-catalog:0.0.0
+          opm index add --bundles $BUNDLE_IMAGE --tag $CATALOG_IMAGE --use-http --build-tool docker
+
+          # Save container images
+          docker save -o ublhub-bundle-container-image.tar $BUNDLE_IMAGE
+          docker save -o ublhub-catalog-container-image.tar $CATALOG_IMAGE
+      - name: Upload container image
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: |
+            ublhub-bundle-container-image.tar
+            ublhub-catalog-container-image.tar
+
+  ui-e2e-tests:
+    needs: [ application-container, operator-container, catalog-container ]
+    name: UI E2E Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        k8s-version: [ v1.25.3 ]
+        browser: [ chrome ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - uses: actions/download-artifact@v3
+      - name: Load and config images
+        run: |
+          docker load -i artifacts/ublhub-application-container-image.tar
+          docker load -i artifacts/ublhub-operator-container-image.tar
+          docker load -i artifacts/ublhub-bundle-container-image.tar
+          docker load -i artifacts/ublhub-catalog-container-image.tar
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.7.2
+        with:
+          minikube version: v1.28.0
+          kubernetes version: ${{ matrix.k8s-version }}
+          start args: --insecure-registry "10.0.0.0/24" --addons=registry,ingress
+          github token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configure Minikube
+        run: |
+          # Install OLM
+          curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.22.0/install.sh | bash -s v0.22.0
+          
+          # Load images
+          minikube image load localhost:5000/ublhub:0.0.0
+          minikube image load localhost:5000/ublhub-operator:0.0.0
+          minikube image load localhost:5000/ublhub-operator-bundle:0.0.0
+          minikube image load localhost:5000/ublhub-operator-catalog:0.0.0
+          
+          # Push images to internal registry
+          docker push localhost:5000/ublhub:0.0.0
+          docker push localhost:5000/ublhub-operator:0.0.0
+          docker push localhost:5000/ublhub-operator-bundle:0.0.0
+          docker push localhost:5000/ublhub-operator-catalog:0.0.0
+      - name: Install Ublhub operator
+        run: |
+          kubectl create ns openubl
+          
+          # Create custom catalog         
+          kubectl create -f scripts/ublhub-operator.yaml
+          kubectl get pods -n olm --selector=olm.catalogSource=ublhub-catalog-source
+          
+          # Verify subscription
+          kubectl get csv -n olm
+      - name: Install Postgresql Operator
+        run: |
+          kubectl create -f https://operatorhub.io/install/postgresql.yaml
+          
+          PHASE=""
+          while [ "$PHASE" != "Succeeded" ]
+          do
+            PHASE=$(kubectl get csv -n operators -o jsonpath="{$.items[*].status.phase}")
+            echo "Waiting for postgresql csv. Current phase=$PHASE"
+            sleep 10;
+          done
+      - name: Install DB
+        run: |
+          kubectl -n openubl apply -f scripts/postgresql.yaml
+          
+          POD_COUNT=0
+          while [ $POD_COUNT -le 3 ]
+          do
+            POD_COUNT=$(kubectl get pods -n openubl -o name | wc -l)
+            echo "Waiting for pods to exists. Current count=$POD_COUNT"
+            sleep 10;
+          done
+          echo "Resources exists, now wait for them to be ready"
+
+          kubectl wait pods -l "postgres-operator.crunchydata.com/data"="pgbackrest" -n openubl --for condition=Ready --timeout=-1s
+          kubectl wait pods -l "postgres-operator.crunchydata.com/data"="postgres" -n openubl --for condition=Ready --timeout=-1s
+      - name: Install Ublhub
+        run: |
+          kubectl -n openubl apply -f scripts/ublhub.yaml
+          sleep 10;
+          
+          kubectl wait pods --selector "app.kubernetes.io/name"="ublhub" -n openubl --for condition=Ready --timeout=-1s
+
+          external_ip=""
+          while [[ -z $external_ip ]]
+          do
+            external_ip=$(kubectl get ingress ublhub-ublhub-ingress --template="{{range.status.loadBalancer.ingress}}{{.ip}}{{end}}" -n openubl);
+            echo "Waiting for end point...current=$external_ip"
+            sleep 10;
+          done
+
+          echo "End point ready: $external_ip"
+          export endpoint=$(minikube ip);
+          echo "CYPRESS_BASE_URL=https://$endpoint" >> $GITHUB_ENV
+      - name: Cypress run
+        uses: cypress-io/github-action@v5
+        with:
+          working-directory: application/src/main/webapp
+          record: false
+          browser: ${{ matrix.browser }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: container-screenshots-${{ matrix.os }}-${{ matrix.browser }}
+          path: application/src/main/webapp/cypress/screenshots
+      - uses: actions/upload-artifact@v1
+        if: always()
+        with:
+          name: container-videos-${{ matrix.os }}-${{ matrix.browser }}
+          path: application/src/main/webapp/cypress/videos
+
 #  helm-tests:
 #    name: Helm Tests
 #    runs-on: ubuntu-latest

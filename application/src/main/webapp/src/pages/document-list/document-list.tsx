@@ -452,7 +452,7 @@ export const DocumentList: React.FC = () => {
                 <ToolbarItem>
                   <Button
                     type="button"
-                    aria-label="new-project"
+                    aria-label="new-document"
                     variant={ButtonVariant.primary}
                     onClick={() => documentModal.open("ADD")}
                   >

@@ -68,6 +68,7 @@
     ]
   },
   "devDependencies": {
+    "cypress": "^12.2.0",
     "monaco-editor-webpack-plugin": "7.0.1",
     "react-app-rewired": "^2.2.1"
   },
