@@ -74,30 +74,30 @@ jobs:
           # Push images
           docker image push --all-tags quay.io/projectopenubl/ublhub
 
-#  helm:
-#    needs: [ prepare ]
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#        with:
-#          ref: master
-#      - uses: actions/setup-java@v3
-#        with:
-#          java-version: 17
-#          distribution: temurin
-#          cache: maven
-#      - uses: azure/setup-helm@v3
-#      - name: Release Helm
-#        run: |
-#          mvn package -DskipTests
-#          mvn process-resources
-#
-#          helm plugin install https://github.com/chartmuseum/helm-push
-#          helm repo add \
-#          --username ${{ secrets.GITLAB_REGISTRY_USERNAME }} \
-#          --password ${{ secrets.GITLAB_REGISTRY_TOKEN }} \
-#          openubl https://gitlab.com/api/v4/projects/36554180/packages/helm/stable
-#          helm cm-push --force application/target/helm openubl
+  #  helm:
+  #    needs: [ prepare ]
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #      - uses: actions/checkout@v3
+  #        with:
+  #          ref: master
+  #      - uses: actions/setup-java@v3
+  #        with:
+  #          java-version: 17
+  #          distribution: temurin
+  #          cache: maven
+  #      - uses: azure/setup-helm@v3
+  #      - name: Release Helm
+  #        run: |
+  #          mvn package -DskipTests
+  #          mvn process-resources
+  #
+  #          helm plugin install https://github.com/chartmuseum/helm-push
+  #          helm repo add \
+  #          --username ${{ secrets.GITLAB_REGISTRY_USERNAME }} \
+  #          --password ${{ secrets.GITLAB_REGISTRY_TOKEN }} \
+  #          openubl https://gitlab.com/api/v4/projects/36554180/packages/helm/stable
+  #          helm cm-push --force application/target/helm openubl
 
   operator:
     needs: [ prepare ]
@@ -152,20 +152,21 @@ jobs:
           java-version: 17
           distribution: temurin
           cache: maven
+      - name: Setup other tools
+        run: |
+          sudo apt-get install -y groovy
       - name: Prepare files
         working-directory: ublhub
         run: |
-          sudo apt-get install -y groovy
-
           mvn package -DskipTests \
           -Doperator.ublhub.image=quay.io/projectopenubl/ublhub:v${{ github.event.inputs.version }} \
           -Dquarkus.operator-sdk.bundle.package-name=ublhub-operator \
           -Dquarkus.operator-sdk.bundle.channels=alpha \
+          -Dquarkus.application.version=v${{ github.event.inputs.version }} \
           -pl operator
 
-          groovy scripts/enrichCSV.groovy \
-          operator/target/bundle/ublhub-operator/manifests/ublhub-operator.clusterserviceversion.yaml \
-          ${{ github.event.inputs.version }}
+          groovy scripts/enrichCSV.groovy operator/target/bundle/ublhub-operator/manifests/ublhub-operator.clusterserviceversion.yaml ${{ github.event.inputs.version }}
+          sed -i "/  annotations: ''/d" ./operator/target/bundle/ublhub-operator/manifests/ublhub-operator.clusterserviceversion.yaml
       - name: Create PR community-operators
         uses: project-openubl/.github/actions/pull-request-operator@master
         with:

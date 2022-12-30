@@ -5,7 +5,7 @@
 Start minikube
 
 ```shell
-minikube start --kubernetes-version 1.24.7
+minikube start
 minikube addons enable ingress
 ```
 

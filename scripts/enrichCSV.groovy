@@ -17,6 +17,7 @@
 @Grab('org.yaml:snakeyaml:1.33')
 import org.yaml.snakeyaml.*
 import groovy.yaml.*
+import java.time.LocalDate
 
 def file = new File(this.args[0])
 def version = this.args[1]
@@ -26,7 +27,9 @@ def yaml = new Yaml().load(fileReader)
 
 yaml.metadata.name = 'ublhub-operator.v' + version
 yaml.spec.annotations.containerImage = 'quay.io/projectopenubl/ublhub-operator:v' + version
-yaml.spec.install.spec.deployments[0].spec.template.spec.containers[0].image = 'quay.io/projectopenubl/ublhub-operator:v' + version
+yaml.spec.annotations.description = 'Ublhub is an enterprise solution for managing XML files based on UBL (Universal Business Language). Valid for Peru.'
+yaml.spec.annotations.createdAt = LocalDate.now().toString()
+//yaml.spec.install.spec.deployments[0].spec.template.spec.containers[0].image = 'quay.io/projectopenubl/ublhub-operator:v' + version
 yaml.spec.version = version
 yaml.spec.customresourcedefinitions.owned[0].displayName = 'Ublhub'
 yaml.spec.customresourcedefinitions.owned[0].description = 'Ublhub'

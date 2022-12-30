@@ -1,0 +1,17 @@
+kind: "Ublhub"
+apiVersion: "ublhub.openubl.io/v1alpha1"
+metadata:
+  name: ublhub
+spec:
+  db:
+    usernameSecret:
+      name: postgresql-pguser-foo
+      key: user
+    passwordSecret:
+      name: postgresql-pguser-foo
+      key: password
+    url: jdbc:postgresql://postgresql-primary.openubl.svc:5432/ublhubdb
+  storage:
+    type: "filesystem"
+    filesystem:
+      size: "1Gi"
