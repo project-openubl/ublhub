@@ -58,7 +58,7 @@
         <dependency>
             <groupId>io.github.project-openubl</groupId>
             <artifactId>quarkus-xbuilder</artifactId>
-            <version>2.0.0-Beta5</version>
+            <version>2.0.0.Beta2</version>
         </dependency>
         <dependency>
             <groupId>io.github.project-openubl</groupId>
