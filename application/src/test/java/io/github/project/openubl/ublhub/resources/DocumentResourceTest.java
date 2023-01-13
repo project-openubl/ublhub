@@ -64,7 +64,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
     final static SunatDto sunatDto = SunatDto.builder()
             .facturaUrl("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
             .guiaUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
-            .retencionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")
+            .retencionUrl("https://api-cpe.sunat.gob.pe/v1/contribuyente/gem")
             .username("MODDATOS")
             .password("MODDATOS")
             .build();

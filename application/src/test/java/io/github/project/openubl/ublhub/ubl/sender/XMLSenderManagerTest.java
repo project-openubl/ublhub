@@ -115,7 +115,7 @@ public class XMLSenderManagerTest {
         XMLSenderConfig wsConfig = XMLSenderConfig.builder()
                 .facturaUrl("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
                 .guiaRemisionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
-                .percepcionRetencionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")
+                .percepcionRetencionUrl("https://api-cpe.sunat.gob.pe/v1/contribuyente/gem")
                 .username("MODDATOS11111111111")
                 .password("MODDATOS")
                 .build();
@@ -140,7 +140,7 @@ public class XMLSenderManagerTest {
         XMLSenderConfig wsConfig = XMLSenderConfig.builder()
                 .facturaUrl("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
                 .guiaRemisionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService")
-                .percepcionRetencionUrl("https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService")
+                .percepcionRetencionUrl("https://api-cpe.sunat.gob.pe/v1/contribuyente/gem")
                 .username("MODDATOS11111111111")
                 .password("MODDATOS")
                 .build();

@@ -171,6 +171,12 @@
             "type" : "string",
             "description" : "Catalog 16"
           },
+          "tasaIgv" : {
+            "type" : "number",
+            "description" : "Ejemplo: 0.18",
+            "minimum" : 0,
+            "maximum" : 1
+          },
           "totalImpuestos" : {
             "type" : "number",
             "minimum" : 0
