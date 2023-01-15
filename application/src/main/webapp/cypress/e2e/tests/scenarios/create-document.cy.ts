@@ -16,7 +16,7 @@ describe("Flows", () => {
       facturaUrl:
         "https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService",
       guiaUrl:
-        "https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService",
+        "https://api-cpe.sunat.gob.pe/v1/contribuyente/gem",
       retencionUrl:
         "https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService",
       sunatUser: "MODDATOS",

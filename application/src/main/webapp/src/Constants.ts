@@ -18,14 +18,14 @@ export const SUNAT_BETA_CREDENTIALS: ISunatCredentials = {
 
 export const SUNAT_PROD_URLS: SunatURls = {
   factura: "https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl",
-  guia: "https://e-guiaremision.sunat.gob.pe/ol-ti-itemision-guia-gem/billService?wsdl",
+  guia: "https://api-cpe.sunat.gob.pe/v1/contribuyente/gem",
   retencion:
     "https://e-factura.sunat.gob.pe/ol-ti-itemision-otroscpe-gem/billService?wsdl",
 };
 
 export const SUNAT_BETA_URLS: SunatURls = {
   factura: "https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService",
-  guia: "https://e-beta.sunat.gob.pe/ol-ti-itemision-guia-gem-beta/billService",
+  guia: "https://api-cpe.sunat.gob.pe/v1/contribuyente/gem",
   retencion:
     "https://e-beta.sunat.gob.pe/ol-ti-itemision-otroscpe-gem-beta/billService",
 };
