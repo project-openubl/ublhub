@@ -31,7 +31,7 @@
     <artifactId>ublhub-operator</artifactId>
 
     <properties>
-        <quarkus-sdk.version>5.0.0</quarkus-sdk.version>
+        <quarkus-sdk.version>5.0.4</quarkus-sdk.version>
         <skipITs>true</skipITs>
     </properties>
 
