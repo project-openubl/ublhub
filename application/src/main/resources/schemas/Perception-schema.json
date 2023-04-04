@@ -101,7 +101,7 @@
           "pattern" : "[0-9]+"
         }
       },
-      "description" : "Persona que firma electrónicamente el comprobante. Si NULL los datos del proveedor son usados."
+      "description" : "Persona que firma el comprobante. Si NULL los datos del proveedor son usados."
     },
     "importeTotalCobrado" : {
       "type" : "number",

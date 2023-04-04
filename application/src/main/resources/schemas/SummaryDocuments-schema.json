@@ -118,6 +118,10 @@
                   }
                 }
               },
+              "moneda" : {
+                "type" : "string",
+                "description" : "Moneda del comprobante declarado"
+              },
               "serieNumero" : {
                 "type" : "string"
               },
@@ -179,7 +183,8 @@
           "maxLength" : 11,
           "pattern" : "[0-9]+"
         }
-      }
+      },
+      "description" : "Persona que firma el comprobante. Si NULL los datos del proveedor son usados."
     },
     "moneda" : {
       "type" : "string",

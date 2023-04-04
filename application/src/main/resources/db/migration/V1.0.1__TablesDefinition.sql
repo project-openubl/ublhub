@@ -114,6 +114,17 @@ create table GENERATED_ID
     primary key (id)
 );
 
+create table QUTE_TEMPLATE
+(
+    id            int8          not null,
+    content       varchar(4000) not null,
+    template_type varchar(50)   not null,
+    document_type varchar(50)   not null,
+    project_id    int8          not null,
+    company_id    int8          not null,
+    primary key (id)
+);
+
 alter table if exists PROJECT
     add constraint uq_project_name unique (name);
 

@@ -327,6 +327,17 @@ export const DocumentList: React.FC = () => {
 
     if (row.status.xmlData) {
       actions.push({
+        title: "Ver PDF",
+        onClick: (
+          event: React.MouseEvent,
+          rowIndex: number,
+          rowData: IRowData
+        ) => {
+          const row: DocumentDto = getRow(rowData);
+          // xmlCdrModal.open("xml", row);
+        },
+      });
+      actions.push({
         title: "Ver XML",
         onClick: (
           event: React.MouseEvent,

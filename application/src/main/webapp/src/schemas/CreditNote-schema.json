@@ -125,6 +125,19 @@
             "type" : "string",
             "description" : "Catalogo 07"
           },
+          "isc" : {
+            "type" : "number",
+            "description" : "Monto total de ISC",
+            "minimum" : 0
+          },
+          "iscBaseImponible" : {
+            "type" : "number",
+            "minimum" : 0
+          },
+          "iscTipo" : {
+            "type" : "string",
+            "description" : "Catalogo 08"
+          },
           "precio" : {
             "type" : "number",
             "description" : "Precio sin incluir impuestos",
@@ -142,9 +155,19 @@
             "type" : "string",
             "description" : "Catalog 16"
           },
+          "tasaIcb" : {
+            "type" : "number",
+            "minimum" : 0
+          },
           "tasaIgv" : {
             "type" : "number",
             "description" : "Ejemplo: 0.18",
+            "minimum" : 0,
+            "maximum" : 1
+          },
+          "tasaIsc" : {
+            "type" : "number",
+            "description" : "Ejemplo: 0.17",
             "minimum" : 0,
             "maximum" : 1
           },
@@ -191,7 +214,7 @@
           "pattern" : "[0-9]+"
         }
       },
-      "description" : "Persona que firma electrónicamente el comprobante. Si NULL los datos del proveedor son usados."
+      "description" : "Persona que firma el comprobante. Si NULL los datos del proveedor son usados."
     },
     "guias" : {
       "type" : "array",
@@ -271,6 +294,12 @@
       "minimum" : 0,
       "maximum" : 1
     },
+    "tasaIvap" : {
+      "type" : "number",
+      "description" : "Ejemplo: 0.04",
+      "minimum" : 0,
+      "maximum" : 1
+    },
     "tipoNota" : {
       "type" : "string",
       "description" : "Si NotaCredito Catalog 09. Si NotaDebito Catalog 10"
@@ -303,6 +332,14 @@
           "type" : "number",
           "minimum" : 0
         },
+        "exportacionBaseImponible" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "exportacionImporte" : {
+          "type" : "number",
+          "minimum" : 0
+        },
         "gratuitoBaseImponible" : {
           "type" : "number",
           "minimum" : 0
@@ -328,6 +365,14 @@
           "minimum" : 0
         },
         "inafectoImporte" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "iscBaseImponible" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "iscImporte" : {
           "type" : "number",
           "minimum" : 0
         },

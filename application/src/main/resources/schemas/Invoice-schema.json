@@ -58,18 +58,6 @@
           "description" : "Nombre de la urbanización."
         }
       }
-    },
-    "DocumentoRelacionado" : {
-      "type" : "object",
-      "properties" : {
-        "serieNumero" : {
-          "type" : "string"
-        },
-        "tipoDocumento" : {
-          "type" : "string",
-          "description" : "Catalog 12"
-        }
-      }
     }
   },
   "type" : "object",
@@ -119,6 +107,27 @@
         }
       }
     },
+    "descuentos" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "factor" : {
+            "type" : "number"
+          },
+          "monto" : {
+            "type" : "number"
+          },
+          "montoBase" : {
+            "type" : "number"
+          },
+          "tipoDescuento" : {
+            "type" : "string",
+            "description" : "Catalogo 53"
+          }
+        }
+      }
+    },
     "detalles" : {
       "minItems" : 1,
       "type" : "array",
@@ -154,6 +163,19 @@
             "type" : "string",
             "description" : "Catalogo 07"
           },
+          "isc" : {
+            "type" : "number",
+            "description" : "Monto total de ISC",
+            "minimum" : 0
+          },
+          "iscBaseImponible" : {
+            "type" : "number",
+            "minimum" : 0
+          },
+          "iscTipo" : {
+            "type" : "string",
+            "description" : "Catalogo 08"
+          },
           "precio" : {
             "type" : "number",
             "description" : "Precio sin incluir impuestos",
@@ -171,9 +193,19 @@
             "type" : "string",
             "description" : "Catalog 16"
           },
+          "tasaIcb" : {
+            "type" : "number",
+            "minimum" : 0
+          },
           "tasaIgv" : {
             "type" : "number",
             "description" : "Ejemplo: 0.18",
+            "minimum" : 0,
+            "maximum" : 1
+          },
+          "tasaIsc" : {
+            "type" : "number",
+            "description" : "Ejemplo: 0.17",
             "minimum" : 0,
             "maximum" : 1
           },
@@ -218,7 +250,16 @@
     "documentosRelacionados" : {
       "type" : "array",
       "items" : {
-        "$ref" : "#/definitions/DocumentoRelacionado"
+        "type" : "object",
+        "properties" : {
+          "serieNumero" : {
+            "type" : "string"
+          },
+          "tipoDocumento" : {
+            "type" : "string",
+            "description" : "Catalog 12"
+          }
+        }
       }
     },
     "fechaEmision" : {
@@ -244,7 +285,7 @@
           "pattern" : "[0-9]+"
         }
       },
-      "description" : "Persona que firma electrónicamente el comprobante. Si NULL los datos del proveedor son usados."
+      "description" : "Persona que firma el comprobante. Si NULL los datos del proveedor son usados."
     },
     "formaDePago" : {
       "type" : "object",
@@ -318,12 +359,6 @@
     "ordenDeCompra" : {
       "type" : "string"
     },
-    "otrosDocumentosTributariosRelacionados" : {
-      "type" : "array",
-      "items" : {
-        "$ref" : "#/definitions/DocumentoRelacionado"
-      }
-    },
     "percepcion" : {
       "type" : "object",
       "properties" : {
@@ -384,6 +419,12 @@
       "minimum" : 0,
       "maximum" : 1
     },
+    "tasaIvap" : {
+      "type" : "number",
+      "description" : "Ejemplo: 0.04",
+      "minimum" : 0,
+      "maximum" : 1
+    },
     "tipoComprobante" : {
       "type" : "string",
       "description" : "Catalogo 01"
@@ -396,6 +437,10 @@
       "type" : "object",
       "properties" : {
         "anticipos" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "descuentos" : {
           "type" : "number",
           "minimum" : 0
         },
@@ -425,6 +470,14 @@
           "type" : "number",
           "minimum" : 0
         },
+        "exportacionBaseImponible" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "exportacionImporte" : {
+          "type" : "number",
+          "minimum" : 0
+        },
         "gratuitoBaseImponible" : {
           "type" : "number",
           "minimum" : 0
@@ -450,6 +503,14 @@
           "minimum" : 0
         },
         "inafectoImporte" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "iscBaseImponible" : {
+          "type" : "number",
+          "minimum" : 0
+        },
+        "iscImporte" : {
           "type" : "number",
           "minimum" : 0
         },
