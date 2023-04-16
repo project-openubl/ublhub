@@ -121,6 +121,7 @@
                                 <exclude>**/src/main/kubernetes/**</exclude>
                                 <exclude>**/src/main/helm/**</exclude>
                                 <exclude>**/src/main/webapp/**</exclude>
+                                <exclude>**/src/main/itext/**</exclude>
                                 <exclude>**/src/jreleaser/templates/**</exclude>
                                 <exclude>**/.mvn/**</exclude>
                                 <exclude>.github/**</exclude>

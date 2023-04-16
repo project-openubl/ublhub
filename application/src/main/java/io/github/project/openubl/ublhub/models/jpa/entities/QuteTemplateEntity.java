@@ -16,6 +16,8 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
+import io.github.project.openubl.ublhub.models.TemplateType;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,11 +27,11 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Column;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -39,37 +41,30 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
-@Table(name = "company")
-public class CompanyEntity extends BaseEntity {
+@Table(name = "QUTE_TEMPLATE")
+public class QuteTemplateEntity extends PanacheEntityBase {
 
+    @EqualsAndHashCode.Include
     @Id
     @Column(name = "id")
     @Access(AccessType.PROPERTY)
     private Long id;
 
     @NotNull
-    @Size(max = 11)
-    @Column(name = "ruc")
-    private String ruc;
+    public String content;
 
+    @Enumerated(EnumType.STRING)
     @NotNull
-    @Size(max = 255)
-    @Column(name = "name")
-    private String name;
+    @Column(name = "template_type")
+    private TemplateType templateType;
 
-    @Size(max = 255)
-    private String description;
+    @Size(max = 50)
+    @Column(name = "document_type")
+    private String documentType;
 
-    @Size(max = 255)
-    @Column(name = "logo_file_id")
-    private String logoFileId;
-
-    @Valid
-    @Embedded
-    private SunatEntity sunat;
-
-    @NotNull
     @Column(name = "project_id")
     private Long projectId;
 
+    @Column(name = "company_id")
+    private Long companyId;
 }

@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es" class="pf-m-redhat-font">
+<head>
+    <meta charset="UTF-8">
+    <title>Project OpenUBL</title>
+    <link href="css/bootstrap.css" rel="stylesheet">
+<body>
+<div class="container">
+    <div class="row pb-5">
+        <div class="col-8">
+            <table style="border: 1px solid #212529;">
+                <tbody>
+                <tr>
+                    <td class="pt-1 ps-1 fw-bold">NOTA CRÉDITO:</td>
+                    <td class="pt-1 pe-1 fw-bold">{input.serie}-{input.numero}</td>
+                </tr>
+                <tr>
+                    <td class="ps-1">Documento ref.:</td>
+                    <td>{input.comprobanteAfectadoSerieNumero}</td>
+                </tr>
+                <tr>
+                    <td class="ps-1 pb-1">Fecha emisión:</td>
+                    <td class="pe-1 pb-1">{input.fechaEmision.format('dd-MM-yyyy')}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        {#if metadata.logo}
+            <div class="col-4">
+            <img alt="Logo" src="data:image/png;base64,{metadata.logo }" style="max-height: 40px;"/>
+            </div>
+        {/if}
+    </div>
+
+    <div class="row">
+        <div class="col-8">
+            <table>
+                <thead>
+                <tr>
+                    <td class="fw-bold">CLIENTE</td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{input.cliente.nombre}</td>
+                </tr>
+                <tr>
+                    <td>
+                        {input.cliente.tipoDocumentoIdentidad ? input.cliente.tipoDocumentoIdentidad.catalog(6) : null}:&nbsp;
+                        {input.cliente.numeroDocumentoIdentidad}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        {#if input.cliente.direccion}
+                            <address>{input.cliente.direccion.print()}<br></address>
+                        {/if}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-4">
+            <table>
+                <thead>
+                <tr>
+                    <td class="fw-bold">PROVEEDOR</td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{input.proveedor.razonSocial}</td>
+                </tr>
+                <tr>
+                    <td>RUC: {input.proveedor.ruc}</td>
+                </tr>
+                <tr>
+                    <td>
+                        {#if input.proveedor.direccion}
+                            <address>{input.proveedor.direccion.print()}<br></address>
+                        {/if}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <table class="table table-sm">
+            <thead class="uppercase bg-gray-200">
+            <tr>
+                <th class="py-3">Cant.</th>
+                <th class="py-3">UM</th>
+                <th class="py-3">Descripción</th>
+                <th class="py-3">V/U</th>
+                <th class="py-3">P/U</th>
+                <th class="py-3">Importe</th>
+            </tr>
+            </thead>
+            <tbody class="table-group-divider">
+            {#each input.detalles}
+                <tr>
+                <td>{it.cantidad}</td>
+                <td>{it.unidadMedida}</td>
+                <td>{it.descripcion}</td>
+                <td>{it.precio.scale(2)}</td>
+                <td>{it.precioReferencia.scale(2)}</td>
+                <td class="text-end">{it.cantidad.multiply(it.precioReferencia).scale(2)}</td>
+                </tr>
+            {/each}
+            </tbody>
+            <tfoot class="table-group-divider">
+            <tr>
+                <td colspan="5" class="text-end">Gravado</td>
+                <td colspan="1" class="text-end">
+                    {input.totalImpuestos.gravadoImporte ? input.totalImpuestos.gravadoImporte.scale(2) : '0.00'}
+                </td>
+            </tr>
+            {#if input.totalImpuestos.ivapImporte}
+                <tr>
+                <td colspan="5" class="text-end">IVAP</td>
+                <td colspan="1" class="text-end">{input.totalImpuestos.ivapImporte.scale(2)}</td>
+                </tr>
+            {/if}
+            {#if input.totalImpuestos.exportacionImporte}
+                <tr>
+                <td colspan="5" class="text-end">Exportación</td>
+                <td colspan="1" class="text-end">{input.totalImpuestos.exportacionImporte.scale(2)}</td>
+                </tr>
+            {/if}
+            <tr>
+                <td colspan="5" class="text-end">Gratuito</td>
+                <td colspan="1" class="text-end">
+                    {input.totalImpuestos.gratuitoImporte ? input.totalImpuestos.gratuitoImporte.scale(2) : '0.00'}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5" class="text-end">Exonerado</td>
+                <td colspan="1" class="text-end">
+                    {input.totalImpuestos.exoneradoImporte ? input.totalImpuestos.exoneradoImporte.scale(2) : '0.00'}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5" class="text-end">Inafecto</td>
+                <td colspan="1" class="text-end">
+                    {input.totalImpuestos.inafectoImporte ? input.totalImpuestos.inafectoImporte.scale(2) : '0.00'}
+                </td>
+            </tr>
+            {#if input.totalImpuestos.icbImporte}
+                <tr>
+                <td colspan="5" class="text-end">ICB</td>
+                <td colspan="1" class="text-end">{input.totalImpuestos.icbImporte.scale(2)}</td>
+                </tr>
+            {/if}
+            {#if input.totalImpuestos.iscImporte}
+                <tr>
+                <td colspan="5" class="text-end">ISC</td>
+                <td colspan="1" class="text-end">{input.totalImpuestos.iscImporte.scale(2)}</td>
+                </tr>
+            {/if}
+            <tr>
+                <td colspan="5" class="text-end fw-bold">TOTAL</td>
+                <td colspan="1" class="text-end fw-bold">{input.totalImporte.importe.scale(2)}</td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+</body>
+</html>

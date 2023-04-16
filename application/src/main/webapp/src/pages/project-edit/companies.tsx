@@ -50,7 +50,6 @@ import {
   ToolbarToggleGroup,
 } from "@patternfly/react-core";
 import {
-  BuildingIcon,
   CheckCircleIcon,
   FilterIcon,
   InfoAltIcon,
@@ -62,6 +61,7 @@ import { useCompaniesQuery, useDeleteCompanyMutation } from "queries/companies";
 
 import { AddCompanyForm } from "./components/add-company-form";
 import { CompanyDetailsTabs } from "./components/company-details-tabs";
+import { CompanyLogo } from "./components/company-logo";
 
 export const compareByColumnIndex = (
   a: CompanyDto,
@@ -192,7 +192,7 @@ const Companies: React.FC = () => {
                     <ToolbarItem variant="search-filter">
                       <SearchInput
                         value={filterText}
-                        onChange={setFilterText}
+                        onChange={(_, value) => setFilterText(value)}
                       />
                     </ToolbarItem>
                   </ToolbarToggleGroup>
@@ -245,9 +245,6 @@ const Companies: React.FC = () => {
                       <DataListItemRow>
                         <DataListItemCells
                           dataListCells={[
-                            <DataListCell key="icon" isIcon>
-                              <BuildingIcon />
-                            </DataListCell>,
                             <DataListCell key="primary content">
                               <div>{item.name}</div>
                               <small>{item.description}</small>
@@ -281,6 +278,14 @@ const Companies: React.FC = () => {
                                     <Link to="../sunat">Proyecto</Link>
                                   </span>
                                 </div>
+                              )}
+                            </DataListCell>,
+                            <DataListCell key="logo">
+                              {project?.id && item.id && (
+                                <CompanyLogo
+                                  projectId={project.id}
+                                  companyId={item.id}
+                                />
                               )}
                             </DataListCell>,
                             <DataListAction

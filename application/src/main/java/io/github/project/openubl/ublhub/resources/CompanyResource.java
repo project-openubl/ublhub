@@ -35,6 +35,7 @@ package io.github.project.openubl.ublhub.resources;
 
 import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.ublhub.dto.CompanyDto;
+import io.github.project.openubl.ublhub.files.FilesManager;
 import io.github.project.openubl.ublhub.keys.DefaultKeyProviders;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import io.github.project.openubl.ublhub.mapper.CompanyMapper;
@@ -63,6 +64,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
+import java.util.Base64;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -94,6 +96,9 @@ public class CompanyResource {
 
     @Inject
     TsidFactory tsidFactory;
+
+    @Inject
+    FilesManager filesManager;
 
     private ComponentOwner getOwner(Long companyId) {
         return ComponentOwner.builder()
@@ -156,9 +161,18 @@ public class CompanyResource {
             return conflictResponse.apply(companyEntity);
         }
 
+        // Save logo
+        String logoFileId = null;
+        if (companyDto.getLogo() != null && !companyDto.getLogo().isEmpty()) {
+            String logoBase64 = companyDto.getLogo().trim().replaceFirst("data[:]image[/]([a-z])+;base64,", "");
+            byte[] logoBytes = Base64.getDecoder().decode(logoBase64);
+            logoFileId = filesManager.createFile(logoBytes, true);
+        }
+
         companyEntity = companyMapper.updateEntityFromDto(companyDto, CompanyEntity.builder()
                 .projectId(projectEntity.getId())
                 .id(tsidFactory.create().toLong())
+                .logoFileId(logoFileId)
                 .build()
         );
         companyEntity.persist();
@@ -192,6 +206,15 @@ public class CompanyResource {
             return notFoundResponse.get();
         }
 
+        // Save logo
+        if (companyDto.getLogo() != null && !companyDto.getLogo().isEmpty()) {
+            String logoBase64 = companyDto.getLogo().trim().replaceFirst("data:image/([a-z])+;base64,", "");
+            byte[] logoBytes = Base64.getDecoder().decode(logoBase64);
+            String logoFileId = filesManager.createFile(logoBytes, true);
+
+            companyEntity.setLogoFileId(logoFileId);
+        }
+
         companyMapper.updateEntityFromDto(companyDto, companyEntity);
         companyEntity.persist();
 
@@ -216,6 +239,35 @@ public class CompanyResource {
 
         boolean result = companyRepository.deleteByProjectIdAndId(projectId, companyId);
         return result ? successResponse.get() : notFoundResponse.get();
+    }
+
+    @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
+    @Operation(summary = "Get company's logo", description = "Get one company's logo")
+    @Produces({"image/jpeg", "image/png"})
+    @GET
+    @Path("/{projectId}/companies/{companyId}/logo")
+    public RestResponse<String> getCompanyBase64Logo(
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("companyId") @NotNull Long companyId
+    ) {
+        Function<byte[], RestResponse<String>> successResponse = bytes -> RestResponse.ResponseBuilder
+                .<String>create(RestResponse.Status.OK)
+                .entity(Base64.getEncoder().withoutPadding().encodeToString(bytes))
+                .build();
+        Supplier<RestResponse<String>> notFoundResponse = () -> RestResponse.ResponseBuilder
+                .<String>create(RestResponse.Status.NOT_FOUND)
+                .build();
+
+        CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
+        if (companyEntity == null) {
+            return notFoundResponse.get();
+        }
+        if (companyEntity.getLogoFileId() == null) {
+            return RestResponse.ResponseBuilder.<String>ok().build();
+        }
+
+        byte[] logoBytes = filesManager.getFileAsBytesAfterUnzip(companyEntity.getLogoFileId());
+        return successResponse.apply(logoBytes);
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})

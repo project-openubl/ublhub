@@ -42,6 +42,7 @@ import {
   ToolbarContent,
   ToolbarGroup,
   ToolbarItem,
+  Truncate,
 } from "@patternfly/react-core";
 import {
   cellWidth,
@@ -68,6 +69,7 @@ import { DocumentDto } from "api/models";
 
 import { DocumentEditor } from "./components/document-editor";
 import { XmlCdrPreview } from "./components/xml-cdr-preview";
+import { PdfPreview } from "./components/pdf-preview";
 
 const getStatusType = (status?: string): StatusType => {
   if (status === "ACEPTADO") {
@@ -110,7 +112,7 @@ const itemsToRow = (
               <Icon isInline isInProgress={item.status.inProgress}>
                 <ShieldAltIcon />
               </Icon>{" "}
-              {item.id}
+              <Truncate content={item.id} />
             </TextContent>
           ),
         },
@@ -237,7 +239,7 @@ export const DocumentList: React.FC = () => {
   };
 
   const documentModal = useModal<"ADD", DocumentDto>();
-  const xmlCdrModal = useModal<"xml" | "cdr", DocumentDto>();
+  const rowModal = useModal<"xml" | "cdr" | "pdf", DocumentDto>();
 
   const [filterTextTemp, setFilterTextTemp] = useState("");
   const [filterText, setFilterText] = useState("");
@@ -291,12 +293,12 @@ export const DocumentList: React.FC = () => {
   const columns: ICell[] = [
     {
       title: "ID",
-      transforms: [cellWidth(25)],
-      cellTransforms: [truncate],
+      transforms: [cellWidth(15)],
+      cellTransforms: [],
     },
     { title: t("terms.created-on"), transforms: [cellWidth(15)] },
     { title: "RUC", transforms: [cellWidth(10)] },
-    { title: t("terms.document"), transforms: [cellWidth(10)] },
+    { title: t("terms.document"), transforms: [cellWidth(20)] },
     { title: "SUNAT", transforms: [cellWidth(10)] },
     { title: "Descripción", transforms: [], cellTransforms: [truncate] },
   ];
@@ -325,6 +327,18 @@ export const DocumentList: React.FC = () => {
 
     const actions: (IAction | ISeparator)[] = [];
 
+    actions.push({
+      title: "Ver PDF",
+      onClick: (
+        event: React.MouseEvent,
+        rowIndex: number,
+        rowData: IRowData
+      ) => {
+        const row: DocumentDto = getRow(rowData);
+        rowModal.open("pdf", row);
+      },
+    });
+
     if (row.status.xmlData) {
       actions.push({
         title: "Ver XML",
@@ -334,7 +348,7 @@ export const DocumentList: React.FC = () => {
           rowData: IRowData
         ) => {
           const row: DocumentDto = getRow(rowData);
-          xmlCdrModal.open("xml", row);
+          rowModal.open("xml", row);
         },
       });
     }
@@ -348,7 +362,7 @@ export const DocumentList: React.FC = () => {
           rowData: IRowData
         ) => {
           const row: DocumentDto = getRow(rowData);
-          xmlCdrModal.open("cdr", row);
+          rowModal.open("cdr", row);
         },
       });
     }
@@ -356,6 +370,21 @@ export const DocumentList: React.FC = () => {
     return actions;
   };
 
+  let modalTitle;
+  switch (rowModal.action) {
+    case "xml":
+      modalTitle = "Ver XML";
+      break;
+    case "cdr":
+      modalTitle = "Ver CDR";
+      break;
+    case "pdf":
+      modalTitle = "Ver PDF";
+      break;
+    default:
+      modalTitle = "...";
+      break;
+  }
   return (
     <>
       <PageSection
@@ -439,7 +468,7 @@ export const DocumentList: React.FC = () => {
               <ToolbarItem variant="search-filter">
                 <SearchInput
                   value={filterTextTemp}
-                  onChange={setFilterTextTemp}
+                  onChange={(_, value) => setFilterTextTemp(value)}
                   onSearch={() => setFilterText(filterTextTemp)}
                   attributes={[{ attr: "ruc", display: "RUC" }]}
                   advancedSearchDelimiter={":"}
@@ -485,21 +514,26 @@ export const DocumentList: React.FC = () => {
 
       <Modal
         variant="large"
-        title={xmlCdrModal.action === "xml" ? "Ver XML" : "Ver CDR"}
-        isOpen={xmlCdrModal.isOpen}
-        onClose={xmlCdrModal.close}
+        title={modalTitle}
+        isOpen={rowModal.isOpen}
+        onClose={rowModal.close}
         actions={[
-          <Button key="close" variant="primary" onClick={xmlCdrModal.close}>
+          <Button key="close" variant="primary" onClick={rowModal.close}>
             {t("actions.close")}
           </Button>,
         ]}
       >
-        {projectId && xmlCdrModal.data && xmlCdrModal.action && (
-          <XmlCdrPreview
-            projectId={projectId}
-            document={xmlCdrModal.data}
-            variant={xmlCdrModal.action}
-          />
+        {projectId &&
+          rowModal.data &&
+          (rowModal.action === "xml" || rowModal.action === "cdr") && (
+            <XmlCdrPreview
+              projectId={projectId}
+              document={rowModal.data}
+              variant={rowModal.action === "xml" ? "xml" : "cdr"}
+            />
+          )}
+        {projectId && rowModal.data && rowModal.action === "pdf" && (
+          <PdfPreview projectId={projectId} document={rowModal.data} />
         )}
       </Modal>
     </>

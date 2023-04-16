@@ -45,6 +45,9 @@ public class CompanyDto {
     @Size(max = 250)
     private String description;
 
+    // Used only for POST and UPDATE and never on GET
+    private String logo;
+
     @Valid
     private SunatDto sunat;
 

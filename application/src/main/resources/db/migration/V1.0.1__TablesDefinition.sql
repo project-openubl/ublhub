@@ -35,6 +35,7 @@ create table COMPANY
     ruc                            varchar(11)  not null,
     name                           varchar(255) not null,
     description                    varchar(255),
+    logo_file_id                   varchar(255),
     sunat_username                 varchar(255),
     sunat_password                 varchar(255),
     sunat_url_factura              varchar(255),
@@ -111,6 +112,17 @@ create table GENERATED_ID
     created       timestamp   not null,
     updated       timestamp,
     version       int4        not null,
+    primary key (id)
+);
+
+create table QUTE_TEMPLATE
+(
+    id            int8          not null,
+    content       varchar(4000) not null,
+    template_type varchar(50)   not null,
+    document_type varchar(50)   not null,
+    project_id    int8          not null,
+    company_id    int8          not null,
     primary key (id)
 );
 

@@ -57,6 +57,7 @@ export const useUpdateCompanyMutation = (
     {
       onSuccess: (response) => {
         queryClient.invalidateQueries(["companies", projectId]);
+        queryClient.invalidateQueries(["logo", projectId]);
         onSuccess && onSuccess(response);
       },
     }
@@ -77,8 +78,25 @@ export const useDeleteCompanyMutation = (
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["companies", projectId]);
+        queryClient.invalidateQueries(["logo", projectId]);
         onSuccess && onSuccess();
       },
     }
   );
+};
+
+export const useCompanyLogoQuery = (
+  projectId: string | null,
+  companyId: string | null
+): UseQueryResult<string, AxiosError> => {
+  const result = useQuery<string, AxiosError>({
+    queryKey: ["logo", projectId, companyId],
+    queryFn: async () => {
+      const url = `/projects/${projectId}/companies/${companyId}/logo`;
+      return (await axios.get<string>(url)).data;
+    },
+    refetchInterval: false,
+    enabled: !!projectId,
+  });
+  return result;
 };

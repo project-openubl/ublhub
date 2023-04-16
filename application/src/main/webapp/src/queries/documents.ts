@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import {
   useMutation,
   UseMutationResult,
@@ -137,6 +137,26 @@ export const useDocumentXmlCdrQuery = (
     queryFn: async () => {
       const url = `/projects/${projectId}/documents/${documentId}/${variant}`;
       return (await axios.get<string>(url)).data;
+    },
+    refetchInterval: false,
+    enabled: !!projectId,
+  });
+  return result;
+};
+
+export const useDocumentPdfUrlQuery = (
+  projectId: string | null,
+  documentId: string | null
+): UseQueryResult<string, AxiosError> => {
+  const result = useQuery<string, AxiosError>({
+    queryKey: ["pdf", projectId, documentId],
+    queryFn: () => {
+      const url = `/projects/${projectId}/documents/${documentId}/print`;
+      const config: AxiosRequestConfig = {
+        url: url,
+      };
+
+      return axios.defaults.baseURL + axios.getUri(config);
     },
     refetchInterval: false,
     enabled: !!projectId,
