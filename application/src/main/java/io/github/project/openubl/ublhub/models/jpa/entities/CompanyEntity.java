@@ -60,6 +60,10 @@ public class CompanyEntity extends BaseEntity {
     @Size(max = 255)
     private String description;
 
+    @Size(max = 255)
+    @Column(name = "logo_file_id")
+    private String logoFileId;
+
     @Valid
     @Embedded
     private SunatEntity sunat;

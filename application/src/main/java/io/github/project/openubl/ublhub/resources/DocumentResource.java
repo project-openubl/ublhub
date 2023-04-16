@@ -34,6 +34,8 @@ package io.github.project.openubl.ublhub.resources;
  */
 
 import com.github.f4b6a3.tsid.TsidFactory;
+import com.itextpdf.html2pdf.ConverterProperties;
+import com.itextpdf.html2pdf.HtmlConverter;
 import io.github.project.openubl.ublhub.dto.DocumentDto;
 import io.github.project.openubl.ublhub.dto.DocumentInputDto;
 import io.github.project.openubl.ublhub.dto.ErrorDto;
@@ -46,20 +48,41 @@ import io.github.project.openubl.ublhub.models.FilterDocumentBean;
 import io.github.project.openubl.ublhub.models.PageBean;
 import io.github.project.openubl.ublhub.models.SearchBean;
 import io.github.project.openubl.ublhub.models.SortBean;
+import io.github.project.openubl.ublhub.models.TemplateType;
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.UBLDocumentRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
+import io.github.project.openubl.ublhub.qute.DbTemplateLocator;
 import io.github.project.openubl.ublhub.resources.exceptions.NoCertificateToSignFoundException;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
 import io.github.project.openubl.ublhub.resources.validation.JSONValidatorManager;
-import io.github.project.openubl.ublhub.scheduler.SchedulerManager;
 import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorManager;
 import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLResult;
+import io.github.project.openubl.xbuilder.content.jaxb.mappers.CreditNoteMapper;
+import io.github.project.openubl.xbuilder.content.jaxb.mappers.DebitNoteMapper;
+import io.github.project.openubl.xbuilder.content.jaxb.mappers.DespatchAdviceMapper;
+import io.github.project.openubl.xbuilder.content.jaxb.mappers.InvoiceMapper;
+import io.github.project.openubl.xbuilder.content.jaxb.mappers.PerceptionMapper;
+import io.github.project.openubl.xbuilder.content.jaxb.mappers.RetentionMapper;
+import io.github.project.openubl.xbuilder.content.jaxb.mappers.SummaryDocumentsMapper;
+import io.github.project.openubl.xbuilder.content.jaxb.mappers.VoidedDocumentsMapper;
+import io.github.project.openubl.xbuilder.content.jaxb.models.XMLCreditNote;
+import io.github.project.openubl.xbuilder.content.jaxb.models.XMLDebitNote;
+import io.github.project.openubl.xbuilder.content.jaxb.models.XMLDespatchAdvice;
+import io.github.project.openubl.xbuilder.content.jaxb.models.XMLInvoice;
+import io.github.project.openubl.xbuilder.content.jaxb.models.XMLPercepcion;
+import io.github.project.openubl.xbuilder.content.jaxb.models.XMLRetention;
+import io.github.project.openubl.xbuilder.content.jaxb.models.XMLSummaryDocuments;
+import io.github.project.openubl.xbuilder.content.jaxb.models.XMLVoidedDocuments;
 import io.github.project.openubl.xbuilder.signature.XMLSigner;
 import io.github.project.openubl.xbuilder.signature.XmlSignatureHelper;
+import io.github.project.openubl.xsender.files.xml.XmlContent;
+import io.github.project.openubl.xsender.files.xml.XmlContentProvider;
+import io.quarkus.qute.Engine;
+import io.quarkus.qute.Template;
 import io.vertx.core.json.JsonObject;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.MultipartForm;
@@ -69,6 +92,7 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.keycloak.crypto.Algorithm;
 import org.keycloak.crypto.KeyUse;
 import org.keycloak.crypto.KeyWrapper;
+import org.mapstruct.factory.Mappers;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -80,6 +104,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -88,16 +113,25 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import javax.xml.crypto.MarshalException;
 import javax.xml.crypto.dsig.XMLSignatureException;
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -116,10 +150,10 @@ public class DocumentResource {
     private static final Logger LOG = Logger.getLogger(DocumentResource.class);
 
     @Inject
-    FilesManager filesManager;
+    Engine engine;
 
     @Inject
-    SchedulerManager schedulerManager;
+    FilesManager filesManager;
 
     @Inject
     ProjectRepository projectRepository;
@@ -436,6 +470,171 @@ public class DocumentResource {
         return Response
                 .ok(bytes, mediaType)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "_cdr" + fileExtension + "\"")
+                .build();
+    }
+
+    @GET
+    @Path("/{projectId}/documents/{documentId}/print")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
+    public Response getDocumentCdrFile(
+            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("documentId") @NotNull Long documentId
+    ) {
+        UBLDocumentEntity documentEntity = documentRepository.findById(projectId, documentId);
+        if (documentEntity == null || documentEntity.getXmlFileId() == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        String xmlFileId = documentEntity.getXmlFileId();
+        byte[] xmlBytes = filesManager.getFileAsBytesAfterUnzip(xmlFileId);
+
+        String documentType;
+        String ruc;
+        String serieNumero;
+        if (documentEntity.getXmlData() != null) {
+            documentType = documentEntity.getXmlData().getTipoDocumento();
+            ruc = documentEntity.getXmlData().getRuc();
+            serieNumero = documentEntity.getXmlData().getSerieNumero();
+        } else {
+            try {
+                XmlContent xmlContent = XmlContentProvider.getSunatDocument(new ByteArrayInputStream(xmlBytes));
+                documentType = xmlContent.getDocumentType();
+                ruc = xmlContent.getRuc();
+                serieNumero = xmlContent.getDocumentID();
+            } catch (ParserConfigurationException | IOException | SAXException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // Read XML
+        Object inputData;
+        try {
+            InputStream targetStream = new ByteArrayInputStream(xmlBytes);
+            switch (documentType) {
+                case "Invoice" -> {
+                    InvoiceMapper mapper = Mappers.getMapper(InvoiceMapper.class);
+                    XMLInvoice pojo = (XMLInvoice) JAXBContext.newInstance(XMLInvoice.class)
+                            .createUnmarshaller()
+                            .unmarshal(targetStream);
+                    inputData = mapper.map(pojo);
+                }
+                case "CreditNote" -> {
+                    CreditNoteMapper mapper = Mappers.getMapper(CreditNoteMapper.class);
+                    XMLCreditNote pojo = (XMLCreditNote) JAXBContext.newInstance(XMLCreditNote.class)
+                            .createUnmarshaller()
+                            .unmarshal(targetStream);
+                    inputData = mapper.map(pojo);
+                }
+                case "DebitNote" -> {
+                    DebitNoteMapper mapper = Mappers.getMapper(DebitNoteMapper.class);
+                    XMLDebitNote pojo = (XMLDebitNote) JAXBContext.newInstance(XMLDebitNote.class)
+                            .createUnmarshaller()
+                            .unmarshal(targetStream);
+                    inputData = mapper.map(pojo);
+                }
+                case "VoidedDocuments" -> {
+                    VoidedDocumentsMapper mapper = Mappers.getMapper(VoidedDocumentsMapper.class);
+                    XMLVoidedDocuments pojo = (XMLVoidedDocuments) JAXBContext.newInstance(XMLVoidedDocuments.class)
+                            .createUnmarshaller()
+                            .unmarshal(targetStream);
+                    inputData = mapper.map(pojo);
+                }
+                case "SummaryDocuments" -> {
+                    SummaryDocumentsMapper mapper = Mappers.getMapper(SummaryDocumentsMapper.class);
+                    XMLSummaryDocuments pojo = (XMLSummaryDocuments) JAXBContext.newInstance(XMLSummaryDocuments.class)
+                            .createUnmarshaller()
+                            .unmarshal(targetStream);
+                    inputData = mapper.map(pojo);
+                }
+                case "Perception" -> {
+                    PerceptionMapper mapper = Mappers.getMapper(PerceptionMapper.class);
+                    XMLPercepcion pojo = (XMLPercepcion) JAXBContext.newInstance(XMLPercepcion.class)
+                            .createUnmarshaller()
+                            .unmarshal(targetStream);
+                    inputData = mapper.map(pojo);
+                }
+                case "Retention" -> {
+                    RetentionMapper mapper = Mappers.getMapper(RetentionMapper.class);
+                    XMLRetention pojo = (XMLRetention) JAXBContext.newInstance(XMLRetention.class)
+                            .createUnmarshaller()
+                            .unmarshal(targetStream);
+                    inputData = mapper.map(pojo);
+                }
+                case "DespatchAdvice" -> {
+                    DespatchAdviceMapper mapper = Mappers.getMapper(DespatchAdviceMapper.class);
+                    XMLDespatchAdvice pojo = (XMLDespatchAdvice) JAXBContext.newInstance(XMLDespatchAdvice.class)
+                            .createUnmarshaller()
+                            .unmarshal(targetStream);
+                    inputData = mapper.map(pojo);
+                }
+                default -> {
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+                }
+            }
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Search template
+        Template template = null;
+        CompanyEntity companyEntity = companyRepository.findByRuc(projectId, ruc);
+        if (companyEntity != null) {
+            ComponentOwner companyOwner = ComponentOwner.builder()
+                    .id(companyEntity.getId())
+                    .type(company)
+                    .build();
+            String templateName = DbTemplateLocator.encodeTemplateName(companyOwner, TemplateType.PRINT.name(), documentType);
+            template = engine.getTemplate(templateName);
+        }
+        if (template == null) {
+            ComponentOwner projectOwner = ComponentOwner.builder()
+                    .id(projectId)
+                    .type(project)
+                    .build();
+            String templateName = DbTemplateLocator.encodeTemplateName(projectOwner, TemplateType.PRINT.name(), documentType);
+            template = engine.getTemplate(templateName);
+        }
+        if (template == null) {
+            String templateName = "itext/" + documentType + ".html";
+            template = engine.getTemplate(templateName);
+        }
+        if (template == null) {
+            throw new NotFoundException("Could not find a valid template for the document");
+        }
+
+        // Get logo
+        String logoBase64 = null;
+        if (companyEntity != null && companyEntity.getLogoFileId() != null) {
+            byte[] logoBytes = filesManager.getFileAsBytesAfterUnzip(companyEntity.getLogoFileId());
+            logoBase64 = Base64.getEncoder().withoutPadding().encodeToString(logoBytes);
+        }
+
+        // Render HTML
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("logo", logoBase64);
+
+        String htmlDocument = template
+                .data(
+                        "input", inputData,
+                        "metadata", metadata
+                )
+                .render();
+
+        // Generate response
+        ConverterProperties converterProperties = new ConverterProperties();
+        try {
+            String s = Thread.currentThread().getContextClassLoader().getResource("templates/itext/").toURI().toString();
+            converterProperties.setBaseUri(s);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        HtmlConverter.convertToPdf(htmlDocument, output, converterProperties);
+
+        String filename = serieNumero + ".pdf";
+        return Response.ok(output.toByteArray(), MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .build();
     }
 

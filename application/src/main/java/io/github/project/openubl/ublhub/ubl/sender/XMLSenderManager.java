@@ -99,10 +99,11 @@ public class XMLSenderManager {
     public XMLSenderConfig getXSenderConfig(Long projectId, String ruc) {
         CompanyEntity companyEntity = companyRepository.findByRuc(projectId, ruc);
 
-        SunatEntity sunatEntity;
+        SunatEntity sunatEntity = null;
         if (companyEntity != null) {
             sunatEntity = companyEntity.getSunat();
-        } else {
+        }
+        if (sunatEntity == null) {
             sunatEntity = projectRepository.findById(projectId).getSunat();
         }
 

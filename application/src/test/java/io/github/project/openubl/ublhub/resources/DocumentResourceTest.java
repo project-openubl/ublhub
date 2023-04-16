@@ -603,5 +603,58 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 );
     }
 
+    @Test
+    public void createInvoiceAndPrint() {
+        // Given
+        ProjectDto projectDto = ProjectDto.builder()
+                .name("myproject")
+                .description("my description")
+                .sunat(sunatDto)
+                .build();
+
+        String projectId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(projectDto)
+                .when()
+                .post("/")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()))
+                .extract().path("id").toString();
+
+        // When
+        DocumentInputDto inputDto = DocumentInputDto.builder()
+                .kind(DocumentInputDto.Kind.Invoice)
+                .spec(DocumentInputDto.Spec.builder()
+                        .document(JsonObject.mapFrom(invoice))
+                        .build()
+                )
+                .build();
+
+        String documentId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(JsonObject.mapFrom(inputDto).toString())
+                .when()
+                .post("/" + projectId + "/documents")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()))
+                .extract().path("id").toString();
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/documents/" + documentId + "/print")
+                .then()
+                .statusCode(200);
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + projectId + "/documents/" + documentId + "/print?format=html")
+                .then()
+                .statusCode(200);
+    }
 }
 

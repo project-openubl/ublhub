@@ -189,7 +189,10 @@ export const ProjectList: React.FC = () => {
           filtersApplied={filterText.trim().length > 0}
           toolbarToggle={
             <ToolbarItem variant="search-filter">
-              <SearchInput value={filterText} onChange={setFilterText} />
+              <SearchInput
+                value={filterText}
+                onChange={(_, value) => setFilterText(value)}
+              />
             </ToolbarItem>
           }
           toolbarActions={

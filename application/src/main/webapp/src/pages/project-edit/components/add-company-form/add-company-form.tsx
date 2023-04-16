@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Controller, useForm } from "react-hook-form";
@@ -10,11 +10,14 @@ import { ResolvedQueries } from "@migtools/lib-ui";
 import {
   ActionGroup,
   Button,
+  FileUpload,
   Form,
   FormFieldGroupExpandable,
   FormFieldGroupHeader,
   FormGroup,
   FormSection,
+  Grid,
+  GridItem,
   TextArea,
   TextInput,
 } from "@patternfly/react-core";
@@ -37,6 +40,7 @@ interface ICompanyForm {
   ruc: string;
   name: string;
   description: string;
+  logo: string;
   sunat: {
     factura: string;
     guia: string;
@@ -59,6 +63,8 @@ export const AddCompanyForm: React.FC<IAddCompanyFormProps> = ({
 }) => {
   const { t } = useTranslation();
 
+  const [logoFile, setLogoFile] = useState<File>();
+
   const companiesQuery = useCompaniesQuery(projectId);
   const createCompanyMutation = useCreateCompanyMutation(
     projectId,
@@ -77,6 +83,7 @@ export const AddCompanyForm: React.FC<IAddCompanyFormProps> = ({
       ruc: "",
       name: "",
       description: "",
+      logo: "",
       sunat: {
         factura: "",
         guia: "",
@@ -99,6 +106,7 @@ export const AddCompanyForm: React.FC<IAddCompanyFormProps> = ({
           }),
         name: string().trim().required().max(250),
         description: string().trim().max(250),
+        logo: string(),
         sunat: object()
           .shape({
             factura: string().trim().max(250),
@@ -138,6 +146,7 @@ export const AddCompanyForm: React.FC<IAddCompanyFormProps> = ({
       ruc: values.ruc,
       name: values.name,
       description: values.description,
+      logo: values.logo,
       sunat: values.sunat.factura
         ? {
             facturaUrl: values.sunat.factura,
@@ -235,6 +244,55 @@ export const AddCompanyForm: React.FC<IAddCompanyFormProps> = ({
             />
           )}
         />
+      </FormGroup>
+      <FormGroup
+        label={t("terms.logo")}
+        fieldId="logo"
+        isRequired={false}
+        validated={getValidatedFromError(errors.logo)}
+        helperTextInvalid={errors.logo?.message}
+      >
+        <Grid hasGutter>
+          <GridItem md={8}>
+            <Controller
+              control={control}
+              name="logo"
+              render={({ field: { onChange } }) => (
+                <FileUpload
+                  id="company-logo"
+                  type="dataURL"
+                  value={logoFile}
+                  filename={logoFile?.name}
+                  filenamePlaceholder="Drag and drop a file or upload one"
+                  onFileInputChange={(_, file) => {
+                    setLogoFile(file);
+                  }}
+                  onClearClick={() => {
+                    onChange(undefined);
+                    setLogoFile(undefined);
+                  }}
+                  onDataChange={(base64Image) => {
+                    onChange(base64Image);
+                  }}
+                  allowEditingUploadedText={false}
+                  browseButtonText="Upload"
+                  hideDefaultPreview
+                ></FileUpload>
+              )}
+            />
+          </GridItem>
+          <GridItem md={4}>
+            {logoFile && (
+              <div>
+                <img
+                  src={URL.createObjectURL(logoFile)}
+                  alt="Logo"
+                  style={{ maxHeight: 36 }}
+                />
+              </div>
+            )}
+          </GridItem>
+        </Grid>
       </FormGroup>
       <FormFieldGroupExpandable
         toggleAriaLabel="sunat"

@@ -35,6 +35,7 @@ create table COMPANY
     ruc                            varchar(11)  not null,
     name                           varchar(255) not null,
     description                    varchar(255),
+    logo_file_id                   varchar(255),
     sunat_username                 varchar(255),
     sunat_password                 varchar(255),
     sunat_url_factura              varchar(255),

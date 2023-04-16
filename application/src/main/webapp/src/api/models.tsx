@@ -32,6 +32,7 @@ export interface CompanyDto {
   ruc: string;
   name: string;
   description?: string;
+  logo?: string;
   sunat?: SunatDto;
 }
 

@@ -21,6 +21,7 @@ import { useCompaniesQuery } from "queries/companies";
 
 import { CompanyDto, ProjectDto } from "api/models";
 import { GeneralForm } from "./general-form";
+import { CompanyLogo } from "../company-logo";
 
 interface IGeneralProps {
   project: ProjectDto;
@@ -55,6 +56,14 @@ export const General: React.FC<IGeneralProps> = ({
         </CardHeader>
         <CardBody>
           <DescriptionList>
+            <DescriptionListGroup>
+              <DescriptionListTerm>Logo</DescriptionListTerm>
+              <DescriptionListDescription>
+                {project?.id && company?.id && (
+                  <CompanyLogo projectId={project.id} companyId={company.id} />
+                )}
+              </DescriptionListDescription>
+            </DescriptionListGroup>
             <DescriptionListGroup>
               <DescriptionListTerm>RUC</DescriptionListTerm>
               <DescriptionListDescription>
