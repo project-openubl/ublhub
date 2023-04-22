@@ -18,18 +18,41 @@ package io.github.project.openubl.ublhub.files.health.impl;
 
 import io.github.project.openubl.ublhub.files.health.StorageProvider;
 import io.github.project.openubl.ublhub.files.health.StorageReadinessCheck;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.Optional;
 
 @ApplicationScoped
-@StorageProvider(StorageProvider.Type.S3)
-public class S3ReadinessCheck implements StorageReadinessCheck {
+@StorageProvider(StorageProvider.Type.MINIO)
+public class MinioReadinessCheck implements StorageReadinessCheck {
+
+    @ConfigProperty(name = "openubl.storage.minio.health.url")
+    Optional<String> minioHostHealthCheckUrl;
 
     private final HttpClient client = HttpClient.newHttpClient();
 
     @Override
     public boolean isHealthy() {
-        return true;
+        if (minioHostHealthCheckUrl.isPresent()) {
+            try {
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(new URI(minioHostHealthCheckUrl.get()))
+                        .GET()
+                        .build();
+                HttpResponse<Void> response = client.send(request, HttpResponse.BodyHandlers.discarding());
+                return response.statusCode() == 200;
+            } catch (URISyntaxException | IOException | InterruptedException e) {
+                return false;
+            }
+        } else {
+            return true;
+        }
     }
 }
