@@ -36,7 +36,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @ApplicationScoped
-public class S3FilesRoute extends RouteBuilder {
+public class AwsS3FilesRoute extends RouteBuilder {
 
     @ConfigProperty(name = "openubl.storage.link-expiration", defaultValue = "5000")
     String linkExpiration;

@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub;
 
+import io.github.project.openubl.ublhub.containers.GoogleCloudStorageServer;
 import io.github.project.openubl.ublhub.containers.MinioServer;
 import io.quarkus.test.junit.QuarkusTestProfile;
 
@@ -27,7 +28,7 @@ public abstract class ProfileManager implements QuarkusTestProfile {
     List<TestResourceEntry> testResources = new ArrayList<>();
 
     public ProfileManager() {
-        testResources.add(new TestResourceEntry(MinioServer.class));
+        testResources.add(new TestResourceEntry(GoogleCloudStorageServer.class));
     }
 
     public abstract String getProfile();
