@@ -65,7 +65,7 @@ create table COMPONENT_CONFIG
 (
     id           int8 not null,
     name         varchar(255),
-    value        varchar(4000),
+    val        varchar(4000),
     component_id int8 not null,
     primary key (id)
 );
@@ -98,7 +98,7 @@ create table UBL_DOCUMENT
 create table SUNAT_NOTE
 (
     sunat_note_id int8 not null,
-    value         varchar(255)
+    val           varchar(255)
 );
 
 create table GENERATED_ID

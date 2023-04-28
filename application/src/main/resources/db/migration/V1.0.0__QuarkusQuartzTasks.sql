@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS QRTZ_CALENDARS;
 DROP TABLE IF EXISTS TASKS;
 DROP SEQUENCE IF EXISTS hibernate_sequence;
 
-CREATE SEQUENCE hibernate_sequence start 1 increment 1;
+CREATE SEQUENCE hibernate_sequence start with 1 increment 1;
 
 CREATE TABLE TASKS
 (

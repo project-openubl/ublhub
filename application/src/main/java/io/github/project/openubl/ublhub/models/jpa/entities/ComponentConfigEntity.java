@@ -60,9 +60,9 @@ public class ComponentConfigEntity extends PanacheEntityBase {
     @Column(name = "name")
     private String name;
 
-    @Nationalized
+//    @Nationalized
     @Size(max = 4000)
-    @Column(name = "value", length = 4000)
+    @Column(name = "val", length = 4000)
     private String value;
 
 }

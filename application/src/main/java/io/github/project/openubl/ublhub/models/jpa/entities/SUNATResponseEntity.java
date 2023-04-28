@@ -59,7 +59,7 @@ public class SUNATResponseEntity {
     private String description;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @Column(name = "value")
+    @Column(name = "val")
     @CollectionTable(name = "sunat_note", joinColumns = {@JoinColumn(name = "sunat_note_id")})
     private Set<@NotNull @Size(max = 255) String> notes = new HashSet<>();
 
