@@ -72,7 +72,7 @@ public class FilesystemRoute extends RouteBuilder {
 
         from("direct:filesystem-get-file-link")
                 .id("filesystem-get-file-link")
-                .log(LoggingLevel.WARN, "Filesystem does not support link generation. Will return null");
+                .log(LoggingLevel.WARN, "Filesystem does not support link generation.");
 
         from("direct:filesystem-delete-file")
                 .id("filesystem-delete-file")
