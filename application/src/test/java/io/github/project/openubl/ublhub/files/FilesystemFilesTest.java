@@ -14,25 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.files.health;
+package io.github.project.openubl.ublhub.files;
 
-import javax.inject.Qualifier;
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.QuarkusTestProfile;
+import io.quarkus.test.junit.TestProfile;
 
-@Qualifier
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE})
-@Documented
-public @interface StorageProvider {
-    Type value();
+import java.util.Map;
 
-    enum Type {
-        FILESYSTEM,
-        MINIO,
-        S3
+@QuarkusTest
+@TestProfile(value = FilesystemFilesTest.Profile.class)
+public class FilesystemFilesTest extends AbstractFilesTest {
+
+    public static class Profile implements QuarkusTestProfile {
+        @Override
+        public Map<String, String> getConfigOverrides() {
+            return Map.of("openubl.storage.type", "filesystem");
+        }
     }
+
 }

@@ -30,6 +30,8 @@ import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
+import javax.inject.Named;
 import java.net.URI;
 import java.util.Iterator;
 import java.util.Optional;
@@ -56,8 +58,31 @@ public class S3FilesRoute extends RouteBuilder {
     @ConfigProperty(name = "openubl.storage.s3.host")
     Optional<String> s3Host;
 
-    @Override
-    public void configure() throws Exception {
+    @Produces
+    @Named("s3Presigner")
+    public S3Presigner produceS3Client() {
+        AwsCredentials awsCredentials = AwsBasicCredentials.create(s3AccessKeyID, s3SecretAccessKey);
+        AwsCredentialsProvider awsCredentialsProvider = StaticCredentialsProvider.create(awsCredentials);
+
+        S3Presigner.Builder s3PreSignerBuilder = S3Presigner.builder()
+                .credentialsProvider(awsCredentialsProvider)
+                .region(Region.of(s3Region));
+
+        S3Presigner s3Presigner;
+        if (s3Host.isPresent()) {
+            s3Presigner = s3PreSignerBuilder
+                    .endpointOverride(URI.create(s3Host.get()))
+                    .build();
+        } else {
+            s3Presigner = s3PreSignerBuilder
+                    .build();
+        }
+        return s3Presigner;
+    }
+
+    @Produces
+    @Named("s3client")
+    public S3Client produceS3Presigner() {
         AwsCredentials awsCredentials = AwsBasicCredentials.create(s3AccessKeyID, s3SecretAccessKey);
         AwsCredentialsProvider awsCredentialsProvider = StaticCredentialsProvider.create(awsCredentials);
 
@@ -65,29 +90,21 @@ public class S3FilesRoute extends RouteBuilder {
                 .credentialsProvider(awsCredentialsProvider)
                 .region(Region.of(s3Region));
 
-        S3Presigner.Builder s3PreSignerBuilder = S3Presigner.builder()
-                .credentialsProvider(awsCredentialsProvider)
-                .region(Region.of(s3Region));
-
         S3Client s3Client;
-        S3Presigner s3Presigner;
         if (s3Host.isPresent()) {
             s3Client = s3ClientBuilder
-                    .endpointOverride(URI.create(s3Host.get()))
-                    .build();
-            s3Presigner = s3PreSignerBuilder
                     .endpointOverride(URI.create(s3Host.get()))
                     .build();
         } else {
             s3Client = s3ClientBuilder
                     .build();
-            s3Presigner = s3PreSignerBuilder
-                    .build();
         }
 
-        bindToRegistry("s3client", s3Client);
-        bindToRegistry("s3Presigner", s3Presigner);
+        return s3Client;
+    }
 
+    @Override
+    public void configure() throws Exception {
         from("direct:s3-save-file")
                 .id("s3-save-file")
                 .choice()
