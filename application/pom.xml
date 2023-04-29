@@ -219,6 +219,14 @@
             <groupId>org.apache.camel.quarkus</groupId>
             <artifactId>camel-quarkus-json-validator</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-jsonb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-snakeyaml</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>
