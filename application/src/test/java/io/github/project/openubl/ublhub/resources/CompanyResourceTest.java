@@ -17,7 +17,8 @@
 package io.github.project.openubl.ublhub.resources;
 
 import io.github.project.openubl.ublhub.AbstractBaseTest;
-import io.github.project.openubl.ublhub.BasicProfileManager;
+import io.github.project.openubl.ublhub.ProductionTestProfile;
+import io.github.project.openubl.ublhub.ResourceHelpers;
 import io.github.project.openubl.ublhub.dto.CompanyDto;
 import io.github.project.openubl.ublhub.dto.ComponentDto;
 import io.github.project.openubl.ublhub.dto.SunatDto;
@@ -27,23 +28,27 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
-@TestProfile(BasicProfileManager.class)
+@TestProfile(ProductionTestProfile.class)
 @TestHTTPEndpoint(CompanyResource.class)
 public class CompanyResourceTest extends AbstractBaseTest {
 
-    @Override
-    public Class<?> getTestClass() {
-        return CompanyResourceTest.class;
+    @Inject
+    ResourceHelpers resourceHelpers;
+
+    @BeforeEach
+    public void beforeEach() {
+        cleanDB();
+        resourceHelpers.generatePreexistingData();
     }
 
     @Test
@@ -59,10 +64,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .body("id", is(notNullValue()),
                         "name", is("company1"),
                         "ruc", is("11111111111"),
-                        "sunat.facturaUrl", is("http://urlFactura1"),
-                        "sunat.guiaUrl", is("http://urlGuia1"),
-                        "sunat.retencionUrl", is("http://urlPercepcionRetencion1"),
-                        "sunat.username", is("username1"),
+                        "sunat.facturaUrl", is("http://factura-company1"),
+                        "sunat.guiaUrl", is("http://guia-company1"),
+                        "sunat.retencionUrl", is("http://percepcionRetencion-company1"),
+                        "sunat.username", is("username-company1"),
                         "sunat.password", nullValue()
                 );
         // Then
@@ -346,9 +351,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .get("/" + projectId + "/companies")
                 .then()
                 .statusCode(200)
-                .body("size()", is(2),
-                        "[0].name", is("company2"),
-                        "[1].name", is("company1")
+                .body("size()", is(3),
+                        "[0].name", is("company3"),
+                        "[1].name", is("company2"),
+                        "[2].name", is("company1")
                 );
         // Then
     }

@@ -56,8 +56,8 @@ create table COMPONENT
     provider_id   varchar(255),
     provider_type varchar(255),
     sub_type      varchar(255),
-    project_id    int8 null,
-    company_id    int8 null,
+    project_id    int8         null,
+    company_id    int8         null,
     primary key (id)
 );
 
@@ -65,7 +65,7 @@ create table COMPONENT_CONFIG
 (
     id           int8 not null,
     name         varchar(255),
-    val        varchar(4000),
+    val          nvarchar(4000),
     component_id int8 not null,
     primary key (id)
 );
@@ -131,64 +131,64 @@ alter table if exists PROJECT
 
 alter table if exists COMPONENT
     add constraint fk_component_project
-    foreign key (project_id)
-    references PROJECT
-    on
-delete
-cascade;
+        foreign key (project_id)
+            references PROJECT
+            on
+                delete
+                cascade;
 
 alter table if exists COMPONENT
     add constraint fk_component_company
-    foreign key (company_id)
-    references COMPANY
-    on
-delete
-cascade;
+        foreign key (company_id)
+            references COMPANY
+            on
+                delete
+                cascade;
 
 alter table if exists COMPONENT_CONFIG
     add constraint fk_componentconfig_component
-    foreign key (component_id)
-    references COMPONENT
-    on
-delete
-cascade;
+        foreign key (component_id)
+            references COMPONENT
+            on
+                delete
+                cascade;
 
 alter table if exists COMPANY
     add constraint uq_company_projectid_ruc unique (project_id, ruc);
 
 alter table if exists COMPANY
     add constraint fk_company_project
-    foreign key (project_id)
-    references PROJECT
-    on
-delete
-cascade;
+        foreign key (project_id)
+            references PROJECT
+            on
+                delete
+                cascade;
 
 alter table if exists UBL_DOCUMENT
     add constraint fk_ubldocument_project
-    foreign key (project_id)
-    references PROJECT
-    on
-delete
-cascade;
+        foreign key (project_id)
+            references PROJECT
+            on
+                delete
+                cascade;
 
 alter table if exists SUNAT_NOTE
     add constraint fk_sunatnote_ubldocument
-    foreign key (sunat_note_id)
-    references UBL_DOCUMENT
-    on
-delete
-cascade;
+        foreign key (sunat_note_id)
+            references UBL_DOCUMENT
+            on
+                delete
+                cascade;
 
 
 alter table if exists GENERATED_ID
     add constraint fk_generatedid_project
-    foreign key (project_id)
-    references PROJECT
-    on
-delete
-cascade;
+        foreign key (project_id)
+            references PROJECT
+            on
+                delete
+                cascade;
 
 alter table if exists GENERATED_ID
     add constraint uq_generatedid_projectid_ruc_documenttype
-    unique (project_id, ruc, document_type);
+        unique (project_id, ruc, document_type);
