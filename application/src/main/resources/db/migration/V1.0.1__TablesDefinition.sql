@@ -65,7 +65,7 @@ create table COMPONENT_CONFIG
 (
     id           int8 not null,
     name         varchar(255),
-    val          nvarchar(4000),
+    val          varchar(4000),
     component_id int8 not null,
     primary key (id)
 );
