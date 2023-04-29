@@ -30,7 +30,7 @@ import java.util.UUID;
 @ApplicationScoped
 public class FilesystemRoute extends RouteBuilder {
 
-    @ConfigProperty(name = "openubl.storage.filesystem.folder", defaultValue = "ublhub-filesystem")
+    @ConfigProperty(name = "openubl.storage.filesystem.directory")
     String fileSystemFolder;
 
     @Override
