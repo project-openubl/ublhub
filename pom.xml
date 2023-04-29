@@ -112,22 +112,9 @@
                     <licenseSets>
                         <licenseSet>
                             <header>tools/copyright.txt</header>
-                            <excludes>
-                                <exclude>jreleaser.yml</exclude>
-                                <exclude>**/README</exclude>
-                                <exclude>**/src/main/resources/**</exclude>
-                                <exclude>**/src/test/resources/**</exclude>
-                                <exclude>**/src/main/docker/**</exclude>
-                                <exclude>**/src/main/kubernetes/**</exclude>
-                                <exclude>**/src/main/helm/**</exclude>
-                                <exclude>**/src/main/webapp/**</exclude>
-                                <exclude>**/src/main/itext/**</exclude>
-                                <exclude>**/src/jreleaser/templates/**</exclude>
-                                <exclude>**/.mvn/**</exclude>
-                                <exclude>.github/**</exclude>
-                                <exclude>**/workspace/**</exclude>
-                                <exclude>scripts/**</exclude>
-                            </excludes>
+                            <includes>
+                                <include>**/*.java</include>
+                            </includes>
                         </licenseSet>
                     </licenseSets>
                     <properties>
