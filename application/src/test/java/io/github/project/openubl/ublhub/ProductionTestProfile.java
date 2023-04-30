@@ -40,7 +40,7 @@ public class ProductionTestProfile implements QuarkusTestProfile {
 
     @Override
     public String getConfigProfile() {
-        return "test,postgresql,oidc";
+        return "test,oidc";
     }
 
     @Override
