@@ -14,13 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub;
+package io.github.project.openubl.ublhub.db;
 
-public class BasicProfileManager extends ProfileManager {
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.QuarkusTestProfile;
+import io.quarkus.test.junit.TestProfile;
 
-    @Override
-    public String getProfile() {
-        return "basic";
+import java.util.Map;
+
+@QuarkusTest
+@TestProfile(value = H2Test.Profile.class)
+public class H2Test extends AbstractDbTest {
+
+    public static class Profile implements QuarkusTestProfile {
+        @Override
+        public Map<String, String> getConfigOverrides() {
+            return Map.of("quarkus.datasource.db-kind", "h2");
+        }
     }
-
 }
+

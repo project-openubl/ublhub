@@ -20,31 +20,15 @@ import io.restassured.specification.RequestSpecification;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.flywaydb.core.Flyway;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
 
 import static io.restassured.RestAssured.given;
 
 public abstract class AbstractBaseTest {
 
-    public abstract Class<?> getTestClass();
-
-    @BeforeEach
-    public void beforeEach() {
+    protected void cleanDB() {
         Flyway flyway = flyway();
         flyway.clean();
         flyway.migrate();
-    }
-
-    @AfterEach
-    public void afterEach() {
-        Flyway flyway = flyway();
-        flyway.clean();
     }
 
     private Flyway flyway() {
@@ -55,37 +39,25 @@ public abstract class AbstractBaseTest {
         String jdbcUrl = config.getValue("quarkus.datasource.jdbc.url", String.class);
 
         // Flyway
-        final String packageName = getTestClass().getName();
-        final String testDefaultLocation = "db/" + packageName.replaceAll("\\.", Matcher.quoteReplacement(File.separator));
-
-        final List<String> locations = new ArrayList<>();
-        locations.add(testDefaultLocation);
-        locations.add("db" + File.separator + "basic-authentication");
-        locations.add("db" + File.separator + "migration");
-
-        if (packageName.startsWith("Native") && packageName.endsWith("IT")) {
-            final String className = getTestClass().getSimpleName();
-            final String nativeClassName = className.replaceFirst("Native", "").replace("IT", "Test");
-            final String testNativeDefaultLocation = "db/" + getTestClass().getPackage().getName().replaceAll("\\.", Matcher.quoteReplacement(File.separator)) + "/" + nativeClassName;
-
-            locations.add(testNativeDefaultLocation);
-        }
-
         return Flyway.configure()
                 .cleanDisabled(false)
                 .dataSource(jdbcUrl, username, password)
                 .connectRetries(120)
-                .locations(locations.toArray(String[]::new))
                 .load();
     }
 
     protected RequestSpecification givenAuth(String username) {
         Config config = ConfigProvider.getConfig();
-        Boolean oidcEnabled = config.getValue("quarkus.oidc.tenant-enabled", Boolean.class);
-        if (oidcEnabled) {
-            return given().auth().oauth2(getAccessToken(username));
+        Boolean isAuthorizationEnabled = config.getValue("ublhub.disable.authorization", Boolean.class);
+        Boolean isOidcEnabled = config.getValue("quarkus.oidc.tenant-enabled", Boolean.class);
+        if (isAuthorizationEnabled) {
+            if (isOidcEnabled) {
+                return given().auth().oauth2(getAccessToken(username));
+            } else {
+                return given().auth().preemptive().basic(username, username);
+            }
         } else {
-            return given().auth().preemptive().basic(username, username);
+            return given();
         }
     }
 

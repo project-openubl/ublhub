@@ -17,7 +17,8 @@
 package io.github.project.openubl.ublhub.resources;
 
 import io.github.project.openubl.ublhub.AbstractBaseTest;
-import io.github.project.openubl.ublhub.BasicProfileManager;
+import io.github.project.openubl.ublhub.ProductionTestProfile;
+import io.github.project.openubl.ublhub.ResourceHelpers;
 import io.github.project.openubl.ublhub.dto.ComponentDto;
 import io.github.project.openubl.ublhub.dto.ProjectDto;
 import io.github.project.openubl.ublhub.dto.SunatDto;
@@ -27,23 +28,27 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
-@TestProfile(BasicProfileManager.class)
+@TestProfile(ProductionTestProfile.class)
 @TestHTTPEndpoint(ProjectResource.class)
 public class ProjectResourceTest extends AbstractBaseTest {
 
-    @Override
-    public Class<?> getTestClass() {
-        return ProjectResourceTest.class;
+    @Inject
+    ResourceHelpers resourceHelpers;
+
+    @BeforeEach
+    public void beforeEach() {
+        cleanDB();
+        resourceHelpers.generatePreexistingData();
     }
 
     @Test
@@ -148,9 +153,9 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .statusCode(200)
                 .body("name", is("my-project1"),
                         "description", is("description1"),
-                        "sunat.facturaUrl", is("http://url1"),
-                        "sunat.guiaUrl", is("http://url11"),
-                        "sunat.retencionUrl", is("http://url111"),
+                        "sunat.facturaUrl", is("http://factura1"),
+                        "sunat.guiaUrl", is("http://guia1"),
+                        "sunat.retencionUrl", is("http://percepcionRetencion1"),
                         "sunat.username", is("username1"),
                         "sunat.password", nullValue()
                 );
@@ -301,7 +306,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
         ComponentDto componentDto = ComponentDto.builder()
                 .name("myKey")
                 .providerId(GeneratedRsaKeyProviderFactory.ID)
-                .config(new HashMap<>(){{
+                .config(new HashMap<>() {{
                     put("active", List.of("true"));
                     put("algorithm", List.of("RS256"));
                     put("enabled", List.of("true"));
@@ -340,7 +345,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
         ComponentDto componentDto = ComponentDto.builder()
                 .name("myKey")
                 .providerId(GeneratedRsaKeyProviderFactory.ID)
-                .config(new HashMap<>(){{
+                .config(new HashMap<>() {{
                     put("active", List.of("true"));
                     put("algorithm", List.of("RS256"));
                     put("enabled", List.of("true"));
@@ -388,7 +393,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
         ComponentDto componentDto = ComponentDto.builder()
                 .name("myKey")
                 .providerId(GeneratedRsaKeyProviderFactory.ID)
-                .config(new HashMap<>(){{
+                .config(new HashMap<>() {{
                     put("active", List.of("true"));
                     put("algorithm", List.of("RS256"));
                     put("enabled", List.of("true"));
@@ -409,7 +414,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
 
         componentDto = ComponentDto.builder()
                 .name("myNewKeyname")
-                .config(new HashMap<>(){{
+                .config(new HashMap<>() {{
                     put("active", List.of("false"));
                     put("algorithm", List.of("RS512"));
                     put("enabled", List.of("false"));
@@ -448,7 +453,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
         ComponentDto componentDto = ComponentDto.builder()
                 .name("myKey")
                 .providerId(GeneratedRsaKeyProviderFactory.ID)
-                .config(new HashMap<>(){{
+                .config(new HashMap<>() {{
                     put("active", List.of("true"));
                     put("algorithm", List.of("RS256"));
                     put("enabled", List.of("true"));

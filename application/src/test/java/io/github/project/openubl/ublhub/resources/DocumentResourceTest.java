@@ -17,7 +17,8 @@
 package io.github.project.openubl.ublhub.resources;
 
 import io.github.project.openubl.ublhub.AbstractBaseTest;
-import io.github.project.openubl.ublhub.BasicProfileManager;
+import io.github.project.openubl.ublhub.ProductionTestProfile;
+import io.github.project.openubl.ublhub.ResourceHelpers;
 import io.github.project.openubl.ublhub.dto.ComponentDto;
 import io.github.project.openubl.ublhub.dto.DocumentInputDto;
 import io.github.project.openubl.ublhub.dto.ProjectDto;
@@ -34,9 +35,11 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.keycloak.crypto.Algorithm;
 
+import javax.inject.Inject;
 import java.io.File;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -49,17 +52,17 @@ import java.util.concurrent.TimeUnit;
 
 import static io.github.project.openubl.ublhub.models.JobPhaseType.READ_XML_FILE;
 import static org.awaitility.Awaitility.await;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
-@TestProfile(BasicProfileManager.class)
+@TestProfile(ProductionTestProfile.class)
 @TestHTTPEndpoint(DocumentResource.class)
 public class DocumentResourceTest extends AbstractBaseTest {
 
-    final int TIMEOUT = 60;
+    @Inject
+    ResourceHelpers resourceHelpers;
 
+    final int TIMEOUT = 60;
 
     final static SunatDto sunatDto = SunatDto.builder()
             .facturaUrl("https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService")
@@ -97,9 +100,10 @@ public class DocumentResourceTest extends AbstractBaseTest {
             )
             .build();
 
-    @Override
-    public Class<?> getTestClass() {
-        return DocumentResourceTest.class;
+    @BeforeEach
+    public void beforeEach() {
+        cleanDB();
+        resourceHelpers.generatePreexistingData();
     }
 
     @Test
@@ -158,7 +162,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .statusCode(200)
                 .body("count", is(2),
                         "items.size()", is(2),
-                        "items[0].id", is("22"),
+                        "items[0].id", is("12"),
                         "items[1].id", is("11")
                 );
 
@@ -171,7 +175,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .body("count", is(2),
                         "items.size()", is(2),
                         "items[0].id", is("11"),
-                        "items[1].id", is("22")
+                        "items[1].id", is("12")
                 );
         // Then
     }
@@ -185,12 +189,12 @@ public class DocumentResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/documents?filterText=11")
+                .get("/" + projectId + "/documents?filterText=1")
                 .then()
                 .statusCode(200)
                 .body("count", is(1),
                         "items.size()", is(1),
-                        "items[0].status.xmlData.serieNumero", is("F-11")
+                        "items[0].status.xmlData.serieNumero", is("F-1")
                 );
         // Then
     }

@@ -28,8 +28,10 @@ import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.transaction.Transactional;
 import java.util.List;
 
+@Transactional
 @ApplicationScoped
 public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentEntity, Long> {
 

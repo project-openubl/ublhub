@@ -17,7 +17,7 @@
 package io.github.project.openubl.ublhub.resources;
 
 import io.github.project.openubl.ublhub.AbstractBaseTest;
-import io.github.project.openubl.ublhub.BasicProfileManager;
+import io.github.project.openubl.ublhub.ProductionTestProfile;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
@@ -27,13 +27,8 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 
 @QuarkusTest
-@TestProfile(BasicProfileManager.class)
+@TestProfile(ProductionTestProfile.class)
 public class StorageHealthCheckTest extends AbstractBaseTest {
-
-    @Override
-    public Class<?> getTestClass() {
-        return StorageHealthCheckTest.class;
-    }
 
     @Test
     public void getCompany() {
