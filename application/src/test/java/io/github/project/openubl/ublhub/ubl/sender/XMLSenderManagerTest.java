@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.ubl.sender;
 
-import io.github.project.openubl.ublhub.BasicProfileManager;
+import io.github.project.openubl.ublhub.ProductionTestProfile;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ConnectToSUNATException;
 import io.github.project.openubl.ublhub.ubl.sender.exceptions.ReadXMLFileContentException;
 import io.github.project.openubl.xsender.files.xml.DocumentType;
@@ -36,12 +36,10 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
-@TestProfile(BasicProfileManager.class)
+@TestProfile(ProductionTestProfile.class)
 public class XMLSenderManagerTest {
 
     @Inject

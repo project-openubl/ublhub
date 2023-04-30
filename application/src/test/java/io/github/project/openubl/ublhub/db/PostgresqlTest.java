@@ -14,31 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub;
+package io.github.project.openubl.ublhub.db;
 
-import io.github.project.openubl.ublhub.containers.MinioServer;
+import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
+import io.quarkus.test.junit.TestProfile;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
-public abstract class ProfileManager implements QuarkusTestProfile {
+@QuarkusTest
+@TestProfile(value = PostgresqlTest.Profile.class)
+public class PostgresqlTest extends AbstractDbTest {
 
-    List<TestResourceEntry> testResources = new ArrayList<>();
-
-    public ProfileManager() {
-        testResources.add(new TestResourceEntry(MinioServer.class));
-    }
-
-    public abstract String getProfile();
-
-    @Override
-    public String getConfigProfile() {
-        return "test," + getProfile();
-    }
-
-    @Override
-    public List<TestResourceEntry> testResources() {
-        return testResources;
+    public static class Profile implements QuarkusTestProfile {
+        @Override
+        public Map<String, String> getConfigOverrides() {
+            return Map.of("quarkus.datasource.db-kind", "postgresql");
+        }
     }
 }
+

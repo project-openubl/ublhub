@@ -22,7 +22,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Nationalized;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
@@ -60,9 +59,9 @@ public class ComponentConfigEntity extends PanacheEntityBase {
     @Column(name = "name")
     private String name;
 
-    @Nationalized
+//    @Nationalized
     @Size(max = 4000)
-    @Column(name = "value", length = 4000)
+    @Column(name = "val", length = 4000)
     private String value;
 
 }
