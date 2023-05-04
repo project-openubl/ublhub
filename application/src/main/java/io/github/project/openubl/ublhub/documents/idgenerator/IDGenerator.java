@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.builder.idgenerator;
+package io.github.project.openubl.ublhub.documents.idgenerator;
 
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 
@@ -33,6 +33,7 @@ public interface IDGenerator {
     ID generateSummaryDocumentID(ProjectEntity project, String ruc);
 
     ID generatePerceptionID(ProjectEntity project, String ruc, Map<String, String> config);
+
     ID generateRetentionID(ProjectEntity project, String ruc, Map<String, String> config);
 
 }

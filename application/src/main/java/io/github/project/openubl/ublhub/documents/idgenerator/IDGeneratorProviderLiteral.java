@@ -14,14 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.sender.exceptions;
+package io.github.project.openubl.ublhub.documents.idgenerator;
 
-public class ReadXMLFileContentException extends Exception {
-    public ReadXMLFileContentException(String message) {
-        super(message);
+import javax.enterprise.util.AnnotationLiteral;
+
+public class IDGeneratorProviderLiteral extends AnnotationLiteral<IDGeneratorProvider> implements IDGeneratorProvider {
+
+    private final IDGeneratorType providerType;
+
+    public IDGeneratorProviderLiteral(IDGeneratorType providerType) {
+        this.providerType = providerType;
     }
 
-    public ReadXMLFileContentException(Throwable e) {
-        super(e);
+    @Override
+    public IDGeneratorType value() {
+        return providerType;
     }
+
 }

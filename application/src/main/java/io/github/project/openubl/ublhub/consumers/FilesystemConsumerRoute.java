@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.consumers;
 
+import io.github.project.openubl.ublhub.documents.DocumentRoute;
 import io.github.project.openubl.ublhub.files.camel.RouteUtils;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
@@ -52,15 +53,19 @@ public class FilesystemConsumerRoute extends RouteBuilder {
                 .choice()
                     .when(header(FileConstants.FILE_NAME).regex(".*\\.(yml|yaml)"))
                         .unmarshal().yaml(YAMLLibrary.SnakeYAML, JsonObject.class)
+                        .to("direct:import-json")
                     .endChoice()
                     .when(header(FileConstants.FILE_NAME).regex(".*\\.(json)"))
                         .unmarshal().json(JsonLibrary.Jsonb, JsonObject.class)
+                        .to("direct:import-json")
                     .endChoice()
-                .end()
-//                .to("file://data2")
-                .process(exchange -> {
-                    System.out.println("yaml" + exchange.getIn().getBody());
-                });
+                    .when(header(FileConstants.FILE_NAME).regex(".*\\.(xml)"))
+                        .process(exchange -> {
+                            String fileName = exchange.getIn().getHeader(FileConstants.FILE_NAME_ONLY, String.class);
+                        })
+                        .to("direct:import-xml")
+                    .endChoice()
+                .end();
     }
 
 }

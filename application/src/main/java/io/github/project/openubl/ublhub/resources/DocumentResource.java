@@ -36,9 +36,8 @@ package io.github.project.openubl.ublhub.resources;
 import com.github.f4b6a3.tsid.TsidFactory;
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
+import io.github.project.openubl.ublhub.documents.DocumentRoute;
 import io.github.project.openubl.ublhub.dto.DocumentDto;
-import io.github.project.openubl.ublhub.dto.DocumentInputDto;
-import io.github.project.openubl.ublhub.dto.ErrorDto;
 import io.github.project.openubl.ublhub.dto.PageDto;
 import io.github.project.openubl.ublhub.files.FilesManager;
 import io.github.project.openubl.ublhub.keys.KeyManager;
@@ -56,11 +55,7 @@ import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.ublhub.qute.DbTemplateLocator;
-import io.github.project.openubl.ublhub.resources.exceptions.NoCertificateToSignFoundException;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
-import io.github.project.openubl.ublhub.resources.validation.JSONValidatorManager;
-import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLGeneratorManager;
-import io.github.project.openubl.ublhub.ubl.builder.xmlgenerator.XMLResult;
 import io.github.project.openubl.xbuilder.content.jaxb.mappers.CreditNoteMapper;
 import io.github.project.openubl.xbuilder.content.jaxb.mappers.DebitNoteMapper;
 import io.github.project.openubl.xbuilder.content.jaxb.mappers.DespatchAdviceMapper;
@@ -77,57 +72,38 @@ import io.github.project.openubl.xbuilder.content.jaxb.models.XMLPercepcion;
 import io.github.project.openubl.xbuilder.content.jaxb.models.XMLRetention;
 import io.github.project.openubl.xbuilder.content.jaxb.models.XMLSummaryDocuments;
 import io.github.project.openubl.xbuilder.content.jaxb.models.XMLVoidedDocuments;
-import io.github.project.openubl.xbuilder.signature.XMLSigner;
-import io.github.project.openubl.xbuilder.signature.XmlSignatureHelper;
 import io.github.project.openubl.xsender.files.xml.XmlContent;
 import io.github.project.openubl.xsender.files.xml.XmlContentProvider;
 import io.quarkus.qute.Engine;
 import io.quarkus.qute.Template;
-import io.vertx.core.json.JsonObject;
+import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
+import org.apache.camel.ProducerTemplate;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.reactive.MultipartForm;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
-import org.keycloak.crypto.Algorithm;
-import org.keycloak.crypto.KeyUse;
-import org.keycloak.crypto.KeyWrapper;
 import org.mapstruct.factory.Mappers;
-import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
+import javax.json.JsonObject;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.crypto.MarshalException;
-import javax.xml.crypto.dsig.XMLSignatureException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -153,6 +129,9 @@ public class DocumentResource {
     Engine engine;
 
     @Inject
+    ProducerTemplate producerTemplate;
+
+    @Inject
     FilesManager filesManager;
 
     @Inject
@@ -165,22 +144,7 @@ public class DocumentResource {
     UBLDocumentRepository documentRepository;
 
     @Inject
-    XMLGeneratorManager xmlGeneratorManager;
-
-    @Inject
-    KeyManager keystore;
-
-    @Inject
-    JSONValidatorManager jsonManager;
-
-    @Inject
     DocumentMapper documentMapper;
-
-    @Inject
-    Event<UBLDocumentEntity> sendBillEvent;
-
-    @Inject
-    TsidFactory tsidFactory;
 
     Function<DocumentDto, RestResponse<DocumentDto>> documentDtoCreatedResponse = (dto) -> RestResponse.ResponseBuilder
             .<DocumentDto>create(RestResponse.Status.CREATED)
@@ -209,190 +173,143 @@ public class DocumentResource {
                 .build();
     }
 
-    public Document createAndSignXML(ProjectEntity projectEntity, DocumentInputDto inputDto) throws NoCertificateToSignFoundException, MarshalException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException, ParserConfigurationException, XMLSignatureException, SAXException {
-        XMLResult xmlResult = xmlGeneratorManager.createXMLString(projectEntity, inputDto);
-        String algorithm = inputDto.getSpec().getSignature() != null ? inputDto.getSpec().getSignature().getAlgorithm() : Algorithm.RS256;
 
-        KeyWrapper keyWrapper = null;
+//    @POST
+//    @Consumes(MediaType.MULTIPART_FORM_DATA)
+//    @Path("/{projectId}/upload/document")
+//    public RestResponse<DocumentDto> uploadXML(
+//            @PathParam("projectId") @NotNull Long projectId,
+//            @MultipartForm UploadFormData formData
+//    ) throws FileNotFoundException {
+//        ProjectEntity projectEntity = projectRepository.findById(projectId);
+//        if (projectEntity == null) {
+//            return documentDtoNotFoundResponse.get();
+//        }
+//
+//        String fileId = filesManager.createFile(formData.file.uploadedFile().toFile(), true);
+//        UBLDocumentEntity entity = createAndScheduleSend(projectEntity, fileId);
+//        DocumentDto dto = documentMapper.toDto(entity);
+//
+//        return documentDtoCreatedResponse.apply(dto);
+//    }
 
-        CompanyEntity companyEntity = companyRepository.findByRuc(projectEntity.getId(), xmlResult.getRuc());
-        if (companyEntity != null) {
-            ComponentOwner companyOwner = ComponentOwner.builder()
-                    .id(companyEntity.getId())
-                    .type(company)
-                    .build();
-            keyWrapper = keystore.getActiveKeyWithoutFallback(companyOwner, KeyUse.SIG, algorithm);
-        }
-
-        if (keyWrapper == null) {
-            ComponentOwner projectOwner = ComponentOwner.builder()
-                    .id(projectEntity.getId())
-                    .type(project)
-                    .build();
-            keyWrapper = keystore.getActiveKeyWithoutFallback(projectOwner, KeyUse.SIG, algorithm);
-        }
-
-        if (keyWrapper == null) {
-            throw new NoCertificateToSignFoundException("Could not find a key to sign neither in project or company level");
-        }
-
-        KeyManager.ActiveRsaKey rsaKey = KeyManager.ActiveRsaKey.builder()
-                .kid(keyWrapper.getKid())
-                .privateKey((PrivateKey) keyWrapper.getPrivateKey())
-                .publicKey((PublicKey) keyWrapper.getPublicKey())
-                .certificate(keyWrapper.getCertificate())
-                .build();
-
-        return XMLSigner.signXML(xmlResult.getXml(), "OPENUBL", rsaKey.getCertificate(), rsaKey.getPrivateKey());
-    }
-
-    public String saveXML(Document xml) throws Exception {
-        byte[] bytes = XmlSignatureHelper.getBytesFromDocument(xml);
-        return filesManager.createFile(bytes, true);
-    }
-
-    public UBLDocumentEntity createAndScheduleSend(ProjectEntity projectEntity, String fileSavedId) {
-        UBLDocumentEntity documentEntity = new UBLDocumentEntity();
-        documentEntity.setId(tsidFactory.create().toLong());
-        documentEntity.setXmlFileId(fileSavedId);
-        documentEntity.setProjectId(projectEntity.getId());
-        documentEntity.setJobInProgress(true);
-        documentEntity.persist();
-
-        sendBillEvent.fire(documentEntity);
-        return documentEntity;
-    }
-
-    @POST
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Path("/{projectId}/upload/document")
-    public RestResponse<DocumentDto> uploadXML(
-            @PathParam("projectId") @NotNull Long projectId,
-            @MultipartForm UploadFormData formData
-    ) throws FileNotFoundException {
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
-        if (projectEntity == null) {
-            return documentDtoNotFoundResponse.get();
-        }
-
-        String fileId = filesManager.createFile(formData.file.uploadedFile().toFile(), true);
-        UBLDocumentEntity entity = createAndScheduleSend(projectEntity, fileId);
-        DocumentDto dto = documentMapper.toDto(entity);
-
-        return documentDtoCreatedResponse.apply(dto);
-    }
-
+    @Transactional(Transactional.TxType.NEVER)
     @POST
     @Path("/{projectId}/documents")
     public RestResponse<DocumentDto> createDocument(
             @PathParam("projectId") @NotNull Long projectId,
             @NotNull JsonObject jsonObject
     ) throws Exception {
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
-        if (projectEntity == null) {
-            return documentDtoNotFoundResponse.get();
-        }
+        Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, projectId);
+        Long documentId = producerTemplate.requestBodyAndHeaders("direct:import-json", jsonObject, headers, Long.class);
+        System.out.println("Hello");
 
-        Boolean isValid = jsonManager.validateJsonObject(jsonObject);
-        if (!isValid) {
-            return documentDtoBadRequestResponse.get();
-        }
-
-        DocumentInputDto documentInputDto = jsonManager.getDocumentInputDtoFromJsonObject(jsonObject);
-        Document document;
-        try {
-            document = createAndSignXML(projectEntity, documentInputDto);
-        } catch (NoCertificateToSignFoundException | MarshalException | InvalidAlgorithmParameterException |
-                 NoSuchAlgorithmException | IOException | ParserConfigurationException | XMLSignatureException |
-                 SAXException e) {
-            return RestResponse.ResponseBuilder
-                    .<DocumentDto>create(RestResponse.Status.BAD_REQUEST)
-                    .build();
-        }
-
-        String documentId = saveXML(document);
-        UBLDocumentEntity documentEntity = createAndScheduleSend(projectEntity, documentId);
-
-        DocumentDto documentDto = documentMapper.toDto(documentEntity);
-        return documentDtoCreatedResponse.apply(documentDto);
+//        ProjectEntity projectEntity = projectRepository.findById(projectId);
+//        if (projectEntity == null) {
+//            return documentDtoNotFoundResponse.get();
+//        }
+//
+//        Boolean isValid = jsonManager.validateJsonObject(jsonObject);
+//        if (!isValid) {
+//            return documentDtoBadRequestResponse.get();
+//        }
+//
+//        DocumentInputDto documentInputDto = jsonManager.getDocumentInputDtoFromJsonObject(jsonObject);
+//        Document document;
+//        try {
+//            document = createAndSignXML(projectEntity, documentInputDto);
+//        } catch (NoCertificateToSignFoundException | MarshalException | InvalidAlgorithmParameterException |
+//                 NoSuchAlgorithmException | IOException | ParserConfigurationException | XMLSignatureException |
+//                 SAXException e) {
+//            return RestResponse.ResponseBuilder
+//                    .<DocumentDto>create(RestResponse.Status.BAD_REQUEST)
+//                    .build();
+//        }
+//
+//        String documentId = saveXML(document);
+//        UBLDocumentEntity documentEntity = createAndScheduleSend(projectEntity, documentId);
+//
+//        DocumentDto documentDto = documentMapper.toDto(documentEntity);
+//        return documentDtoCreatedResponse.apply(documentDto);
+        return null;
     }
 
-    @POST
-    @Path("/{projectId}/enrich-document")
-    public RestResponse<?> enrichDocuments(
-            @PathParam("projectId") @NotNull Long projectId,
-            @NotNull JsonObject jsonObject
-    ) {
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
-        if (projectEntity == null) {
-            return documentDtoNotFoundResponse.get();
-        }
+//    @POST
+//    @Path("/{projectId}/enrich-document")
+//    public RestResponse<?> enrichDocuments(
+//            @PathParam("projectId") @NotNull Long projectId,
+//            @NotNull JsonObject jsonObject
+//    ) {
+//        ProjectEntity projectEntity = projectRepository.findById(projectId);
+//        if (projectEntity == null) {
+//            return documentDtoNotFoundResponse.get();
+//        }
+//
+//        Boolean isValid = jsonManager.validateJsonObject(jsonObject);
+//        if (!isValid) {
+//            return RestResponse.ResponseBuilder
+//                    .<String>create(RestResponse.Status.BAD_REQUEST)
+//                    .entity("Invalid document")
+//                    .build();
+//        }
+//
+//        DocumentInputDto documentInputDto = jsonManager.getDocumentInputDtoFromJsonObject(jsonObject);
+//
+//        try {
+//            Object inputDocument = xmlGeneratorManager.enrichDocument(documentInputDto);
+//
+//            return RestResponse.ResponseBuilder
+//                    .create(RestResponse.Status.OK)
+//                    .entity(inputDocument)
+//                    .build();
+//        } catch (Throwable e) {
+//            String message = e.getMessage() != null && !e.getMessage().isEmpty() ? e.getMessage() : e.getCause().getMessage();
+//            ErrorDto errorDto = ErrorDto.builder()
+//                    .message(message)
+//                    .build();
+//            return RestResponse.ResponseBuilder
+//                    .create(RestResponse.Status.BAD_REQUEST)
+//                    .entity(errorDto)
+//                    .build();
+//        }
+//    }
 
-        Boolean isValid = jsonManager.validateJsonObject(jsonObject);
-        if (!isValid) {
-            return RestResponse.ResponseBuilder
-                    .<String>create(RestResponse.Status.BAD_REQUEST)
-                    .entity("Invalid document")
-                    .build();
-        }
-
-        DocumentInputDto documentInputDto = jsonManager.getDocumentInputDtoFromJsonObject(jsonObject);
-
-        try {
-            Object inputDocument = xmlGeneratorManager.enrichDocument(documentInputDto);
-
-            return RestResponse.ResponseBuilder
-                    .create(RestResponse.Status.OK)
-                    .entity(inputDocument)
-                    .build();
-        } catch (Throwable e) {
-            String message = e.getMessage() != null && !e.getMessage().isEmpty() ? e.getMessage() : e.getCause().getMessage();
-            ErrorDto errorDto = ErrorDto.builder()
-                    .message(message)
-                    .build();
-            return RestResponse.ResponseBuilder
-                    .create(RestResponse.Status.BAD_REQUEST)
-                    .entity(errorDto)
-                    .build();
-        }
-    }
-
-    @POST
-    @Path("/{projectId}/render-document")
-    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
-    public RestResponse<String> renderDocument(
-            @PathParam("projectId") @NotNull Long projectId,
-            @NotNull JsonObject jsonObject
-    ) {
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
-        if (projectEntity == null) {
-            return RestResponse.ResponseBuilder
-                    .<String>create(RestResponse.Status.NOT_FOUND)
-                    .build();
-        }
-
-        Boolean isValid = jsonManager.validateJsonObject(jsonObject);
-        if (!isValid) {
-            return RestResponse.ResponseBuilder
-                    .<String>create(RestResponse.Status.OK)
-                    .entity("Invalid document, it does not comply with schema")
-                    .build();
-        }
-
-        DocumentInputDto documentInputDto = jsonManager.getDocumentInputDtoFromJsonObject(jsonObject);
-
-        String result;
-        try {
-            result = xmlGeneratorManager.renderDocument(documentInputDto);
-        } catch (Throwable e) {
-            result = e.getMessage() != null && !e.getMessage().isEmpty() ? e.getMessage() : e.getCause().getMessage();
-        }
-
-        return RestResponse.ResponseBuilder
-                .<String>create(RestResponse.Status.OK)
-                .entity(result)
-                .build();
-    }
+//    @POST
+//    @Path("/{projectId}/render-document")
+//    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
+//    public RestResponse<String> renderDocument(
+//            @PathParam("projectId") @NotNull Long projectId,
+//            @NotNull JsonObject jsonObject
+//    ) {
+//        ProjectEntity projectEntity = projectRepository.findById(projectId);
+//        if (projectEntity == null) {
+//            return RestResponse.ResponseBuilder
+//                    .<String>create(RestResponse.Status.NOT_FOUND)
+//                    .build();
+//        }
+//
+//        Boolean isValid = jsonManager.validateJsonObject(jsonObject);
+//        if (!isValid) {
+//            return RestResponse.ResponseBuilder
+//                    .<String>create(RestResponse.Status.OK)
+//                    .entity("Invalid document, it does not comply with schema")
+//                    .build();
+//        }
+//
+//        DocumentInputDto documentInputDto = jsonManager.getDocumentInputDtoFromJsonObject(jsonObject);
+//
+//        String result;
+//        try {
+//            result = xmlGeneratorManager.renderDocument(documentInputDto);
+//        } catch (Throwable e) {
+//            result = e.getMessage() != null && !e.getMessage().isEmpty() ? e.getMessage() : e.getCause().getMessage();
+//        }
+//
+//        return RestResponse.ResponseBuilder
+//                .<String>create(RestResponse.Status.OK)
+//                .entity(result)
+//                .build();
+//    }
 
     @GET
     @Path("/{projectId}/documents/{documentId}")

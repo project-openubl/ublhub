@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.builder.idgenerator.impl;
+package io.github.project.openubl.ublhub.documents.idgenerator.impl;
 
+import io.github.project.openubl.ublhub.documents.idgenerator.IDGeneratorProvider;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
-import io.github.project.openubl.ublhub.ubl.builder.idgenerator.ID;
-import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGenerator;
-import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorProvider;
-import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
+import io.github.project.openubl.ublhub.documents.idgenerator.ID;
+import io.github.project.openubl.ublhub.documents.idgenerator.IDGenerator;
+import io.github.project.openubl.ublhub.documents.idgenerator.IDGeneratorType;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.Map;

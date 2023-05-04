@@ -14,6 +14,9 @@
           "items" : {
             "type" : "string"
           }
+        },
+        "project" : {
+          "type" : "integer"
         }
       }
     },
@@ -22,11 +25,6 @@
       "properties" : {
         "document" : {
           "type" : "object",
-          "properties" : {
-            "map" : {
-              "type" : "object"
-            }
-          },
           "description" : "Document config"
         },
         "id" : {

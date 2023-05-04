@@ -14,24 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.ubl.builder.idgenerator;
+package io.github.project.openubl.ublhub.documents.idgenerator;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import java.lang.annotation.Annotation;
-
-@ApplicationScoped
-public class IDGeneratorManager {
-
-    @Inject
-    @Any
-    Instance<IDGenerator> idGenerators;
-
-    public IDGenerator selectIDGenerator(IDGeneratorType providerType) {
-        Annotation annotation = new IDGeneratorProviderLiteral(providerType);
-        return idGenerators.select(annotation).get();
-    }
-
+public enum IDGeneratorType {
+    none,
+    generated,
 }

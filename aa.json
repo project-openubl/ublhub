@@ -1,0 +1,606 @@
+{
+  "kind": {
+    "chars": "Invoice",
+    "string": "Invoice",
+    "valueType": "STRING"
+  },
+  "metadata": {
+    "valueType": "NULL"
+  },
+  "spec": {
+    "id": {
+      "valueType": "NULL"
+    },
+    "signature": {
+      "valueType": "NULL"
+    },
+    "document": {
+      "moneda": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "fechaEmision": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "proveedor": {
+        "ruc": {
+          "chars": {
+            "chars": "12345678912",
+            "string": "12345678912",
+            "valueType": "STRING"
+          },
+          "string": {
+            "chars": "12345678912",
+            "string": "12345678912",
+            "valueType": "STRING"
+          },
+          "valueType": {
+            "chars": "STRING",
+            "string": "STRING",
+            "valueType": "STRING"
+          }
+        },
+        "nombreComercial": {
+          "valueType": {
+            "chars": "NULL",
+            "string": "NULL",
+            "valueType": "STRING"
+          }
+        },
+        "razonSocial": {
+          "chars": {
+            "chars": "Softgreen S.A.C.",
+            "string": "Softgreen S.A.C.",
+            "valueType": "STRING"
+          },
+          "string": {
+            "chars": "Softgreen S.A.C.",
+            "string": "Softgreen S.A.C.",
+            "valueType": "STRING"
+          },
+          "valueType": {
+            "chars": "STRING",
+            "string": "STRING",
+            "valueType": "STRING"
+          }
+        },
+        "direccion": {
+          "valueType": {
+            "chars": "NULL",
+            "string": "NULL",
+            "valueType": "STRING"
+          }
+        },
+        "contacto": {
+          "valueType": {
+            "chars": "NULL",
+            "string": "NULL",
+            "valueType": "STRING"
+          }
+        }
+      },
+      "firmante": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "leyendas": {},
+      "tasaIvap": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "tasaIgv": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "tasaIcb": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "serie": {
+        "chars": {
+          "chars": "F001",
+          "string": "F001",
+          "valueType": "STRING"
+        },
+        "string": {
+          "chars": "F001",
+          "string": "F001",
+          "valueType": "STRING"
+        },
+        "valueType": {
+          "chars": "STRING",
+          "string": "STRING",
+          "valueType": "STRING"
+        }
+      },
+      "numero": {
+        "integral": {
+          "valueType": "TRUE"
+        },
+        "valueType": {
+          "chars": "NUMBER",
+          "string": "NUMBER",
+          "valueType": "STRING"
+        }
+      },
+      "horaEmision": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "ordenDeCompra": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "cliente": {
+        "tipoDocumentoIdentidad": {
+          "chars": {
+            "chars": "RUC",
+            "string": "RUC",
+            "valueType": "STRING"
+          },
+          "string": {
+            "chars": "RUC",
+            "string": "RUC",
+            "valueType": "STRING"
+          },
+          "valueType": {
+            "chars": "STRING",
+            "string": "STRING",
+            "valueType": "STRING"
+          }
+        },
+        "numeroDocumentoIdentidad": {
+          "chars": {
+            "chars": "12121212121",
+            "string": "12121212121",
+            "valueType": "STRING"
+          },
+          "string": {
+            "chars": "12121212121",
+            "string": "12121212121",
+            "valueType": "STRING"
+          },
+          "valueType": {
+            "chars": "STRING",
+            "string": "STRING",
+            "valueType": "STRING"
+          }
+        },
+        "nombre": {
+          "chars": {
+            "chars": "Carlos Feria",
+            "string": "Carlos Feria",
+            "valueType": "STRING"
+          },
+          "string": {
+            "chars": "Carlos Feria",
+            "string": "Carlos Feria",
+            "valueType": "STRING"
+          },
+          "valueType": {
+            "chars": "STRING",
+            "string": "STRING",
+            "valueType": "STRING"
+          }
+        },
+        "direccion": {
+          "valueType": {
+            "chars": "NULL",
+            "string": "NULL",
+            "valueType": "STRING"
+          }
+        },
+        "contacto": {
+          "valueType": {
+            "chars": "NULL",
+            "string": "NULL",
+            "valueType": "STRING"
+          }
+        }
+      },
+      "totalImpuestos": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "detalles": [
+        {
+          "descripcion": {
+            "chars": {
+              "chars": "Item1",
+              "string": "Item1",
+              "valueType": "STRING"
+            },
+            "string": {
+              "chars": "Item1",
+              "string": "Item1",
+              "valueType": "STRING"
+            },
+            "valueType": {
+              "chars": "STRING",
+              "string": "STRING",
+              "valueType": "STRING"
+            }
+          },
+          "unidadMedida": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "cantidad": {
+            "integral": {
+              "valueType": "TRUE"
+            },
+            "valueType": {
+              "chars": "NUMBER",
+              "string": "NUMBER",
+              "valueType": "STRING"
+            }
+          },
+          "precio": {
+            "integral": {
+              "valueType": "TRUE"
+            },
+            "valueType": {
+              "chars": "NUMBER",
+              "string": "NUMBER",
+              "valueType": "STRING"
+            }
+          },
+          "precioConImpuestos": {
+            "valueType": {
+              "chars": "FALSE",
+              "string": "FALSE",
+              "valueType": "STRING"
+            }
+          },
+          "precioReferencia": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "precioReferenciaTipo": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "tasaIgv": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "igv": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "igvBaseImponible": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "igvTipo": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "tasaIcb": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "icb": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "icbAplica": {
+            "valueType": {
+              "chars": "FALSE",
+              "string": "FALSE",
+              "valueType": "STRING"
+            }
+          },
+          "tasaIsc": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "isc": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "iscBaseImponible": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "iscTipo": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "totalImpuestos": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          }
+        },
+        {
+          "descripcion": {
+            "chars": {
+              "chars": "Item2",
+              "string": "Item2",
+              "valueType": "STRING"
+            },
+            "string": {
+              "chars": "Item2",
+              "string": "Item2",
+              "valueType": "STRING"
+            },
+            "valueType": {
+              "chars": "STRING",
+              "string": "STRING",
+              "valueType": "STRING"
+            }
+          },
+          "unidadMedida": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "cantidad": {
+            "integral": {
+              "valueType": "TRUE"
+            },
+            "valueType": {
+              "chars": "NUMBER",
+              "string": "NUMBER",
+              "valueType": "STRING"
+            }
+          },
+          "precio": {
+            "integral": {
+              "valueType": "TRUE"
+            },
+            "valueType": {
+              "chars": "NUMBER",
+              "string": "NUMBER",
+              "valueType": "STRING"
+            }
+          },
+          "precioConImpuestos": {
+            "valueType": {
+              "chars": "FALSE",
+              "string": "FALSE",
+              "valueType": "STRING"
+            }
+          },
+          "precioReferencia": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "precioReferenciaTipo": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "tasaIgv": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "igv": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "igvBaseImponible": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "igvTipo": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "tasaIcb": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "icb": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "icbAplica": {
+            "valueType": {
+              "chars": "FALSE",
+              "string": "FALSE",
+              "valueType": "STRING"
+            }
+          },
+          "tasaIsc": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "isc": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "iscBaseImponible": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "iscTipo": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          },
+          "totalImpuestos": {
+            "valueType": {
+              "chars": "NULL",
+              "string": "NULL",
+              "valueType": "STRING"
+            }
+          }
+        }
+      ],
+      "guias": [],
+      "documentosRelacionados": [],
+      "fechaVencimiento": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "tipoComprobante": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "observaciones": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "tipoOperacion": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "formaDePago": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "totalImporte": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "direccionEntrega": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "detraccion": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "percepcion": {
+        "valueType": {
+          "chars": "NULL",
+          "string": "NULL",
+          "valueType": "STRING"
+        }
+      },
+      "anticipos": [],
+      "descuentos": []
+    }
+  }
+}

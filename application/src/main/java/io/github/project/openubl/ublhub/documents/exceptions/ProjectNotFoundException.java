@@ -14,25 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.resources.validation;
+package io.github.project.openubl.ublhub.documents.exceptions;
 
-import org.apache.camel.ValidationException;
-import org.apache.camel.builder.RouteBuilder;
-
-import javax.enterprise.context.ApplicationScoped;
-
-@ApplicationScoped
-public class JSONValidatorRoute extends RouteBuilder {
-
-    @Override
-    public void configure() throws Exception {
-        from("direct:validate-json-document")
-                .doTry()
-                    .to("json-validator:schemas/DocumentInputDto-schema.json")
-                    .setBody(constant(true))
-                .doCatch(ValidationException.class)
-                    .setBody(constant(false))
-                .end();
+public class ProjectNotFoundException extends Exception {
+    public ProjectNotFoundException(Long projectId) {
+        super("Project " + projectId + " not found");
     }
-
 }
