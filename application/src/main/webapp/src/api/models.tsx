@@ -21,14 +21,12 @@ export interface PageDto<T> {
 }
 
 export interface ProjectDto {
-  id?: string;
   name: string;
   description?: string;
   sunat: SunatDto;
 }
 
 export interface CompanyDto {
-  id?: string;
   ruc: string;
   name: string;
   description?: string;

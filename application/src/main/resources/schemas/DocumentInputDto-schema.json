@@ -16,7 +16,7 @@
           }
         },
         "project" : {
-          "type" : "integer"
+          "type" : "string"
         }
       }
     },

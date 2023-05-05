@@ -75,8 +75,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .post("/")
                 .then()
                 .statusCode(201)
-                .body("id", is(notNullValue()),
-                        "name", is(projectDto.getName()),
+                .body("name", is(projectDto.getName()),
                         "description", is(projectDto.getDescription()),
                         "sunat.facturaUrl", is(projectDto.getSunat().getFacturaUrl()),
                         "sunat.guiaUrl", is(projectDto.getSunat().getGuiaUrl()),
@@ -148,7 +147,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/1")
+                .get("/" + ResourceHelpers.projects.get(0))
                 .then()
                 .statusCode(200)
                 .body("name", is("my-project1"),
@@ -178,7 +177,8 @@ public class ProjectResourceTest extends AbstractBaseTest {
     @Test
     public void updateProject() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
+
         ProjectDto projectDto = ProjectDto.builder()
                 .name("new name")
                 .description("my description")
@@ -197,11 +197,10 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(projectDto)
                 .when()
-                .put("/" + projectId)
+                .put("/" + project)
                 .then()
                 .statusCode(200)
-                .body("id", is(projectId.toString()),
-                        "name", is(projectDto.getName()),
+                .body("name", is(project), // Name has not changed
                         "description", is(projectDto.getDescription()),
                         "sunat.facturaUrl", is(projectDto.getSunat().getFacturaUrl()),
                         "sunat.guiaUrl", is(projectDto.getSunat().getGuiaUrl()),
@@ -214,11 +213,10 @@ public class ProjectResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId)
+                .get("/" + project)
                 .then()
                 .statusCode(200)
-                .body("id", is(projectId.toString()),
-                        "name", is(projectDto.getName()),
+                .body("name", is(project),
                         "description", is(projectDto.getDescription()),
                         "sunat.facturaUrl", is(projectDto.getSunat().getFacturaUrl()),
                         "sunat.guiaUrl", is(projectDto.getSunat().getGuiaUrl()),
@@ -231,13 +229,13 @@ public class ProjectResourceTest extends AbstractBaseTest {
     @Test
     public void deleteProject() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         // When
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/" + projectId)
+                .delete("/" + project)
                 .then()
                 .statusCode(204);
 
@@ -245,7 +243,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId)
+                .get("/" + project)
                 .then()
                 .statusCode(404);
     }
@@ -267,20 +265,19 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        String projectId = givenAuth("alice")
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .body(projectDto)
                 .when()
                 .post("/")
                 .then()
-                .statusCode(201)
-                .extract().path("id").toString();
+                .statusCode(201);
 
         // Then
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/keys")
+                .get("/" + projectDto.getName() + "/keys")
                 .then()
                 .statusCode(200)
                 .body("active.RS256", is(notNullValue()),
@@ -300,7 +297,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     @Test
     public void createProjectComponent() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -320,12 +317,12 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/components/")
+                .post("/" + project + "/components/")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
                         "name", is(componentDto.getName()),
-                        "parentId", is(projectId.toString()),
+                        "parentId", is(project),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -339,7 +336,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     @Test
     public void getProjectComponent() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -358,7 +355,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/components/")
+                .post("/" + project + "/components/")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()))
@@ -368,12 +365,12 @@ public class ProjectResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/components/" + componentId)
+                .get("/" + project + "/components/" + componentId)
                 .then()
                 .statusCode(200)
-                .body("id", is(componentId.toString()),
+                .body("id", is(componentId),
                         "name", is(componentDto.getName()),
-                        "parentId", is(projectId.toString()),
+                        "parentId", is(project),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -387,7 +384,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     @Test
     public void updateProjectComponent() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -406,7 +403,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/components/")
+                .post("/" + project + "/components/")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()))
@@ -428,12 +425,12 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .when()
                 .body(componentDto)
-                .put("/" + projectId + "/components/" + componentId)
+                .put("/" + project + "/components/" + componentId)
                 .then()
                 .statusCode(200)
                 .body("id", is(componentId),
                         "name", is(componentDto.getName()),
-                        "parentId", is(projectId.toString()),
+                        "parentId", is(project),
                         "providerId", is(GeneratedRsaKeyProviderFactory.ID),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("false"),
@@ -447,7 +444,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
     @Test
     public void deleteProjectComponent() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -466,7 +463,7 @@ public class ProjectResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/components/")
+                .post("/" + project + "/components/")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()))
@@ -476,14 +473,14 @@ public class ProjectResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/" + projectId + "/components/" + componentId)
+                .delete("/" + project + "/components/" + componentId)
                 .then()
                 .statusCode(204);
 
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/components/" + componentId)
+                .get("/" + project + "/components/" + componentId)
                 .then()
                 .statusCode(404);
     }

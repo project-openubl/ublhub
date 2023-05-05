@@ -54,15 +54,17 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void getCompany() {
         // Given
+        String project = ResourceHelpers.projects.get(0);
+        String ruc = ResourceHelpers.projectRuc.get(project).get(0);
+
         // When
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/1/companies/11")
+                .get("/" + project + "/companies/" + ruc)
                 .then()
                 .statusCode(200)
-                .body("id", is(notNullValue()),
-                        "name", is("company1"),
+                .body("name", is("company1"),
                         "ruc", is("11111111111"),
                         "sunat.facturaUrl", is("http://factura-company1"),
                         "sunat.guiaUrl", is("http://guia-company1"),
@@ -74,20 +76,23 @@ public class CompanyResourceTest extends AbstractBaseTest {
     }
 
     @Test
-    public void getCompanyThatBelongsToOtherProject_shouldNotBeAllowed() {
+    public void getCompanyShouldMatchProjectAndRuc() {
         // Given
+        String project = ResourceHelpers.projects.get(0);
+        String ruc = ResourceHelpers.projectRuc.get(project).get(0);
+
         // When
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/1/companies/11")
+                .get("/" + project + "/companies/" + ruc)
                 .then()
                 .statusCode(200);
 
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/2/companies/11")
+                .get("/some-project/companies/" + ruc)
                 .then()
                 .statusCode(404);
         // Then
@@ -96,7 +101,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void createCompany() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         CompanyDto companyDto = CompanyDto.builder()
                 .name("My company")
@@ -116,11 +121,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(companyDto)
                 .when()
-                .post("/" + projectId + "/companies")
+                .post("/" + project + "/companies")
                 .then()
                 .statusCode(201)
-                .body("id", is(notNullValue()),
-                        "name", is(companyDto.getName()),
+                .body("name", is(companyDto.getName()),
                         "ruc", is(companyDto.getRuc()),
                         "sunat.facturaUrl", is(companyDto.getSunat().getFacturaUrl()),
                         "sunat.guiaUrl", is(companyDto.getSunat().getGuiaUrl()),
@@ -133,11 +137,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/companies/" + response.getId())
+                .get("/" + project + "/companies/" + response.getRuc())
                 .then()
                 .statusCode(200)
-                .body("id", is(response.getId()),
-                        "name", is(companyDto.getName()),
+                .body("name", is(companyDto.getName()),
                         "sunat.facturaUrl", is(companyDto.getSunat().getFacturaUrl()),
                         "sunat.guiaUrl", is(companyDto.getSunat().getGuiaUrl()),
                         "sunat.retencionUrl", is(companyDto.getSunat().getRetencionUrl()),
@@ -149,7 +152,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void create2CompaniesWithSameRuc_shouldNotBeAllowed() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         CompanyDto company = CompanyDto.builder()
                 .name("My company")
@@ -169,7 +172,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(company)
                 .when()
-                .post("/" + projectId + "/companies")
+                .post("/" + project + "/companies")
                 .then()
                 .statusCode(409);
         // Then
@@ -178,7 +181,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void createCompanyWithoutSunatData() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         CompanyDto companyDto = CompanyDto.builder()
                 .name("My company")
@@ -190,11 +193,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(companyDto)
                 .when()
-                .post("/" + projectId + "/companies")
+                .post("/" + project + "/companies")
                 .then()
                 .statusCode(201)
-                .body("id", is(notNullValue()),
-                        "name", is(companyDto.getName()),
+                .body("name", is(companyDto.getName()),
                         "ruc", is(companyDto.getRuc()),
                         "sunat", is(nullValue())
                 ).extract().body().as(CompanyDto.class);
@@ -203,10 +205,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/companies/" + response.getId())
+                .get("/" + project + "/companies/" + response.getRuc())
                 .then()
                 .statusCode(200)
-                .body("id", is(response.getId()),
+                .body("ruc", is(response.getRuc()),
                         "name", is(companyDto.getName()),
                         "sunat", is(nullValue())
                 );
@@ -215,8 +217,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void updateCompany() {
         // Given
-        Long projectId = 1L;
-        Long companyId = 11L;
+        String project = ResourceHelpers.projects.get(0);
+        String ruc = ResourceHelpers.projectRuc.get(project).get(0);
 
         CompanyDto companyDto = CompanyDto.builder()
                 .ruc("99999999999")
@@ -237,10 +239,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(companyDto)
                 .when()
-                .put("/" + projectId + "/companies/" + companyId)
+                .put("/" + project + "/companies/" + ruc)
                 .then()
                 .statusCode(200)
-                .body("ruc", is(companyDto.getRuc()),
+                .body("ruc", is(ruc),
                         "name", is(companyDto.getName()),
                         "description", is(companyDto.getDescription()),
                         "sunat.facturaUrl", is(companyDto.getSunat().getFacturaUrl()),
@@ -254,11 +256,10 @@ public class CompanyResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/companies/" + companyId)
+                .get("/" + project + "/companies/" + ruc)
                 .then()
                 .statusCode(200)
-                .body("id", is(companyId.toString()),
-                        "ruc", is(companyDto.getRuc()),
+                .body("ruc", is(ruc),
                         "name", is(companyDto.getName()),
                         "description", is(companyDto.getDescription()),
                         "sunat.facturaUrl", is(companyDto.getSunat().getFacturaUrl()),
@@ -271,8 +272,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
 
     @Test
     public void updateCompanyWithIncorrectProject_shouldNotBeAllowed() {
-        Long projectId = 1L;
-        String companyId = "33";
+        String project = ResourceHelpers.projects.get(0);
+        String ruc = "44444444444";
 
         // Given
         CompanyDto companyRepresentation = CompanyDto.builder()
@@ -294,7 +295,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(companyRepresentation)
                 .when()
-                .put("/" + projectId + "/companies/" + companyId)
+                .put("/" + project + "/companies/" + ruc)
                 .then()
                 .statusCode(404);
         // Then
@@ -303,14 +304,14 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void deleteCompany() {
         // Given
-        Long projectId = 1L;
-        Long companyId = 11L;
+        String project = ResourceHelpers.projects.get(0);
+        String ruc = ResourceHelpers.projectRuc.get(project).get(0);
 
         // When
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/" + projectId + "/companies/" + companyId)
+                .delete("/" + project + "/companies/" + ruc)
                 .then()
                 .statusCode(204);
 
@@ -318,22 +319,22 @@ public class CompanyResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/companies/" + companyId)
+                .get("/" + project + "/companies/" + ruc)
                 .then()
                 .statusCode(404);
     }
 
     @Test
-    public void deleteCompanyByIncorrectProject_shouldNotBeAllowed() {
+    public void deleteCompany_notFound() {
         // Given
-        Long projectId = 1L;
-        String companyId = "33";
+        String project = ResourceHelpers.projects.get(0);
+        String ruc = "44444444444";
 
         // When
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/" + projectId + "/companies/" + companyId)
+                .delete("/" + project + "/companies/" + ruc)
                 .then()
                 .statusCode(404);
         // Then
@@ -342,13 +343,13 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void getCompanies() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         // When
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/companies")
+                .get("/" + project + "/companies")
                 .then()
                 .statusCode(200)
                 .body("size()", is(3),
@@ -377,7 +378,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void getCompanyKeys() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
+
         CompanyDto companyDto = CompanyDto.builder()
                 .name("mycompany")
                 .description("my description")
@@ -393,20 +395,19 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .build();
 
         // When
-        String companyId = givenAuth("alice")
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .body(companyDto)
                 .when()
-                .post("/" + projectId + "/companies")
+                .post("/" + project + "/companies")
                 .then()
-                .statusCode(201)
-                .extract().path("id").toString();
+                .statusCode(201);
 
         // Then
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/companies/" + companyId + "/keys")
+                .get("/" + project + "/companies/" + companyDto.getRuc() + "/keys")
                 .then()
                 .statusCode(200)
                 .body("active.RS256", is(notNullValue()),
@@ -426,8 +427,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void createCompanyComponent() {
         // Given
-        Long projectId = 1L;
-        Long companyId = 11L;
+        String project = ResourceHelpers.projects.get(0);
+        String ruc = ResourceHelpers.projectRuc.get(project).get(0);
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -447,12 +448,12 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/companies/" + companyId + "/components")
+                .post("/" + project + "/companies/" + ruc + "/components")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
                         "name", is(componentDto.getName()),
-                        "parentId", is(companyId.toString()),
+                        "parentId", is(project),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -466,8 +467,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void getCompanyComponent() {
         // Given
-        Long projectId = 1L;
-        Long companyId = 11L;
+        String project = ResourceHelpers.projects.get(0);
+        String ruc = ResourceHelpers.projectRuc.get(project).get(0);
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -486,7 +487,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/companies/" + companyId + "/components")
+                .post("/" + project + "/companies/" + ruc + "/components")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()))
@@ -496,12 +497,12 @@ public class CompanyResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/companies/" + companyId + "/components/" + componentId)
+                .get("/" + project + "/companies/" + ruc + "/components/" + componentId)
                 .then()
                 .statusCode(200)
                 .body("id", is(componentId),
                         "name", is(componentDto.getName()),
-                        "parentId", is(companyId.toString()),
+                        "parentId", is(project),
                         "providerId", is(componentDto.getProviderId()),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("true"),
@@ -515,8 +516,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void updateCompanyComponent() {
         // Given
-        Long projectId = 1L;
-        Long companyId = 11L;
+        String project = ResourceHelpers.projects.get(0);
+        String ruc = ResourceHelpers.projectRuc.get(project).get(0);
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -535,7 +536,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/companies/" + companyId + "/components")
+                .post("/" + project + "/companies/" + ruc + "/components")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()))
@@ -557,12 +558,12 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .when()
                 .body(componentDto)
-                .put("/" + projectId + "/companies/" + companyId + "/components/" + componentId)
+                .put("/" + project + "/companies/" + ruc + "/components/" + componentId)
                 .then()
                 .statusCode(200)
                 .body("id", is(componentId),
                         "name", is(componentDto.getName()),
-                        "parentId", is(companyId.toString()),
+                        "parentId", is(project),
                         "providerId", is(GeneratedRsaKeyProviderFactory.ID),
                         "providerType", is(KeyProvider.class.getName()),
                         "config.active[0]", is("false"),
@@ -576,8 +577,8 @@ public class CompanyResourceTest extends AbstractBaseTest {
     @Test
     public void deleteCompanyComponent() {
         // Given
-        Long projectId = 1L;
-        Long companyId = 11L;
+        String project = ResourceHelpers.projects.get(0);
+        String ruc = ResourceHelpers.projectRuc.get(project).get(0);
 
         // When
         ComponentDto componentDto = ComponentDto.builder()
@@ -596,7 +597,7 @@ public class CompanyResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(componentDto)
                 .when()
-                .post("/" + projectId + "/companies/" + companyId + "/components")
+                .post("/" + project + "/companies/" + ruc + "/components")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()))
@@ -606,14 +607,14 @@ public class CompanyResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .delete("/" + projectId + "/companies/" + companyId + "/components/" + componentId)
+                .delete("/" + project + "/companies/" + ruc + "/components/" + componentId)
                 .then()
                 .statusCode(204);
 
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/companies/" + companyId + "/components/" + componentId)
+                .get("/" + project + "/companies/" + ruc + "/components/" + componentId)
                 .then()
                 .statusCode(404);
     }

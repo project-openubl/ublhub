@@ -70,8 +70,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static io.github.project.openubl.ublhub.keys.component.ComponentOwner.OwnerType.company;
-
 @Path("/projects")
 @Produces("application/json")
 @Consumes("application/json")
@@ -100,20 +98,20 @@ public class CompanyResource {
     @Inject
     FilesManager filesManager;
 
-    private ComponentOwner getOwner(Long companyId) {
+    private ComponentOwner getOwner(String project, String ruc) {
         return ComponentOwner.builder()
-                .type(company)
-                .id(companyId)
+                .project(project)
+                .ruc(ruc)
                 .build();
     }
 
     @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
     @Operation(summary = "Get company", description = "Get one company")
     @GET
-    @Path("/{projectId}/companies/{companyId}")
+    @Path("/{project}/companies/{ruc}")
     public RestResponse<CompanyDto> getCompany(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("companyId") @NotNull Long companyId
+            @PathParam("project") @NotNull String project,
+            @PathParam("ruc") @NotNull String ruc
     ) {
         Function<CompanyDto, RestResponse<CompanyDto>> successResponse = dto -> RestResponse.ResponseBuilder
                 .<CompanyDto>create(RestResponse.Status.OK)
@@ -123,7 +121,7 @@ public class CompanyResource {
                 .<CompanyDto>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
-        CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return notFoundResponse.get();
         }
@@ -135,9 +133,9 @@ public class CompanyResource {
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Create company", description = "Create a company")
     @POST
-    @Path("/{projectId}/companies")
+    @Path("/{project}/companies")
     public RestResponse<CompanyDto> createCompany(
-            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("project") @NotNull String project,
             @NotNull @Valid CompanyDto companyDto
     ) {
         Function<CompanyDto, RestResponse<CompanyDto>> successResponse = (dto) -> RestResponse.ResponseBuilder
@@ -151,12 +149,12 @@ public class CompanyResource {
                 .<CompanyDto>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        ProjectEntity projectEntity = projectRepository.findById(project);
         if (projectEntity == null) {
             return notFoundResponse.get();
         }
 
-        CompanyEntity companyEntity = companyRepository.findByRuc(projectEntity, companyDto.getRuc());
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(projectEntity.getName(), companyDto.getRuc()));
         if (companyEntity != null) {
             return conflictResponse.apply(companyEntity);
         }
@@ -170,14 +168,13 @@ public class CompanyResource {
         }
 
         companyEntity = companyMapper.updateEntityFromDto(companyDto, CompanyEntity.builder()
-                .projectId(projectEntity.getId())
-                .id(tsidFactory.create().toLong())
+                .id(new CompanyEntity.CompanyId(projectEntity.getName(), companyDto.getRuc()))
                 .logoFileId(logoFileId)
                 .build()
         );
         companyEntity.persist();
 
-        ComponentOwner owner = getOwner(companyEntity.getId());
+        ComponentOwner owner = getOwner(companyEntity.getId().getProject(), companyEntity.getId().getRuc());
         defaultKeyProviders.createProviders(owner);
 
         CompanyDto response = companyMapper.toDto(companyEntity);
@@ -187,10 +184,10 @@ public class CompanyResource {
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Update company", description = "Update one company")
     @PUT
-    @Path("/{projectId}/companies/{companyId}")
+    @Path("/{project}/companies/{ruc}")
     public RestResponse<CompanyDto> updateCompany(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("companyId") @NotNull Long companyId,
+            @PathParam("project") @NotNull String project,
+            @PathParam("ruc") @NotNull String ruc,
             @NotNull CompanyDto companyDto
     ) {
         Function<CompanyDto, RestResponse<CompanyDto>> successResponse = dto -> RestResponse.ResponseBuilder
@@ -201,7 +198,7 @@ public class CompanyResource {
                 .<CompanyDto>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
-        CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return notFoundResponse.get();
         }
@@ -225,10 +222,10 @@ public class CompanyResource {
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Delete company", description = "Delete one company")
     @DELETE
-    @Path("/{projectId}/companies/{companyId}")
+    @Path("/{project}/companies/{ruc}")
     public RestResponse<Void> deleteCompany(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("companyId") @NotNull Long companyId
+            @PathParam("project") @NotNull String project,
+            @PathParam("ruc") @NotNull String ruc
     ) {
         Supplier<RestResponse<Void>> successResponse = () -> RestResponse.ResponseBuilder
                 .<Void>create(RestResponse.Status.NO_CONTENT)
@@ -237,7 +234,7 @@ public class CompanyResource {
                 .<Void>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
-        boolean result = companyRepository.deleteByProjectIdAndId(projectId, companyId);
+        boolean result = companyRepository.deleteById(new CompanyEntity.CompanyId(project, ruc));
         return result ? successResponse.get() : notFoundResponse.get();
     }
 
@@ -245,10 +242,10 @@ public class CompanyResource {
     @Operation(summary = "Get company's logo", description = "Get one company's logo")
     @Produces({"image/jpeg", "image/png"})
     @GET
-    @Path("/{projectId}/companies/{companyId}/logo")
+    @Path("/{project}/companies/{ruc}/logo")
     public RestResponse<String> getCompanyBase64Logo(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("companyId") @NotNull Long companyId
+            @PathParam("project") @NotNull String project,
+            @PathParam("ruc") @NotNull String ruc
     ) {
         Function<byte[], RestResponse<String>> successResponse = bytes -> RestResponse.ResponseBuilder
                 .<String>create(RestResponse.Status.OK)
@@ -258,7 +255,7 @@ public class CompanyResource {
                 .<String>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
-        CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return notFoundResponse.get();
         }
@@ -273,8 +270,8 @@ public class CompanyResource {
     @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
     @Operation(summary = "List companies", description = "List all companies")
     @GET
-    @Path("/{projectId}/companies")
-    public RestResponse<List<CompanyDto>> getCompanies(@PathParam("projectId") @NotNull Long projectId) {
+    @Path("/{project}/companies")
+    public RestResponse<List<CompanyDto>> getCompanies(@PathParam("project") @NotNull String project) {
         Function<List<CompanyDto>, RestResponse<List<CompanyDto>>> successResponse = dtos -> RestResponse.ResponseBuilder
                 .<List<CompanyDto>>create(RestResponse.Status.OK)
                 .entity(dtos)
@@ -284,9 +281,9 @@ public class CompanyResource {
                 .<List<CompanyDto>>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
-        Sort sort = Sort.by(CompanyRepository.SortByField.created.toString(), Sort.Direction.Descending);
+        Sort sort = Sort.by(CompanyRepository.SortByField.name.toString(), Sort.Direction.Descending);
 
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        ProjectEntity projectEntity = projectRepository.findById(project);
         if (projectEntity == null) {
             return notFoundResponse.get();
         }

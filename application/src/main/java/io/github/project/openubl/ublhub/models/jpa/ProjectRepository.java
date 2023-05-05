@@ -31,18 +31,13 @@ import java.util.List;
 
 @Transactional
 @ApplicationScoped
-public class ProjectRepository implements PanacheRepositoryBase<ProjectEntity, Long> {
+public class ProjectRepository implements PanacheRepositoryBase<ProjectEntity, String> {
 
     public enum SortByField {
-        name,
-        created
+        name
     }
 
-    public static final String[] SORT_BY_FIELDS = {SortByField.name.toString(), SortByField.created.toString()};
-
-    public ProjectEntity findByName(String name) {
-        return find("name", name).firstResult();
-    }
+    public static final String[] SORT_BY_FIELDS = {SortByField.name.toString()};
 
     public SearchBean<ProjectEntity> list(PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
@@ -70,8 +65,8 @@ public class ProjectRepository implements PanacheRepositoryBase<ProjectEntity, L
     }
 
     @Override
-    public boolean deleteById(Long id) {
-        long rows = ProjectEntity.delete("id", id);
+    public boolean deleteById(String id) {
+        long rows = ProjectEntity.delete("name", id);
         return rows > 0;
     }
 }

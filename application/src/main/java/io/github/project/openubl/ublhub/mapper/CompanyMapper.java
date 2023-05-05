@@ -27,6 +27,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(componentModel = "cdi", builder = @Builder(disableBuilder = true))
 public abstract class CompanyMapper {
 
+    @Mapping(target = "ruc", source = "id.ruc")
     @Mapping(target = "sunat.facturaUrl", source = "sunat.sunatUrlFactura")
     @Mapping(target = "sunat.guiaUrl", source = "sunat.sunatUrlGuiaRemision")
     @Mapping(target = "sunat.retencionUrl", source = "sunat.sunatUrlPercepcionRetencion")
@@ -34,7 +35,6 @@ public abstract class CompanyMapper {
     @Mapping(target = "sunat.password", ignore = true)
     public abstract CompanyDto toDto(CompanyEntity entity);
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "sunat.sunatUrlFactura", source = "sunat.facturaUrl")
     @Mapping(target = "sunat.sunatUrlGuiaRemision", source = "sunat.guiaUrl")
     @Mapping(target = "sunat.sunatUrlPercepcionRetencion", source = "sunat.retencionUrl")

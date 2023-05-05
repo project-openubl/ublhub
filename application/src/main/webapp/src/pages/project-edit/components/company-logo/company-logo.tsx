@@ -6,14 +6,14 @@ import { useCompanyLogoQuery } from "queries/companies";
 
 interface ICompanyLogoProps {
   projectId: string;
-  companyId: string;
+  companyRuc: string;
 }
 
 export const CompanyLogo: React.FC<ICompanyLogoProps> = ({
   projectId,
-  companyId,
+  companyRuc,
 }) => {
-  const logoQuery = useCompanyLogoQuery(projectId, companyId);
+  const logoQuery = useCompanyLogoQuery(projectId, companyRuc);
 
   let result;
   if (logoQuery.isLoading) {

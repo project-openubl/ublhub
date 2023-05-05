@@ -38,7 +38,6 @@ import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import java.io.File;
-import java.io.StringReader;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -104,14 +103,14 @@ public class DocumentResourceTest extends AbstractBaseTest {
     @Test
     public void getDocument() {
         // Given
-        Long projectId = 1L;
-        Long documentId = 11L;
+        String project = ResourceHelpers.projects.get(0);
+        Long documentId = ResourceHelpers.projectDocumentIds.get(project).get(0);
 
         // When
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/documents/" + documentId)
+                .get("/" + project + "/documents/" + documentId)
                 .then()
                 .statusCode(200)
                 .body("id", is(documentId.toString()));
@@ -121,10 +120,10 @@ public class DocumentResourceTest extends AbstractBaseTest {
     @Test
     public void getDocumentThatBelongsToOtherNamespace_shouldNotBeAllowed() {
         // Given
-        String projectOwnerId = "1";
-        String projectToTestId = "2";
+        String projectOwnerId = ResourceHelpers.projects.get(0);
+        String projectToTestId = ResourceHelpers.projects.get(1);
 
-        Long documentId = 11L;
+        Long documentId = ResourceHelpers.projectDocumentIds.get(projectOwnerId).get(0);
 
         // When
         givenAuth("alice")
@@ -146,31 +145,31 @@ public class DocumentResourceTest extends AbstractBaseTest {
     @Test
     public void searchDocuments() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         // When
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/documents")
+                .get("/" + project + "/documents")
                 .then()
                 .statusCode(200)
                 .body("count", is(2),
                         "items.size()", is(2),
-                        "items[0].id", is("12"),
-                        "items[1].id", is("11")
+                        "items[0].status.xmlData.serieNumero", is("F-2"),
+                        "items[1].status.xmlData.serieNumero", is("F-1")
                 );
 
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/documents?sort_by=created:asc")
+                .get("/" + project + "/documents?sort_by=created:asc")
                 .then()
                 .statusCode(200)
                 .body("count", is(2),
                         "items.size()", is(2),
-                        "items[0].id", is("11"),
-                        "items[1].id", is("12")
+                        "items[0].status.xmlData.serieNumero", is("F-1"),
+                        "items[1].status.xmlData.serieNumero", is("F-2")
                 );
         // Then
     }
@@ -178,13 +177,13 @@ public class DocumentResourceTest extends AbstractBaseTest {
     @Test
     public void searchDocuments_filterTextByName() {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         // When
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/documents?filterText=1")
+                .get("/" + project + "/documents?filterText=1")
                 .then()
                 .statusCode(200)
                 .body("count", is(1),
@@ -197,32 +196,23 @@ public class DocumentResourceTest extends AbstractBaseTest {
     @Test
     public void createInvoiceWithDefaultSignAlgorithm() {
         // Given
+        String project = "myproject";
+
         ProjectDto projectDto = ProjectDto.builder()
-                .name("myproject")
+                .name(project)
                 .description("my description")
                 .sunat(sunatDto)
                 .build();
 
-        String projectId = givenAuth("alice")
+        givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .body(projectDto)
                 .when()
                 .post("/")
                 .then()
-                .statusCode(201)
-                .body("id", is(notNullValue()))
-                .extract().path("id").toString();
+                .statusCode(201);
 
         // When
-//        DocumentInputDto inputDto = DocumentInputDto.builder()
-//                .kind(DocumentInputDto.Kind.Invoice)
-//                .spec(DocumentInputDto.Spec.builder()
-//                        .id(null)
-//                        .signature(null)
-//                        .document(toJavax(invoice))
-//                        .build()
-//                )
-//                .build();
         JsonObject inputDto = Json.createObjectBuilder()
                 .add("kind", DocumentInputDto.Kind.Invoice.toString())
                 .add("spec", Json.createObjectBuilder()
@@ -236,7 +226,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .contentType(ContentType.JSON)
                 .body(inputDto.toString())
                 .when()
-                .post("/" + projectId + "/documents")
+                .post("/" + project + "/documents")
                 .then()
                 .statusCode(201)
                 .body("id", is(notNullValue()),
@@ -248,7 +238,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
             String inProgress = givenAuth("alice")
                     .contentType(ContentType.JSON)
                     .when()
-                    .get("/" + projectId + "/documents/" + documentId)
+                    .get("/" + project + "/documents/" + documentId)
                     .then()
                     .statusCode(200)
                     .extract().path("status.inProgress").toString();
@@ -258,7 +248,7 @@ public class DocumentResourceTest extends AbstractBaseTest {
         givenAuth("alice")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/" + projectId + "/documents/" + documentId)
+                .get("/" + project + "/documents/" + documentId)
                 .then()
                 .statusCode(200)
                 .body("status.inProgress", is(false),

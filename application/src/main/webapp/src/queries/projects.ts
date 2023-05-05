@@ -71,7 +71,7 @@ export const useUpdateProjectMutation = (
   const queryClient = useQueryClient();
   return useMutation<ProjectDto, AxiosError, ProjectDto>(
     async (project) => {
-      return (await axios.put<ProjectDto>(`/projects/${project.id}`, project))
+      return (await axios.put<ProjectDto>(`/projects/${project.name}`, project))
         .data;
     },
     {
@@ -90,7 +90,7 @@ export const useDeleteProjectMutation = (
 
   return useMutation<void, AxiosError, ProjectDto>(
     async (project: ProjectDto) => {
-      await axios.delete<void>(`/projects/${project.id}`);
+      await axios.delete<void>(`/projects/${project.name}`);
     },
     {
       onSuccess: () => {

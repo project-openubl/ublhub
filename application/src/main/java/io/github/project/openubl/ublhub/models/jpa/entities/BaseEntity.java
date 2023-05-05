@@ -27,6 +27,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -34,13 +35,11 @@ import java.util.Date;
 public abstract class BaseEntity extends PanacheEntityBase {
 
     @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created")
-    private Date created;
+    private LocalDateTime created;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated")
-    private Date updated;
+    private LocalDateTime updated;
 
     @Version
     @Column(name = "version")
@@ -48,12 +47,12 @@ public abstract class BaseEntity extends PanacheEntityBase {
 
     @PrePersist
     private void prePersist() {
-        created = new Date();
+        created = LocalDateTime.now();
     }
 
     @PreUpdate
     private void preUpdate() {
-        updated = new Date();
+        updated = LocalDateTime.now();
     }
 
 }

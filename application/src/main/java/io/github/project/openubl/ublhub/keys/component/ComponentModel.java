@@ -22,11 +22,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ComponentModel {
 
-    private Long id;
+    private String id;
     private String name;
     private String providerId;
     private String providerType;
-    private Long parentId;
+    private String parentId;
     private String subType;
     private MultivaluedHashMap<String, String> config = new MultivaluedHashMap<>();
     private transient ConcurrentHashMap<String, Object> notes = new ConcurrentHashMap<>();
@@ -44,11 +44,11 @@ public class ComponentModel {
     }
 
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -140,11 +140,11 @@ public class ComponentModel {
         this.providerType = providerType;
     }
 
-    public Long getParentId() {
+    public String getParentId() {
         return parentId;
     }
 
-    public void setParentId(Long parentId) {
+    public void setParentId(String parentId) {
         this.parentId = parentId;
     }
 

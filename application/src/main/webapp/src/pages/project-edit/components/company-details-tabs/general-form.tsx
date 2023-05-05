@@ -53,9 +53,9 @@ export const GeneralForm: React.FC<IGeneralFormProps> = ({
 
   const { pushNotification } = React.useContext(NotificationContext);
 
-  const companiesQuery = useCompaniesQuery(project.id || null);
+  const companiesQuery = useCompaniesQuery(project.name || null);
   const updateCompanyMutation = useUpdateCompanyMutation(
-    project.id || null,
+    project.name || null,
     (p) => {
       pushNotification({
         title: t("info.data-saved"),
@@ -88,9 +88,7 @@ export const GeneralForm: React.FC<IGeneralFormProps> = ({
           .min(11)
           .max(11)
           .test("duplicateRuc", (value, options) => {
-            return !companiesQuery.data?.find(
-              (f) => f.ruc === value && f.id !== company.id
-            )
+            return !companiesQuery.data?.find((f) => f.ruc === value)
               ? true
               : options.createError({ message: "RUC already registered" });
           }),
@@ -139,6 +137,7 @@ export const GeneralForm: React.FC<IGeneralFormProps> = ({
               onBlur={onBlur}
               value={value}
               validated={!isTouched ? "default" : error ? "error" : "success"}
+              isDisabled
             />
           )}
         />

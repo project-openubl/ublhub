@@ -49,6 +49,10 @@ public class GeneratedIDEntity extends BaseEntity {
     private Long id;
 
     @NotNull
+    @Column(name = "project")
+    private String project;
+
+    @NotNull
     @Size(max = 11)
     @Column(name = "ruc")
     private String ruc;
@@ -67,10 +71,6 @@ public class GeneratedIDEntity extends BaseEntity {
     @Min(1)
     @Column(name = "numero")
     private int numero;
-
-    @NotNull
-    @Column(name = "project_id")
-    private Long projectId;
 
     @Version
     @Column(name = "version")

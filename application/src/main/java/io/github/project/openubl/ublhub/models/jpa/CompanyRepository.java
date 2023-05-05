@@ -29,49 +29,23 @@ import java.util.List;
 
 @Transactional
 @ApplicationScoped
-public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, Long> {
+public class CompanyRepository implements PanacheRepositoryBase<CompanyEntity, CompanyEntity.CompanyId> {
 
     public enum SortByField {
-        name,
-        created
-    }
-
-    public CompanyEntity findById(ProjectEntity project, Long companyId) {
-        return findById(project.getId(), companyId);
-    }
-
-    public CompanyEntity findById(Long projectId, Long companyId) {
-        Parameters params = Parameters.with("projectId", projectId).and("companyId", companyId);
-        return find("id = :companyId and projectId = :projectId", params).firstResult();
-    }
-
-    public CompanyEntity findByRuc(ProjectEntity project, String ruc) {
-        return findByRuc(project.getId(), ruc);
-    }
-
-    public CompanyEntity findByRuc(Long projectId, String ruc) {
-        Parameters params = Parameters.with("projectId", projectId).and("ruc", ruc);
-        return find("ruc = :ruc and projectId = :projectId", params).firstResult();
+        name
     }
 
     public List<CompanyEntity> listAll(ProjectEntity project) {
-        Sort sort = Sort.by(CompanyRepository.SortByField.created.toString(), Sort.Direction.Descending);
+        Sort sort = Sort.by(SortByField.name.toString(), Sort.Direction.Descending);
         return listAll(project, sort);
     }
 
     public List<CompanyEntity> listAll(ProjectEntity project, Sort sort) {
-        Parameters params = Parameters.with("projectId", project.getId());
+        Parameters params = Parameters.with("project", project.getName());
 
         PanacheQuery<CompanyEntity> query = CompanyEntity
-                .find("From CompanyEntity as c where c.projectId = :projectId", sort, params);
+                .find("From CompanyEntity as c where c.id.project = :project", sort, params);
 
         return query.list();
-    }
-
-    public boolean deleteByProjectIdAndId(Long projectId, Long id) {
-        Parameters params = Parameters.with("projectId", projectId).and("id", id);
-        long rows = CompanyEntity
-                .delete("projectId = :projectId and id = :id", params);
-        return rows > 0;
     }
 }

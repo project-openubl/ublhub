@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.dto;
 
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,6 +25,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 @Data
@@ -33,8 +35,7 @@ import javax.validation.constraints.Size;
 @RegisterForReflection
 public class ProjectDto {
 
-    private String id;
-
+    @Pattern(regexp = ProjectEntity.NAME_PATTERN)
     @NotNull
     private String name;
 

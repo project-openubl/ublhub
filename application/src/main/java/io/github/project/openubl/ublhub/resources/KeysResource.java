@@ -33,7 +33,6 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
-import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.ublhub.dto.ComponentDto;
 import io.github.project.openubl.ublhub.keys.KeyManager;
 import io.github.project.openubl.ublhub.keys.KeyProvider;
@@ -57,15 +56,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import java.util.HashMap;
@@ -74,9 +65,6 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static io.github.project.openubl.ublhub.keys.component.ComponentOwner.OwnerType.company;
-import static io.github.project.openubl.ublhub.keys.component.ComponentOwner.OwnerType.project;
 
 @Path("/projects")
 @Produces("application/json")
@@ -103,9 +91,6 @@ public class KeysResource {
     @Inject
     KeyManager keyManager;
 
-    @Inject
-    TsidFactory tsidFactory;
-    
     Function<KeysMetadataRepresentation, RestResponse<KeysMetadataRepresentation>> keyMetadataSuccessResponse = dto -> RestResponse.ResponseBuilder
             .<KeysMetadataRepresentation>create(RestResponse.Status.OK)
             .entity(dto)
@@ -136,33 +121,32 @@ public class KeysResource {
             .<Void>create(RestResponse.Status.INTERNAL_SERVER_ERROR)
             .build();
 
-    private ComponentOwner getOwnerProject(Long projectId) {
+    private ComponentOwner getOwnerProject(String project) {
         return ComponentOwner.builder()
-                .type(project)
-                .id(projectId)
+                .project(project)
                 .build();
     }
 
-    private ComponentOwner getOwnerCompany(Long companyId) {
+    private ComponentOwner getOwnerCompany(String project, String ruc) {
         return ComponentOwner.builder()
-                .type(company)
-                .id(companyId)
+                .project(project)
+                .ruc(ruc)
                 .build();
     }
 
     @RolesAllowed({Permission.admin, Permission.project_read})
     @Operation(summary = "Get project keys", description = "List of keys")
     @GET
-    @Path("/{projectId}/keys")
+    @Path("/{project}/keys")
     public RestResponse<KeysMetadataRepresentation> getProjectKeys(
-            @PathParam("projectId") @NotNull Long projectId
+            @PathParam("project") @NotNull String project
     ) {
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        ProjectEntity projectEntity = projectRepository.findById(project);
         if (projectEntity == null) {
             return keyMetadataNotFoundResponse.get();
         }
 
-        ComponentOwner owner = getOwnerProject(projectId);
+        ComponentOwner owner = getOwnerProject(project);
         KeysMetadataRepresentation keys = getKeys(owner);
         return keyMetadataSuccessResponse.apply(keys);
     }
@@ -170,17 +154,17 @@ public class KeysResource {
     @RolesAllowed({Permission.admin, Permission.project_read})
     @Operation(summary = "Get company keys", description = "List of keys")
     @GET
-    @Path("/{projectId}/companies/{companyId}/keys")
+    @Path("/{project}/companies/{ruc}/keys")
     public RestResponse<KeysMetadataRepresentation> getCompanyKeys(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("companyId") @NotNull Long companyId
+            @PathParam("project") @NotNull String project,
+            @PathParam("ruc") @NotNull String ruc
     ) {
-        CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return keyMetadataNotFoundResponse.get();
         }
 
-        ComponentOwner owner = getOwnerCompany(companyId);
+        ComponentOwner owner = getOwnerCompany(project, ruc);
         KeysMetadataRepresentation keys = getKeys(owner);
         return keyMetadataSuccessResponse.apply(keys);
     }
@@ -224,21 +208,21 @@ public class KeysResource {
     @RolesAllowed({Permission.admin, Permission.project_read})
     @Operation(summary = "Get project components", description = "List of components")
     @GET
-    @Path("/{projectId}/components")
+    @Path("/{project}/components")
     public RestResponse<List<ComponentDto>> getProjectComponents(
-            @PathParam("projectId") @NotNull Long projectId,
-            @QueryParam("parent") Long parent,
+            @PathParam("project") @NotNull String project,
+            @QueryParam("parent") String parent,
             @QueryParam("type") String type,
             @QueryParam("name") String name
     ) {
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        ProjectEntity projectEntity = projectRepository.findById(project);
         if (projectEntity == null) {
             return RestResponse.ResponseBuilder
                     .<List<ComponentDto>>create(RestResponse.Status.NOT_FOUND)
                     .build();
         }
 
-        ComponentOwner owner = getOwnerProject(projectId);
+        ComponentOwner owner = getOwnerProject(project);
 
         List<ComponentModel> components;
         if (parent == null && type == null) {
@@ -264,22 +248,22 @@ public class KeysResource {
     @RolesAllowed({Permission.admin, Permission.project_read})
     @Operation(summary = "Get company components", description = "List of components")
     @GET
-    @Path("/{projectId}/companies/{companyId}/components")
+    @Path("/{project}/companies/{ruc}/components")
     public RestResponse<List<ComponentDto>> getCompanyComponents(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("companyId") @NotNull Long companyId,
-            @QueryParam("parent") Long parent,
+            @PathParam("project") @NotNull String project,
+            @PathParam("ruc") @NotNull String ruc,
+            @QueryParam("parent") String parent,
             @QueryParam("type") String type,
             @QueryParam("name") String name
     ) {
-        CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return RestResponse.ResponseBuilder
                     .<List<ComponentDto>>create(RestResponse.Status.NOT_FOUND)
                     .build();
         }
 
-        ComponentOwner owner = getOwnerCompany(companyId);
+        ComponentOwner owner = getOwnerCompany(project, ruc);
 
         List<ComponentModel> components;
         if (parent == null && type == null) {
@@ -304,21 +288,21 @@ public class KeysResource {
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Create a project component", description = "Create component")
     @POST
-    @Path("/{projectId}/components")
+    @Path("/{project}/components")
     public RestResponse<ComponentDto> createProjectComponent(
-            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("project") @NotNull String project,
             ComponentDto componentDto
     ) {
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        ProjectEntity projectEntity = projectRepository.findById(project);
         if (projectEntity == null) {
             return componentDtoNotFoundDtoResponse.get();
         }
 
         componentDto.setId(null);
-        componentDto.setParentId(projectId.toString());
+        componentDto.setParentId(project);
         componentDto.setProviderType(KeyProvider.class.getName());
 
-        ComponentOwner owner = getOwnerProject(projectId);
+        ComponentOwner owner = getOwnerProject(project);
         ComponentDto response = createComponent(owner, componentDto);
 
         return componentDtoCreatedResponse.apply(response);
@@ -327,22 +311,22 @@ public class KeysResource {
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Create a company component", description = "Create component")
     @POST
-    @Path("/{projectId}/companies/{companyId}/components")
+    @Path("/{project}/companies/{ruc}/components")
     public RestResponse<ComponentDto> createCompanyComponent(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("companyId") @NotNull Long companyId,
+            @PathParam("project") @NotNull String project,
+            @PathParam("ruc") @NotNull String ruc,
             ComponentDto componentDto
     ) {
-        CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return componentDtoNotFoundDtoResponse.get();
         }
 
         componentDto.setId(null);
-        componentDto.setParentId(companyId.toString());
+        componentDto.setParentId(project);
         componentDto.setProviderType(KeyProvider.class.getName());
 
-        ComponentOwner owner = getOwnerCompany(companyId);
+        ComponentOwner owner = getOwnerCompany(project, ruc);
         ComponentDto response = createComponent(owner, componentDto);
 
         return componentDtoCreatedResponse.apply(response);
@@ -356,17 +340,17 @@ public class KeysResource {
     @RolesAllowed({Permission.admin, Permission.project_read})
     @Operation(summary = "Get project component", description = "Get one component")
     @GET
-    @Path("/{projectId}/components/{componentId}")
+    @Path("/{project}/components/{componentId}")
     public RestResponse<ComponentDto> getProjectComponent(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("componentId") Long componentId
+            @PathParam("project") @NotNull String project,
+            @PathParam("componentId") String componentId
     ) {
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        ProjectEntity projectEntity = projectRepository.findById(project);
         if (projectEntity == null) {
             return componentDtoNotFoundDtoResponse.get();
         }
 
-        ComponentOwner owner = getOwnerProject(projectId);
+        ComponentOwner owner = getOwnerProject(project);
         ComponentDto componentDto = getComponent(owner, componentId);
 
         return componentDto != null ? componentDtoOkResponse.apply(componentDto) : componentDtoNotFoundDtoResponse.get();
@@ -375,24 +359,24 @@ public class KeysResource {
     @RolesAllowed({Permission.admin, Permission.project_read})
     @Operation(summary = "Get company component", description = "Get one component")
     @GET
-    @Path("/{projectId}/companies/{companyId}/components/{componentId}")
+    @Path("/{project}/companies/{ruc}/components/{componentId}")
     public RestResponse<ComponentDto> getCompanyComponent(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("companyId") @NotNull Long companyId,
-            @PathParam("componentId") Long componentId
+            @PathParam("project") @NotNull String project,
+            @PathParam("ruc") @NotNull String ruc,
+            @PathParam("componentId") String componentId
     ) {
-        CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return componentDtoNotFoundDtoResponse.get();
         }
 
-        ComponentOwner owner = getOwnerCompany(companyId);
+        ComponentOwner owner = getOwnerCompany(project, ruc);
         ComponentDto componentDto = getComponent(owner, componentId);
 
         return componentDto != null ? componentDtoOkResponse.apply(componentDto) : componentDtoNotFoundDtoResponse.get();
     }
 
-    private ComponentDto getComponent(ComponentOwner owner, Long componentId) {
+    private ComponentDto getComponent(ComponentOwner owner, String componentId) {
         ComponentModel model = componentRepository.getComponent(owner, componentId);
         return componentMapper.toDto(model, false);
     }
@@ -400,18 +384,18 @@ public class KeysResource {
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Update project component", description = "Update a component")
     @PUT
-    @Path("/{projectId}/components/{componentId}")
+    @Path("/{project}/components/{componentId}")
     public RestResponse<ComponentDto> updateProjectComponent(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("componentId") Long componentId,
+            @PathParam("project") @NotNull String project,
+            @PathParam("componentId") String componentId,
             ComponentDto componentDto
     ) {
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        ProjectEntity projectEntity = projectRepository.findById(project);
         if (projectEntity == null) {
             return componentDtoNotFoundDtoResponse.get();
         }
 
-        ComponentOwner owner = getOwnerProject(projectId);
+        ComponentOwner owner = getOwnerProject(project);
         ComponentDto response = updateComponent(owner, componentId, componentDto);
 
         return componentDtoOkResponse.apply(response);
@@ -420,25 +404,25 @@ public class KeysResource {
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Update company component", description = "Update a component")
     @PUT
-    @Path("/{projectId}/companies/{companyId}/components/{componentId}")
+    @Path("/{project}/companies/{ruc}/components/{componentId}")
     public RestResponse<ComponentDto> updateCompanyComponent(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("companyId") @NotNull Long companyId,
-            @PathParam("componentId") Long componentId,
+            @PathParam("project") @NotNull String project,
+            @PathParam("ruc") @NotNull String ruc,
+            @PathParam("componentId") String componentId,
             ComponentDto componentDto
     ) {
-        CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return componentDtoNotFoundDtoResponse.get();
         }
 
-        ComponentOwner owner = getOwnerCompany(companyId);
+        ComponentOwner owner = getOwnerCompany(project, ruc);
         ComponentDto response = updateComponent(owner, componentId, componentDto);
 
         return componentDtoOkResponse.apply(response);
     }
 
-    public ComponentDto updateComponent(ComponentOwner owner, Long componentId, ComponentDto componentDto) {
+    public ComponentDto updateComponent(ComponentOwner owner, String componentId, ComponentDto componentDto) {
         ComponentModel model = componentRepository.getComponent(owner, componentId);
         model = componentMapper.updateModelFromDto(componentDto, model);
 
@@ -451,17 +435,17 @@ public class KeysResource {
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Delete a project component", description = "Delete a component")
     @DELETE
-    @Path("/{projectId}/components/{componentId}")
+    @Path("/{project}/components/{componentId}")
     public RestResponse<Void> deleteComponent(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("componentId") Long componentId
+            @PathParam("project") @NotNull String project,
+            @PathParam("componentId") String componentId
     ) {
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        ProjectEntity projectEntity = projectRepository.findById(project);
         if (projectEntity == null) {
             return componentDtoNotFoundVoidResponse.get();
         }
 
-        ComponentOwner owner = getOwnerProject(projectId);
+        ComponentOwner owner = getOwnerProject(project);
         boolean result = deleteComponent(owner, componentId);
 
         return result ? componentDtoNoContentResponse.get() : componentDtoInternalServerErrorResponse.get();
@@ -470,24 +454,24 @@ public class KeysResource {
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Delete a company component", description = "Delete a component")
     @DELETE
-    @Path("/{projectId}/companies/{companyId}/components/{componentId}")
+    @Path("/{project}/companies/{ruc}/components/{componentId}")
     public RestResponse<Void> deleteCompanyComponent(
-            @PathParam("projectId") @NotNull Long projectId,
-            @PathParam("companyId") @NotNull Long companyId,
-            @PathParam("componentId") Long componentId
+            @PathParam("project") @NotNull String project,
+            @PathParam("ruc") @NotNull String ruc,
+            @PathParam("componentId") String componentId
     ) {
-        CompanyEntity companyEntity = companyRepository.findById(projectId, companyId);
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return componentDtoNotFoundVoidResponse.get();
         }
 
-        ComponentOwner owner = getOwnerCompany(companyId);
+        ComponentOwner owner = getOwnerCompany(project, ruc);
         boolean result = deleteComponent(owner, componentId);
 
         return result ? componentDtoNoContentResponse.get() : componentDtoInternalServerErrorResponse.get();
     }
 
-    public boolean deleteComponent(ComponentOwner owner, Long componentId) {
+    public boolean deleteComponent(ComponentOwner owner, String componentId) {
         ComponentModel model = componentRepository.getComponent(owner, componentId);
         return componentRepository.removeComponent(owner, model);
     }

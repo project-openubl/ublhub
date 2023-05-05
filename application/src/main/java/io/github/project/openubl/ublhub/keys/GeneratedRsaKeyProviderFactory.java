@@ -96,7 +96,7 @@ public class GeneratedRsaKeyProviderFactory extends AbstractRsaKeyProviderFactor
         if (keyUse.equals(KeyUse.SIG) && isSupportedRsaAlgorithm(algorithm)) {
             ComponentModel generated = new ComponentModel();
             generated.setName("fallback-" + algorithm);
-            generated.setParentId(owner.getId());
+            generated.setParentId(owner.getProject());
             generated.setProviderId(ID);
             generated.setProviderType(KeyProvider.class.getName());
 

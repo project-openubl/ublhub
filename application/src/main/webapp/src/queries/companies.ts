@@ -51,7 +51,7 @@ export const useUpdateCompanyMutation = (
   const queryClient = useQueryClient();
   return useMutation<CompanyDto, AxiosError, CompanyDto>(
     async (company) => {
-      const url = `/projects/${projectId}/companies/${company.id}`;
+      const url = `/projects/${projectId}/companies/${company.ruc}`;
       return (await axios.put<CompanyDto>(url, company)).data;
     },
     {
@@ -72,7 +72,7 @@ export const useDeleteCompanyMutation = (
 
   return useMutation<void, AxiosError, CompanyDto>(
     async (company: CompanyDto) => {
-      const url = `/projects/${projectId}/companies/${company.id}`;
+      const url = `/projects/${projectId}/companies/${company.ruc}`;
       await axios.delete<void>(url);
     },
     {

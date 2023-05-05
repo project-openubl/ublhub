@@ -15,7 +15,6 @@ alter table APP_USER
 
 create table PROJECT
 (
-    id                             int8         not null,
     name                           varchar(255) not null,
     description                    varchar(255),
     sunat_username                 varchar(255) not null,
@@ -23,15 +22,13 @@ create table PROJECT
     sunat_url_factura              varchar(255) not null,
     sunat_url_guia_remision        varchar(255) not null,
     sunat_url_percepcion_retencion varchar(255) not null,
-    created                        timestamp    not null,
-    updated                        timestamp,
     version                        int4         not null,
-    primary key (id)
+    primary key (name)
 );
 
 create table COMPANY
 (
-    id                             int8         not null,
+    project                        varchar(255) not null,
     ruc                            varchar(11)  not null,
     name                           varchar(255) not null,
     description                    varchar(255),
@@ -41,42 +38,39 @@ create table COMPANY
     sunat_url_factura              varchar(255),
     sunat_url_guia_remision        varchar(255),
     sunat_url_percepcion_retencion varchar(255),
-    project_id                     int8         not null,
-    created                        timestamp    not null,
-    updated                        timestamp,
     version                        int4         not null,
-    primary key (id)
+    primary key (project, ruc)
 );
 
 create table COMPONENT
 (
-    id            int8         not null,
+    id            varchar(255) not null,
     name          varchar(255) not null,
-    parent_id     int8,
+    parent_id     varchar(255),
     provider_id   varchar(255),
     provider_type varchar(255),
     sub_type      varchar(255),
-    project_id    int8         null,
-    company_id    int8         null,
+    project       varchar(255) not null,
+    ruc           varchar(11)  null,
     primary key (id)
 );
 
 create table COMPONENT_CONFIG
 (
-    id           int8 not null,
+    id           int8         not null,
     name         varchar(255),
     val          varchar(4000),
-    component_id int8 not null,
+    component_id varchar(255) not null,
     primary key (id)
 );
 
 create table UBL_DOCUMENT
 (
     id                             int8         not null,
+    project                        varchar(255) not null,
     job_in_progress                char(1)      not null,
     xml_file_id                    varchar(255) not null,
     cdr_file_id                    varchar(255),
-    project_id                     int8         not null,
     created                        timestamp    not null,
     updated                        timestamp,
     version                        int4         not null,
@@ -103,15 +97,15 @@ create table SUNAT_NOTE
 
 create table GENERATED_ID
 (
-    id            int8        not null,
-    ruc           varchar(11) not null,
-    document_type varchar(50) not null,
-    serie         int4        not null,
-    numero        int4        not null,
-    project_id    int8        not null,
-    created       timestamp   not null,
+    id            int8         not null,
+    project       varchar(255) not null,
+    ruc           varchar(11)  not null,
+    document_type varchar(50)  not null,
+    serie         int4         not null,
+    numero        int4         not null,
+    created       timestamp    not null,
     updated       timestamp,
-    version       int4        not null,
+    version       int4         not null,
     primary key (id)
 );
 
@@ -121,26 +115,15 @@ create table QUTE_TEMPLATE
     content       varchar(4000) not null,
     template_type varchar(50)   not null,
     document_type varchar(50)   not null,
-    project_id    int8          not null,
-    company_id    int8          not null,
+    project       varchar(255)  not null,
+    ruc           varchar(11),
     primary key (id)
 );
 
-alter table if exists PROJECT
-    add constraint uq_project_name unique (name);
-
 alter table if exists COMPONENT
     add constraint fk_component_project
-        foreign key (project_id)
+        foreign key (project)
             references PROJECT
-            on
-                delete
-                cascade;
-
-alter table if exists COMPONENT
-    add constraint fk_component_company
-        foreign key (company_id)
-            references COMPANY
             on
                 delete
                 cascade;
@@ -154,11 +137,8 @@ alter table if exists COMPONENT_CONFIG
                 cascade;
 
 alter table if exists COMPANY
-    add constraint uq_company_projectid_ruc unique (project_id, ruc);
-
-alter table if exists COMPANY
     add constraint fk_company_project
-        foreign key (project_id)
+        foreign key (project)
             references PROJECT
             on
                 delete
@@ -166,7 +146,7 @@ alter table if exists COMPANY
 
 alter table if exists UBL_DOCUMENT
     add constraint fk_ubldocument_project
-        foreign key (project_id)
+        foreign key (project)
             references PROJECT
             on
                 delete
@@ -183,7 +163,7 @@ alter table if exists SUNAT_NOTE
 
 alter table if exists GENERATED_ID
     add constraint fk_generatedid_project
-        foreign key (project_id)
+        foreign key (project)
             references PROJECT
             on
                 delete
@@ -191,4 +171,4 @@ alter table if exists GENERATED_ID
 
 alter table if exists GENERATED_ID
     add constraint uq_generatedid_projectid_ruc_documenttype
-        unique (project_id, ruc, document_type);
+        unique (project, ruc, document_type);

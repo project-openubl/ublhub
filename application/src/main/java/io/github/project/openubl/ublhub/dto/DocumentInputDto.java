@@ -68,7 +68,7 @@ public class DocumentInputDto {
     @AllArgsConstructor
     @RegisterForReflection
     public static class Metadata {
-        private Long project;
+        private String project;
 
         @ArraySchema
         private List<String> labels;

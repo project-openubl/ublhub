@@ -1,7 +1,7 @@
 ---
 kind: Invoice
 metadata:
-  project: 441557216265669060
+  project: test
 spec:
   document:
     serie: F001

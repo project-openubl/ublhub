@@ -33,21 +33,15 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
-import com.github.f4b6a3.tsid.TsidFactory;
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
 import io.github.project.openubl.ublhub.documents.DocumentRoute;
 import io.github.project.openubl.ublhub.dto.DocumentDto;
 import io.github.project.openubl.ublhub.dto.PageDto;
 import io.github.project.openubl.ublhub.files.FilesManager;
-import io.github.project.openubl.ublhub.keys.KeyManager;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import io.github.project.openubl.ublhub.mapper.DocumentMapper;
-import io.github.project.openubl.ublhub.models.FilterDocumentBean;
-import io.github.project.openubl.ublhub.models.PageBean;
-import io.github.project.openubl.ublhub.models.SearchBean;
-import io.github.project.openubl.ublhub.models.SortBean;
-import io.github.project.openubl.ublhub.models.TemplateType;
+import io.github.project.openubl.ublhub.models.*;
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.UBLDocumentRepository;
@@ -56,28 +50,12 @@ import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.ublhub.qute.DbTemplateLocator;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
-import io.github.project.openubl.xbuilder.content.jaxb.mappers.CreditNoteMapper;
-import io.github.project.openubl.xbuilder.content.jaxb.mappers.DebitNoteMapper;
-import io.github.project.openubl.xbuilder.content.jaxb.mappers.DespatchAdviceMapper;
-import io.github.project.openubl.xbuilder.content.jaxb.mappers.InvoiceMapper;
-import io.github.project.openubl.xbuilder.content.jaxb.mappers.PerceptionMapper;
-import io.github.project.openubl.xbuilder.content.jaxb.mappers.RetentionMapper;
-import io.github.project.openubl.xbuilder.content.jaxb.mappers.SummaryDocumentsMapper;
-import io.github.project.openubl.xbuilder.content.jaxb.mappers.VoidedDocumentsMapper;
-import io.github.project.openubl.xbuilder.content.jaxb.models.XMLCreditNote;
-import io.github.project.openubl.xbuilder.content.jaxb.models.XMLDebitNote;
-import io.github.project.openubl.xbuilder.content.jaxb.models.XMLDespatchAdvice;
-import io.github.project.openubl.xbuilder.content.jaxb.models.XMLInvoice;
-import io.github.project.openubl.xbuilder.content.jaxb.models.XMLPercepcion;
-import io.github.project.openubl.xbuilder.content.jaxb.models.XMLRetention;
-import io.github.project.openubl.xbuilder.content.jaxb.models.XMLSummaryDocuments;
-import io.github.project.openubl.xbuilder.content.jaxb.models.XMLVoidedDocuments;
+import io.github.project.openubl.xbuilder.content.jaxb.mappers.*;
+import io.github.project.openubl.xbuilder.content.jaxb.models.*;
 import io.github.project.openubl.xsender.files.xml.XmlContent;
 import io.github.project.openubl.xsender.files.xml.XmlContentProvider;
 import io.quarkus.qute.Engine;
 import io.quarkus.qute.Template;
-import org.apache.camel.CamelContext;
-import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestForm;
@@ -87,7 +65,6 @@ import org.mapstruct.factory.Mappers;
 import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.json.JsonObject;
 import javax.transaction.Transactional;
@@ -104,17 +81,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static io.github.project.openubl.ublhub.keys.component.ComponentOwner.OwnerType.company;
-import static io.github.project.openubl.ublhub.keys.component.ComponentOwner.OwnerType.project;
 
 @Path("/projects")
 @Produces("application/json")
@@ -166,10 +136,10 @@ public class DocumentResource {
         public FileUpload file;
     }
 
-    private ComponentOwner getOwner(Long companyId) {
+    private ComponentOwner getOwner(String project, String ruc) {
         return ComponentOwner.builder()
-                .type(company)
-                .id(companyId)
+                .project(project)
+                .ruc(ruc)
                 .build();
     }
 
@@ -195,12 +165,12 @@ public class DocumentResource {
 
     @Transactional(Transactional.TxType.NEVER)
     @POST
-    @Path("/{projectId}/documents")
+    @Path("/{project}/documents")
     public RestResponse<DocumentDto> createDocument(
-            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("project") @NotNull String project,
             @NotNull JsonObject jsonObject
     ) throws Exception {
-        Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, projectId);
+        Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, project);
         Long documentId = producerTemplate.requestBodyAndHeaders("direct:import-json", jsonObject, headers, Long.class);
         System.out.println("Hello");
 
@@ -312,12 +282,12 @@ public class DocumentResource {
 //    }
 
     @GET
-    @Path("/{projectId}/documents/{documentId}")
+    @Path("/{project}/documents/{documentId}")
     public RestResponse<DocumentDto> getDocument(
-            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("project") @NotNull String project,
             @PathParam("documentId") @NotNull Long documentId
     ) {
-        UBLDocumentEntity documentEntity = documentRepository.findById(projectId, documentId);
+        UBLDocumentEntity documentEntity = documentRepository.findById(project, documentId);
         if (documentEntity == null) {
             return documentDtoNotFoundResponse.get();
         }
@@ -327,17 +297,17 @@ public class DocumentResource {
     }
 
     @GET
-    @Path("/{projectId}/documents/{documentId}/xml")
+    @Path("/{project}/documents/{documentId}/xml")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
     public Response getDocumentXMLFile(
-            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("project") @NotNull String project,
             @PathParam("documentId") @NotNull Long documentId,
             @QueryParam("unzip") @DefaultValue("true") boolean unzip
     ) {
         String mediaType = !unzip ? "application/zip" : MediaType.APPLICATION_XML;
         String fileExtension = !unzip ? ".zip" : ".xml";
 
-        UBLDocumentEntity documentEntity = documentRepository.findById(projectId, documentId);
+        UBLDocumentEntity documentEntity = documentRepository.findById(project, documentId);
         if (documentEntity == null) {
             return Response
                     .status(Response.Status.NOT_FOUND)
@@ -359,17 +329,17 @@ public class DocumentResource {
     }
 
     @GET
-    @Path("/{projectId}/documents/{documentId}/cdr")
+    @Path("/{project}/documents/{documentId}/cdr")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
     public Response getDocumentCdrFile(
-            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("project") @NotNull String project,
             @PathParam("documentId") @NotNull Long documentId,
             @QueryParam("unzip") @DefaultValue("true") boolean unzip
     ) {
         String mediaType = !unzip ? "application/zip" : MediaType.APPLICATION_XML;
         String fileExtension = !unzip ? ".zip" : ".xml";
 
-        UBLDocumentEntity documentEntity = documentRepository.findById(projectId, documentId);
+        UBLDocumentEntity documentEntity = documentRepository.findById(project, documentId);
         if (documentEntity == null) {
             return Response
                     .status(Response.Status.NOT_FOUND)
@@ -391,13 +361,13 @@ public class DocumentResource {
     }
 
     @GET
-    @Path("/{projectId}/documents/{documentId}/print")
+    @Path("/{project}/documents/{documentId}/print")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
     public Response getDocumentCdrFile(
-            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("project") @NotNull String project,
             @PathParam("documentId") @NotNull Long documentId
     ) {
-        UBLDocumentEntity documentEntity = documentRepository.findById(projectId, documentId);
+        UBLDocumentEntity documentEntity = documentRepository.findById(project, documentId);
         if (documentEntity == null || documentEntity.getXmlFileId() == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
@@ -494,19 +464,18 @@ public class DocumentResource {
 
         // Search template
         Template template = null;
-        CompanyEntity companyEntity = companyRepository.findByRuc(projectId, ruc);
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity != null) {
             ComponentOwner companyOwner = ComponentOwner.builder()
-                    .id(companyEntity.getId())
-                    .type(company)
+                    .project(companyEntity.getId().getProject())
+                    .ruc(companyEntity.getId().getRuc())
                     .build();
             String templateName = DbTemplateLocator.encodeTemplateName(companyOwner, TemplateType.PRINT.name(), documentType);
             template = engine.getTemplate(templateName);
         }
         if (template == null) {
             ComponentOwner projectOwner = ComponentOwner.builder()
-                    .id(projectId)
-                    .type(project)
+                    .project(companyEntity.getId().getProject())
                     .build();
             String templateName = DbTemplateLocator.encodeTemplateName(projectOwner, TemplateType.PRINT.name(), documentType);
             template = engine.getTemplate(templateName);
@@ -556,9 +525,9 @@ public class DocumentResource {
     }
 
     @GET
-    @Path("/{projectId}/documents")
+    @Path("/{project}/documents")
     public RestResponse<PageDto<DocumentDto>> getDocuments(
-            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("project") @NotNull String project,
             @QueryParam("ruc") List<String> ruc,
             @QueryParam("documentType") List<String> documentType,
             @QueryParam("filterText") String filterText,
@@ -582,7 +551,7 @@ public class DocumentResource {
                 .documentType(documentType)
                 .build();
 
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        ProjectEntity projectEntity = projectRepository.findById(project);
         if (projectEntity == null) {
             return notFoundResponse.get();
         }

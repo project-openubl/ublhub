@@ -20,7 +20,7 @@ const App: React.FC = () => {
     <HashRouter>
       <ProjectContextProvider
         allContexts={(projectsQuery.data || []).map((e) => ({
-          key: e.id!,
+          key: e.name!,
           label: e.name,
         }))}
       >

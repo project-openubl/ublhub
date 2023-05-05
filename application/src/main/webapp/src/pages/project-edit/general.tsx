@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import axios, { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 
 import { ResolvedQueries } from "@migtools/lib-ui";
@@ -64,17 +63,17 @@ const General: React.FC = () => {
         name: string()
           .trim()
           .required()
-          .max(250)
-          .test("duplicateName", (value, options) => {
-            return axios
-              .post<string>("/projects/check-name", { name: value })
-              .then(() => true)
-              .catch((error: AxiosError) => {
-                return value === project?.name
-                  ? true
-                  : options.createError({ message: error.response?.data });
-              });
-          }),
+          .max(250),
+          // .test("duplicateName", (value, options) => {
+          //   return axios
+          //     .post<string>("/projects/check-name", { name: value })
+          //     .then(() => true)
+          //     .catch((error: AxiosError) => {
+          //       return value === project?.name
+          //         ? true
+          //         : options.createError({ message: error.response?.data });
+          //     });
+          // }),
         description: string().trim().max(250),
       })
     ),
@@ -128,6 +127,7 @@ const General: React.FC = () => {
                   validated={
                     !isTouched ? "default" : error ? "error" : "success"
                   }
+                  isDisabled
                 />
               )}
             />

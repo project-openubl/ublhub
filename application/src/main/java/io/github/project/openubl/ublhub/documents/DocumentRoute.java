@@ -88,9 +88,9 @@ public class DocumentRoute extends RouteBuilder {
                     .when(header(DOCUMENT_PROJECT).isNull())
                         .process(exchange -> {
                             JsonObject json = exchange.getIn().getBody(JsonObject.class);
-                            JsonNumber projectId = json.getJsonObject("metadata").getJsonNumber("project");
-                            if (projectId != null) {
-                                exchange.getIn().setHeader(DOCUMENT_PROJECT, projectId.longValue());
+                            String project = json.getJsonObject("metadata").getString("project");
+                            if (project != null) {
+                                exchange.getIn().setHeader(DOCUMENT_PROJECT, project);
                             }
                         })
                     .endChoice()

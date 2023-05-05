@@ -146,7 +146,7 @@ public class KeyManager {
     }
 
     private List<KeyProvider> getProviders(ComponentOwner owner) {
-        return componentRepository.getComponents(owner, owner.getId(), KeyProvider.class.getName())
+        return componentRepository.getComponents(owner, owner.getProject(), KeyProvider.class.getName())
                 .stream()
                 .sorted(new ProviderComparator())
                 .map(c -> {

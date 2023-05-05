@@ -76,12 +76,12 @@ public class DocumentBean {
     UBLDocumentRepository documentRepository;
 
     public void validateProject(
-            @Header(DocumentRoute.DOCUMENT_PROJECT) Long projectId,
+            @Header(DocumentRoute.DOCUMENT_PROJECT) String project,
             Exchange exchange
     ) throws ProjectNotFoundException {
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        ProjectEntity projectEntity = projectRepository.findById(project);
         if (projectEntity == null) {
-            throw new ProjectNotFoundException(projectId);
+            throw new ProjectNotFoundException(project);
         }
     }
 
@@ -134,7 +134,7 @@ public class DocumentBean {
     }
 
     public void sign(
-            @Header(DocumentRoute.DOCUMENT_PROJECT) Long projectId,
+            @Header(DocumentRoute.DOCUMENT_PROJECT) String project,
             @Header(DocumentRoute.DOCUMENT_RUC) String ruc,
             @Body String body,
             Exchange exchange
@@ -143,19 +143,18 @@ public class DocumentBean {
 
         KeyWrapper keyWrapper = null;
 
-        CompanyEntity companyEntity = companyRepository.findByRuc(projectId, ruc);
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity != null) {
             ComponentOwner companyOwner = ComponentOwner.builder()
-                    .id(companyEntity.getId())
-                    .type(ComponentOwner.OwnerType.company)
+                    .project(project)
+                    .ruc(ruc)
                     .build();
             keyWrapper = keystore.getActiveKeyWithoutFallback(companyOwner, KeyUse.SIG, algorithm);
         }
 
         if (keyWrapper == null) {
             ComponentOwner projectOwner = ComponentOwner.builder()
-                    .id(projectId)
-                    .type(ComponentOwner.OwnerType.project)
+                    .project(project)
                     .build();
             keyWrapper = keystore.getActiveKeyWithoutFallback(projectOwner, KeyUse.SIG, algorithm);
         }
@@ -177,14 +176,14 @@ public class DocumentBean {
 
     @Transactional
     public void create(
-            @Header(DocumentRoute.DOCUMENT_PROJECT) Long projectId,
+            @Header(DocumentRoute.DOCUMENT_PROJECT) String project,
             @Header(DocumentRoute.DOCUMENT_FILE_ID) String documentFileId,
             Exchange exchange
     ) {
         UBLDocumentEntity documentEntity = new UBLDocumentEntity();
         documentEntity.setId(tsidFactory.create().toLong());
         documentEntity.setXmlFileId(documentFileId);
-        documentEntity.setProjectId(projectId);
+        documentEntity.setProject(project);
         documentEntity.setJobInProgress(true);
         documentEntity.persist();
 
@@ -198,7 +197,7 @@ public class DocumentBean {
             Exchange exchange
     ) {
         UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
-        exchange.getIn().setHeader(DocumentRoute.DOCUMENT_PROJECT, documentEntity.getProjectId());
+        exchange.getIn().setHeader(DocumentRoute.DOCUMENT_PROJECT, documentEntity.getProject());
         exchange.getIn().setHeader(DocumentRoute.DOCUMENT_FILE_ID, documentEntity.getXmlFileId());
         exchange.getIn().setHeader(DocumentRoute.DOCUMENT_XML_DATA, documentEntity.getXmlData());
 
@@ -231,18 +230,18 @@ public class DocumentBean {
 
     @Transactional
     public void getSunatData(
-            @Header(DocumentRoute.DOCUMENT_PROJECT) Long projectId,
+            @Header(DocumentRoute.DOCUMENT_PROJECT) String project,
             @Header(DocumentRoute.DOCUMENT_XML_DATA) XMLDataEntity xmlData,
             Exchange exchange
     ) {
-        CompanyEntity companyEntity = companyRepository.findByRuc(projectId, xmlData.getRuc());
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, xmlData.getRuc()));
 
         SunatEntity sunatEntity = null;
         if (companyEntity != null) {
             sunatEntity = companyEntity.getSunat();
         }
         if (sunatEntity == null) {
-            sunatEntity = projectRepository.findById(projectId).getSunat();
+            sunatEntity = projectRepository.findById(project).getSunat();
         }
 
         exchange.getIn().setHeader(DocumentRoute.DOCUMENT_SUNAT_DATA, sunatEntity);

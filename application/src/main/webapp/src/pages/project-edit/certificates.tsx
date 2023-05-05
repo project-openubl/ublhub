@@ -79,11 +79,11 @@ const Certificates: React.FC = () => {
   const confirmationModal = useConfirmationContext();
 
   const project = useOutletContext<ProjectDto | null>();
-  const keysQuery = useKeysQuery(project?.id || null, null);
+  const keysQuery = useKeysQuery(project?.name || null, null);
   const serverInfoQuery = useServerInfoQuery();
-  const componentskeysQuery = useComponentsQuery(project?.id || null, null);
+  const componentskeysQuery = useComponentsQuery(project?.name || null, null);
   const deleteComponentMutation = useDeleteComponentMutation(
-    project?.id || null,
+    project?.name || null,
     null,
     () => {
       confirmationModal.close();
@@ -343,9 +343,9 @@ const Certificates: React.FC = () => {
         isOpen={componentFormModal.isOpen}
         onClose={componentFormModal.close}
       >
-        {project && project.id && componentFormModal.data && (
+        {project && project.name && componentFormModal.data && (
           <ComponentForm
-            projectId={project.id}
+            projectId={project.name}
             componentType={componentFormModal.data.componentType}
             component={componentFormModal.data.component}
             onSaved={componentFormModal.close}

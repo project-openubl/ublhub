@@ -14,14 +14,14 @@ export const ProjectEdit: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const routeParams = useMatch("/projects/:projectId/*");
+  const routeParams = useMatch("/projects/:projectName/*");
   const confirmationModal = useConfirmationContext();
 
   const projectsQuery = useProjectsQuery();
   const project = useMemo(() => {
-    const projectId = routeParams?.params.projectId;
+    const projectName = routeParams?.params.projectName;
     return (
-      projectsQuery.data?.find((project) => project.id === projectId) || null
+      projectsQuery.data?.find((project) => project.name === projectName) || null
     );
   }, [routeParams?.params, projectsQuery.data]);
 
@@ -88,19 +88,19 @@ export const ProjectEdit: React.FC = () => {
           navItems={[
             {
               title: "General",
-              path: `/projects/${project?.id}/general`,
+              path: `/projects/${project?.name}/general`,
             },
             {
               title: "SUNAT",
-              path: `/projects/${project?.id}/sunat`,
+              path: `/projects/${project?.name}/sunat`,
             },
             {
               title: t("terms.certificates"),
-              path: `/projects/${project?.id}/certificates`,
+              path: `/projects/${project?.name}/certificates`,
             },
             {
               title: t("terms.companies"),
-              path: `/projects/${project?.id}/companies`,
+              path: `/projects/${project?.name}/companies`,
             },
           ]}
         />

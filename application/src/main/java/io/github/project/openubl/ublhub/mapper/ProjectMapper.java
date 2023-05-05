@@ -34,7 +34,6 @@ public abstract class ProjectMapper {
     @Mapping(target = "sunat.password", ignore = true)
     public abstract ProjectDto toDto(ProjectEntity entity);
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "sunat.sunatUrlFactura", source = "sunat.facturaUrl")
     @Mapping(target = "sunat.sunatUrlGuiaRemision", source = "sunat.guiaUrl")
     @Mapping(target = "sunat.sunatUrlPercepcionRetencion", source = "sunat.retencionUrl")

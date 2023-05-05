@@ -89,12 +89,12 @@ public class GeneratedIDGenerator implements IDGenerator {
     }
 
     private GeneratedIDEntity generateNextID(ProjectEntity projectEntity, String ruc, String documentType, int minSerie, int minNumero) {
-        GeneratedIDEntity entity = generatedIDRepository.getCurrentID(projectEntity, ruc, documentType);
+        GeneratedIDEntity entity = generatedIDRepository.getCurrentID(projectEntity.getName(), ruc, documentType);
         if (entity == null) {
             entity = new GeneratedIDEntity();
 
             entity.setId(tsidFactory.create().toLong());
-            entity.setProjectId(projectEntity.getId());
+            entity.setProject(projectEntity.getName());
             entity.setRuc(ruc);
             entity.setDocumentType(documentType);
             entity.setSerie(minSerie);
@@ -121,12 +121,12 @@ public class GeneratedIDGenerator implements IDGenerator {
     }
 
     private GeneratedIDEntity generateNextIDVoidedAndSummaryDocument(ProjectEntity project, String ruc, String documentType) {
-        GeneratedIDEntity entity = generatedIDRepository.getCurrentID(project, ruc, documentType);
+        GeneratedIDEntity entity = generatedIDRepository.getCurrentID(project.getName(), ruc, documentType);
         if (entity == null) {
             entity = new GeneratedIDEntity();
 
             entity.setId(tsidFactory.create().toLong());
-            entity.setProjectId(project.getId());
+            entity.setProject(project.getName());
             entity.setRuc(ruc);
             entity.setDocumentType(documentType);
             entity.setSerie(Integer.parseInt(LocalDateTime

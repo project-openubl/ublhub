@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub;
 
+import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.UBLDocumentRepository;
@@ -23,10 +24,20 @@ import io.github.project.openubl.ublhub.models.jpa.entities.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @ApplicationScoped
 public class ResourceHelpers {
+
+    public static final List<String> projects = new CopyOnWriteArrayList<>();
+    public static final Map<String, List<String>> projectRuc = new ConcurrentHashMap<>();
+    public static final Map<String, List<Long>> projectDocumentIds = new ConcurrentHashMap<>();
 
     @Inject
     ProjectRepository projectRepository;
@@ -37,62 +48,85 @@ public class ResourceHelpers {
     @Inject
     UBLDocumentRepository documentRepository;
 
+    @Inject
+    TsidFactory tsidFactory;
+
+    private static String generateProjectName(Integer id) {
+        return "my-project" + id;
+    }
+
+    private static String generateCompanyRuc(Integer id) {
+        return id.toString().repeat(11);
+    }
+
     public void generatePreexistingData() {
-        Stream.of(1L, 2L, 3L)
-                .forEach(projectId -> {
-                    ProjectEntity project = ProjectEntity.builder()
-                            .id(projectId)
-                            .name("my-project" + projectId)
-                            .description("description" + projectId)
+        IntStream.rangeClosed(1, 3)
+                .forEach(projectIndex -> {
+                    String projectName = generateProjectName(projectIndex);
+                    projects.add(projectName);
+
+                    ProjectEntity projectEntity = ProjectEntity.builder()
+                            .name(generateProjectName(projectIndex))
+                            .description("description" + projectIndex)
                             .sunat(SunatEntity.builder()
-                                    .sunatUsername("username" + projectId)
-                                    .sunatPassword("password" + projectId)
-                                    .sunatUrlFactura("http://factura" + projectId)
-                                    .sunatUrlGuiaRemision("http://guia" + projectId)
-                                    .sunatUrlPercepcionRetencion("http://percepcionRetencion" + projectId)
+                                    .sunatUsername("username" + projectIndex)
+                                    .sunatPassword("password" + projectIndex)
+                                    .sunatUrlFactura("http://factura" + projectIndex)
+                                    .sunatUrlGuiaRemision("http://guia" + projectIndex)
+                                    .sunatUrlPercepcionRetencion("http://percepcionRetencion" + projectIndex)
                                     .build()
                             )
                             .build();
 
-                    projectRepository.persist(project);
+                    projectRepository.persist(projectEntity);
 
                     // Companies
-                    Stream.of(1L, 2L, 3L)
-                            .forEach(companyId -> {
-                                CompanyEntity company = CompanyEntity.builder()
-                                        .projectId(project.getId())
-                                        .id(Long.parseLong(project.getId().toString() + companyId))
-                                        .ruc(companyId.toString().repeat(11))
-                                        .name("company" + companyId)
+                    IntStream.rangeClosed(1, 3)
+                            .forEach(companyIndex -> {
+                                String ruc = generateCompanyRuc(companyIndex);
+
+                                List<String> rucList = projectRuc.getOrDefault(projectName, new ArrayList<>());
+                                rucList.add(ruc);
+                                projectRuc.put(projectName, rucList);
+
+                                CompanyEntity companyEntity = CompanyEntity.builder()
+                                        .id(new CompanyEntity.CompanyId(projectName, ruc))
+                                        .name("company" + companyIndex)
                                         .sunat(SunatEntity.builder()
-                                                .sunatUsername("username-company" + companyId)
-                                                .sunatPassword("password-company" + companyId)
-                                                .sunatUrlFactura("http://factura-company" + companyId)
-                                                .sunatUrlGuiaRemision("http://guia-company" + companyId)
-                                                .sunatUrlPercepcionRetencion("http://percepcionRetencion-company" + companyId)
+                                                .sunatUsername("username-company" + companyIndex)
+                                                .sunatPassword("password-company" + companyIndex)
+                                                .sunatUrlFactura("http://factura-company" + companyIndex)
+                                                .sunatUrlGuiaRemision("http://guia-company" + companyIndex)
+                                                .sunatUrlPercepcionRetencion("http://percepcionRetencion-company" + companyIndex)
                                                 .build()
                                         )
                                         .build();
 
-                                companyRepository.persist(company);
+                                companyRepository.persist(companyEntity);
                             });
 
                     // Documents
-                    Stream.of(1L, 2L)
-                            .forEach(documentId -> {
-                                UBLDocumentEntity document = UBLDocumentEntity.builder()
-                                        .projectId(project.getId())
-                                        .id(Long.parseLong(project.getId().toString() + documentId))
+                    IntStream.rangeClosed(1, 2)
+                            .forEach(documentIndex -> {
+                                long documentId = tsidFactory.create().toLong();
+
+                                List<Long> documentIdList = projectDocumentIds.getOrDefault(projectName, new ArrayList<>());
+                                documentIdList.add(documentId);
+                                projectDocumentIds.put(projectName, documentIdList);
+
+                                UBLDocumentEntity documentEntity = UBLDocumentEntity.builder()
+                                        .project(projectName)
+                                        .id(documentId)
                                         .xmlFileId("/home/file")
                                         .xmlData(XMLDataEntity.builder()
                                                 .ruc("12345678910")
-                                                .serieNumero("F-" + documentId)
+                                                .serieNumero("F-" + documentIndex)
                                                 .tipoDocumento("Invoice")
                                                 .build()
                                         )
                                         .build();
 
-                                documentRepository.persist(document);
+                                documentRepository.persist(documentEntity);
                             });
                 });
     }

@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,13 +24,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.Column;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -50,8 +45,8 @@ public class UBLDocumentEntity extends BaseEntity {
     private Long id;
 
     @NotNull
-    @Column(name = "project_id")
-    private Long projectId;
+    @Column(name = "project")
+    private String project;
 
     @NotNull
     @Size(max = 255)
@@ -78,4 +73,8 @@ public class UBLDocumentEntity extends BaseEntity {
     @Valid
     @Embedded
     private ErrorEntity error;
+
+    @Version
+    @Column(name = "version")
+    private int version;
 }

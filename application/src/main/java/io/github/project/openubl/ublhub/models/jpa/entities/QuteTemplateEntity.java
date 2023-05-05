@@ -62,9 +62,9 @@ public class QuteTemplateEntity extends PanacheEntityBase {
     @Column(name = "document_type")
     private String documentType;
 
-    @Column(name = "project_id")
-    private Long projectId;
+    @Column(name = "project")
+    private String project;
 
-    @Column(name = "company_id")
-    private Long companyId;
+    @Column(name = "ruc")
+    private String ruc;
 }

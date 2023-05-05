@@ -58,7 +58,7 @@ export const SunatForm: React.FC<ISunatFormProps> = ({
   const { pushNotification } = React.useContext(NotificationContext);
 
   const updateCompanyMutation = useUpdateCompanyMutation(
-    project.id || null,
+    project.name || null,
     (p) => {
       pushNotification({
         title: t("info.data-saved"),

@@ -17,7 +17,7 @@
 package io.github.project.openubl.ublhub.documents.exceptions;
 
 public class ProjectNotFoundException extends Exception {
-    public ProjectNotFoundException(Long projectId) {
-        super("Project " + projectId + " not found");
+    public ProjectNotFoundException(String project) {
+        super("Project " + project + " not found");
     }
 }
