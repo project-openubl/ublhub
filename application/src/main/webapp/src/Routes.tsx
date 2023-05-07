@@ -25,7 +25,7 @@ export const AppRoutes = () => {
     },
     {
       Component: ProjectEdit,
-      path: "/projects/:projectId",
+      path: "/projects/:projectName",
       children: [
         {
           Component: () => <Navigate to="general" replace />,
@@ -61,7 +61,7 @@ export const AppRoutes = () => {
     },
     {
       Component: DocumentList,
-      path: "/documents/projects/:projectId",
+      path: "/documents/projects/:projectName",
       hasDescendant: false,
     },
   ];

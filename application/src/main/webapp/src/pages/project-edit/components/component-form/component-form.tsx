@@ -36,7 +36,7 @@ interface IComponentForm {
 }
 
 interface IComponentFormProps {
-  projectId: string;
+  projectName: string;
   companyRuc?: string;
   componentType: ComponentTypeDto;
   component?: ComponentDto;
@@ -45,7 +45,7 @@ interface IComponentFormProps {
 }
 
 export const ComponentForm: React.FC<IComponentFormProps> = ({
-  projectId,
+  projectName,
   companyRuc,
   componentType,
   component,
@@ -55,14 +55,14 @@ export const ComponentForm: React.FC<IComponentFormProps> = ({
   const { t } = useTranslation();
 
   const createComponentMutation = useCreateComponentMutation(
-    projectId,
+    projectName,
     companyRuc || null,
     (component) => {
       onSaved(component);
     }
   );
   const updateComponentMutation = useUpdateComponentMutation(
-    projectId,
+    projectName,
     companyRuc || null,
     (component) => {
       onSaved(component);

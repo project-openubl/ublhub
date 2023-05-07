@@ -16,5 +16,5 @@
  */
 package io.github.project.openubl.ublhub.documents.exceptions;
 
-public class CouldNotCreateXMLException extends Exception {
+public class NoUBLXMLFileCompliantException extends Exception {
 }

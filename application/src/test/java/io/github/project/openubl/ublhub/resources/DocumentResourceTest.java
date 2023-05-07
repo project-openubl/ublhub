@@ -516,87 +516,40 @@ public class DocumentResourceTest extends AbstractBaseTest {
 //    }
 
     @Test
-    public void uploadInvalidImageFile_shouldSetErrorStatus() throws URISyntaxException {
+    public void uploadXml_notXMLFileShouldBeRejected() throws URISyntaxException {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("images/java-icon.png").toURI();
         File file = new File(fileURI);
 
         // When
-        String documentId = givenAuth("alice")
+        // Then
+        givenAuth("alice")
                 .accept(ContentType.JSON)
                 .multiPart("file", file, "application/xml")
                 .when()
-                .post("/" + projectId + "/upload/document")
+                .post("/" + project + "/upload/document")
                 .then()
-                .statusCode(201)
-                .extract().path("id").toString();
-
-        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            String inProgress = givenAuth("alice")
-                    .contentType(ContentType.JSON)
-                    .when()
-                    .get("/" + projectId + "/documents/" + documentId)
-                    .then()
-                    .statusCode(200)
-                    .extract().path("status.inProgress").toString();
-            return !Boolean.parseBoolean(inProgress);
-        });
-
-        // Then
-        givenAuth("alice")
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/" + projectId + "/documents/" + documentId)
-                .then()
-                .statusCode(200)
-                .body("status.inProgress", is(false),
-                        "status.error.phase", is(READ_XML_FILE.toString())
-                );
+                .statusCode(400);
     }
 
     @Test
-    public void uploadInvalidXMLFile_shouldSetErrorStatus() throws URISyntaxException {
+    public void uploadXML_notUblXMLFileShouldBeRejected() throws URISyntaxException {
         // Given
-        Long projectId = 1L;
+        String project = ResourceHelpers.projects.get(0);
 
         URI fileURI = DocumentResourceTest.class.getClassLoader().getResource("xml/maven.xml").toURI();
         File file = new File(fileURI);
 
         // When
-        String documentId = givenAuth("alice")
+        givenAuth("alice")
                 .accept(ContentType.JSON)
                 .multiPart("file", file, "application/xml")
                 .when()
-                .post("/" + projectId + "/upload/document")
+                .post("/" + project + "/upload/document")
                 .then()
-                .statusCode(201)
-                .extract().path("id").toString();
-
-        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
-            String inProgress = givenAuth("alice")
-                    .contentType(ContentType.JSON)
-                    .when()
-                    .get("/" + projectId + "/documents/" + documentId)
-                    .then()
-                    .statusCode(200)
-                    .extract().path("status.inProgress").toString();
-            return !Boolean.parseBoolean(inProgress);
-        });
-
-        // Then
-        givenAuth("alice")
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/" + projectId + "/documents/" + documentId)
-                .then()
-                .statusCode(200)
-                .body("status.inProgress", is(false),
-                        "status.xmlData", is(nullValue()),
-                        "status.error.phase", is(READ_XML_FILE.toString()),
-                        "status.error.description", is("No se pudo leer XML")
-                );
+                .statusCode(400);
     }
 
 //    @Test

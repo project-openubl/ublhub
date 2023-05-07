@@ -30,14 +30,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 @ApplicationScoped
 public class ResourceHelpers {
 
-    public static final List<String> projects = new CopyOnWriteArrayList<>();
-    public static final Map<String, List<String>> projectRuc = new ConcurrentHashMap<>();
-    public static final Map<String, List<Long>> projectDocumentIds = new ConcurrentHashMap<>();
+    public static List<String> projects = new CopyOnWriteArrayList<>();
+    public static Map<String, List<String>> projectRuc = new ConcurrentHashMap<>();
+    public static Map<String, List<Long>> projectDocumentIds = new ConcurrentHashMap<>();
 
     @Inject
     ProjectRepository projectRepository;
@@ -60,6 +59,10 @@ public class ResourceHelpers {
     }
 
     public void generatePreexistingData() {
+        projects = new CopyOnWriteArrayList<>();
+        projectRuc = new ConcurrentHashMap<>();
+        projectDocumentIds = new ConcurrentHashMap<>();
+
         IntStream.rangeClosed(1, 3)
                 .forEach(projectIndex -> {
                     String projectName = generateProjectName(projectIndex);

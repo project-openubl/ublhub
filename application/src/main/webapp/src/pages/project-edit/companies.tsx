@@ -283,7 +283,7 @@ const Companies: React.FC = () => {
                             <DataListCell key="logo">
                               {project?.name && item.ruc && (
                                 <CompanyLogo
-                                  projectId={project.name}
+                                  projectName={project.name}
                                   companyRuc={item.ruc}
                                 />
                               )}
@@ -367,7 +367,7 @@ const Companies: React.FC = () => {
       >
         {project && (
           <AddCompanyForm
-            projectId={project.name!}
+            projectName={project.name!}
             onSaved={companyModal.close}
             onCancel={companyModal.close}
           />

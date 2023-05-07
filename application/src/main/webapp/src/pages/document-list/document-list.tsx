@@ -231,8 +231,8 @@ export const DocumentList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const matchSingleProjectPage = useMatch("/documents/projects/:projectId");
-  const projectId = matchSingleProjectPage?.params.projectId;
+  const matchSingleProjectPage = useMatch("/documents/projects/:projectName");
+  const projectName = matchSingleProjectPage?.params.projectName;
 
   const onProjectContextChange = (context: ContextOption) => {
     navigate("/documents/projects/" + context.key);
@@ -280,7 +280,7 @@ export const DocumentList: React.FC = () => {
     setQueryParams(params);
   }, [filterText, currentPage]);
 
-  const documentsQuery = useDocumentsQuery(projectId || null, queryParams);
+  const documentsQuery = useDocumentsQuery(projectName || null, queryParams);
 
   const {
     isItemSelected: isRowExpanded,
@@ -396,7 +396,7 @@ export const DocumentList: React.FC = () => {
             <ToolbarItem>{t("terms.projects")}:</ToolbarItem>
             <ToolbarItem>
               <ProjectContextSelector
-                contextKeyFromURL={projectId}
+                contextKeyFromURL={projectName}
                 onChange={onProjectContextChange}
                 props={{
                   footer: (
@@ -428,7 +428,7 @@ export const DocumentList: React.FC = () => {
       <Divider />
       <PageSection variant="light" type="nav">
         <ConditionalRender
-          when={!projectId}
+          when={!projectName}
           then={
             <Bullseye>
               <EmptyState>
@@ -503,9 +503,9 @@ export const DocumentList: React.FC = () => {
         isOpen={documentModal.isOpen}
         onClose={documentModal.close}
       >
-        {projectId && (
+        {projectName && (
           <DocumentEditor
-            projectId={projectId}
+            projectName={projectName}
             onSaved={documentModal.close}
             onCancel={documentModal.close}
           />
@@ -523,17 +523,17 @@ export const DocumentList: React.FC = () => {
           </Button>,
         ]}
       >
-        {projectId &&
+        {projectName &&
           rowModal.data &&
           (rowModal.action === "xml" || rowModal.action === "cdr") && (
             <XmlCdrPreview
-              projectId={projectId}
+              projectName={projectName}
               document={rowModal.data}
               variant={rowModal.action === "xml" ? "xml" : "cdr"}
             />
           )}
-        {projectId && rowModal.data && rowModal.action === "pdf" && (
-          <PdfPreview projectId={projectId} document={rowModal.data} />
+        {projectName && rowModal.data && rowModal.action === "pdf" && (
+          <PdfPreview projectName={projectName} document={rowModal.data} />
         )}
       </Modal>
     </>

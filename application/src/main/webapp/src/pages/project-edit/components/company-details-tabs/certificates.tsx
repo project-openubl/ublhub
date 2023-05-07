@@ -362,7 +362,7 @@ export const Certificates: React.FC<ICertificatesProps> = ({
       >
         {project && project.name && componentFormModal.data && (
           <ComponentForm
-            projectId={project.name}
+            projectName={project.name}
             companyRuc={company.ruc}
             componentType={componentFormModal.data.componentType}
             component={componentFormModal.data.component}

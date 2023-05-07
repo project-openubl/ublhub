@@ -10,16 +10,16 @@ import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 
 interface IPdfPreviewProps {
-  projectId: string;
+  projectName: string;
   document: DocumentDto;
 }
 
 export const PdfPreview: React.FC<IPdfPreviewProps> = ({
-  projectId,
+  projectName,
   document: documentDto,
 }) => {
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  const pdfUrlQuery = useDocumentPdfUrlQuery(projectId, documentDto.id || null);
+  const pdfUrlQuery = useDocumentPdfUrlQuery(projectName, documentDto.id || null);
 
   return (
     <>

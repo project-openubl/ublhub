@@ -17,24 +17,14 @@
 package io.github.project.openubl.ublhub.consumers;
 
 import io.github.project.openubl.ublhub.documents.DocumentRoute;
-import io.github.project.openubl.ublhub.files.camel.RouteUtils;
-import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.file.FileConstants;
-import org.apache.camel.component.jackson.JacksonDataFormat;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.dataformat.YAMLLibrary;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.yaml.snakeyaml.Yaml;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.json.JsonObject;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
 
 @ApplicationScoped
 public class FilesystemConsumerRoute extends RouteBuilder {
@@ -47,7 +37,7 @@ public class FilesystemConsumerRoute extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        from("file://" + consumerTargetDirectory + "?includeExt=json,yml,yaml&delete=true")
+        from("file://" + consumerTargetDirectory + "?includeExt=json,yml,yaml,xml&delete=true")
                 .autoStartup("{{openubl.consumers.filesystem.enabled}}")
                 .id("consumer-filesystem")
                 .choice()
@@ -62,6 +52,10 @@ public class FilesystemConsumerRoute extends RouteBuilder {
                     .when(header(FileConstants.FILE_NAME).regex(".*\\.(xml)"))
                         .process(exchange -> {
                             String fileName = exchange.getIn().getHeader(FileConstants.FILE_NAME_ONLY, String.class);
+                            String[] split = fileName.split("\\.");
+                            String project = split.length > 2 ? split[split.length - 2] : null;
+
+                            exchange.getIn().setHeader(DocumentRoute.DOCUMENT_PROJECT, project);
                         })
                         .to("direct:import-xml")
                     .endChoice()

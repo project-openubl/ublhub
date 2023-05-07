@@ -60,7 +60,7 @@ export const General: React.FC<IGeneralProps> = ({
               <DescriptionListTerm>Logo</DescriptionListTerm>
               <DescriptionListDescription>
                 {project?.name && company?.ruc && (
-                  <CompanyLogo projectId={project.name} companyRuc={company.ruc} />
+                  <CompanyLogo projectName={project.name} companyRuc={company.ruc} />
                 )}
               </DescriptionListDescription>
             </DescriptionListGroup>

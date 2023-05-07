@@ -85,6 +85,7 @@ export const GeneralForm: React.FC<IGeneralFormProps> = ({
         ruc: string()
           .trim()
           .required()
+          .matches(/[0-9]+/)
           .min(11)
           .max(11)
           .test("duplicateRuc", (value, options) => {

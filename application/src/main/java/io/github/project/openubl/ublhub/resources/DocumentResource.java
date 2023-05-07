@@ -36,7 +36,9 @@ package io.github.project.openubl.ublhub.resources;
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
 import io.github.project.openubl.ublhub.documents.DocumentRoute;
+import io.github.project.openubl.ublhub.documents.DocumentImportResult;
 import io.github.project.openubl.ublhub.dto.DocumentDto;
+import io.github.project.openubl.ublhub.dto.DocumentInputDto;
 import io.github.project.openubl.ublhub.dto.PageDto;
 import io.github.project.openubl.ublhub.files.FilesManager;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
@@ -54,10 +56,12 @@ import io.github.project.openubl.xbuilder.content.jaxb.mappers.*;
 import io.github.project.openubl.xbuilder.content.jaxb.models.*;
 import io.github.project.openubl.xsender.files.xml.XmlContent;
 import io.github.project.openubl.xsender.files.xml.XmlContentProvider;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.qute.Engine;
 import io.quarkus.qute.Template;
 import org.apache.camel.ProducerTemplate;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.MultipartForm;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
@@ -76,10 +80,7 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Function;
@@ -143,25 +144,35 @@ public class DocumentResource {
                 .build();
     }
 
+    private RestResponse<DocumentDto> mapDocumentImportResult(String project, DocumentImportResult importResult) {
+        if (importResult.getErrorMessage() != null) {
+            return documentDtoBadRequestResponse.get();
+        } else {
+            QuarkusTransaction.begin();
 
-//    @POST
-//    @Consumes(MediaType.MULTIPART_FORM_DATA)
-//    @Path("/{projectId}/upload/document")
-//    public RestResponse<DocumentDto> uploadXML(
-//            @PathParam("projectId") @NotNull Long projectId,
-//            @MultipartForm UploadFormData formData
-//    ) throws FileNotFoundException {
-//        ProjectEntity projectEntity = projectRepository.findById(projectId);
-//        if (projectEntity == null) {
-//            return documentDtoNotFoundResponse.get();
-//        }
-//
-//        String fileId = filesManager.createFile(formData.file.uploadedFile().toFile(), true);
-//        UBLDocumentEntity entity = createAndScheduleSend(projectEntity, fileId);
-//        DocumentDto dto = documentMapper.toDto(entity);
-//
-//        return documentDtoCreatedResponse.apply(dto);
-//    }
+            UBLDocumentEntity documentEntity = documentRepository.findById(project, importResult.getDocumentId());
+            DocumentDto documentDto = documentMapper.toDto(documentEntity);
+
+            QuarkusTransaction.commit();
+            return documentDtoCreatedResponse.apply(documentDto);
+        }
+    }
+
+    @Transactional(Transactional.TxType.NEVER)
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Path("/{project}/upload/document")
+    public RestResponse<DocumentDto> uploadXML(
+            @PathParam("project") @NotNull String project,
+            @MultipartForm UploadFormData formData
+    ) {
+        File file = formData.file.uploadedFile().toFile();
+
+        Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, project);
+        DocumentImportResult importResult = producerTemplate.requestBodyAndHeaders("direct:import-xml", file, headers, DocumentImportResult.class);
+
+        return mapDocumentImportResult(project, importResult);
+    }
 
     @Transactional(Transactional.TxType.NEVER)
     @POST
@@ -169,48 +180,20 @@ public class DocumentResource {
     public RestResponse<DocumentDto> createDocument(
             @PathParam("project") @NotNull String project,
             @NotNull JsonObject jsonObject
-    ) throws Exception {
+    ) {
         Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, project);
-        Long documentId = producerTemplate.requestBodyAndHeaders("direct:import-json", jsonObject, headers, Long.class);
-        System.out.println("Hello");
+        DocumentImportResult importResult = producerTemplate.requestBodyAndHeaders("direct:import-json", jsonObject, headers, DocumentImportResult.class);
 
-//        ProjectEntity projectEntity = projectRepository.findById(projectId);
-//        if (projectEntity == null) {
-//            return documentDtoNotFoundResponse.get();
-//        }
-//
-//        Boolean isValid = jsonManager.validateJsonObject(jsonObject);
-//        if (!isValid) {
-//            return documentDtoBadRequestResponse.get();
-//        }
-//
-//        DocumentInputDto documentInputDto = jsonManager.getDocumentInputDtoFromJsonObject(jsonObject);
-//        Document document;
-//        try {
-//            document = createAndSignXML(projectEntity, documentInputDto);
-//        } catch (NoCertificateToSignFoundException | MarshalException | InvalidAlgorithmParameterException |
-//                 NoSuchAlgorithmException | IOException | ParserConfigurationException | XMLSignatureException |
-//                 SAXException e) {
-//            return RestResponse.ResponseBuilder
-//                    .<DocumentDto>create(RestResponse.Status.BAD_REQUEST)
-//                    .build();
-//        }
-//
-//        String documentId = saveXML(document);
-//        UBLDocumentEntity documentEntity = createAndScheduleSend(projectEntity, documentId);
-//
-//        DocumentDto documentDto = documentMapper.toDto(documentEntity);
-//        return documentDtoCreatedResponse.apply(documentDto);
-        return null;
+        return mapDocumentImportResult(project, importResult);
     }
 
 //    @POST
-//    @Path("/{projectId}/enrich-document")
+//    @Path("/{project}/enrich-document")
 //    public RestResponse<?> enrichDocuments(
-//            @PathParam("projectId") @NotNull Long projectId,
+//            @PathParam("project") @NotNull String project,
 //            @NotNull JsonObject jsonObject
 //    ) {
-//        ProjectEntity projectEntity = projectRepository.findById(projectId);
+//        ProjectEntity projectEntity = projectRepository.findById(project);
 //        if (projectEntity == null) {
 //            return documentDtoNotFoundResponse.get();
 //        }
@@ -467,15 +450,15 @@ public class DocumentResource {
         CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity != null) {
             ComponentOwner companyOwner = ComponentOwner.builder()
-                    .project(companyEntity.getId().getProject())
-                    .ruc(companyEntity.getId().getRuc())
+                    .project(project)
+                    .ruc(ruc)
                     .build();
             String templateName = DbTemplateLocator.encodeTemplateName(companyOwner, TemplateType.PRINT.name(), documentType);
             template = engine.getTemplate(templateName);
         }
         if (template == null) {
             ComponentOwner projectOwner = ComponentOwner.builder()
-                    .project(companyEntity.getId().getProject())
+                    .project(project)
                     .build();
             String templateName = DbTemplateLocator.encodeTemplateName(projectOwner, TemplateType.PRINT.name(), documentType);
             template = engine.getTemplate(templateName);

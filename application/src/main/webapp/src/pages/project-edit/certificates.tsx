@@ -345,7 +345,7 @@ const Certificates: React.FC = () => {
       >
         {project && project.name && componentFormModal.data && (
           <ComponentForm
-            projectId={project.name}
+            projectName={project.name}
             componentType={componentFormModal.data.componentType}
             component={componentFormModal.data.component}
             onSaved={componentFormModal.close}

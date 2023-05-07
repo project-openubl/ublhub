@@ -2,9 +2,11 @@ package io.github.project.openubl.ublhub.documents;
 
 import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.quarkus.xbuilder.XBuilder;
+import io.github.project.openubl.ublhub.documents.exceptions.NoUBLXMLFileCompliantException;
 import io.github.project.openubl.ublhub.documents.exceptions.ProjectNotFoundException;
 import io.github.project.openubl.ublhub.keys.KeyManager;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
+import io.github.project.openubl.ublhub.mapper.XmlContentMapper;
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.UBLDocumentRepository;
@@ -74,6 +76,9 @@ public class DocumentBean {
 
     @Inject
     UBLDocumentRepository documentRepository;
+
+    @Inject
+    XmlContentMapper xmlContentMapper;
 
     public void validateProject(
             @Header(DocumentRoute.DOCUMENT_PROJECT) String project,
@@ -207,34 +212,41 @@ public class DocumentBean {
         exchange.getIn().setHeader(DocumentRoute.SUNAT_TICKET, ticket);
     }
 
-    @Transactional
     public void generateXmlData(
-            @Header(DocumentRoute.DOCUMENT_ID) Long documentId,
             @Header(DocumentRoute.DOCUMENT_FILE) byte[] documentFile,
             Exchange exchange
-    ) throws ParserConfigurationException, IOException, SAXException {
+    ) throws ParserConfigurationException, IOException, SAXException, NoUBLXMLFileCompliantException {
         XmlContent xmlContent = XmlContentProvider.getSunatDocument(new ByteArrayInputStream(documentFile));
+        if (xmlContent == null ||
+                xmlContent.getDocumentType() == null || xmlContent.getDocumentType().isEmpty() ||
+                xmlContent.getDocumentID() == null || xmlContent.getDocumentID().isEmpty() ||
+                xmlContent.getRuc() == null || xmlContent.getRuc().isEmpty()
+        ) {
+            throw new NoUBLXMLFileCompliantException();
+        }
+        exchange.getIn().setHeader(DocumentRoute.DOCUMENT_XML_DATA, xmlContent);
+    }
 
-        XMLDataEntity xmlDataEntity = new XMLDataEntity();
-        xmlDataEntity.setRuc(xmlContent.getRuc());
-        xmlDataEntity.setTipoDocumento(xmlContent.getDocumentType());
-        xmlDataEntity.setSerieNumero(xmlContent.getDocumentID());
-        xmlDataEntity.setBajaCodigoTipoDocumento(xmlContent.getVoidedLineDocumentTypeCode());
+    @Transactional
+    public void saveXmlData(
+            @Header(DocumentRoute.DOCUMENT_ID) Long documentId,
+            @Header(DocumentRoute.DOCUMENT_XML_DATA) XmlContent xmlContent,
+            Exchange exchange
+    ) {
+        XMLDataEntity xmlDataEntity = xmlContentMapper.toEntity(xmlContent);
 
         UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
         documentEntity.setXmlData(xmlDataEntity);
         documentEntity.persist();
-
-        exchange.getIn().setHeader(DocumentRoute.DOCUMENT_XML_DATA, documentEntity.getXmlData());
     }
 
     @Transactional
     public void getSunatData(
             @Header(DocumentRoute.DOCUMENT_PROJECT) String project,
-            @Header(DocumentRoute.DOCUMENT_XML_DATA) XMLDataEntity xmlData,
+            @Header(DocumentRoute.DOCUMENT_XML_DATA) XmlContent xmlContent,
             Exchange exchange
     ) {
-        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, xmlData.getRuc()));
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, xmlContent.getRuc()));
 
         SunatEntity sunatEntity = null;
         if (companyEntity != null) {

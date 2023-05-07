@@ -17,6 +17,7 @@
 package io.github.project.openubl.ublhub.documents;
 
 import io.github.project.openubl.ublhub.documents.exceptions.NoCertificateToSignFoundException;
+import io.github.project.openubl.ublhub.documents.exceptions.NoUBLXMLFileCompliantException;
 import io.github.project.openubl.ublhub.documents.exceptions.ProjectNotFoundException;
 import io.github.project.openubl.ublhub.models.jpa.entities.SunatEntity;
 import io.github.project.openubl.xbuilder.content.models.standard.general.CreditNote;
@@ -35,6 +36,8 @@ import io.github.project.openubl.xsender.company.CompanyURLs;
 import io.github.project.openubl.xsender.files.BillServiceFileAnalyzer;
 import io.github.project.openubl.xsender.files.BillServiceXMLFileAnalyzer;
 import io.github.project.openubl.xsender.files.ZipFile;
+import io.github.project.openubl.xsender.files.xml.XmlContent;
+import io.github.project.openubl.xsender.files.xml.XmlContentProvider;
 import io.github.project.openubl.xsender.models.Sunat;
 import io.github.project.openubl.xsender.models.SunatResponse;
 import io.github.project.openubl.xsender.sunat.BillServiceDestination;
@@ -42,11 +45,15 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.ValidationException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
+import org.apache.camel.support.builder.Namespaces;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXParseException;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.json.JsonNumber;
 import javax.json.JsonObject;
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.util.Optional;
 
 import static io.github.project.openubl.xsender.camel.utils.CamelUtils.getBillServiceCamelData;
@@ -66,6 +73,9 @@ public class DocumentRoute extends RouteBuilder {
     public static final String SUNAT_RESPONSE = "sunatResponse";
     public static final String SUNAT_TICKET = "sunatTicket";
 
+    Namespaces ns = new Namespaces("ext", "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2")
+            .add("ds", "http://www.w3.org/2000/09/xmldsig#");
+
     @ConfigProperty(name = "openubl.storage.type")
     String storageType;
 
@@ -80,6 +90,14 @@ public class DocumentRoute extends RouteBuilder {
                 // Validate Json
                 .marshal().json(JsonLibrary.Jsonb, JsonObject.class)
                 .to("json-validator:schemas/DocumentInputDto-schema.json")
+                .onException(ValidationException.class)
+                    .setBody(exchange -> DocumentImportResult.builder()
+                            .errorMessage("JSON does not match the required schema")
+                            .build()
+                    )
+                    .handled(true)
+                    .log(LoggingLevel.ERROR, "File does not match Schema")
+                .end()
 
                 .unmarshal().json(JsonLibrary.Jsonb, JsonObject.class)
 
@@ -106,7 +124,6 @@ public class DocumentRoute extends RouteBuilder {
                     exchange.getIn().setHeader(DOCUMENT_KIND, kind);
                     exchange.getIn().setBody(document);
                 })
-                .bean("documentBean", "validateProject")
 
                 // Unmarshal to XBuilder POJO
                 .choice()
@@ -177,28 +194,66 @@ public class DocumentRoute extends RouteBuilder {
                 .end()
                 .bean("documentBean", "enrich")
                 .bean("documentBean", "render")
-                .bean("documentBean", "sign")
                 .to("direct:import-xml")
 
                 // Set final result
-                .setBody(header(DOCUMENT_ID))
-
-                .onException(ProjectNotFoundException.class)
-                    .handled(true)
-                    .log(LoggingLevel.ERROR, "Project ${in.headers.project} not found")
-                .end()
-                .onException(ValidationException.class)
-                    .handled(true)
-                    .log(LoggingLevel.ERROR, "File does not match Schema")
-                .end()
-                .onException(NoCertificateToSignFoundException.class)
-                    .handled(true)
-                    .log(LoggingLevel.ERROR, "No certificate to sign found")
-                .end();
+                .setBody(exchange -> DocumentImportResult.builder()
+                        .documentId(exchange.getIn().getHeader(DOCUMENT_ID, Long.class))
+                        .build()
+                );
 
         // Requires body=org.w3c.dom.Document, DOCUMENT_PROJECT
         from("direct:import-xml")
                 .id("import-xml")
+                .bean("documentBean", "validateProject")
+                .onException(ProjectNotFoundException.class)
+                    .setBody(exchange -> DocumentImportResult.builder()
+                            .errorMessage("Project not found")
+                            .build()
+                    )
+                    .handled(true)
+                    .log(LoggingLevel.ERROR, "Project ${in.headers.project} not found")
+                .end()
+
+                .choice()
+                    .when(xpath("count(//ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/ds:Signature)", Integer.class, ns).isEqualTo(0))
+                        .choice()
+                            .when(header(DOCUMENT_RUC).isNull())
+                                .setHeader(DOCUMENT_FILE, body())
+                                .bean("documentBean", "generateXmlData")
+                                .process(exchange -> {
+                                    XmlContent xmlContent = exchange.getIn().getHeader(DOCUMENT_XML_DATA, XmlContent.class);
+                                    exchange.getIn().setHeader(DOCUMENT_RUC, xmlContent.getRuc());
+                                })
+                            .otherwise()
+                                .log(LoggingLevel.DEBUG, "Ruc already present")
+                        .bean("documentBean", "sign")
+                    .endChoice()
+                    .otherwise()
+                        .log(LoggingLevel.DEBUG, "Document signed already")
+                .end()
+                .onException(NoUBLXMLFileCompliantException.class)
+                    .setBody(exchange -> DocumentImportResult.builder()
+                            .errorMessage("No valid UBL XML file")
+                            .build()
+                    )
+                    .handled(true)
+                .end()
+                .onException(NoCertificateToSignFoundException.class)
+                    .setBody(exchange -> DocumentImportResult.builder()
+                            .errorMessage("No certificate to sign found")
+                            .build()
+                    )
+                    .handled(true)
+                .end()
+                .onException(SAXParseException.class)
+                    .setBody(exchange -> DocumentImportResult.builder()
+                            .errorMessage("XML could not be parsed")
+                            .build()
+                    )
+                    .handled(true)
+                .end()
+
                 .setHeader("shouldZipFile", constant(true))
                 .enrich("direct:" + storageType + "-save-file", (oldExchange, newExchange) -> {
                     String documentFileId = newExchange.getIn().getBody(String.class);
@@ -207,10 +262,14 @@ public class DocumentRoute extends RouteBuilder {
                 })
                 .bean("documentBean", "create")
                 .setBody(exchange -> exchange.getIn().getHeader(DOCUMENT_ID, Long.class))
-                .to("direct:send-xml");
+                .to("seda:send-xml?waitForTaskToComplete=Never")
+                .setBody(exchange -> DocumentImportResult.builder()
+                        .documentId(exchange.getIn().getHeader(DOCUMENT_ID, Long.class))
+                        .build()
+                );
 
         // Requires body=DOCUMENT_ID
-        from("direct:send-xml")
+        from("seda:send-xml")
                 .id("send-xml")
                 .setHeader(DOCUMENT_ID, body())
                 .bean("documentBean", "fetchDocument")
@@ -226,6 +285,14 @@ public class DocumentRoute extends RouteBuilder {
                     .when(header(DOCUMENT_XML_DATA).isNull())
                         .bean("documentBean", "generateXmlData")
                     .endChoice()
+                .end()
+                .bean("documentBean", "saveXmlData")
+                .onException(NoUBLXMLFileCompliantException.class)
+                    .setBody(exchange -> DocumentImportResult.builder()
+                            .errorMessage("No valid UBL XML file")
+                            .build()
+                    )
+                    .handled(true)
                 .end()
 
                 .bean("documentBean", "getSunatData")
@@ -253,7 +320,6 @@ public class DocumentRoute extends RouteBuilder {
                     camelFileData.getHeaders().forEach((k, v) -> exchange.getIn().setHeader(k, v));
                 })
                 .to(Constants.XSENDER_BILL_SERVICE_URI)
-//                //handle exception to set rechazado
 
                 .process(exchange -> {
                     SunatResponse sunatResponse = exchange.getIn().getBody(SunatResponse.class);
