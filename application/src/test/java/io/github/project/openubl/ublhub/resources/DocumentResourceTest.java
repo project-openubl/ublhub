@@ -44,7 +44,6 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-import static io.github.project.openubl.ublhub.models.JobPhaseType.READ_XML_FILE;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.*;
 
@@ -552,58 +551,135 @@ public class DocumentResourceTest extends AbstractBaseTest {
                 .statusCode(400);
     }
 
-//    @Test
-//    public void createInvoiceAndPrint() {
-//        // Given
-//        ProjectDto projectDto = ProjectDto.builder()
-//                .name("myproject")
-//                .description("my description")
-//                .sunat(sunatDto)
-//                .build();
-//
-//        String projectId = givenAuth("alice")
-//                .contentType(ContentType.JSON)
-//                .body(projectDto)
-//                .when()
-//                .post("/")
-//                .then()
-//                .statusCode(201)
-//                .body("id", is(notNullValue()))
-//                .extract().path("id").toString();
-//
-//        // When
-//        DocumentInputDto inputDto = DocumentInputDto.builder()
-//                .kind(DocumentInputDto.Kind.Invoice)
-//                .spec(DocumentInputDto.Spec.builder()
-//                        .document(JsonObject.mapFrom(invoice))
-//                        .build()
-//                )
-//                .build();
-//
-//        String documentId = givenAuth("alice")
-//                .contentType(ContentType.JSON)
-//                .body(JsonObject.mapFrom(inputDto).toString())
-//                .when()
-//                .post("/" + projectId + "/documents")
-//                .then()
-//                .statusCode(201)
-//                .body("id", is(notNullValue()))
-//                .extract().path("id").toString();
-//
-//        // Then
-//        givenAuth("alice")
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + projectId + "/documents/" + documentId + "/print")
-//                .then()
-//                .statusCode(200);
-//
-//        givenAuth("alice")
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/" + projectId + "/documents/" + documentId + "/print?format=html")
-//                .then()
-//                .statusCode(200);
-//    }
+    @Test
+    public void createInvoiceAndPrint() {
+        // Given
+        String project = "myproject";
+
+        ProjectDto projectDto = ProjectDto.builder()
+                .name(project)
+                .description("my description")
+                .sunat(sunatDto)
+                .build();
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(projectDto)
+                .when()
+                .post("/")
+                .then()
+                .statusCode(201);
+
+        // When
+        JsonObject inputDto = Json.createObjectBuilder()
+                .add("kind", DocumentInputDto.Kind.Invoice.toString())
+                .add("spec", Json.createObjectBuilder()
+                        .add("document", toJavax(invoice))
+                        .build()
+                )
+                .build();
+
+        String documentId = givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(inputDto.toString())
+                .when()
+                .post("/" + project + "/documents")
+                .then()
+                .statusCode(201)
+                .body("id", is(notNullValue()))
+                .extract().path("id").toString();
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + project + "/documents/" + documentId + "/print")
+                .then()
+                .statusCode(200);
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/" + project + "/documents/" + documentId + "/print?format=html")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    public void enrichInvoice() {
+        // Given
+        String project = "myproject";
+
+        ProjectDto projectDto = ProjectDto.builder()
+                .name(project)
+                .description("my description")
+                .sunat(sunatDto)
+                .build();
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(projectDto)
+                .when()
+                .post("/")
+                .then()
+                .statusCode(201);
+
+        // When
+        JsonObject inputDto = Json.createObjectBuilder()
+                .add("kind", DocumentInputDto.Kind.Invoice.toString())
+                .add("spec", Json.createObjectBuilder()
+                        .add("document", toJavax(invoice))
+                        .build()
+                )
+                .build();
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(inputDto.toString())
+                .when()
+                .post("/" + project + "/enrich-document")
+                .then()
+                .statusCode(200)
+                .body("moneda", is("PEN"));
+    }
+
+    @Test
+    public void renderInvoice() {
+        // Given
+        String project = "myproject";
+
+        ProjectDto projectDto = ProjectDto.builder()
+                .name(project)
+                .description("my description")
+                .sunat(sunatDto)
+                .build();
+
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(projectDto)
+                .when()
+                .post("/")
+                .then()
+                .statusCode(201);
+
+        // When
+        JsonObject inputDto = Json.createObjectBuilder()
+                .add("kind", DocumentInputDto.Kind.Invoice.toString())
+                .add("spec", Json.createObjectBuilder()
+                        .add("document", toJavax(invoice))
+                        .build()
+                )
+                .build();
+
+        // Then
+        givenAuth("alice")
+                .contentType(ContentType.JSON)
+                .body(inputDto.toString())
+                .when()
+                .post("/" + project + "/render-document")
+                .then()
+                .statusCode(200);
+    }
 }
 

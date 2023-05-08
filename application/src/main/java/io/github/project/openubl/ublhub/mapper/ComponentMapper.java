@@ -20,14 +20,7 @@ import io.github.project.openubl.ublhub.dto.ComponentDto;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.utils.StripSecretsUtils;
 import org.keycloak.representations.idm.ComponentRepresentation;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.BeforeMapping;
-import org.mapstruct.Builder;
-import org.mapstruct.Context;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 import javax.inject.Inject;
 import java.util.HashSet;

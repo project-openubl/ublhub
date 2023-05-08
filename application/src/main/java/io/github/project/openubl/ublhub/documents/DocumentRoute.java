@@ -37,7 +37,6 @@ import io.github.project.openubl.xsender.files.BillServiceFileAnalyzer;
 import io.github.project.openubl.xsender.files.BillServiceXMLFileAnalyzer;
 import io.github.project.openubl.xsender.files.ZipFile;
 import io.github.project.openubl.xsender.files.xml.XmlContent;
-import io.github.project.openubl.xsender.files.xml.XmlContentProvider;
 import io.github.project.openubl.xsender.models.Sunat;
 import io.github.project.openubl.xsender.models.SunatResponse;
 import io.github.project.openubl.xsender.sunat.BillServiceDestination;
@@ -47,13 +46,10 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.support.builder.Namespaces;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.w3c.dom.Document;
 import org.xml.sax.SAXParseException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.json.JsonObject;
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.util.Optional;
 
 import static io.github.project.openubl.xsender.camel.utils.CamelUtils.getBillServiceCamelData;
@@ -87,6 +83,20 @@ public class DocumentRoute extends RouteBuilder {
         // Requires body=java.json.JsonObject + Optional DOCUMENT_PROJECT
         from("direct:import-json")
                 .id("import-json")
+                .to("direct:render-json")
+                .to("direct:import-xml")
+                .setBody(exchange -> DocumentImportResult.builder()
+                        .documentId(exchange.getIn().getHeader(DOCUMENT_ID, Long.class))
+                        .build()
+                );
+
+        from("direct:render-json")
+                .id("render-json")
+                .to("direct:enrich-json")
+                .bean("documentBean", "render");
+
+        from("direct:enrich-json")
+                .id("enrich-json")
                 // Validate Json
                 .marshal().json(JsonLibrary.Jsonb, JsonObject.class)
                 .to("json-validator:schemas/DocumentInputDto-schema.json")
@@ -96,7 +106,7 @@ public class DocumentRoute extends RouteBuilder {
                             .build()
                     )
                     .handled(true)
-                    .log(LoggingLevel.ERROR, "File does not match Schema")
+                    .log(LoggingLevel.DEBUG, "File does not match Schema")
                 .end()
 
                 .unmarshal().json(JsonLibrary.Jsonb, JsonObject.class)
@@ -192,15 +202,7 @@ public class DocumentRoute extends RouteBuilder {
                         })
                     .endChoice()
                 .end()
-                .bean("documentBean", "enrich")
-                .bean("documentBean", "render")
-                .to("direct:import-xml")
-
-                // Set final result
-                .setBody(exchange -> DocumentImportResult.builder()
-                        .documentId(exchange.getIn().getHeader(DOCUMENT_ID, Long.class))
-                        .build()
-                );
+                .bean("documentBean", "enrich");
 
         // Requires body=org.w3c.dom.Document, DOCUMENT_PROJECT
         from("direct:import-xml")

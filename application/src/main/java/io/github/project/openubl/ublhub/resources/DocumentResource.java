@@ -35,10 +35,9 @@ package io.github.project.openubl.ublhub.resources;
 
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
-import io.github.project.openubl.ublhub.documents.DocumentRoute;
 import io.github.project.openubl.ublhub.documents.DocumentImportResult;
+import io.github.project.openubl.ublhub.documents.DocumentRoute;
 import io.github.project.openubl.ublhub.dto.DocumentDto;
-import io.github.project.openubl.ublhub.dto.DocumentInputDto;
 import io.github.project.openubl.ublhub.dto.PageDto;
 import io.github.project.openubl.ublhub.files.FilesManager;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
@@ -187,82 +186,52 @@ public class DocumentResource {
         return mapDocumentImportResult(project, importResult);
     }
 
-//    @POST
-//    @Path("/{project}/enrich-document")
-//    public RestResponse<?> enrichDocuments(
-//            @PathParam("project") @NotNull String project,
-//            @NotNull JsonObject jsonObject
-//    ) {
-//        ProjectEntity projectEntity = projectRepository.findById(project);
-//        if (projectEntity == null) {
-//            return documentDtoNotFoundResponse.get();
-//        }
-//
-//        Boolean isValid = jsonManager.validateJsonObject(jsonObject);
-//        if (!isValid) {
-//            return RestResponse.ResponseBuilder
-//                    .<String>create(RestResponse.Status.BAD_REQUEST)
-//                    .entity("Invalid document")
-//                    .build();
-//        }
-//
-//        DocumentInputDto documentInputDto = jsonManager.getDocumentInputDtoFromJsonObject(jsonObject);
-//
-//        try {
-//            Object inputDocument = xmlGeneratorManager.enrichDocument(documentInputDto);
-//
-//            return RestResponse.ResponseBuilder
-//                    .create(RestResponse.Status.OK)
-//                    .entity(inputDocument)
-//                    .build();
-//        } catch (Throwable e) {
-//            String message = e.getMessage() != null && !e.getMessage().isEmpty() ? e.getMessage() : e.getCause().getMessage();
-//            ErrorDto errorDto = ErrorDto.builder()
-//                    .message(message)
-//                    .build();
-//            return RestResponse.ResponseBuilder
-//                    .create(RestResponse.Status.BAD_REQUEST)
-//                    .entity(errorDto)
-//                    .build();
-//        }
-//    }
+    @POST
+    @Path("/{project}/enrich-document")
+    public RestResponse<?> enrichDocuments(
+            @PathParam("project") @NotNull String project,
+            @NotNull JsonObject jsonObject
+    ) {
+        Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, project);
+        Object result = producerTemplate.requestBodyAndHeaders("direct:enrich-json", jsonObject, headers, Object.class);
 
-//    @POST
-//    @Path("/{projectId}/render-document")
-//    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
-//    public RestResponse<String> renderDocument(
-//            @PathParam("projectId") @NotNull Long projectId,
-//            @NotNull JsonObject jsonObject
-//    ) {
-//        ProjectEntity projectEntity = projectRepository.findById(projectId);
-//        if (projectEntity == null) {
-//            return RestResponse.ResponseBuilder
-//                    .<String>create(RestResponse.Status.NOT_FOUND)
-//                    .build();
-//        }
-//
-//        Boolean isValid = jsonManager.validateJsonObject(jsonObject);
-//        if (!isValid) {
-//            return RestResponse.ResponseBuilder
-//                    .<String>create(RestResponse.Status.OK)
-//                    .entity("Invalid document, it does not comply with schema")
-//                    .build();
-//        }
-//
-//        DocumentInputDto documentInputDto = jsonManager.getDocumentInputDtoFromJsonObject(jsonObject);
-//
-//        String result;
-//        try {
-//            result = xmlGeneratorManager.renderDocument(documentInputDto);
-//        } catch (Throwable e) {
-//            result = e.getMessage() != null && !e.getMessage().isEmpty() ? e.getMessage() : e.getCause().getMessage();
-//        }
-//
-//        return RestResponse.ResponseBuilder
-//                .<String>create(RestResponse.Status.OK)
-//                .entity(result)
-//                .build();
-//    }
+        if (result instanceof DocumentImportResult importResult) {
+            return RestResponse.ResponseBuilder
+                    .create(RestResponse.Status.BAD_REQUEST)
+                    .entity(importResult.getErrorMessage())
+                    .build();
+        } else {
+            return RestResponse.ResponseBuilder
+                    .ok()
+                    .entity(result)
+                    .build();
+        }
+    }
+
+    @POST
+    @Path("/{project}/render-document")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_OCTET_STREAM})
+    public RestResponse<String> renderDocument(
+            @PathParam("project") @NotNull String project,
+            @NotNull JsonObject jsonObject
+    ) {
+        Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, project);
+        Object result = producerTemplate.requestBodyAndHeaders("direct:render-json", jsonObject, headers, Object.class);
+
+        if (result instanceof DocumentImportResult importResult) {
+            return RestResponse.ResponseBuilder
+                    .<String>create(RestResponse.Status.BAD_REQUEST)
+                    .entity(importResult.getErrorMessage())
+                    .build();
+        } else if (result instanceof String xmlString) {
+            return RestResponse.ResponseBuilder
+                    .<String>ok()
+                    .entity(xmlString)
+                    .build();
+        } else {
+           throw new IllegalStateException("Unexpected result");
+        }
+    }
 
     @GET
     @Path("/{project}/documents/{documentId}")

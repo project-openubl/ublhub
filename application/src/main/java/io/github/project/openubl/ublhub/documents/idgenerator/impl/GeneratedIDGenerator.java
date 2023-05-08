@@ -17,13 +17,13 @@
 package io.github.project.openubl.ublhub.documents.idgenerator.impl;
 
 import com.github.f4b6a3.tsid.TsidFactory;
+import io.github.project.openubl.ublhub.documents.idgenerator.ID;
+import io.github.project.openubl.ublhub.documents.idgenerator.IDGenerator;
 import io.github.project.openubl.ublhub.documents.idgenerator.IDGeneratorProvider;
+import io.github.project.openubl.ublhub.documents.idgenerator.IDGeneratorType;
 import io.github.project.openubl.ublhub.models.jpa.GeneratedIDRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.GeneratedIDEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
-import io.github.project.openubl.ublhub.documents.idgenerator.ID;
-import io.github.project.openubl.ublhub.documents.idgenerator.IDGenerator;
-import io.github.project.openubl.ublhub.documents.idgenerator.IDGeneratorType;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 

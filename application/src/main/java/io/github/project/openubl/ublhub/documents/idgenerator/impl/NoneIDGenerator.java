@@ -16,11 +16,11 @@
  */
 package io.github.project.openubl.ublhub.documents.idgenerator.impl;
 
-import io.github.project.openubl.ublhub.documents.idgenerator.IDGeneratorProvider;
-import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.documents.idgenerator.ID;
 import io.github.project.openubl.ublhub.documents.idgenerator.IDGenerator;
+import io.github.project.openubl.ublhub.documents.idgenerator.IDGeneratorProvider;
 import io.github.project.openubl.ublhub.documents.idgenerator.IDGeneratorType;
+import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.Map;

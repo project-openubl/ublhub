@@ -22,11 +22,7 @@ import io.github.project.openubl.ublhub.keys.KeyProvider;
 import io.github.project.openubl.ublhub.keys.component.ComponentFactory;
 import io.github.project.openubl.ublhub.keys.component.ComponentModel;
 import io.github.project.openubl.ublhub.keys.provider.ProviderConfigProperty;
-import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderLiteral;
-import io.github.project.openubl.ublhub.keys.qualifiers.ComponentProviderType;
-import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderLiteral;
-import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyProviderType;
-import io.github.project.openubl.ublhub.keys.qualifiers.RsaKeyType;
+import io.github.project.openubl.ublhub.keys.qualifiers.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Any;

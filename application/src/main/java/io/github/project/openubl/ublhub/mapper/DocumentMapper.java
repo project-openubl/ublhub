@@ -18,11 +18,7 @@ package io.github.project.openubl.ublhub.mapper;
 
 import io.github.project.openubl.ublhub.dto.DocumentDto;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Builder;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
 
 import java.util.Date;
 

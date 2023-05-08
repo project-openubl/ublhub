@@ -16,27 +16,7 @@
  */
 package io.github.project.openubl.ublhub.qute;
 
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog1;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog10;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog12;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog16;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog18;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog19;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog20;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog21;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog22;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog23;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog5;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog51;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog52;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog53;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog54;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog59;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog6;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog7;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog8;
-import io.github.project.openubl.xbuilder.content.catalogs.Catalog9;
+import io.github.project.openubl.xbuilder.content.catalogs.*;
 import io.github.project.openubl.xbuilder.content.models.common.Direccion;
 import io.quarkus.qute.EngineBuilder;
 import io.quarkus.qute.RawString;

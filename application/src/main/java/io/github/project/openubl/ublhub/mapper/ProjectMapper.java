@@ -18,11 +18,7 @@ package io.github.project.openubl.ublhub.mapper;
 
 import io.github.project.openubl.ublhub.dto.ProjectDto;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
-import org.mapstruct.Builder;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "cdi", builder = @Builder(disableBuilder = true))
 public abstract class ProjectMapper {

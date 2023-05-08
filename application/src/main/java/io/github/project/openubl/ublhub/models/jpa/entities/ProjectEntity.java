@@ -17,12 +17,7 @@
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.NaturalId;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.Valid;
