@@ -1,0 +1,33 @@
+{
+  "kind": "Invoice",
+  "metadata": {
+    "project": "test"
+  },
+  "spec": {
+    "document": {
+      "serie": "F001",
+      "numero": 1,
+      "proveedor": {
+        "ruc": "12345678912",
+        "razonSocial": "OpenUBL S.A.C."
+      },
+      "cliente": {
+        "nombre": "Carlos Feria",
+        "tipoDocumentoIdentidad": "RUC",
+        "numeroDocumentoIdentidad": "12121212121"
+      },
+      "detalles": [
+        {
+          "descripcion": "Item1",
+          "cantidad": 10,
+          "precio": 100
+        },
+        {
+          "descripcion": "Item2",
+          "cantidad": 10,
+          "precio": 100
+        }
+      ]
+    }
+  }
+}

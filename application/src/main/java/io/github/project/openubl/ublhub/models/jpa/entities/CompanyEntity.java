@@ -16,22 +16,15 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import lombok.*;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.Column;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 
 @Data
 @Builder
@@ -40,17 +33,30 @@ import javax.validation.constraints.Size;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "company")
-public class CompanyEntity extends BaseEntity {
+public class CompanyEntity extends PanacheEntityBase {
 
-    @Id
-    @Column(name = "id")
-    @Access(AccessType.PROPERTY)
-    private Long id;
+    public static final String RUC_PATTERN = "[0-9]+";
 
-    @NotNull
-    @Size(max = 11)
-    @Column(name = "ruc")
-    private String ruc;
+    @Embeddable
+    @EqualsAndHashCode
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CompanyId implements Serializable {
+        @Pattern(regexp = ProjectEntity.NAME_PATTERN)
+        @NotNull
+        @Column(name = "project")
+        private String project;
+
+        @Size(min = 11, max = 11)
+        @Column(name = "ruc")
+        @Access(AccessType.PROPERTY)
+        private String ruc;
+    }
+
+    @EmbeddedId
+    private CompanyId id;
 
     @NotNull
     @Size(max = 255)
@@ -68,8 +74,7 @@ public class CompanyEntity extends BaseEntity {
     @Embedded
     private SunatEntity sunat;
 
-    @NotNull
-    @Column(name = "project_id")
-    private Long projectId;
-
+    @Version
+    @Column(name = "version")
+    private int version;
 }

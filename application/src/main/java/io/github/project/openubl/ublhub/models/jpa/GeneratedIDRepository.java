@@ -17,7 +17,6 @@
 package io.github.project.openubl.ublhub.models.jpa;
 
 import io.github.project.openubl.ublhub.models.jpa.entities.GeneratedIDEntity;
-import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 
@@ -28,13 +27,13 @@ import javax.transaction.Transactional;
 @ApplicationScoped
 public class GeneratedIDRepository implements PanacheRepositoryBase<GeneratedIDEntity, Long> {
 
-    public GeneratedIDEntity getCurrentID(ProjectEntity projectEntity, String ruc, String documentType) {
+    public GeneratedIDEntity getCurrentID(String project, String ruc, String documentType) {
         Parameters params = Parameters
-                .with("projectId", projectEntity.getId())
+                .with("project", project)
                 .and("ruc", ruc)
                 .and("documentType", documentType);
 
-        return find("projectId = :projectId and ruc = :ruc and documentType = :documentType", params).firstResult();
+        return find("project = :project and ruc = :ruc and documentType = :documentType", params).firstResult();
     }
 
 }

@@ -51,13 +51,13 @@ interface ICompanyForm {
 }
 
 interface IAddCompanyFormProps {
-  projectId: string;
+  projectName: string;
   onSaved: (instance: CompanyDto) => void;
   onCancel: () => void;
 }
 
 export const AddCompanyForm: React.FC<IAddCompanyFormProps> = ({
-  projectId,
+  projectName,
   onSaved,
   onCancel,
 }) => {
@@ -65,9 +65,9 @@ export const AddCompanyForm: React.FC<IAddCompanyFormProps> = ({
 
   const [logoFile, setLogoFile] = useState<File>();
 
-  const companiesQuery = useCompaniesQuery(projectId);
+  const companiesQuery = useCompaniesQuery(projectName);
   const createCompanyMutation = useCreateCompanyMutation(
-    projectId,
+    projectName,
     (company) => {
       onSaved(company);
     }
@@ -97,6 +97,7 @@ export const AddCompanyForm: React.FC<IAddCompanyFormProps> = ({
         ruc: string()
           .trim()
           .required()
+          .matches(/[0-9]+/)
           .min(11)
           .max(11)
           .test("duplicateRuc", (value, options) => {

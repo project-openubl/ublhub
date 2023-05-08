@@ -16,17 +16,17 @@
  */
 package io.github.project.openubl.ublhub.dto;
 
-import io.github.project.openubl.ublhub.ubl.builder.idgenerator.IDGeneratorType;
+import io.github.project.openubl.ublhub.documents.idgenerator.IDGeneratorType;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.keycloak.crypto.Algorithm;
 
+import javax.json.JsonObject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -68,6 +68,8 @@ public class DocumentInputDto {
     @AllArgsConstructor
     @RegisterForReflection
     public static class Metadata {
+        private String project;
+
         @ArraySchema
         private List<String> labels;
     }

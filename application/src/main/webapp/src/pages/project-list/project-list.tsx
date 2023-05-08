@@ -45,7 +45,7 @@ const itemsToRow = (items: ProjectDto[]) => {
     [ROW_FIELD]: item,
     cells: [
       {
-        title: <Link to={`/projects/${item.id}`}>{item.name}</Link>,
+        title: <Link to={`/projects/${item.name}`}>{item.name}</Link>,
       },
       {
         title: item.description,
@@ -119,7 +119,7 @@ export const ProjectList: React.FC = () => {
         extraData: IExtraData
       ) => {
         const row: ProjectDto = getRow(rowData);
-        navigate(`/projects/${row.id}`);
+        navigate(`/projects/${row.name}`);
       },
     },
     {
@@ -218,7 +218,7 @@ export const ProjectList: React.FC = () => {
         <AddProjectWizard
           onSave={(project) => {
             modal.close();
-            navigate(`/projects/${project.id}`);
+            navigate(`/projects/${project.name}`);
           }}
           onClose={modal.close}
         />

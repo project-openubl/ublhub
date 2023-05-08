@@ -27,7 +27,6 @@ import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.security.Permission;
 import io.quarkus.panache.common.Sort;
 import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import javax.annotation.security.RolesAllowed;
@@ -36,14 +35,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -59,8 +51,6 @@ import static org.jboss.resteasy.reactive.RestResponse.Status;
 @ApplicationScoped
 public class ProjectResource {
 
-    private static final Logger LOG = Logger.getLogger(ProjectResource.class);
-
     @Inject
     ProjectMapper projectMapper;
 
@@ -73,10 +63,9 @@ public class ProjectResource {
     @Inject
     TsidFactory tsidFactory;
 
-    private ComponentOwner getOwner(Long projectId) {
+    private ComponentOwner getOwner(String projectName) {
         return ComponentOwner.builder()
-                .type(ComponentOwner.OwnerType.project)
-                .id(projectId)
+                .project(projectName)
                 .build();
     }
 
@@ -93,7 +82,7 @@ public class ProjectResource {
                 .entity("Name is already taken")
                 .build();
 
-        ProjectEntity projectEntity = projectRepository.findByName(checkCompanyDto.getName());
+        ProjectEntity projectEntity = projectRepository.findById(checkCompanyDto.getName());
         if (projectEntity == null) {
             return successResponse.get();
         }
@@ -114,18 +103,15 @@ public class ProjectResource {
                 .<ProjectDto>create(Status.CONFLICT)
                 .build();
 
-        ProjectEntity projectEntity = projectRepository.findByName(projectDto.getName());
+        ProjectEntity projectEntity = projectRepository.findById(projectDto.getName());
         if (projectEntity != null) {
             return errorResponse.apply(projectEntity);
         }
 
-        projectEntity = projectMapper.updateEntityFromDto(projectDto, ProjectEntity.builder()
-                .id(tsidFactory.create().toLong())
-                .build()
-        );
+        projectEntity = projectMapper.updateEntityFromDto(projectDto, ProjectEntity.builder().build());
         projectEntity.persist();
 
-        ComponentOwner owner = getOwner(projectEntity.getId());
+        ComponentOwner owner = getOwner(projectEntity.getName());
         defaultKeyProviders.createProviders(owner);
 
         return successResponse.apply(projectMapper.toDto(projectEntity));
@@ -136,7 +122,7 @@ public class ProjectResource {
     @GET
     @Path("/")
     public List<ProjectDto> getProjects() {
-        Sort sort = Sort.by(ProjectRepository.SortByField.created.toString(), Sort.Direction.Descending);
+        Sort sort = Sort.by(ProjectRepository.SortByField.name.toString(), Sort.Direction.Descending);
         return projectRepository.listAll(sort)
                 .stream()
                 .map(entity -> projectMapper.toDto(entity))
@@ -146,8 +132,8 @@ public class ProjectResource {
     @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
     @Operation(summary = "Get project", description = "Get one project")
     @GET
-    @Path("/{projectId}")
-    public RestResponse<ProjectDto> getProject(@PathParam("projectId") @NotNull Long projectId) {
+    @Path("/{projectName}")
+    public RestResponse<ProjectDto> getProject(@PathParam("projectName") @NotNull String projectName) {
         Function<ProjectDto, RestResponse<ProjectDto>> successResponse = dto -> ResponseBuilder
                 .<ProjectDto>create(Status.OK)
                 .entity(dto)
@@ -156,7 +142,7 @@ public class ProjectResource {
                 .<ProjectDto>create(Status.NOT_FOUND)
                 .build();
 
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        ProjectEntity projectEntity = projectRepository.findById(projectName);
         if (projectEntity == null) {
             return notFoundResponse.get();
         }
@@ -168,9 +154,9 @@ public class ProjectResource {
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Update project", description = "Update one project")
     @PUT
-    @Path("/{projectId}")
+    @Path("/{projectName}")
     public RestResponse<ProjectDto> updateProject(
-            @PathParam("projectId") @NotNull Long projectId,
+            @PathParam("projectName") @NotNull String projectName,
             @NotNull ProjectDto projectDto
     ) {
         Function<ProjectDto, RestResponse<ProjectDto>> successResponse = dto -> ResponseBuilder
@@ -181,12 +167,14 @@ public class ProjectResource {
                 .<ProjectDto>create(Status.NOT_FOUND)
                 .build();
 
-        ProjectEntity projectEntity = projectRepository.findById(projectId);
+        ProjectEntity projectEntity = projectRepository.findById(projectName);
         if (projectEntity == null) {
             return notFoundResponse.get();
         }
 
         projectMapper.updateEntityFromDto(projectDto, projectEntity);
+
+        projectEntity.setName(projectName); // To prevent changing PK
         projectEntity.persist();
 
         return successResponse.apply(projectMapper.toDto(projectEntity));
@@ -195,8 +183,8 @@ public class ProjectResource {
     @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Delete project", description = "Delete one project")
     @DELETE
-    @Path("/{projectId}")
-    public RestResponse<Void> deleteProject(@PathParam("projectId") @NotNull Long projectId) {
+    @Path("/{projectName}")
+    public RestResponse<Void> deleteProject(@PathParam("projectName") @NotNull String projectName) {
         Supplier<RestResponse<Void>> successResponse = () -> ResponseBuilder
                 .<Void>create(Status.NO_CONTENT)
                 .build();
@@ -204,7 +192,7 @@ public class ProjectResource {
                 .<Void>create(Status.NOT_FOUND)
                 .build();
 
-        boolean result = projectRepository.deleteById(projectId);
+        boolean result = projectRepository.deleteById(projectName);
         Supplier<RestResponse<Void>> response = result ? successResponse : notFoundResponse;
         return response.get();
     }

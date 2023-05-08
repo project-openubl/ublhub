@@ -17,21 +17,9 @@
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.HashSet;
@@ -50,7 +38,7 @@ public class ComponentEntity extends PanacheEntityBase {
     @Id
     @Column(name = "id")
     @Access(AccessType.PROPERTY)
-    private Long id;
+    private String id;
 
     @NotNull
     @Size(max = 255)
@@ -66,7 +54,7 @@ public class ComponentEntity extends PanacheEntityBase {
     private String providerId;
 
     @Column(name = "parent_id")
-    private Long parentId;
+    private String parentId;
 
     @Size(max = 255)
     @Column(name = "sub_type")
@@ -75,9 +63,9 @@ public class ComponentEntity extends PanacheEntityBase {
     @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.ALL}, orphanRemoval = true, mappedBy = "component")
     private Set<ComponentConfigEntity> componentConfigs = new HashSet<>();
 
-    @Column(name = "project_id")
-    private Long projectId;
+    @Column(name = "project")
+    private String project;
 
-    @Column(name = "company_id")
-    private Long companyId;
+    @Column(name = "ruc")
+    private String ruc;
 }

@@ -52,13 +52,13 @@ import RETENTION from "jsons/retention.json";
 const EDITOR_HEIGHT = "500px";
 
 interface IDocumentEditor {
-  projectId: string;
+  projectName: string;
   onSaved: (instance: DocumentDto) => void;
   onCancel: () => void;
 }
 
 export const DocumentEditor: React.FC<IDocumentEditor> = ({
-  projectId,
+  projectName,
   onSaved,
   onCancel,
 }) => {
@@ -74,7 +74,7 @@ export const DocumentEditor: React.FC<IDocumentEditor> = ({
   const [viewXmlCode, setViewXmlCode] = useState(false);
 
   const { mutate: enrichDocumentMutate } = useEnrichDocumentMutation(
-    projectId,
+    projectName,
     (instance) => {
       const yamlString = stringify(instance, {
         sortMapEntries: (a: Pair<any, any>, b: Pair<any, any>) => {
@@ -96,14 +96,14 @@ export const DocumentEditor: React.FC<IDocumentEditor> = ({
   );
 
   const { mutate: renderDocumentMutate } = useRenderDocumentMutation(
-    projectId,
+    projectName,
     (instance) => {
       setXmlCode(instance);
     }
   );
 
   const createDocumentMutation = useCreateDocumentMutation(
-    projectId,
+    projectName,
     (instance) => {
       onSaved(instance);
     }

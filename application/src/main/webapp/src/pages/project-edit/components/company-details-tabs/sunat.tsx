@@ -43,9 +43,9 @@ export const Sunat: React.FC<ISunatProps> = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const companiesQuery = useCompaniesQuery(project.id || null);
+  const companiesQuery = useCompaniesQuery(project.name || null);
   const company = useMemo(() => {
-    return companiesQuery.data?.find((e) => e.id === companyInput.id);
+    return companiesQuery.data?.find((e) => e.ruc === companyInput.ruc);
   }, [companyInput, companiesQuery.data]);
 
   const modal = useModal<"EDIT", CompanyDto>();
@@ -53,7 +53,7 @@ export const Sunat: React.FC<ISunatProps> = ({
   const { pushNotification } = React.useContext(NotificationContext);
 
   const updateCompanyMutation = useUpdateCompanyMutation(
-    project.id || null,
+    project.name || null,
     (p) => {
       pushNotification({
         title: t("info.data-saved"),

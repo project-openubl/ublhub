@@ -1,0 +1,31 @@
+{
+  "kind": "VoidedDocuments",
+  "metadata": {
+    "project": "test"
+  },
+  "spec": {
+    "document": {
+      "numero": 1,
+      "fechaEmision": "2022-01-31",
+      "fechaEmisionComprobantes": "2022-01-29",
+      "proveedor": {
+        "ruc": "12345678912",
+        "razonSocial": "Softgreen S.A.C."
+      },
+      "comprobantes": [
+        {
+          "serie": "F001",
+          "numero": 1,
+          "tipoComprobante": "01",
+          "descripcionSustento": "Mi sustento1"
+        },
+        {
+          "serie": "F001",
+          "numero": 2,
+          "tipoComprobante": "01",
+          "descripcionSustento": "Mi sustento2"
+        }
+      ]
+    }
+  }
+}

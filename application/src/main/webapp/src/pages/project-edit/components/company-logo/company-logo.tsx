@@ -5,15 +5,15 @@ import { Spinner } from "@patternfly/react-core";
 import { useCompanyLogoQuery } from "queries/companies";
 
 interface ICompanyLogoProps {
-  projectId: string;
-  companyId: string;
+  projectName: string;
+  companyRuc: string;
 }
 
 export const CompanyLogo: React.FC<ICompanyLogoProps> = ({
-  projectId,
-  companyId,
+  projectName,
+  companyRuc,
 }) => {
-  const logoQuery = useCompanyLogoQuery(projectId, companyId);
+  const logoQuery = useCompanyLogoQuery(projectName, companyRuc);
 
   let result;
   if (logoQuery.isLoading) {

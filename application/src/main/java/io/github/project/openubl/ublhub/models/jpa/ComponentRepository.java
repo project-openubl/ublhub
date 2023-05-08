@@ -24,30 +24,26 @@ import io.github.project.openubl.ublhub.keys.component.utils.ComponentUtil;
 import io.github.project.openubl.ublhub.models.jpa.entities.ComponentConfigEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ComponentEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
-import io.quarkus.panache.common.Parameters;
 import org.keycloak.common.util.MultivaluedHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
-
-import static io.github.project.openubl.ublhub.keys.component.ComponentOwner.OwnerType.project;
 
 @Transactional
 @ApplicationScoped
-public class ComponentRepository implements PanacheRepositoryBase<ComponentEntity, Long> {
+public class ComponentRepository implements PanacheRepositoryBase<ComponentEntity, String> {
 
     @Inject
     ComponentUtil componentUtil;
 
     @Inject
     TsidFactory tsidFactory;
-
-    private String getOwnerFieldName(ComponentOwner owner) {
-        return owner.getType().equals(project) ? "projectId" : "companyId";
-    }
 
     public ComponentModel addComponentModel(ComponentOwner owner, ComponentModel model) {
         return importComponentModel(owner, model);
@@ -63,24 +59,22 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
 
         ComponentEntity c = new ComponentEntity();
         if (model.getId() == null) {
-            c.setId(tsidFactory.create().toLong());
+            c.setId(UUID.randomUUID().toString());
         } else {
             c.setId(model.getId());
         }
         c.setName(model.getName());
         c.setParentId(model.getParentId());
         if (model.getParentId() == null) {
-            c.setParentId(owner.getId());
-            model.setParentId(owner.getId());
+            c.setParentId(owner.getProject());
+            model.setParentId(owner.getProject());
         }
         c.setProviderType(model.getProviderType());
         c.setProviderId(model.getProviderId());
         c.setSubType(model.getSubType());
-        if (owner.getType().equals(project)) {
-            c.setProjectId(owner.getId());
-        } else {
-            c.setCompanyId(owner.getId());
-        }
+
+        c.setProject(owner.getProject());
+        c.setRuc(owner.getRuc());
 
         c.persist();
 
@@ -126,61 +120,104 @@ public class ComponentRepository implements PanacheRepositoryBase<ComponentEntit
         return ComponentEntity.deleteById(component.getId());
     }
 
-    public long removeComponents(ComponentOwner owner, Long parentId) {
-        String query = new StringBuilder(getOwnerFieldName(owner)).append(" = :ownerId")
+    public long removeComponents(ComponentOwner owner, String parentId) {
+        String query = new StringBuilder("project = :project")
+                .append(owner.getRuc() != null ? " and ruc = :ruc" : "")
                 .append(" and parentId = :parentId")
                 .toString();
 
-        return ComponentEntity.delete(query, Parameters.with("ownerId", owner.getId()).and("parentId", parentId));
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("project", owner.getProject());
+        if (owner.getRuc() != null) {
+            parameters.put("ruc", owner.getRuc());
+        }
+        parameters.put("parentId", parentId);
+
+        return ComponentEntity.delete(query, parameters);
     }
 
     public List<ComponentModel> getComponents(ComponentOwner owner) {
         String query = new StringBuilder("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs")
-                .append(" WHERE c.").append(getOwnerFieldName(owner)).append(" = :ownerId")
+                .append(" WHERE c.project = :project")
+                .append(owner.getRuc() != null ? " and c.ruc = :ruc" : "")
                 .toString();
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("project", owner.getProject());
+        if (owner.getRuc() != null) {
+            parameters.put("ruc", owner.getRuc());
+        }
+
         return ComponentEntity
-                .find(query, Parameters.with("ownerId", owner.getId()))
+                .find(query, parameters)
                 .<ComponentEntity>list()
                 .stream()
                 .map(this::entityToModel)
                 .collect(Collectors.toList());
     }
 
-    public List<ComponentModel> getComponents(ComponentOwner owner, Long parentId) {
+    public List<ComponentModel> getComponents(ComponentOwner owner, String parentId) {
         String query = new StringBuilder("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs")
-                .append(" WHERE c.").append(getOwnerFieldName(owner)).append(" = :ownerId")
+                .append(" WHERE c.project = :project")
+                .append(owner.getRuc() != null ? " and c.ruc = :ruc" : "")
                 .append(" and c.parentId = :parentId")
                 .toString();
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("project", owner.getProject());
+        if (owner.getRuc() != null) {
+            parameters.put("ruc", owner.getRuc());
+        }
+        parameters.put("parentId", parentId);
+
         return ComponentEntity
-                .find(query, Parameters.with("ownerId", owner.getId()).and("parentId", parentId))
+                .find(query, parameters)
                 .<ComponentEntity>list()
                 .stream()
                 .map(this::entityToModel)
                 .collect(Collectors.toList());
     }
 
-    public List<ComponentModel> getComponents(ComponentOwner owner, Long parentId, String providerType) {
+    public List<ComponentModel> getComponents(ComponentOwner owner, String parentId, String providerType) {
         String query = new StringBuilder("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs")
-                .append(" WHERE c.").append(getOwnerFieldName(owner)).append(" = :ownerId")
+                .append(" WHERE c.project = :project")
+                .append(owner.getRuc() != null ? " and c.ruc = :ruc" : "")
                 .append(" and c.parentId = :parentId")
                 .append(" and c.providerType = :providerType")
                 .toString();
 
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("project", owner.getProject());
+        if (owner.getRuc() != null) {
+            parameters.put("ruc", owner.getRuc());
+        }
+        parameters.put("parentId", parentId);
+        parameters.put("providerType", providerType);
+
         return ComponentEntity
-                .find(query, Parameters.with("ownerId", owner.getId()).and("parentId", parentId).and("providerType", providerType))
+                .find(query, parameters)
                 .<ComponentEntity>list()
                 .stream()
                 .map(this::entityToModel)
                 .collect(Collectors.toList());
     }
 
-    public ComponentModel getComponent(ComponentOwner owner, Long id) {
+    public ComponentModel getComponent(ComponentOwner owner, String id) {
         String query = new StringBuilder("SELECT DISTINCT c FROM ComponentEntity c LEFT JOIN FETCH c.componentConfigs")
-                .append(" WHERE c.").append(getOwnerFieldName(owner)).append(" = :ownerId")
+                .append(" WHERE c.project = :project")
+                .append(owner.getRuc() != null ? " and c.ruc = :ruc" : "")
                 .append(" and c.id = :id")
                 .toString();
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("project", owner.getProject());
+        if (owner.getRuc() != null) {
+            parameters.put("ruc", owner.getRuc());
+        }
+        parameters.put("id", id);
+
         return ComponentEntity
-                .<ComponentEntity>find(query, Parameters.with("ownerId", owner.getId()).and("id", id))
+                .<ComponentEntity>find(query, parameters)
                 .firstResultOptional()
                 .map(this::entityToModel)
                 .orElse(null);

@@ -89,9 +89,9 @@ const Companies: React.FC = () => {
   const confirmationModal = useConfirmationContext();
 
   const project = useOutletContext<ProjectDto | null>();
-  const companiesQuery = useCompaniesQuery(project?.id || null);
+  const companiesQuery = useCompaniesQuery(project?.name || null);
   const deleteCompanyMutation = useDeleteCompanyMutation(
-    project?.id || null,
+    project?.name || null,
     () => {
       confirmationModal.close();
     }
@@ -106,7 +106,7 @@ const Companies: React.FC = () => {
   } = useSelectionState<CompanyDto>({
     items: companiesQuery.data || [],
     isEqual: (a, b) => {
-      return a.id === b.id;
+      return a.ruc === b.ruc;
     },
   });
 
@@ -234,7 +234,7 @@ const Companies: React.FC = () => {
                     <DataListItem
                       key={item.ruc}
                       style={
-                        drawerModal.data?.id === item.id
+                        drawerModal.data?.ruc === item.ruc
                           ? {
                               borderRightStyle: "solid",
                               borderRightColor: "var(--pf-global--link--Color)",
@@ -281,10 +281,10 @@ const Companies: React.FC = () => {
                               )}
                             </DataListCell>,
                             <DataListCell key="logo">
-                              {project?.id && item.id && (
+                              {project?.name && item.ruc && (
                                 <CompanyLogo
-                                  projectId={project.id}
-                                  companyId={item.id}
+                                  projectName={project.name}
+                                  companyRuc={item.ruc}
                                 />
                               )}
                             </DataListCell>,
@@ -367,7 +367,7 @@ const Companies: React.FC = () => {
       >
         {project && (
           <AddCompanyForm
-            projectId={project.id!}
+            projectName={project.name!}
             onSaved={companyModal.close}
             onCancel={companyModal.close}
           />

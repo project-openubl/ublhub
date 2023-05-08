@@ -42,7 +42,7 @@ public class DefaultKeyProviders {
     private ComponentModel createRsaKeyProvider(String name, KeyUse keyUse, ComponentOwner owner) {
         ComponentModel generated = new ComponentModel();
         generated.setName(name);
-        generated.setParentId(owner.getId());
+        generated.setParentId(owner.getProject());
         generated.setProviderId("rsa-generated");
         generated.setProviderType(KeyProvider.class.getName());
 
@@ -55,7 +55,7 @@ public class DefaultKeyProviders {
     }
 
     protected boolean hasProvider(ComponentOwner owner, String providerId) {
-        return componentRepository.getComponents(owner, owner.getId(), KeyProvider.class.getName()).stream()
+        return componentRepository.getComponents(owner, owner.getProject(), KeyProvider.class.getName()).stream()
                 .anyMatch(component -> Objects.equals(component.getProviderId(), providerId));
     }
 }

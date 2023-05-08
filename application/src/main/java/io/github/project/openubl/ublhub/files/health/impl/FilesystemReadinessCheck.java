@@ -26,7 +26,7 @@ import javax.enterprise.context.ApplicationScoped;
 @StorageProvider(StorageProvider.Type.FILESYSTEM)
 public class FilesystemReadinessCheck implements StorageReadinessCheck {
 
-    @ConfigProperty(name = "openubl.storage.filesystem.folder")
+    @ConfigProperty(name = "openubl.storage.filesystem.directory")
     String filesystemFolder;
 
     @Override

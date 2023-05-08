@@ -11,33 +11,33 @@ import { CompanyDto } from "api/models";
 import { usePollingContext } from "shared/context";
 
 export const useCompaniesQuery = (
-  projectId: string | null
+  projectName: string | null
 ): UseQueryResult<CompanyDto[], AxiosError> => {
   const result = useQuery<CompanyDto[], AxiosError>({
-    queryKey: ["companies", projectId],
+    queryKey: ["companies", projectName],
     queryFn: async () => {
-      const url = `/projects/${projectId}/companies`;
+      const url = `/projects/${projectName}/companies`;
       return (await axios.get<CompanyDto[]>(url)).data;
     },
     refetchInterval: usePollingContext().refetchInterval,
-    enabled: !!projectId,
+    enabled: !!projectName,
   });
   return result;
 };
 
 export const useCreateCompanyMutation = (
-  projectId: string | null,
+  projectName: string | null,
   onSuccess?: (company: CompanyDto) => void
 ): UseMutationResult<CompanyDto, AxiosError, CompanyDto> => {
   const queryClient = useQueryClient();
   return useMutation<CompanyDto, AxiosError, CompanyDto>(
     async (company) => {
-      const url = `/projects/${projectId}/companies`;
+      const url = `/projects/${projectName}/companies`;
       return (await axios.post<CompanyDto>(url, company)).data;
     },
     {
       onSuccess: (response) => {
-        queryClient.invalidateQueries(["companies", projectId]);
+        queryClient.invalidateQueries(["companies", projectName]);
         onSuccess && onSuccess(response);
       },
     }
@@ -45,19 +45,19 @@ export const useCreateCompanyMutation = (
 };
 
 export const useUpdateCompanyMutation = (
-  projectId: string | null,
+  projectName: string | null,
   onSuccess?: (project: CompanyDto) => void
 ): UseMutationResult<CompanyDto, AxiosError, CompanyDto> => {
   const queryClient = useQueryClient();
   return useMutation<CompanyDto, AxiosError, CompanyDto>(
     async (company) => {
-      const url = `/projects/${projectId}/companies/${company.id}`;
+      const url = `/projects/${projectName}/companies/${company.ruc}`;
       return (await axios.put<CompanyDto>(url, company)).data;
     },
     {
       onSuccess: (response) => {
-        queryClient.invalidateQueries(["companies", projectId]);
-        queryClient.invalidateQueries(["logo", projectId]);
+        queryClient.invalidateQueries(["companies", projectName]);
+        queryClient.invalidateQueries(["logo", projectName]);
         onSuccess && onSuccess(response);
       },
     }
@@ -65,20 +65,20 @@ export const useUpdateCompanyMutation = (
 };
 
 export const useDeleteCompanyMutation = (
-  projectId: string | null,
+  projectName: string | null,
   onSuccess?: () => void
 ): UseMutationResult<void, AxiosError, CompanyDto, unknown> => {
   const queryClient = useQueryClient();
 
   return useMutation<void, AxiosError, CompanyDto>(
     async (company: CompanyDto) => {
-      const url = `/projects/${projectId}/companies/${company.id}`;
+      const url = `/projects/${projectName}/companies/${company.ruc}`;
       await axios.delete<void>(url);
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(["companies", projectId]);
-        queryClient.invalidateQueries(["logo", projectId]);
+        queryClient.invalidateQueries(["companies", projectName]);
+        queryClient.invalidateQueries(["logo", projectName]);
         onSuccess && onSuccess();
       },
     }
@@ -86,17 +86,17 @@ export const useDeleteCompanyMutation = (
 };
 
 export const useCompanyLogoQuery = (
-  projectId: string | null,
-  companyId: string | null
+  projectName: string | null,
+  ruc: string | null
 ): UseQueryResult<string, AxiosError> => {
   const result = useQuery<string, AxiosError>({
-    queryKey: ["logo", projectId, companyId],
+    queryKey: ["logo", projectName, ruc],
     queryFn: async () => {
-      const url = `/projects/${projectId}/companies/${companyId}/logo`;
+      const url = `/projects/${projectName}/companies/${ruc}/logo`;
       return (await axios.get<string>(url)).data;
     },
     refetchInterval: false,
-    enabled: !!projectId,
+    enabled: !!projectName,
   });
   return result;
 };

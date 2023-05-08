@@ -19,20 +19,21 @@ package io.github.project.openubl.ublhub.keys.component;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 @Data
 @Builder
 public class ComponentOwner {
 
-    private Long id;
-    private OwnerType type;
-
-    public enum OwnerType {
-        project,
-        company
-    }
+    private String project;
+    private String ruc;
 
     public String getPrettyName() {
-        return type + ":" + id;
+        return Stream.of(project, ruc)
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining(":"));
     }
 
 }

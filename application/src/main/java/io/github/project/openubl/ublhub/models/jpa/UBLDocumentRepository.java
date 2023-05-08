@@ -37,14 +37,10 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
 
     public static final String[] SORT_BY_FIELDS = {"created"};
 
-    public UBLDocumentEntity findById(ProjectEntity project, Long id) {
-        return findById(project.getId(), id);
-    }
-
-    public UBLDocumentEntity findById(Long projectId, Long id) {
-        Parameters params = Parameters.with("projectId", projectId).and("id", id);
+    public UBLDocumentEntity findById(String project, Long id) {
+        Parameters params = Parameters.with("project", project).and("id", id);
         return UBLDocumentEntity
-                .find("From UBLDocumentEntity as d where d.projectId = :projectId and d.id = :id", params)
+                .find("From UBLDocumentEntity as d where d.project = :project and d.id = :id", params)
                 .firstResult();
     }
 
@@ -53,8 +49,8 @@ public class UBLDocumentRepository implements PanacheRepositoryBase<UBLDocumentE
     }
 
     public SearchBean<UBLDocumentEntity> list(ProjectEntity project, String filterText, FilterDocumentBean filters, PageBean pageBean, List<SortBean> sortBy) {
-        StringBuilder queryBuilder = new StringBuilder("select d from UBLDocumentEntity d where d.projectId = :projectId");
-        Parameters params = Parameters.with("projectId", project.getId());
+        StringBuilder queryBuilder = new StringBuilder("select d from UBLDocumentEntity d where d.project = :project");
+        Parameters params = Parameters.with("project", project.getName());
 
         if (filterText != null && !filterText.trim().isEmpty()) {
             queryBuilder.append(" and lower(d.xmlData.serieNumero) like :filterText");

@@ -35,9 +35,9 @@ export const General: React.FC<IGeneralProps> = ({
   const { t } = useTranslation();
   const modal = useModal<"EDIT", CompanyDto>();
 
-  const companiesQuery = useCompaniesQuery(project.id || null);
+  const companiesQuery = useCompaniesQuery(project.name || null);
   const company = useMemo(() => {
-    return companiesQuery.data?.find((e) => e.id === companyInput.id);
+    return companiesQuery.data?.find((e) => e.ruc === companyInput.ruc);
   }, [companyInput, companiesQuery.data]);
 
   return (
@@ -59,8 +59,8 @@ export const General: React.FC<IGeneralProps> = ({
             <DescriptionListGroup>
               <DescriptionListTerm>Logo</DescriptionListTerm>
               <DescriptionListDescription>
-                {project?.id && company?.id && (
-                  <CompanyLogo projectId={project.id} companyId={company.id} />
+                {project?.name && company?.ruc && (
+                  <CompanyLogo projectName={project.name} companyRuc={company.ruc} />
                 )}
               </DescriptionListDescription>
             </DescriptionListGroup>

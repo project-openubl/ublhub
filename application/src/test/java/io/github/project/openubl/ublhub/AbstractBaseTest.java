@@ -21,6 +21,8 @@ import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.flywaydb.core.Flyway;
 
+import java.io.StringReader;
+
 import static io.restassured.RestAssured.given;
 
 public abstract class AbstractBaseTest {
@@ -77,5 +79,15 @@ public abstract class AbstractBaseTest {
                 .when()
                 .post(oidcAuthServerUrl + "/protocol/openid-connect/token")
                 .then().extract().path("access_token").toString();
+    }
+
+    public static javax.json.JsonObject toJavax(Object object) {
+        io.vertx.core.json.JsonObject vertxJson = io.vertx.core.json.JsonObject.mapFrom(object);
+
+        javax.json.JsonReader jsonReader = javax.json.Json.createReader(new StringReader(vertxJson.toString()));
+        javax.json.JsonObject javaxJson = jsonReader.readObject();
+        jsonReader.close();
+
+        return javaxJson;
     }
 }

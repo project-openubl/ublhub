@@ -18,11 +18,7 @@ package io.github.project.openubl.ublhub.mapper;
 
 import io.github.project.openubl.ublhub.dto.ProjectDto;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
-import org.mapstruct.Builder;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "cdi", builder = @Builder(disableBuilder = true))
 public abstract class ProjectMapper {
@@ -34,7 +30,6 @@ public abstract class ProjectMapper {
     @Mapping(target = "sunat.password", ignore = true)
     public abstract ProjectDto toDto(ProjectEntity entity);
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "sunat.sunatUrlFactura", source = "sunat.facturaUrl")
     @Mapping(target = "sunat.sunatUrlGuiaRemision", source = "sunat.guiaUrl")
     @Mapping(target = "sunat.sunatUrlPercepcionRetencion", source = "sunat.retencionUrl")

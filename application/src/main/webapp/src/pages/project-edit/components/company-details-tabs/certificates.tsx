@@ -87,15 +87,15 @@ export const Certificates: React.FC<ICertificatesProps> = ({
   const { t } = useTranslation();
   const confirmationModal = useConfirmationContext();
 
-  const keysQuery = useKeysQuery(project?.id || null, company.id || null);
+  const keysQuery = useKeysQuery(project?.name || null, company.ruc || null);
   const serverInfoQuery = useServerInfoQuery();
   const componentskeysQuery = useComponentsQuery(
-    project?.id || null,
-    company.id || null
+    project?.name || null,
+    company.ruc || null
   );
   const deleteComponentMutation = useDeleteComponentMutation(
-    project?.id || null,
-    company.id || null,
+    project?.name || null,
+    company.ruc || null,
     () => {
       confirmationModal.close();
     }
@@ -360,10 +360,10 @@ export const Certificates: React.FC<ICertificatesProps> = ({
         isOpen={componentFormModal.isOpen}
         onClose={componentFormModal.close}
       >
-        {project && project.id && componentFormModal.data && (
+        {project && project.name && componentFormModal.data && (
           <ComponentForm
-            projectId={project.id}
-            companyId={company.id}
+            projectName={project.name}
+            companyRuc={company.ruc}
             componentType={componentFormModal.data.componentType}
             component={componentFormModal.data.component}
             onSaved={componentFormModal.close}

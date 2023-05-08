@@ -18,18 +18,18 @@ import { DocumentDto } from "api/models";
 import { prettifyXML } from "utils/modelUtils";
 
 interface IXmlCdrPreviewProps {
-  projectId: string;
+  projectName: string;
   document: DocumentDto;
   variant: "xml" | "cdr";
 }
 
 export const XmlCdrPreview: React.FC<IXmlCdrPreviewProps> = ({
-  projectId,
+  projectName,
   document: documentDto,
   variant,
 }) => {
   const documentXmlCdrMutation = useDocumentXmlCdrQuery(
-    projectId,
+    projectName,
     documentDto.id || null,
     variant
   );

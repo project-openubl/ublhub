@@ -42,13 +42,13 @@ export class IDocumentsQueryParamsBuilder {
 }
 
 export const useDocumentsQuery = (
-  projectId: string | null,
+  projectName: string | null,
   params: IDocumentsQueryParams
 ): UseQueryResult<PageDto<DocumentDto>, AxiosError> => {
   const result = useQuery<PageDto<DocumentDto>, AxiosError>({
-    queryKey: ["documents", projectId, params],
+    queryKey: ["documents", projectName, params],
     queryFn: async () => {
-      const url = `/projects/${projectId}/documents`;
+      const url = `/projects/${projectName}/documents`;
 
       const searchParams = new URLSearchParams();
       Object.entries(params)
@@ -62,18 +62,18 @@ export const useDocumentsQuery = (
       ).data;
     },
     refetchInterval: usePollingContext().refetchInterval,
-    enabled: !!projectId,
+    enabled: !!projectName,
   });
   return result;
 };
 
 export const useEnrichDocumentMutation = (
-  projectId: string | null,
+  projectName: string | null,
   onSuccess?: (document: DocumentInputDto) => void
 ): UseMutationResult<DocumentInputDto, AxiosError, DocumentInputDto> => {
   return useMutation<DocumentInputDto, AxiosError, DocumentInputDto>(
     async (documentInput) => {
-      const url = `/projects/${projectId}/enrich-document`;
+      const url = `/projects/${projectName}/enrich-document`;
       const response = (await axios.post<DocumentDto>(url, documentInput)).data;
       return {
         ...documentInput,
@@ -92,12 +92,12 @@ export const useEnrichDocumentMutation = (
 };
 
 export const useRenderDocumentMutation = (
-  projectId: string | null,
+  projectName: string | null,
   onSuccess?: (document: string) => void
 ): UseMutationResult<string, AxiosError, any> => {
   return useMutation<string, AxiosError, any>(
     async (documentInput) => {
-      const url = `/projects/${projectId}/render-document`;
+      const url = `/projects/${projectName}/render-document`;
       return (await axios.post<string>(url, documentInput)).data;
     },
     {
@@ -109,18 +109,18 @@ export const useRenderDocumentMutation = (
 };
 
 export const useCreateDocumentMutation = (
-  projectId: string | null,
+  projectName: string | null,
   onSuccess?: (document: DocumentDto) => void
 ): UseMutationResult<DocumentDto, AxiosError, DocumentInputDto> => {
   const queryClient = useQueryClient();
   return useMutation<DocumentDto, AxiosError, DocumentInputDto>(
     async (documentInput) => {
-      const url = `/projects/${projectId}/documents`;
+      const url = `/projects/${projectName}/documents`;
       return (await axios.post<DocumentDto>(url, documentInput)).data;
     },
     {
       onSuccess: (response) => {
-        queryClient.invalidateQueries(["documents", projectId]);
+        queryClient.invalidateQueries(["documents", projectName]);
         onSuccess && onSuccess(response);
       },
     }
@@ -128,30 +128,30 @@ export const useCreateDocumentMutation = (
 };
 
 export const useDocumentXmlCdrQuery = (
-  projectId: string | null,
+  projectName: string | null,
   documentId: string | null,
   variant: "xml" | "cdr"
 ): UseQueryResult<string, AxiosError> => {
   const result = useQuery<string, AxiosError>({
-    queryKey: [variant, projectId, documentId],
+    queryKey: [variant, projectName, documentId],
     queryFn: async () => {
-      const url = `/projects/${projectId}/documents/${documentId}/${variant}`;
+      const url = `/projects/${projectName}/documents/${documentId}/${variant}`;
       return (await axios.get<string>(url)).data;
     },
     refetchInterval: false,
-    enabled: !!projectId,
+    enabled: !!projectName,
   });
   return result;
 };
 
 export const useDocumentPdfUrlQuery = (
-  projectId: string | null,
+  projectName: string | null,
   documentId: string | null
 ): UseQueryResult<string, AxiosError> => {
   const result = useQuery<string, AxiosError>({
-    queryKey: ["pdf", projectId, documentId],
+    queryKey: ["pdf", projectName, documentId],
     queryFn: () => {
-      const url = `/projects/${projectId}/documents/${documentId}/print`;
+      const url = `/projects/${projectName}/documents/${documentId}/print`;
       const config: AxiosRequestConfig = {
         url: url,
       };
@@ -159,7 +159,7 @@ export const useDocumentPdfUrlQuery = (
       return axios.defaults.baseURL + axios.getUri(config);
     },
     refetchInterval: false,
-    enabled: !!projectId,
+    enabled: !!projectName,
   });
   return result;
 };
