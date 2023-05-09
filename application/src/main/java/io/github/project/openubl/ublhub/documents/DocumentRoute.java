@@ -40,15 +40,20 @@ import io.github.project.openubl.xsender.files.xml.XmlContent;
 import io.github.project.openubl.xsender.models.Sunat;
 import io.github.project.openubl.xsender.models.SunatResponse;
 import io.github.project.openubl.xsender.sunat.BillServiceDestination;
+import org.apache.camel.ExchangePattern;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.ValidationException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.support.builder.Namespaces;
+import org.apache.qpid.jms.JmsConnectionFactory;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.xml.sax.SAXParseException;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
+import javax.inject.Named;
+import javax.jms.ConnectionFactory;
 import javax.json.JsonObject;
 import java.util.Optional;
 
@@ -75,8 +80,29 @@ public class DocumentRoute extends RouteBuilder {
     @ConfigProperty(name = "openubl.storage.type")
     String storageType;
 
-    @ConfigProperty(name = "openubl.ublhub.scheduler.type")
+    @ConfigProperty(name = "openubl.scheduler.type")
     String schedulerType;
+
+    //
+
+    @ConfigProperty(name = "amqp-host")
+    Optional<String> amqpHost;
+
+    @ConfigProperty(name = "amqp-port")
+    Optional<String> amqpPort;
+
+    @ConfigProperty(name = "amqp-user")
+    Optional<String> amqpUsername;
+
+    @ConfigProperty(name = "amqp-password")
+    Optional<String> amqpPassword;
+
+    @Produces
+    @Named("connectionFactory")
+    public ConnectionFactory connectionFactory() {
+        String url = "amqp://" + amqpHost.orElse("") + ":" + amqpPort.orElse("");
+        return new JmsConnectionFactory(amqpUsername.orElse(""), amqpPassword.orElse(""), url);
+    }
 
     @Override
     public void configure() throws Exception {
@@ -264,7 +290,14 @@ public class DocumentRoute extends RouteBuilder {
                 })
                 .bean("documentBean", "create")
                 .setBody(exchange -> exchange.getIn().getHeader(DOCUMENT_ID, Long.class))
-                .to("seda:send-xml?waitForTaskToComplete=Never")
+                .choice()
+                    .when(simple("{{openubl.scheduler.type}}").isEqualToIgnoreCase("jvm"))
+                        .to("seda:send-xml?waitForTaskToComplete=Never")
+                    .endChoice()
+                    .when(simple("{{openubl.scheduler.type}}").isEqualToIgnoreCase("jms"))
+                        .to(ExchangePattern.InOnly, "jms:queue:send-xml?connectionFactory=#connectionFactory")
+                    .endChoice()
+                .end()
                 .setBody(exchange -> DocumentImportResult.builder()
                         .documentId(exchange.getIn().getHeader(DOCUMENT_ID, Long.class))
                         .build()
@@ -272,6 +305,14 @@ public class DocumentRoute extends RouteBuilder {
 
         // Requires body=DOCUMENT_ID
         from("seda:send-xml")
+                .autoStartup(schedulerType.equalsIgnoreCase("jvm"))
+                .to("direct:send-xml");
+
+        from("jms:queue:send-xml?connectionFactory=#connectionFactory")
+                .autoStartup(schedulerType.equalsIgnoreCase("jms"))
+                .to("direct:send-xml");
+
+        from("direct:send-xml")
                 .id("send-xml")
                 .setHeader(DOCUMENT_ID, body())
                 .bean("documentBean", "fetchDocument")
