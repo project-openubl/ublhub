@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.documents.idgenerator;
 
-import javax.enterprise.util.AnnotationLiteral;
+import jakarta.enterprise.util.AnnotationLiteral;
 
 public class IDGeneratorProviderLiteral extends AnnotationLiteral<IDGeneratorProvider> implements IDGeneratorProvider {
 

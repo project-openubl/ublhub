@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.files.health;
 
-import javax.enterprise.util.AnnotationLiteral;
+import jakarta.enterprise.util.AnnotationLiteral;
 
 public class StorageProviderLiteral extends AnnotationLiteral<StorageProvider> implements StorageProvider {
 

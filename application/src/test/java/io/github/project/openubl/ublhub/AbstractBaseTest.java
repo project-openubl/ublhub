@@ -81,11 +81,11 @@ public abstract class AbstractBaseTest {
                 .then().extract().path("access_token").toString();
     }
 
-    public static javax.json.JsonObject toJavax(Object object) {
+    public static jakarta.json.JsonObject toJavax(Object object) {
         io.vertx.core.json.JsonObject vertxJson = io.vertx.core.json.JsonObject.mapFrom(object);
 
-        javax.json.JsonReader jsonReader = javax.json.Json.createReader(new StringReader(vertxJson.toString()));
-        javax.json.JsonObject javaxJson = jsonReader.readObject();
+        jakarta.json.JsonReader jsonReader = jakarta.json.Json.createReader(new StringReader(vertxJson.toString()));
+        jakarta.json.JsonObject javaxJson = jsonReader.readObject();
         jsonReader.close();
 
         return javaxJson;

@@ -181,8 +181,6 @@ public class UblhubDistConfigurator {
                 cr.getSpec().getXBuilderSpec() : Constants.defaultXBuilderConfig;
 
         List<EnvVar> envVars = optionMapper(xBuilderSpec)
-                .mapOption("QUARKUS_XBUILDER_MONEDA", UblhubSpec.XBuilderSpec::getMoneda)
-                .mapOption("QUARKUS_XBUILDER_UNIDAD_MEDIDA", "NIU")
                 .mapOption("QUARKUS_XBUILDER_IGV_TASA", UblhubSpec.XBuilderSpec::getIgvTasa)
                 .mapOption("QUARKUS_XBUILDER_ICB_TASA", UblhubSpec.XBuilderSpec::getIcbTasa)
                 .getEnvVars();

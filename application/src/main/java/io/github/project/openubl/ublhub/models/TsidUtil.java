@@ -19,8 +19,8 @@ package io.github.project.openubl.ublhub.models;
 import com.github.f4b6a3.tsid.TsidFactory;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class TsidUtil {

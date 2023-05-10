@@ -17,18 +17,16 @@
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.security.jpa.Password;
 import io.quarkus.security.jpa.Roles;
 import io.quarkus.security.jpa.UserDefinition;
 import io.quarkus.security.jpa.Username;
 import io.smallrye.mutiny.Uni;
+import jakarta.persistence.*;
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.Version;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 @Data
 @Builder
@@ -38,14 +36,15 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table(name = "app_user")
 @UserDefinition
-public class UserEntity extends PanacheEntity {
+public class UserEntity extends PanacheEntityBase {
 
-    @Column(name = "full_name")
-    private String fullName;
-
+    @Id
     @NotNull
     @Username
     private String username;
+
+    @Column(name = "full_name")
+    private String fullName;
 
     @NotNull
     @Password

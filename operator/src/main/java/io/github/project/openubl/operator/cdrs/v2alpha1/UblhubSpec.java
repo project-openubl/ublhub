@@ -34,6 +34,7 @@ import java.util.List;
 @NoArgsConstructor
 public class UblhubSpec {
 
+    @Builder.Default
     @JsonPropertyDescription("Number of instances. Default is 1.")
     private int instances = 1;
 
@@ -98,6 +99,7 @@ public class UblhubSpec {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class IngressSpec {
+        @Builder.Default
         @JsonProperty("enabled")
         private boolean enabled = true;
     }
@@ -216,9 +218,6 @@ public class UblhubSpec {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class XBuilderSpec {
-        @JsonPropertyDescription("Default currency")
-        private String moneda = "PEN";
-
         @JsonPropertyDescription("Default IGV")
         private String igvTasa;
 
@@ -231,6 +230,7 @@ public class UblhubSpec {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class XSenderSpec {
+        @Builder.Default
         @JsonPropertyDescription("Enable logging feature")
         private Boolean enableLoggingFeature = false;
     }

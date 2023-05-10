@@ -22,8 +22,8 @@ import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.crypto.KeyUse;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.util.Objects;
 
 @ApplicationScoped

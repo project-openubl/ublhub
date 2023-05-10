@@ -20,8 +20,8 @@ import io.github.project.openubl.ublhub.dto.UserDto;
 import io.github.project.openubl.ublhub.models.jpa.entities.UserEntity;
 import io.quarkus.elytron.security.common.BcryptUtil;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.transaction.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 @Transactional
 @ApplicationScoped

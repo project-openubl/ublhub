@@ -19,7 +19,7 @@ package io.github.project.openubl.ublhub.files.health.impl;
 import io.github.project.openubl.ublhub.files.health.StorageProvider;
 import io.github.project.openubl.ublhub.files.health.StorageReadinessCheck;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.net.http.HttpClient;
 
 @ApplicationScoped

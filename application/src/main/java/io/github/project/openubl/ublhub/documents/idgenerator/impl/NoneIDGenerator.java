@@ -22,7 +22,7 @@ import io.github.project.openubl.ublhub.documents.idgenerator.IDGeneratorProvide
 import io.github.project.openubl.ublhub.documents.idgenerator.IDGeneratorType;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Map;
 
 @ApplicationScoped

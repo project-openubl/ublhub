@@ -22,7 +22,7 @@ import io.github.project.openubl.ublhub.keys.utils.StripSecretsUtils;
 import org.keycloak.representations.idm.ComponentRepresentation;
 import org.mapstruct.*;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;

@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.keys.qualifiers;
 
-import javax.inject.Qualifier;
+import jakarta.inject.Qualifier;
 import java.lang.annotation.*;
 
 @Qualifier

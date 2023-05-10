@@ -22,7 +22,7 @@ import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
