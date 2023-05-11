@@ -40,19 +40,20 @@ import io.github.project.openubl.xsender.files.xml.XmlContent;
 import io.github.project.openubl.xsender.models.Sunat;
 import io.github.project.openubl.xsender.models.SunatResponse;
 import io.github.project.openubl.xsender.sunat.BillServiceDestination;
+import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
+import org.apache.camel.BindToRegistry;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.ValidationException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.support.builder.Namespaces;
-import org.apache.qpid.jms.JmsConnectionFactory;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.xml.sax.SAXParseException;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Named;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 import javax.jms.ConnectionFactory;
 import javax.json.JsonObject;
 import java.util.Optional;
@@ -83,25 +84,16 @@ public class DocumentRoute extends RouteBuilder {
     @ConfigProperty(name = "openubl.scheduler.type")
     String schedulerType;
 
-    //
+    @Inject
+    Instance<ConnectionFactory> connectionFactory;
 
-    @ConfigProperty(name = "amqp-host")
-    Optional<String> amqpHost;
-
-    @ConfigProperty(name = "amqp-port")
-    Optional<String> amqpPort;
-
-    @ConfigProperty(name = "amqp-user")
-    Optional<String> amqpUsername;
-
-    @ConfigProperty(name = "amqp-password")
-    Optional<String> amqpPassword;
-
-    @Produces
-    @Named("connectionFactory")
+    @BindToRegistry("connectionFactory")
     public ConnectionFactory connectionFactory() {
-        String url = "amqp://" + amqpHost.orElse("") + ":" + amqpPort.orElse("");
-        return new JmsConnectionFactory(amqpUsername.orElse(""), amqpPassword.orElse(""), url);
+        if (connectionFactory.isResolvable()) {
+            return connectionFactory.get();
+        } else {
+            return new ActiveMQJMSConnectionFactory();
+        }
     }
 
     @Override
