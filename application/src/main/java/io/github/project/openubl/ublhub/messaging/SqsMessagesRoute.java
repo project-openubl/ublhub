@@ -81,6 +81,7 @@ public class SqsMessagesRoute extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         from("aws2-sqs://" + sqsTopic + "?amazonSQSClient=#amazonSQSClient&autoCreateQueue=true")
+                .id("sqs-send-xml")
                 .precondition(String.valueOf(schedulerType.equalsIgnoreCase("sqs")))
                 .to("direct:send-xml");
     }

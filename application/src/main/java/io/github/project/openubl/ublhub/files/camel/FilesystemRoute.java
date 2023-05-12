@@ -30,6 +30,9 @@ import java.util.UUID;
 @ApplicationScoped
 public class FilesystemRoute extends RouteBuilder {
 
+    @ConfigProperty(name = "openubl.storage.type")
+    String storageType;
+
     @ConfigProperty(name = "openubl.storage.filesystem.directory")
     String fileSystemFolder;
 
@@ -37,6 +40,7 @@ public class FilesystemRoute extends RouteBuilder {
     public void configure() throws Exception {
         from("direct:filesystem-save-file")
                 .id("filesystem-save-file")
+                .precondition(String.valueOf(storageType.equalsIgnoreCase("filesystem")))
                 .choice()
                     .when(header("shouldZipFile").isEqualTo(true))
                         .marshal().zipFile()
@@ -55,6 +59,7 @@ public class FilesystemRoute extends RouteBuilder {
 
         from("direct:filesystem-get-file")
                 .id("filesystem-get-file")
+                .precondition(String.valueOf(storageType.equalsIgnoreCase("filesystem")))
                 .process(exchange -> {
                     String filename = exchange.getIn().getBody(String.class);
                     byte[] bytes = Files.readAllBytes(Paths.get(filename));
@@ -72,10 +77,12 @@ public class FilesystemRoute extends RouteBuilder {
 
         from("direct:filesystem-get-file-link")
                 .id("filesystem-get-file-link")
+                .precondition(String.valueOf(storageType.equalsIgnoreCase("filesystem")))
                 .log(LoggingLevel.WARN, "Filesystem does not support link generation.");
 
         from("direct:filesystem-delete-file")
                 .id("filesystem-delete-file")
+                .precondition(String.valueOf(storageType.equalsIgnoreCase("filesystem")))
                 .process(exchange -> {
                     String filename = exchange.getIn().getBody(String.class);
                     Files.delete(Paths.get(filename));

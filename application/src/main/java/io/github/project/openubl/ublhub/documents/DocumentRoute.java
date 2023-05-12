@@ -76,8 +76,8 @@ public class DocumentRoute extends RouteBuilder {
     @ConfigProperty(name = "openubl.storage.type")
     String storageType;
 
-    @ConfigProperty(name = "openubl.messaging.type")
-    String schedulerType;
+    @ConfigProperty(name = "openubl.messaging.jsm.queue")
+    String jmsQueue;
 
     @ConfigProperty(name = "openubl.messaging.sqs.queue")
     String sqsQueue;
@@ -273,7 +273,7 @@ public class DocumentRoute extends RouteBuilder {
                         .to("seda:send-xml?waitForTaskToComplete=Never")
                     .endChoice()
                     .when(simple("{{openubl.messaging.type}}").isEqualToIgnoreCase("jms"))
-                        .to(ExchangePattern.InOnly, "jms:queue:send-xml?connectionFactory=#connectionFactory")
+                        .to(ExchangePattern.InOnly, "jms:queue:" + jmsQueue + "?connectionFactory=#connectionFactory")
                     .endChoice()
                     .when(simple("{{openubl.messaging.type}}").isEqualToIgnoreCase("sqs"))
                         .toD("aws2-sqs://" + sqsQueue + "?amazonSQSClient=#amazonSQSClient&autoCreateQueue=true")

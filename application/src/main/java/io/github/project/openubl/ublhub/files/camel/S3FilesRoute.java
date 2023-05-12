@@ -40,6 +40,9 @@ import java.util.UUID;
 @ApplicationScoped
 public class S3FilesRoute extends RouteBuilder {
 
+    @ConfigProperty(name = "openubl.storage.type")
+    String storageType;
+
     @ConfigProperty(name = "openubl.storage.link-expiration", defaultValue = "5000")
     String linkExpiration;
 
@@ -107,6 +110,7 @@ public class S3FilesRoute extends RouteBuilder {
     public void configure() throws Exception {
         from("direct:s3-save-file")
                 .id("s3-save-file")
+                .precondition(String.valueOf(storageType.equalsIgnoreCase("s3")))
                 .choice()
                     .when(header("shouldZipFile").isEqualTo(true))
                         .marshal().zipFile()
@@ -124,6 +128,7 @@ public class S3FilesRoute extends RouteBuilder {
 
         from("direct:s3-get-file")
                 .id("s3-get-file")
+                .precondition(String.valueOf(storageType.equalsIgnoreCase("s3")))
                 .choice()
                     .when(header("shouldUnzip").isEqualTo(true))
                         .pollEnrich().simple("aws2-s3://" + s3Bucket + "?amazonS3Client=#s3client&deleteAfterRead=false&fileName=${body}")
@@ -144,12 +149,14 @@ public class S3FilesRoute extends RouteBuilder {
 
         from("direct:s3-get-file-link")
                 .id("s3-get-file-link")
+                .precondition(String.valueOf(storageType.equalsIgnoreCase("s3")))
                 .setHeader(AWS2S3Constants.KEY, simple("${body}"))
                 .setHeader(AWS2S3Constants.DOWNLOAD_LINK_EXPIRATION_TIME, constant(linkExpiration))
                 .toD("aws2-s3://" + s3Bucket + "?amazonS3Client=#s3client&amazonS3Presigner=#s3Presigner&operation=createDownloadLink");
 
         from("direct:s3-delete-file")
                 .id("s3-delete-file")
+                .precondition(String.valueOf(storageType.equalsIgnoreCase("s3")))
                 .setHeader(AWS2S3Constants.KEY, simple("${body}"))
                 .toD("aws2-s3://" + s3Bucket + "?amazonS3Client=#s3client&operation=deleteObject");
     }

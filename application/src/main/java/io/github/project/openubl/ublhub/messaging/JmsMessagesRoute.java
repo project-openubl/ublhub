@@ -47,6 +47,7 @@ public class JmsMessagesRoute extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         from("jms:queue:send-xml?connectionFactory=#connectionFactory")
+                .id("jms-send-xml")
                 .precondition(String.valueOf(schedulerType.equalsIgnoreCase("jms")))
                 .to("direct:send-xml");
     }
