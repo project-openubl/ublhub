@@ -14,40 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.documents.messaging;
+package io.github.project.openubl.ublhub.messaging;
 
-import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
-import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import javax.jms.ConnectionFactory;
 
 @ApplicationScoped
-public class JmsMessagesRoute extends RouteBuilder {
+public class JvmMessagesRoute extends RouteBuilder {
 
-    @ConfigProperty(name = "openubl.scheduler.type")
+    @ConfigProperty(name = "openubl.messaging.type")
     String schedulerType;
-
-    @Inject
-    Instance<ConnectionFactory> connectionFactory;
-
-    @BindToRegistry("connectionFactory")
-    public ConnectionFactory connectionFactory() {
-        if (connectionFactory.isResolvable()) {
-            return connectionFactory.get();
-        } else {
-            return new ActiveMQJMSConnectionFactory();
-        }
-    }
 
     @Override
     public void configure() throws Exception {
-        from("jms:queue:send-xml?connectionFactory=#connectionFactory")
-                .precondition(String.valueOf(schedulerType.equalsIgnoreCase("jms")))
+        from("seda:send-xml")
+                .precondition(String.valueOf(schedulerType.equalsIgnoreCase("jvm")))
                 .to("direct:send-xml");
     }
 

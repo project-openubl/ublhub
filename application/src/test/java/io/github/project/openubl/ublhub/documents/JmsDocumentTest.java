@@ -32,7 +32,7 @@ public class JmsDocumentTest extends AbstractDocumentTest {
     public static class Profile implements QuarkusTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
-            return Map.of("openubl.scheduler.type", "jms");
+            return Map.of("openubl.messaging.type", "jms");
         }
     }
 }

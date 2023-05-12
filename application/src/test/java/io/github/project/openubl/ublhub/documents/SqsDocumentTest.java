@@ -34,7 +34,7 @@ public class SqsDocumentTest extends AbstractDocumentTest {
     public static class Profile implements QuarkusTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
-            return Map.of("openubl.scheduler.type", "sqs");
+            return Map.of("openubl.messaging.type", "sqs");
         }
 
         @Override

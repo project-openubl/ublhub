@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub.documents.messaging;
+package io.github.project.openubl.ublhub.messaging;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -36,7 +36,7 @@ import java.util.Optional;
 @ApplicationScoped
 public class SqsMessagesRoute extends RouteBuilder {
 
-    @ConfigProperty(name = "openubl.scheduler.type")
+    @ConfigProperty(name = "openubl.messaging.type")
     String schedulerType;
 
     @ConfigProperty(name = "openubl.messaging.sqs.queue")

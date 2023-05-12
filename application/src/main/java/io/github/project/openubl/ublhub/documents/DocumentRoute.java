@@ -76,7 +76,7 @@ public class DocumentRoute extends RouteBuilder {
     @ConfigProperty(name = "openubl.storage.type")
     String storageType;
 
-    @ConfigProperty(name = "openubl.scheduler.type")
+    @ConfigProperty(name = "openubl.messaging.type")
     String schedulerType;
 
     @ConfigProperty(name = "openubl.messaging.sqs.queue")
@@ -269,13 +269,13 @@ public class DocumentRoute extends RouteBuilder {
                 .bean("documentBean", "create")
                 .setBody(exchange -> exchange.getIn().getHeader(DOCUMENT_ID, Long.class))
                 .choice()
-                    .when(simple("{{openubl.scheduler.type}}").isEqualToIgnoreCase("jvm"))
+                    .when(simple("{{openubl.messaging.type}}").isEqualToIgnoreCase("jvm"))
                         .to("seda:send-xml?waitForTaskToComplete=Never")
                     .endChoice()
-                    .when(simple("{{openubl.scheduler.type}}").isEqualToIgnoreCase("jms"))
+                    .when(simple("{{openubl.messaging.type}}").isEqualToIgnoreCase("jms"))
                         .to(ExchangePattern.InOnly, "jms:queue:send-xml?connectionFactory=#connectionFactory")
                     .endChoice()
-                    .when(simple("{{openubl.scheduler.type}}").isEqualToIgnoreCase("sqs"))
+                    .when(simple("{{openubl.messaging.type}}").isEqualToIgnoreCase("sqs"))
                         .toD("aws2-sqs://" + sqsQueue + "?amazonSQSClient=#amazonSQSClient&autoCreateQueue=true")
                     .endChoice()
                 .end()
