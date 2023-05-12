@@ -19,10 +19,10 @@ package io.github.project.openubl.ublhub.models.jpa.entities;
 import lombok.*;
 import org.hibernate.annotations.Type;
 
-import javax.persistence.*;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Data
 @Builder
@@ -53,7 +53,7 @@ public class UBLDocumentEntity extends BaseEntity {
     private String cdrFileId;
 
     @NotNull
-    @Type(type = "org.hibernate.type.YesNoType")
+    @Convert(converter = org.hibernate.type.YesNoConverter.class)
     @Column(name = "job_in_progress")
     private boolean jobInProgress;
 

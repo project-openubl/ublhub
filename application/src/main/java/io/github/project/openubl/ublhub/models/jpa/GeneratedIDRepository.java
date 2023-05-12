@@ -20,8 +20,8 @@ import io.github.project.openubl.ublhub.models.jpa.entities.GeneratedIDEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Parameters;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.transaction.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 @Transactional
 @ApplicationScoped

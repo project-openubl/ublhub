@@ -22,8 +22,8 @@ import io.quarkus.qute.EngineBuilder;
 import io.quarkus.qute.RawString;
 import io.quarkus.qute.ValueResolver;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 

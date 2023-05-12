@@ -22,10 +22,10 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.minio.MinioConstants;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;

@@ -26,9 +26,9 @@ import io.github.project.openubl.ublhub.models.jpa.entities.ComponentEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import org.keycloak.common.util.MultivaluedHashMap;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.documents.idgenerator;
 
-import javax.inject.Qualifier;
+import jakarta.inject.Qualifier;
 import java.lang.annotation.*;
 
 @Qualifier

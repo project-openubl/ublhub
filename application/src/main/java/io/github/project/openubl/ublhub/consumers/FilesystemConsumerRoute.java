@@ -23,8 +23,8 @@ import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.dataformat.YAMLLibrary;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.json.JsonObject;
 
 @ApplicationScoped
 public class FilesystemConsumerRoute extends RouteBuilder {

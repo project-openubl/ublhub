@@ -64,7 +64,6 @@ public class Constants {
     public static final String STORAGE_MIN_SIZE = "100Mi";
 
     public static final UblhubSpec.XBuilderSpec defaultXBuilderConfig = UblhubSpec.XBuilderSpec.builder()
-            .moneda("PEN")
             .igvTasa("0.18")
             .icbTasa("0.4")
             .build();

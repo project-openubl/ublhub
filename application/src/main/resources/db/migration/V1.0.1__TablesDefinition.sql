@@ -1,17 +1,12 @@
 CREATE TABLE APP_USER
 (
-    id          int8         NOT NULL,
-    full_name   VARCHAR(250),
     username    VARCHAR(250) NOT NULL,
+    full_name   VARCHAR(250),
     password    VARCHAR(250) NOT NULL,
     permissions VARCHAR(250),
     version     int4         NOT NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (username)
 );
-
-alter table APP_USER
-    add constraint uq_appuser_username unique (username);
-
 
 create table PROJECT
 (

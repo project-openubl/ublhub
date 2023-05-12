@@ -18,8 +18,8 @@ package io.github.project.openubl.ublhub.security.validators;
 
 import io.github.project.openubl.ublhub.security.Permission;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import java.util.Collection;
 
 public class ValidPermissionValidator implements ConstraintValidator<ValidPermission, Collection<String>> {

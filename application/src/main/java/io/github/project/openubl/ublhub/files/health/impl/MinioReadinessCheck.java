@@ -20,7 +20,7 @@ import io.github.project.openubl.ublhub.files.health.StorageProvider;
 import io.github.project.openubl.ublhub.files.health.StorageReadinessCheck;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
