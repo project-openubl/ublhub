@@ -25,14 +25,14 @@ import io.quarkus.test.junit.TestProfile;
 import java.util.Map;
 
 @QuarkusTest
-@TestProfile(JMSDocumentTest.Profile.class)
+@TestProfile(JvmDocumentTest.Profile.class)
 @TestHTTPEndpoint(DocumentResource.class)
-public class JMSDocumentTest extends AbstractDocumentTest {
+public class JvmDocumentTest extends AbstractDocumentTest {
 
     public static class Profile implements QuarkusTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
-            return Map.of("openubl.scheduler.type", "jms");
+            return Map.of("openubl.messaging.type", "jvm");
         }
     }
 }

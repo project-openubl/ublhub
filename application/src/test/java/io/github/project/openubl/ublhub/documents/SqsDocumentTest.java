@@ -16,23 +16,30 @@
  */
 package io.github.project.openubl.ublhub.documents;
 
+import io.github.project.openubl.ublhub.containers.SqsServer;
 import io.github.project.openubl.ublhub.resources.DocumentResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 
+import java.util.List;
 import java.util.Map;
 
 @QuarkusTest
-@TestProfile(JVMDocumentTest.Profile.class)
+@TestProfile(SqsDocumentTest.Profile.class)
 @TestHTTPEndpoint(DocumentResource.class)
-public class JVMDocumentTest extends AbstractDocumentTest {
+public class SqsDocumentTest extends AbstractDocumentTest {
 
     public static class Profile implements QuarkusTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
-            return Map.of("openubl.scheduler.type", "jvm");
+            return Map.of("openubl.messaging.type", "sqs");
+        }
+
+        @Override
+        public List<TestResourceEntry> testResources() {
+            return List.of(new TestResourceEntry(SqsServer.class));
         }
     }
 }
