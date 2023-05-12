@@ -32,6 +32,9 @@ public class JmsMessagesRoute extends RouteBuilder {
     @ConfigProperty(name = "openubl.messaging.type")
     String schedulerType;
 
+    @ConfigProperty(name = "openubl.messaging.jsm.queue")
+    String jmsQueue;
+
     @Inject
     Instance<ConnectionFactory> connectionFactory;
 
@@ -46,7 +49,7 @@ public class JmsMessagesRoute extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        from("jms:queue:send-xml?connectionFactory=#connectionFactory")
+        from("jms:queue:" + jmsQueue + "?connectionFactory=#connectionFactory")
                 .id("jms-send-xml")
                 .precondition(String.valueOf(schedulerType.equalsIgnoreCase("jms")))
                 .to("direct:send-xml");
