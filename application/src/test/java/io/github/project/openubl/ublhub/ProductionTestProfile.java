@@ -34,13 +34,10 @@ public class ProductionTestProfile implements QuarkusTestProfile {
     @Override
     public Map<String, String> getConfigOverrides() {
         return Map.of(
-                "openubl.storage.type", "minio"
+                "quarkus.datasource.db-kind", "postgresql",
+                "openubl.storage.type", "minio",
+                "openubl.scheduler.type", "jms"
         );
-    }
-
-    @Override
-    public String getConfigProfile() {
-        return "test,oidc";
     }
 
     @Override
