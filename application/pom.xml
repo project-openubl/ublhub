@@ -277,6 +277,10 @@
             <groupId>org.apache.camel.quarkus</groupId>
             <artifactId>camel-quarkus-jms</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-aws2-sqs</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>

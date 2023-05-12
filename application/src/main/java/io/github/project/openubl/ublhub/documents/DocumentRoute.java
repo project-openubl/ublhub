@@ -40,8 +40,6 @@ import io.github.project.openubl.xsender.files.xml.XmlContent;
 import io.github.project.openubl.xsender.models.Sunat;
 import io.github.project.openubl.xsender.models.SunatResponse;
 import io.github.project.openubl.xsender.sunat.BillServiceDestination;
-import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
-import org.apache.camel.BindToRegistry;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.ValidationException;
@@ -52,9 +50,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.xml.sax.SAXParseException;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import javax.jms.ConnectionFactory;
 import javax.json.JsonObject;
 import java.util.Optional;
 
@@ -84,17 +79,8 @@ public class DocumentRoute extends RouteBuilder {
     @ConfigProperty(name = "openubl.scheduler.type")
     String schedulerType;
 
-    @Inject
-    Instance<ConnectionFactory> connectionFactory;
-
-    @BindToRegistry("connectionFactory")
-    public ConnectionFactory connectionFactory() {
-        if (connectionFactory.isResolvable()) {
-            return connectionFactory.get();
-        } else {
-            return new ActiveMQJMSConnectionFactory();
-        }
-    }
+    @ConfigProperty(name = "openubl.messaging.sqs.queue")
+    String sqsQueue;
 
     @Override
     public void configure() throws Exception {
@@ -289,20 +275,14 @@ public class DocumentRoute extends RouteBuilder {
                     .when(simple("{{openubl.scheduler.type}}").isEqualToIgnoreCase("jms"))
                         .to(ExchangePattern.InOnly, "jms:queue:send-xml?connectionFactory=#connectionFactory")
                     .endChoice()
+                    .when(simple("{{openubl.scheduler.type}}").isEqualToIgnoreCase("sqs"))
+                        .toD("aws2-sqs://" + sqsQueue + "?amazonSQSClient=#amazonSQSClient&autoCreateQueue=true")
+                    .endChoice()
                 .end()
                 .setBody(exchange -> DocumentImportResult.builder()
                         .documentId(exchange.getIn().getHeader(DOCUMENT_ID, Long.class))
                         .build()
                 );
-
-        // Requires body=DOCUMENT_ID
-        from("seda:send-xml")
-                .autoStartup(schedulerType.equalsIgnoreCase("jvm"))
-                .to("direct:send-xml");
-
-        from("jms:queue:send-xml?connectionFactory=#connectionFactory")
-                .autoStartup(schedulerType.equalsIgnoreCase("jms"))
-                .to("direct:send-xml");
 
         from("direct:send-xml")
                 .id("send-xml")
