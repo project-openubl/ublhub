@@ -131,7 +131,6 @@ public class UblhubDistConfigurator {
 
     private void configureDatabase() {
         List<EnvVar> envVars = optionMapper(cr.getSpec().getDatabaseSpec())
-                .mapOption("QUARKUS_DATASOURCE_DB_KIND", databaseSpec -> "postgresql")
                 .mapOption("QUARKUS_DATASOURCE_USERNAME", UblhubSpec.DatabaseSpec::getUsernameSecret)
                 .mapOption("QUARKUS_DATASOURCE_PASSWORD", UblhubSpec.DatabaseSpec::getPasswordSecret)
                 .mapOption("QUARKUS_DATASOURCE_JDBC_URL", UblhubSpec.DatabaseSpec::getUrl)
