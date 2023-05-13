@@ -33,6 +33,9 @@ import java.util.UUID;
 @ApplicationScoped
 public class MinioFilesRoute extends RouteBuilder {
 
+    @ConfigProperty(name = "openubl.storage.type")
+    String storageType;
+
     @ConfigProperty(name = "openubl.storage.minio.bucket")
     String s3Bucket;
 
@@ -59,6 +62,7 @@ public class MinioFilesRoute extends RouteBuilder {
     public void configure() throws Exception {
         from("direct:minio-save-file")
                 .id("minio-save-file")
+                .precondition(String.valueOf(storageType.equalsIgnoreCase("minio")))
                 .choice()
                     .when(header("shouldZipFile").isEqualTo(true))
                         .marshal().zipFile()
@@ -76,6 +80,7 @@ public class MinioFilesRoute extends RouteBuilder {
 
         from("direct:minio-get-file")
                 .id("minio-get-file")
+                .precondition(String.valueOf(storageType.equalsIgnoreCase("minio")))
                 .choice()
                     .when(header("shouldUnzip").isEqualTo(true))
                         .setHeader(MinioConstants.OBJECT_NAME, simple("${body}"))
@@ -94,10 +99,12 @@ public class MinioFilesRoute extends RouteBuilder {
 
         from("direct:minio-get-file-link")
                 .id("minio-get-file-link")
+                .precondition(String.valueOf(storageType.equalsIgnoreCase("minio")))
                 .log(LoggingLevel.WARN, "Minio does not support link generation.");;
 
         from("direct:minio-delete-file")
                 .id("minio-delete-file")
+                .precondition(String.valueOf(storageType.equalsIgnoreCase("minio")))
                 .setHeader(MinioConstants.OBJECT_NAME, simple("${body}"))
                 .toD("minio://" + s3Bucket + "?minioClient=#minioClient&operation=deleteObject");
     }

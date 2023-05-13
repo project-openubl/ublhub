@@ -30,6 +30,7 @@ public class JvmMessagesRoute extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         from("seda:send-xml")
+                .id("jvm-send-xml")
                 .precondition(String.valueOf(schedulerType.equalsIgnoreCase("jvm")))
                 .to("direct:send-xml");
     }
