@@ -44,6 +44,7 @@ import org.apache.camel.ExchangePattern;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.ValidationException;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.jackson.JacksonDataFormat;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.support.builder.Namespaces;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -81,6 +82,29 @@ public class DocumentRoute extends RouteBuilder {
 
     @ConfigProperty(name = "openubl.messaging.sqs.queue")
     String sqsQueue;
+
+    enum UBLDataFormat {
+        INVOICE(Invoice.class),
+        CREDIT_NOTE(CreditNote.class),
+        DEBIT_NOTE(DebitNote.class),
+        VOIDED_DOCUMENTS(VoidedDocuments.class),
+        SUMMARY_DOCUMENTS(SummaryDocuments.class),
+        PERCEPTION(Perception.class),
+        RETENTION(Retention.class),
+        DESPATCH_ADVICE(DespatchAdvice.class),;
+
+        private final Class<?> aClass;
+
+        UBLDataFormat(Class<?> aClass) {
+            this.aClass = aClass;
+        }
+
+        public JacksonDataFormat getDataFormat() {
+            JacksonDataFormat dataFormat = new JacksonDataFormat(aClass);
+            dataFormat.setAutoDiscoverObjectMapper(true);
+            return dataFormat;
+        }
+    }
 
     @Override
     public void configure() throws Exception {
@@ -143,7 +167,7 @@ public class DocumentRoute extends RouteBuilder {
                 .choice()
                     .when(header(DOCUMENT_KIND).isEqualTo("Invoice"))
                         .marshal().json(JsonLibrary.Jsonb, Invoice.class)
-                        .unmarshal().json(JsonLibrary.Jackson, Invoice.class)
+                        .unmarshal(UBLDataFormat.INVOICE.getDataFormat())
                         .process(exchange -> {
                             Invoice input = exchange.getIn().getBody(Invoice.class);
                             exchange.getIn().setHeader(DOCUMENT_RUC, input.getProveedor().getRuc());
@@ -151,7 +175,7 @@ public class DocumentRoute extends RouteBuilder {
                     .endChoice()
                     .when(header(DOCUMENT_KIND).isEqualTo("CreditNote"))
                         .marshal().json(JsonLibrary.Jsonb, CreditNote.class)
-                        .unmarshal().json(JsonLibrary.Jackson, CreditNote.class)
+                        .unmarshal(UBLDataFormat.CREDIT_NOTE.getDataFormat())
                         .process(exchange -> {
                             CreditNote input = exchange.getIn().getBody(CreditNote.class);
                             exchange.getIn().setHeader(DOCUMENT_RUC, input.getProveedor().getRuc());
@@ -159,7 +183,7 @@ public class DocumentRoute extends RouteBuilder {
                     .endChoice()
                     .when(header(DOCUMENT_KIND).isEqualTo("DebitNote"))
                         .marshal().json(JsonLibrary.Jsonb, DebitNote.class)
-                        .unmarshal().json(JsonLibrary.Jackson, DebitNote.class)
+                        .unmarshal(UBLDataFormat.DEBIT_NOTE.getDataFormat())
                         .process(exchange -> {
                             DebitNote input = exchange.getIn().getBody(DebitNote.class);
                             exchange.getIn().setHeader(DOCUMENT_RUC, input.getProveedor().getRuc());
@@ -167,7 +191,7 @@ public class DocumentRoute extends RouteBuilder {
                     .endChoice()
                     .when(header(DOCUMENT_KIND).isEqualTo("VoidedDocuments"))
                         .marshal().json(JsonLibrary.Jsonb, VoidedDocuments.class)
-                        .unmarshal().json(JsonLibrary.Jackson, VoidedDocuments.class)
+                        .unmarshal(UBLDataFormat.VOIDED_DOCUMENTS.getDataFormat())
                         .process(exchange -> {
                             VoidedDocuments input = exchange.getIn().getBody(VoidedDocuments.class);
                             exchange.getIn().setHeader(DOCUMENT_RUC, input.getProveedor().getRuc());
@@ -175,7 +199,7 @@ public class DocumentRoute extends RouteBuilder {
                     .endChoice()
                     .when(header(DOCUMENT_KIND).isEqualTo("SummaryDocuments"))
                         .marshal().json(JsonLibrary.Jsonb, SummaryDocuments.class)
-                        .unmarshal().json(JsonLibrary.Jackson, SummaryDocuments.class)
+                        .unmarshal(UBLDataFormat.SUMMARY_DOCUMENTS.getDataFormat())
                         .process(exchange -> {
                             SummaryDocuments input = exchange.getIn().getBody(SummaryDocuments.class);
                             exchange.getIn().setHeader(DOCUMENT_RUC, input.getProveedor().getRuc());
@@ -183,7 +207,7 @@ public class DocumentRoute extends RouteBuilder {
                     .endChoice()
                     .when(header(DOCUMENT_KIND).isEqualTo("Perception"))
                         .marshal().json(JsonLibrary.Jsonb, Perception.class)
-                        .unmarshal().json(JsonLibrary.Jackson, Perception.class)
+                        .unmarshal(UBLDataFormat.PERCEPTION.getDataFormat())
                         .process(exchange -> {
                             Perception input = exchange.getIn().getBody(Perception.class);
                             exchange.getIn().setHeader(DOCUMENT_RUC, input.getProveedor().getRuc());
@@ -191,7 +215,7 @@ public class DocumentRoute extends RouteBuilder {
                     .endChoice()
                     .when(header(DOCUMENT_KIND).isEqualTo("Retention"))
                         .marshal().json(JsonLibrary.Jsonb, Retention.class)
-                        .unmarshal().json(JsonLibrary.Jackson, Retention.class)
+                        .unmarshal(UBLDataFormat.RETENTION.getDataFormat())
                         .process(exchange -> {
                             Retention input = exchange.getIn().getBody(Retention.class);
                             exchange.getIn().setHeader(DOCUMENT_RUC, input.getProveedor().getRuc());
@@ -199,7 +223,7 @@ public class DocumentRoute extends RouteBuilder {
                     .endChoice()
                     .when(header(DOCUMENT_KIND).isEqualTo("DespatchAdvice"))
                         .marshal().json(JsonLibrary.Jsonb, DespatchAdvice.class)
-                        .unmarshal().json(JsonLibrary.Jackson, DespatchAdvice.class)
+                        .unmarshal(UBLDataFormat.DESPATCH_ADVICE.getDataFormat())
                         .process(exchange -> {
                             DespatchAdvice input = exchange.getIn().getBody(DespatchAdvice.class);
                             exchange.getIn().setHeader(DOCUMENT_RUC, input.getProveedor().getRuc());
