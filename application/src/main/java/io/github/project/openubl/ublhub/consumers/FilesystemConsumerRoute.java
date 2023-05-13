@@ -38,7 +38,7 @@ public class FilesystemConsumerRoute extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         from("file://" + consumerTargetDirectory + "?includeExt=json,yml,yaml,xml&delete=true")
-                .autoStartup("{{openubl.consumers.filesystem.enabled}}")
+                .precondition(String.valueOf(isConsumerEnabled))
                 .id("consumer-filesystem")
                 .choice()
                     .when(header(FileConstants.FILE_NAME).regex(".*\\.(yml|yaml)"))
