@@ -33,7 +33,6 @@ package io.github.project.openubl.ublhub.resources;
  * limitations under the License.
  */
 
-import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.ublhub.dto.CompanyDto;
 import io.github.project.openubl.ublhub.files.FilesManager;
 import io.github.project.openubl.ublhub.keys.DefaultKeyProviders;
@@ -43,12 +42,12 @@ import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
-import io.github.project.openubl.ublhub.security.Permission;
+import io.github.project.openubl.ublhub.security.Role;
 import io.quarkus.panache.common.Sort;
+import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.jboss.resteasy.reactive.RestResponse;
 
-import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -70,6 +69,9 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class CompanyResource {
 
+    @Inject
+    SecurityIdentity securityIdentity;
+
     @Context
     UriInfo uriInfo;
 
@@ -86,9 +88,6 @@ public class CompanyResource {
     DefaultKeyProviders defaultKeyProviders;
 
     @Inject
-    TsidFactory tsidFactory;
-
-    @Inject
     FilesManager filesManager;
 
     private ComponentOwner getOwner(String project, String ruc) {
@@ -98,7 +97,12 @@ public class CompanyResource {
                 .build();
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
+    public boolean isUserForbidden(String project, String... roles) {
+        String username = securityIdentity.getPrincipal().getName();
+        ProjectEntity projectEntity = projectRepository.findById(project);
+        return projectEntity == null || !projectEntity.hasAnyRole(username, roles);
+    }
+
     @Operation(summary = "Get company", description = "Get one company")
     @GET
     @Path("/{project}/companies/{ruc}")
@@ -114,6 +118,10 @@ public class CompanyResource {
                 .<CompanyDto>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return notFoundResponse.get();
+        }
+
         CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return notFoundResponse.get();
@@ -123,7 +131,6 @@ public class CompanyResource {
         return successResponse.apply(companyDto);
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Create company", description = "Create a company")
     @POST
     @Path("/{project}/companies")
@@ -142,12 +149,11 @@ public class CompanyResource {
                 .<CompanyDto>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
-        ProjectEntity projectEntity = projectRepository.findById(project);
-        if (projectEntity == null) {
+        if (isUserForbidden(project, Role.owner)) {
             return notFoundResponse.get();
         }
 
-        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(projectEntity.getName(), companyDto.getRuc()));
+        CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, companyDto.getRuc()));
         if (companyEntity != null) {
             return conflictResponse.apply(companyEntity);
         }
@@ -161,7 +167,7 @@ public class CompanyResource {
         }
 
         companyEntity = companyMapper.updateEntityFromDto(companyDto, CompanyEntity.builder()
-                .id(new CompanyEntity.CompanyId(projectEntity.getName(), companyDto.getRuc()))
+                .id(new CompanyEntity.CompanyId(project, companyDto.getRuc()))
                 .logoFileId(logoFileId)
                 .build()
         );
@@ -174,7 +180,6 @@ public class CompanyResource {
         return successResponse.apply(response);
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Update company", description = "Update one company")
     @PUT
     @Path("/{project}/companies/{ruc}")
@@ -190,6 +195,10 @@ public class CompanyResource {
         Supplier<RestResponse<CompanyDto>> notFoundResponse = () -> RestResponse.ResponseBuilder
                 .<CompanyDto>create(RestResponse.Status.NOT_FOUND)
                 .build();
+
+        if (isUserForbidden(project, Role.owner)) {
+            return notFoundResponse.get();
+        }
 
         CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
@@ -212,7 +221,6 @@ public class CompanyResource {
         return successResponse.apply(response);
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Delete company", description = "Delete one company")
     @DELETE
     @Path("/{project}/companies/{ruc}")
@@ -227,11 +235,14 @@ public class CompanyResource {
                 .<Void>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
+        if (isUserForbidden(project, Role.owner)) {
+            return notFoundResponse.get();
+        }
+
         boolean result = companyRepository.deleteById(new CompanyEntity.CompanyId(project, ruc));
         return result ? successResponse.get() : notFoundResponse.get();
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
     @Operation(summary = "Get company's logo", description = "Get one company's logo")
     @Produces({"image/jpeg", "image/png"})
     @GET
@@ -248,6 +259,10 @@ public class CompanyResource {
                 .<String>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return notFoundResponse.get();
+        }
+
         CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return notFoundResponse.get();
@@ -260,7 +275,6 @@ public class CompanyResource {
         return successResponse.apply(logoBytes);
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
     @Operation(summary = "List companies", description = "List all companies")
     @GET
     @Path("/{project}/companies")
@@ -274,13 +288,16 @@ public class CompanyResource {
                 .<List<CompanyDto>>create(RestResponse.Status.NOT_FOUND)
                 .build();
 
-        Sort sort = Sort.by(CompanyRepository.SortByField.name.toString(), Sort.Direction.Descending);
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return notFoundResponse.get();
+        }
 
         ProjectEntity projectEntity = projectRepository.findById(project);
         if (projectEntity == null) {
             return notFoundResponse.get();
         }
 
+        Sort sort = Sort.by(CompanyRepository.SortByField.name.toString(), Sort.Direction.Descending);
         List<CompanyDto> companyDtos = companyRepository.listAll(projectEntity, sort)
                 .stream()
                 .map(entity -> companyMapper.toDto(entity))

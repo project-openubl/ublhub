@@ -16,13 +16,13 @@
  */
 package io.github.project.openubl.ublhub.security.validators;
 
-import io.github.project.openubl.ublhub.security.Permission;
+import io.github.project.openubl.ublhub.security.Role;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.util.Collection;
 
-public class ValidPermissionValidator implements ConstraintValidator<ValidPermission, Collection<String>> {
+public class ValidRoleValidator implements ConstraintValidator<ValidRole, Collection<String>> {
 
     @Override
     public boolean isValid(Collection<String> value, ConstraintValidatorContext context) {
@@ -30,7 +30,7 @@ public class ValidPermissionValidator implements ConstraintValidator<ValidPermis
             return true;
         }
 
-        boolean isValid = value.stream().allMatch(f -> Permission.allPermissions.stream().anyMatch(f::equals));
+        boolean isValid = value.stream().allMatch(f -> Role.allPermissions.stream().anyMatch(f::equals));
         if (!isValid) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("One or more permissions are not valid")

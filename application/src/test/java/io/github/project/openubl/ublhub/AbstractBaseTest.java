@@ -50,15 +50,10 @@ public abstract class AbstractBaseTest {
 
     protected RequestSpecification givenAuth(String username) {
         Config config = ConfigProvider.getConfig();
-        Boolean isAuthorizationDisabled = config.getValue("openubl.ublhub.disable.authorization", Boolean.class);
-        Boolean isOidcEnabled = config.getValue("quarkus.oidc.tenant-enabled", Boolean.class);
-        if (!isAuthorizationDisabled) {
-            if (isOidcEnabled) {
-                String accessToken = getAccessToken(username);
-                return given().auth().oauth2(accessToken);
-            } else {
-                return given().auth().preemptive().basic(username, username);
-            }
+        Boolean isAuthEnabled = config.getValue("openubl.auth.enabled", Boolean.class);
+        if (isAuthEnabled) {
+            String accessToken = getAccessToken(username);
+            return given().auth().oauth2(accessToken);
         } else {
             return given();
         }

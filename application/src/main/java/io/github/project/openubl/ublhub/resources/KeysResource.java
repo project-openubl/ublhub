@@ -44,14 +44,14 @@ import io.github.project.openubl.ublhub.models.jpa.ComponentRepository;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.CompanyEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
-import io.github.project.openubl.ublhub.security.Permission;
+import io.github.project.openubl.ublhub.security.Role;
+import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.keycloak.common.util.PemUtils;
 import org.keycloak.crypto.KeyWrapper;
 import org.keycloak.representations.idm.KeysMetadataRepresentation;
 
-import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -72,6 +72,9 @@ import java.util.stream.Collectors;
 @Transactional
 @ApplicationScoped
 public class KeysResource {
+
+    @Inject
+    SecurityIdentity securityIdentity;
 
     @Context
     UriInfo uriInfo;
@@ -134,15 +137,19 @@ public class KeysResource {
                 .build();
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_read})
+    public boolean isUserForbidden(String project, String... roles) {
+        String username = securityIdentity.getPrincipal().getName();
+        ProjectEntity projectEntity = projectRepository.findById(project);
+        return projectEntity == null || !projectEntity.hasAnyRole(username, roles);
+    }
+
     @Operation(summary = "Get project keys", description = "List of keys")
     @GET
     @Path("/{project}/keys")
     public RestResponse<KeysMetadataRepresentation> getProjectKeys(
             @PathParam("project") @NotNull String project
     ) {
-        ProjectEntity projectEntity = projectRepository.findById(project);
-        if (projectEntity == null) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
             return keyMetadataNotFoundResponse.get();
         }
 
@@ -151,7 +158,6 @@ public class KeysResource {
         return keyMetadataSuccessResponse.apply(keys);
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_read})
     @Operation(summary = "Get company keys", description = "List of keys")
     @GET
     @Path("/{project}/companies/{ruc}/keys")
@@ -159,6 +165,10 @@ public class KeysResource {
             @PathParam("project") @NotNull String project,
             @PathParam("ruc") @NotNull String ruc
     ) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return keyMetadataNotFoundResponse.get();
+        }
+
         CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return keyMetadataNotFoundResponse.get();
@@ -205,7 +215,6 @@ public class KeysResource {
         return r;
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_read})
     @Operation(summary = "Get project components", description = "List of components")
     @GET
     @Path("/{project}/components")
@@ -215,8 +224,7 @@ public class KeysResource {
             @QueryParam("type") String type,
             @QueryParam("name") String name
     ) {
-        ProjectEntity projectEntity = projectRepository.findById(project);
-        if (projectEntity == null) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
             return RestResponse.ResponseBuilder
                     .<List<ComponentDto>>create(RestResponse.Status.NOT_FOUND)
                     .build();
@@ -245,7 +253,6 @@ public class KeysResource {
                 .build();
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_read})
     @Operation(summary = "Get company components", description = "List of components")
     @GET
     @Path("/{project}/companies/{ruc}/components")
@@ -256,6 +263,12 @@ public class KeysResource {
             @QueryParam("type") String type,
             @QueryParam("name") String name
     ) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return RestResponse.ResponseBuilder
+                    .<List<ComponentDto>>create(RestResponse.Status.NOT_FOUND)
+                    .build();
+        }
+
         CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return RestResponse.ResponseBuilder
@@ -285,7 +298,6 @@ public class KeysResource {
                 .build();
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Create a project component", description = "Create component")
     @POST
     @Path("/{project}/components")
@@ -293,8 +305,7 @@ public class KeysResource {
             @PathParam("project") @NotNull String project,
             ComponentDto componentDto
     ) {
-        ProjectEntity projectEntity = projectRepository.findById(project);
-        if (projectEntity == null) {
+        if (isUserForbidden(project, Role.owner)) {
             return componentDtoNotFoundDtoResponse.get();
         }
 
@@ -308,7 +319,6 @@ public class KeysResource {
         return componentDtoCreatedResponse.apply(response);
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Create a company component", description = "Create component")
     @POST
     @Path("/{project}/companies/{ruc}/components")
@@ -317,6 +327,10 @@ public class KeysResource {
             @PathParam("ruc") @NotNull String ruc,
             ComponentDto componentDto
     ) {
+        if (isUserForbidden(project, Role.owner)) {
+            return componentDtoNotFoundDtoResponse.get();
+        }
+
         CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return componentDtoNotFoundDtoResponse.get();
@@ -337,7 +351,6 @@ public class KeysResource {
         return componentMapper.toDto(componentModel, false);
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_read})
     @Operation(summary = "Get project component", description = "Get one component")
     @GET
     @Path("/{project}/components/{componentId}")
@@ -345,8 +358,7 @@ public class KeysResource {
             @PathParam("project") @NotNull String project,
             @PathParam("componentId") String componentId
     ) {
-        ProjectEntity projectEntity = projectRepository.findById(project);
-        if (projectEntity == null) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
             return componentDtoNotFoundDtoResponse.get();
         }
 
@@ -356,7 +368,6 @@ public class KeysResource {
         return componentDto != null ? componentDtoOkResponse.apply(componentDto) : componentDtoNotFoundDtoResponse.get();
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_read})
     @Operation(summary = "Get company component", description = "Get one component")
     @GET
     @Path("/{project}/companies/{ruc}/components/{componentId}")
@@ -365,6 +376,10 @@ public class KeysResource {
             @PathParam("ruc") @NotNull String ruc,
             @PathParam("componentId") String componentId
     ) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return componentDtoNotFoundDtoResponse.get();
+        }
+
         CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return componentDtoNotFoundDtoResponse.get();
@@ -381,7 +396,6 @@ public class KeysResource {
         return componentMapper.toDto(model, false);
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Update project component", description = "Update a component")
     @PUT
     @Path("/{project}/components/{componentId}")
@@ -390,8 +404,7 @@ public class KeysResource {
             @PathParam("componentId") String componentId,
             ComponentDto componentDto
     ) {
-        ProjectEntity projectEntity = projectRepository.findById(project);
-        if (projectEntity == null) {
+        if (isUserForbidden(project, Role.owner)) {
             return componentDtoNotFoundDtoResponse.get();
         }
 
@@ -401,7 +414,6 @@ public class KeysResource {
         return componentDtoOkResponse.apply(response);
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Update company component", description = "Update a component")
     @PUT
     @Path("/{project}/companies/{ruc}/components/{componentId}")
@@ -411,6 +423,10 @@ public class KeysResource {
             @PathParam("componentId") String componentId,
             ComponentDto componentDto
     ) {
+        if (isUserForbidden(project, Role.owner)) {
+            return componentDtoNotFoundDtoResponse.get();
+        }
+
         CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return componentDtoNotFoundDtoResponse.get();
@@ -432,7 +448,6 @@ public class KeysResource {
         return componentMapper.toDto(model, false);
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Delete a project component", description = "Delete a component")
     @DELETE
     @Path("/{project}/components/{componentId}")
@@ -440,8 +455,7 @@ public class KeysResource {
             @PathParam("project") @NotNull String project,
             @PathParam("componentId") String componentId
     ) {
-        ProjectEntity projectEntity = projectRepository.findById(project);
-        if (projectEntity == null) {
+        if (isUserForbidden(project, Role.owner)) {
             return componentDtoNotFoundVoidResponse.get();
         }
 
@@ -451,7 +465,6 @@ public class KeysResource {
         return result ? componentDtoNoContentResponse.get() : componentDtoInternalServerErrorResponse.get();
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Delete a company component", description = "Delete a component")
     @DELETE
     @Path("/{project}/companies/{ruc}/components/{componentId}")
@@ -460,6 +473,10 @@ public class KeysResource {
             @PathParam("ruc") @NotNull String ruc,
             @PathParam("componentId") String componentId
     ) {
+        if (isUserForbidden(project, Role.owner)) {
+            return componentDtoNotFoundVoidResponse.get();
+        }
+
         CompanyEntity companyEntity = companyRepository.findById(new CompanyEntity.CompanyId(project, ruc));
         if (companyEntity == null) {
             return componentDtoNotFoundVoidResponse.get();

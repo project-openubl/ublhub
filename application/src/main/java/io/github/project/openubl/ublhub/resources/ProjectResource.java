@@ -16,7 +16,6 @@
  */
 package io.github.project.openubl.ublhub.resources;
 
-import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.ublhub.dto.CheckCompanyDto;
 import io.github.project.openubl.ublhub.dto.ProjectDto;
 import io.github.project.openubl.ublhub.keys.DefaultKeyProviders;
@@ -24,12 +23,12 @@ import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
 import io.github.project.openubl.ublhub.mapper.ProjectMapper;
 import io.github.project.openubl.ublhub.models.jpa.ProjectRepository;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
-import io.github.project.openubl.ublhub.security.Permission;
+import io.github.project.openubl.ublhub.security.Role;
 import io.quarkus.panache.common.Sort;
+import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.jboss.resteasy.reactive.RestResponse;
 
-import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -52,6 +51,9 @@ import static org.jboss.resteasy.reactive.RestResponse.Status;
 public class ProjectResource {
 
     @Inject
+    SecurityIdentity securityIdentity;
+
+    @Inject
     ProjectMapper projectMapper;
 
     @Inject
@@ -60,16 +62,13 @@ public class ProjectResource {
     @Inject
     DefaultKeyProviders defaultKeyProviders;
 
-    @Inject
-    TsidFactory tsidFactory;
-
     private ComponentOwner getOwner(String projectName) {
         return ComponentOwner.builder()
                 .project(projectName)
                 .build();
     }
 
-    @Operation(summary = "List projects", description = "List all projects")
+    @Operation(summary = "Verify project name", description = "Verify whether or not the name the project has already been taken")
     @POST
     @Path("/check-name")
     public RestResponse<String> checkProjectName(@NotNull @Valid CheckCompanyDto checkCompanyDto) {
@@ -90,7 +89,6 @@ public class ProjectResource {
         return conflictResponse.get();
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Create project", description = "Create a project")
     @POST
     @Path("/")
@@ -108,28 +106,33 @@ public class ProjectResource {
             return errorResponse.apply(projectEntity);
         }
 
+        // Create Project and its owner
         projectEntity = projectMapper.updateEntityFromDto(projectDto, ProjectEntity.builder().build());
         projectEntity.persist();
 
+        String username = securityIdentity.getPrincipal().getName();
+        projectEntity.setProjectOwner(username);
+
+        // Create default keys
         ComponentOwner owner = getOwner(projectEntity.getName());
         defaultKeyProviders.createProviders(owner);
 
         return successResponse.apply(projectMapper.toDto(projectEntity));
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
     @Operation(summary = "List projects", description = "List all projects")
     @GET
     @Path("/")
     public List<ProjectDto> getProjects() {
+        String username = securityIdentity.getPrincipal().getName();
+
         Sort sort = Sort.by(ProjectRepository.SortByField.name.toString(), Sort.Direction.Descending);
-        return projectRepository.listAll(sort)
+        return projectRepository.listAll(username, sort)
                 .stream()
                 .map(entity -> projectMapper.toDto(entity))
                 .collect(Collectors.toList());
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write, Permission.project_read})
     @Operation(summary = "Get project", description = "Get one project")
     @GET
     @Path("/{projectName}")
@@ -142,8 +145,9 @@ public class ProjectResource {
                 .<ProjectDto>create(Status.NOT_FOUND)
                 .build();
 
+        String username = securityIdentity.getPrincipal().getName();
         ProjectEntity projectEntity = projectRepository.findById(projectName);
-        if (projectEntity == null) {
+        if (projectEntity == null || !projectEntity.hasAnyRole(username)) {
             return notFoundResponse.get();
         }
 
@@ -151,7 +155,6 @@ public class ProjectResource {
         return successResponse.apply(projectDto);
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Update project", description = "Update one project")
     @PUT
     @Path("/{projectName}")
@@ -167,8 +170,9 @@ public class ProjectResource {
                 .<ProjectDto>create(Status.NOT_FOUND)
                 .build();
 
+        String username = securityIdentity.getPrincipal().getName();
         ProjectEntity projectEntity = projectRepository.findById(projectName);
-        if (projectEntity == null) {
+        if (projectEntity == null || !projectEntity.hasAnyRole(username, Role.owner)) {
             return notFoundResponse.get();
         }
 
@@ -180,7 +184,6 @@ public class ProjectResource {
         return successResponse.apply(projectMapper.toDto(projectEntity));
     }
 
-    @RolesAllowed({Permission.admin, Permission.project_write})
     @Operation(summary = "Delete project", description = "Delete one project")
     @DELETE
     @Path("/{projectName}")
@@ -191,6 +194,12 @@ public class ProjectResource {
         Supplier<RestResponse<Void>> notFoundResponse = () -> ResponseBuilder
                 .<Void>create(Status.NOT_FOUND)
                 .build();
+
+        String username = securityIdentity.getPrincipal().getName();
+        ProjectEntity projectEntity = projectRepository.findById(projectName);
+        if (projectEntity == null || !projectEntity.hasAnyRole(username, Role.owner)) {
+            return notFoundResponse.get();
+        }
 
         boolean result = projectRepository.deleteById(projectName);
         Supplier<RestResponse<Void>> response = result ? successResponse : notFoundResponse;

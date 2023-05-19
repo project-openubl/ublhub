@@ -17,7 +17,6 @@
 package io.github.project.openubl.ublhub.documents;
 
 import io.github.project.openubl.ublhub.AbstractBaseTest;
-import io.github.project.openubl.ublhub.ResourceHelpers;
 import io.github.project.openubl.ublhub.dto.DocumentInputDto;
 import io.github.project.openubl.ublhub.dto.ProjectDto;
 import io.github.project.openubl.ublhub.dto.SunatDto;
@@ -41,9 +40,6 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.*;
 
 public abstract class AbstractDocumentTest extends AbstractBaseTest {
-
-    @Inject
-    ResourceHelpers resourceHelpers;
 
     final int TIMEOUT = 60;
 
@@ -86,8 +82,8 @@ public abstract class AbstractDocumentTest extends AbstractBaseTest {
     @BeforeEach
     public void beforeEach() {
         cleanDB();
-        resourceHelpers.generatePreexistingData();
     }
+
     @Test
     public void createInvoiceWithDefaultSignAlgorithm() {
         // Given

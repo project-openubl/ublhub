@@ -16,7 +16,7 @@
  */
 package io.github.project.openubl.ublhub.dto;
 
-import io.github.project.openubl.ublhub.security.validators.ValidPermission;
+import io.github.project.openubl.ublhub.security.validators.ValidRole;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.Data;
 
@@ -43,7 +43,7 @@ public class UserDto {
     @Size(min = 3, max = 250)
     private String password;
 
-    @ValidPermission
+    @ValidRole
     @Valid
     @NotEmpty
     private Set<String> permissions;

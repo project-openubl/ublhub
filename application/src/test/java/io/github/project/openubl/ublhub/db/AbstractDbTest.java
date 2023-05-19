@@ -17,7 +17,6 @@
 package io.github.project.openubl.ublhub.db;
 
 import io.github.project.openubl.ublhub.AbstractBaseTest;
-import io.github.project.openubl.ublhub.ResourceHelpers;
 import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,11 +35,12 @@ public abstract class AbstractDbTest extends AbstractBaseTest {
     @BeforeEach
     public void beforeEach() {
         cleanDB();
-        resourceHelpers.generatePreexistingData();
     }
 
     @Test
     public void testProjects() {
+        resourceHelpers.generatePreexistingData();
+
         List<ProjectEntity> projects = ProjectEntity.listAll();
         assertNotNull(projects);
         assertFalse(projects.isEmpty());

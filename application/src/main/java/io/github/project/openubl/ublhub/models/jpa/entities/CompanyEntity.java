@@ -58,6 +58,10 @@ public class CompanyEntity extends PanacheEntityBase {
     @EmbeddedId
     private CompanyId id;
 
+    @JoinColumn(name = "project", referencedColumnName = "name", insertable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ProjectEntity project;
+
     @NotNull
     @Size(max = 255)
     @Column(name = "name")

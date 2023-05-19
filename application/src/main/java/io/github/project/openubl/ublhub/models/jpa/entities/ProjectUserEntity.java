@@ -16,19 +16,12 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import io.quarkus.security.jpa.Password;
-import io.quarkus.security.jpa.Roles;
-import io.quarkus.security.jpa.UserDefinition;
-import io.quarkus.security.jpa.Username;
-import io.smallrye.mutiny.Uni;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.Version;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 @Data
 @Builder
@@ -36,28 +29,34 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
-@Table(name = "app_user")
-@UserDefinition
-public class UserEntity extends PanacheEntity {
+@Table(name = "project_user")
+public class ProjectUserEntity extends PanacheEntityBase {
 
-    @Column(name = "full_name")
-    private String fullName;
+    @Embeddable
+    @EqualsAndHashCode
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ProjectUserId implements Serializable {
+        @NotNull
+        private String project;
+
+        @NotNull
+        private String username;
+    }
+
+    @EmbeddedId
+    private ProjectUserId id;
+
+    @JoinColumn(name = "project", referencedColumnName = "name", insertable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ProjectEntity project;
 
     @NotNull
-    @Username
-    private String username;
-
-    @NotNull
-    @Password
-    private String password;
-
-    @Roles
-    private String permissions;
+    private String roles;
 
     @Version
     private int version;
 
-    public static Uni<UserEntity> findByUsername(String username) {
-        return find("username", username).singleResult();
-    }
 }
