@@ -44,7 +44,6 @@ public class CompanyEntity extends PanacheEntityBase {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class CompanyId implements Serializable {
-        @Pattern(regexp = ProjectEntity.NAME_PATTERN)
         @NotNull
         @Column(name = "project")
         private String project;

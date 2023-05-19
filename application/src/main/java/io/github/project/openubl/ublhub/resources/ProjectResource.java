@@ -38,6 +38,7 @@ import javax.ws.rs.*;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.jboss.resteasy.reactive.RestResponse.ResponseBuilder;
@@ -80,6 +81,15 @@ public class ProjectResource {
                 .<String>create(Status.CONFLICT)
                 .entity("Name is already taken")
                 .build();
+        Supplier<RestResponse<String>> badRequestResponse = () -> ResponseBuilder
+                .<String>create(Status.BAD_REQUEST)
+                .entity("Name does not comply with pattern " + ProjectEntity.NAME_PATTERN)
+                .build();
+
+        Pattern namePattern = Pattern.compile(ProjectEntity.NAME_PATTERN);
+        if (!namePattern.matcher(checkCompanyDto.getName()).matches()) {
+            return badRequestResponse.get();
+        }
 
         ProjectEntity projectEntity = projectRepository.findById(checkCompanyDto.getName());
         if (projectEntity == null) {

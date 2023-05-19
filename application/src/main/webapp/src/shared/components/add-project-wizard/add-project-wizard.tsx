@@ -66,7 +66,6 @@ export const AddProjectWizard: React.FC<IAddProjectWizardProps> = ({
         name: string()
           .trim()
           .required()
-          .matches(/[a-z0-9]([-a-z0-9]*[a-z0-9])$/)
           .max(250)
           .test("duplicateName", (value, options) => {
             return axios
