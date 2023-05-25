@@ -62,7 +62,6 @@ public class UblhubDistConfigurator {
 
         configureHttp();
         configureDatabase();
-        configureBasicAuth();
         configureOidc();
         configureXBuilder();
         configureXSender();
@@ -138,42 +137,26 @@ public class UblhubDistConfigurator {
         allEnvVars.addAll(envVars);
     }
 
-    private void configureBasicAuth() {
-        boolean isBasicAuthEnabled = CRDUtils
-                .getValueFromSubSpec(cr.getSpec().getBasicAuthSpec(), UblhubSpec.BasicAuthSpec::isEnabled)
-                .orElse(false);
-        if (!isBasicAuthEnabled) {
-            return;
-        }
-
-        SecretKeySelector sessionEncryptionKeySecret = CRDUtils
-                .getValueFromSubSpec(cr.getSpec().getBasicAuthSpec(), UblhubSpec.BasicAuthSpec::getSessionEncryptionKeySecret)
-                .orElseGet(() -> new SecretKeySelector(Constants.BASIC_AUTH_SECRET_ENCRYPTIONKEY, UblhubSecretBasicAuth.getSecretName(cr), false));
-
-        List<EnvVar> envVars = optionMapper(cr.getSpec().getBasicAuthSpec())
-                .mapOption("QUARKUS_HTTP_AUTH_SESSION_ENCRYPTION_KEY", basicAuthSpec -> sessionEncryptionKeySecret)
-                .getEnvVars();
-
-        allEnvVars.addAll(envVars);
-        allProfiles.add(Constants.PROFILE_BASIC);
-    }
-
     private void configureOidc() {
-        boolean isOidcAuthEnabled = CRDUtils
-                .getValueFromSubSpec(cr.getSpec().getOidcSpec(), UblhubSpec.OidcSpec::isEnabled)
+        boolean isAuthEnabled = CRDUtils
+                .getValueFromSubSpec(cr.getSpec().getAuthSpec(), UblhubSpec.AuthSpec::isEnabled)
                 .orElse(false);
-        if (!isOidcAuthEnabled) {
-            return;
+
+        List<EnvVar> envVars;
+        if (isAuthEnabled) {
+            envVars = optionMapper(cr.getSpec().getAuthSpec())
+                    .mapOption("OPENUBL_AUTH_ENABLED", authSpec -> true)
+                    .mapOption("QUARKUS_OIDC_AUTH_SERVER_URL", UblhubSpec.AuthSpec::getServerUrl)
+                    .mapOption("QUARKUS_OIDC_CLIENT_ID", UblhubSpec.AuthSpec::getClientId)
+                    .mapOption("QUARKUS_OIDC_CREDENTIALS_SECRET", UblhubSpec.AuthSpec::getCredentialsSecret)
+                    .getEnvVars();
+        } else {
+            envVars = optionMapper(cr.getSpec().getAuthSpec())
+                    .mapOption("OPENUBL_AUTH_ENABLED", authSpec -> false)
+                    .getEnvVars();
         }
 
-        List<EnvVar> envVars = optionMapper(cr.getSpec().getOidcSpec())
-                .mapOption("QUARKUS_OIDC_AUTH_SERVER_URL", UblhubSpec.OidcSpec::getServerUrl)
-                .mapOption("QUARKUS_OIDC_CLIENT_ID", UblhubSpec.OidcSpec::getClientId)
-                .mapOption("QUARKUS_OIDC_CREDENTIALS_SECRET", UblhubSpec.OidcSpec::getCredentialsSecret)
-                .getEnvVars();
-
         allEnvVars.addAll(envVars);
-        allProfiles.add(Constants.PROFILE_OIDC);
     }
 
     private void configureXBuilder() {
