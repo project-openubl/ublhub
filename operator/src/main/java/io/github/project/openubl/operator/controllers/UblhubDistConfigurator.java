@@ -28,7 +28,6 @@ import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.github.project.openubl.operator.Constants;
 import io.github.project.openubl.operator.cdrs.v2alpha1.Ublhub;
 import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubFileStoragePVC;
-import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubSecretBasicAuth;
 import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubService;
 import io.github.project.openubl.operator.cdrs.v2alpha1.UblhubSpec;
 import io.github.project.openubl.operator.utils.CRDUtils;
@@ -62,7 +61,7 @@ public class UblhubDistConfigurator {
 
         configureHttp();
         configureDatabase();
-        configureOidc();
+        configureAuth();
         configureXBuilder();
         configureXSender();
         configureStorage();
@@ -137,7 +136,7 @@ public class UblhubDistConfigurator {
         allEnvVars.addAll(envVars);
     }
 
-    private void configureOidc() {
+    private void configureAuth() {
         boolean isAuthEnabled = CRDUtils
                 .getValueFromSubSpec(cr.getSpec().getAuthSpec(), UblhubSpec.AuthSpec::isEnabled)
                 .orElse(false);
@@ -153,6 +152,7 @@ public class UblhubDistConfigurator {
         } else {
             envVars = optionMapper(cr.getSpec().getAuthSpec())
                     .mapOption("OPENUBL_AUTH_ENABLED", authSpec -> false)
+                    .mapOption("QUARKUS_OIDC_AUTH_SERVER_URL", authSpec -> "http://localhost:8180") // Just to avoid error since this is required
                     .getEnvVars();
         }
 
