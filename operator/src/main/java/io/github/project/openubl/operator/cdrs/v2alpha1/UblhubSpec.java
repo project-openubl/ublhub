@@ -64,7 +64,7 @@ public class UblhubSpec {
     @JsonPropertyDescription("In this section you can configure hostname and related properties.")
     private HostnameSpec hostnameSpec;
 
-    @JsonProperty("oidc")
+    @JsonProperty("auth")
     @JsonPropertyDescription("In this section you can configure Oidc settings.")
     private AuthSpec authSpec;
 
