@@ -51,6 +51,7 @@ import io.github.project.openubl.ublhub.models.jpa.entities.ProjectEntity;
 import io.github.project.openubl.ublhub.models.jpa.entities.UBLDocumentEntity;
 import io.github.project.openubl.ublhub.qute.DbTemplateLocator;
 import io.github.project.openubl.ublhub.resources.utils.ResourceUtils;
+import io.github.project.openubl.ublhub.security.Role;
 import io.github.project.openubl.xbuilder.content.jaxb.mappers.*;
 import io.github.project.openubl.xbuilder.content.jaxb.models.*;
 import io.github.project.openubl.xsender.files.xml.XmlContent;
@@ -58,6 +59,7 @@ import io.github.project.openubl.xsender.files.xml.XmlContentProvider;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.qute.Engine;
 import io.quarkus.qute.Template;
+import io.quarkus.security.identity.SecurityIdentity;
 import org.apache.camel.ProducerTemplate;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.MultipartForm;
@@ -94,6 +96,9 @@ import java.util.stream.Collectors;
 public class DocumentResource {
 
     private static final Logger LOG = Logger.getLogger(DocumentResource.class);
+
+    @Inject
+    SecurityIdentity securityIdentity;
 
     @Inject
     Engine engine;
@@ -143,6 +148,12 @@ public class DocumentResource {
                 .build();
     }
 
+    public boolean isUserForbidden(String project, String... roles) {
+        String username = securityIdentity.getPrincipal().getName();
+        ProjectEntity projectEntity = projectRepository.findById(project);
+        return projectEntity == null || !projectEntity.hasAnyRole(username, roles);
+    }
+
     private RestResponse<DocumentDto> mapDocumentImportResult(String project, DocumentImportResult importResult) {
         if (importResult.getErrorMessage() != null) {
             return documentDtoBadRequestResponse.get();
@@ -165,6 +176,10 @@ public class DocumentResource {
             @PathParam("project") @NotNull String project,
             @MultipartForm UploadFormData formData
     ) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return documentDtoNotFoundResponse.get();
+        }
+
         File file = formData.file.uploadedFile().toFile();
 
         Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, project);
@@ -180,6 +195,10 @@ public class DocumentResource {
             @PathParam("project") @NotNull String project,
             @NotNull JsonObject jsonObject
     ) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return documentDtoNotFoundResponse.get();
+        }
+
         Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, project);
         DocumentImportResult importResult = producerTemplate.requestBodyAndHeaders("direct:import-json", jsonObject, headers, DocumentImportResult.class);
 
@@ -192,6 +211,10 @@ public class DocumentResource {
             @PathParam("project") @NotNull String project,
             @NotNull JsonObject jsonObject
     ) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return documentDtoNotFoundResponse.get();
+        }
+
         Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, project);
         Object result = producerTemplate.requestBodyAndHeaders("direct:enrich-json", jsonObject, headers, Object.class);
 
@@ -215,6 +238,12 @@ public class DocumentResource {
             @PathParam("project") @NotNull String project,
             @NotNull JsonObject jsonObject
     ) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return RestResponse.ResponseBuilder
+                    .<String>create(RestResponse.Status.NOT_FOUND)
+                    .build();
+        }
+
         Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, project);
         Object result = producerTemplate.requestBodyAndHeaders("direct:render-json", jsonObject, headers, Object.class);
 
@@ -239,6 +268,10 @@ public class DocumentResource {
             @PathParam("project") @NotNull String project,
             @PathParam("documentId") @NotNull Long documentId
     ) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return documentDtoNotFoundResponse.get();
+        }
+
         UBLDocumentEntity documentEntity = documentRepository.findById(project, documentId);
         if (documentEntity == null) {
             return documentDtoNotFoundResponse.get();
@@ -256,6 +289,12 @@ public class DocumentResource {
             @PathParam("documentId") @NotNull Long documentId,
             @QueryParam("unzip") @DefaultValue("true") boolean unzip
     ) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return Response
+                    .status(Response.Status.NOT_FOUND)
+                    .build();
+        }
+
         String mediaType = !unzip ? "application/zip" : MediaType.APPLICATION_XML;
         String fileExtension = !unzip ? ".zip" : ".xml";
 
@@ -288,6 +327,12 @@ public class DocumentResource {
             @PathParam("documentId") @NotNull Long documentId,
             @QueryParam("unzip") @DefaultValue("true") boolean unzip
     ) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return Response
+                    .status(Response.Status.NOT_FOUND)
+                    .build();
+        }
+
         String mediaType = !unzip ? "application/zip" : MediaType.APPLICATION_XML;
         String fileExtension = !unzip ? ".zip" : ".xml";
 
@@ -319,6 +364,12 @@ public class DocumentResource {
             @PathParam("project") @NotNull String project,
             @PathParam("documentId") @NotNull Long documentId
     ) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return Response
+                    .status(Response.Status.NOT_FOUND)
+                    .build();
+        }
+
         UBLDocumentEntity documentEntity = documentRepository.findById(project, documentId);
         if (documentEntity == null || documentEntity.getXmlFileId() == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -487,6 +538,12 @@ public class DocumentResource {
             @QueryParam("limit") @DefaultValue("10") Integer limit,
             @QueryParam("sort_by") @DefaultValue("created:desc") List<String> sortBy
     ) {
+        if (isUserForbidden(project, Role.owner, Role.member)) {
+            return RestResponse.ResponseBuilder
+                    .<PageDto<DocumentDto>>create(RestResponse.Status.NOT_FOUND)
+                    .build();
+        }
+
         Function<PageDto<DocumentDto>, RestResponse<PageDto<DocumentDto>>> successResponse = (dto) -> RestResponse.ResponseBuilder
                 .<PageDto<DocumentDto>>create(RestResponse.Status.OK)
                 .entity(dto)

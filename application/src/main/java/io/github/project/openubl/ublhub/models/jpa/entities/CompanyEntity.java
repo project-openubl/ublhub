@@ -44,7 +44,6 @@ public class CompanyEntity extends PanacheEntityBase {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class CompanyId implements Serializable {
-        @Pattern(regexp = ProjectEntity.NAME_PATTERN)
         @NotNull
         @Column(name = "project")
         private String project;
@@ -57,6 +56,10 @@ public class CompanyEntity extends PanacheEntityBase {
 
     @EmbeddedId
     private CompanyId id;
+
+    @JoinColumn(name = "project", referencedColumnName = "name", insertable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ProjectEntity project;
 
     @NotNull
     @Size(max = 255)

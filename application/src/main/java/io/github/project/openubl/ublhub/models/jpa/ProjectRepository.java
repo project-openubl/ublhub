@@ -37,14 +37,20 @@ public class ProjectRepository implements PanacheRepositoryBase<ProjectEntity, S
         name
     }
 
-    public static final String[] SORT_BY_FIELDS = {SortByField.name.toString()};
+    public List<ProjectEntity> listAll(String username, Sort sort) {
+        Parameters params = Parameters
+                .with("username", username);
+
+        return ProjectEntity
+                .list("Select p From ProjectEntity p JOIN p.users u WHERE u.id.username =: username", sort, params);
+    }
 
     public SearchBean<ProjectEntity> list(PageBean pageBean, List<SortBean> sortBy) {
         Sort sort = Sort.by();
         sortBy.forEach(f -> sort.and(f.getFieldName(), f.isAsc() ? Sort.Direction.Ascending : Sort.Direction.Descending));
 
         PanacheQuery<ProjectEntity> query = ProjectEntity
-                .find("From ProjectEntity as n", sort)
+                .find("FROM ProjectEntity as p JOIN p.", sort)
                 .range(pageBean.getOffset(), pageBean.getOffset() + pageBean.getLimit() - 1);
         return new SearchBean<>(query.count(), query.list());
     }

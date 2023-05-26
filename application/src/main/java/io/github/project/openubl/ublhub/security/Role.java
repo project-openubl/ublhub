@@ -19,11 +19,10 @@ package io.github.project.openubl.ublhub.security;
 import java.util.Arrays;
 import java.util.List;
 
-public interface Permission {
-    String admin = "admin:app";
+public interface Role {
+    String owner = "owner";
 
-    String project_read = "project:read";
-    String project_write = "project:write";
+    String member = "member";
 
-    List<String> allPermissions = Arrays.asList(admin, project_read, project_write);
+    List<String> allPermissions = Arrays.asList(owner, member);
 }

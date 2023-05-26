@@ -64,13 +64,9 @@ public class UblhubSpec {
     @JsonPropertyDescription("In this section you can configure hostname and related properties.")
     private HostnameSpec hostnameSpec;
 
-    @JsonProperty("basicAuth")
-    @JsonPropertyDescription("In this section you can configure Basic Auth settings.")
-    private BasicAuthSpec basicAuthSpec;
-
-    @JsonProperty("oidc")
+    @JsonProperty("auth")
     @JsonPropertyDescription("In this section you can configure Oidc settings.")
-    private OidcSpec oidcSpec;
+    private AuthSpec authSpec;
 
     @JsonProperty("storage")
     @JsonPropertyDescription("In this section you can configure the Storage.")
@@ -130,19 +126,7 @@ public class UblhubSpec {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class BasicAuthSpec {
-        @JsonPropertyDescription("Enable Basic Auth.")
-        private boolean enabled;
-
-        @JsonPropertyDescription("The encryption key that is used to store persistent logins (e.g. for form auth). Logins are stored in a persistent cookie that is encrypted with AES-256 using a key derived from a SHA-256 hash of the key that is provided here.")
-        private SecretKeySelector sessionEncryptionKeySecret;
-    }
-
-    @Data
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class OidcSpec {
+    public static class AuthSpec {
         @JsonPropertyDescription("Enable Oidc Auth.")
         private boolean enabled;
 

@@ -16,14 +16,13 @@
  */
 package io.github.project.openubl.ublhub.dto;
 
-import io.github.project.openubl.ublhub.security.validators.ValidPermission;
+import io.github.project.openubl.ublhub.security.validators.ValidRole;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.util.Set;
 
@@ -34,7 +33,6 @@ public class UserDto {
     private String id;
     private String fullName;
 
-    @Pattern(regexp = "^[a-zA-Z0-9._-]{3,}$")
     @NotNull
     @Size(min = 3, max = 250)
     private String username;
@@ -43,7 +41,7 @@ public class UserDto {
     @Size(min = 3, max = 250)
     private String password;
 
-    @ValidPermission
+    @ValidRole
     @Valid
     @NotEmpty
     private Set<String> permissions;

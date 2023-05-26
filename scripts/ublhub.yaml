@@ -15,3 +15,5 @@ spec:
     type: "filesystem"
     filesystem:
       size: "1Gi"
+  auth:
+    enabled: false

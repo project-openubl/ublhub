@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.project.openubl.ublhub;
+package io.github.project.openubl.ublhub.db;
 
 import com.github.f4b6a3.tsid.TsidFactory;
 import io.github.project.openubl.ublhub.models.jpa.CompanyRepository;

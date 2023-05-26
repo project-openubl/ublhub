@@ -36,7 +36,8 @@ public class ProductionTestProfile implements QuarkusTestProfile {
         return Map.of(
                 "quarkus.datasource.db-kind", "postgresql",
                 "openubl.storage.type", "minio",
-                "openubl.messaging.type", "jms"
+                "openubl.messaging.type", "jms",
+                "openubl.auth.enabled", "true"
         );
     }
 

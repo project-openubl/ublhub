@@ -1,18 +1,3 @@
-CREATE TABLE APP_USER
-(
-    id          int8         NOT NULL,
-    full_name   VARCHAR(250),
-    username    VARCHAR(250) NOT NULL,
-    password    VARCHAR(250) NOT NULL,
-    permissions VARCHAR(250),
-    version     int4         NOT NULL,
-    PRIMARY KEY (id)
-);
-
-alter table APP_USER
-    add constraint uq_appuser_username unique (username);
-
-
 create table PROJECT
 (
     name                           varchar(255) not null,
@@ -120,55 +105,44 @@ create table QUTE_TEMPLATE
     primary key (id)
 );
 
+CREATE TABLE PROJECT_USER
+(
+    project  VARCHAR(250) NOT NULL,
+    username VARCHAR(250) NOT NULL,
+    roles    VARCHAR(250) NOT NULL,
+    version  int4         NOT NULL,
+    PRIMARY KEY (project, username)
+);
+
 alter table if exists COMPONENT
     add constraint fk_component_project
-        foreign key (project)
-            references PROJECT
-            on
-                delete
-                cascade;
+        foreign key (project) references PROJECT on delete cascade;
 
 alter table if exists COMPONENT_CONFIG
     add constraint fk_componentconfig_component
-        foreign key (component_id)
-            references COMPONENT
-            on
-                delete
-                cascade;
+        foreign key (component_id) references COMPONENT on delete cascade;
 
 alter table if exists COMPANY
     add constraint fk_company_project
-        foreign key (project)
-            references PROJECT
-            on
-                delete
-                cascade;
+        foreign key (project) references PROJECT on delete cascade;
 
 alter table if exists UBL_DOCUMENT
     add constraint fk_ubldocument_project
-        foreign key (project)
-            references PROJECT
-            on
-                delete
-                cascade;
+        foreign key (project) references PROJECT on delete cascade;
 
 alter table if exists SUNAT_NOTE
     add constraint fk_sunatnote_ubldocument
-        foreign key (sunat_note_id)
-            references UBL_DOCUMENT
-            on
-                delete
-                cascade;
-
+        foreign key (sunat_note_id) references UBL_DOCUMENT on delete cascade;
 
 alter table if exists GENERATED_ID
     add constraint fk_generatedid_project
         foreign key (project)
-            references PROJECT
-            on
-                delete
-                cascade;
+            references PROJECT on delete cascade;
 
 alter table if exists GENERATED_ID
     add constraint uq_generatedid_projectid_ruc_documenttype
         unique (project, ruc, document_type);
+
+alter table if exists PROJECT_USER
+    add constraint fk_projectuser_project
+        foreign key (project) references PROJECT on delete cascade;

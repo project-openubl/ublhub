@@ -54,8 +54,6 @@ public class Constants {
 
 
     public static final String PROFILE_PROD = "prod";
-    public static final String PROFILE_BASIC = "basic";
-    public static final String PROFILE_OIDC = "oidc";
 
 
     public static final String CERTIFICATES_FOLDER = "/mnt/certificates";

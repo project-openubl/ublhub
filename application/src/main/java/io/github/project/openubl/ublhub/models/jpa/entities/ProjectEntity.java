@@ -16,6 +16,7 @@
  */
 package io.github.project.openubl.ublhub.models.jpa.entities;
 
+import io.github.project.openubl.ublhub.security.Role;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.*;
 
@@ -24,6 +25,11 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 @Builder
@@ -52,7 +58,37 @@ public class ProjectEntity extends PanacheEntityBase {
     @Embedded
     private SunatEntity sunat;
 
+    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
+    private List<ProjectUserEntity> users;
+
     @Version
     @Column(name = "version")
     private int version;
+
+    public void setProjectOwner(String username) {
+        ProjectUserEntity projectUserEntity = new ProjectUserEntity();
+        projectUserEntity.setId(new ProjectUserEntity.ProjectUserId(name, username));
+        projectUserEntity.setRoles(String.join(",",
+                Role.owner
+        ));
+        projectUserEntity.persist();
+    }
+
+    public boolean hasAnyRole(String username) {
+        return ProjectUserEntity
+                .findByIdOptional(new ProjectUserEntity.ProjectUserId(name, username))
+                .isPresent();
+    }
+
+    public boolean hasAnyRole(String username, String... roles) {
+        return ProjectUserEntity
+                .<ProjectUserEntity>findByIdOptional(new ProjectUserEntity.ProjectUserId(name, username))
+                .map(projectUserEntity -> {
+                    Set<String> collect = Stream.of(roles).collect(Collectors.toSet());
+                    return Arrays.stream(projectUserEntity.getRoles().split(","))
+                            .anyMatch(collect::contains);
+                })
+                .orElse(false);
+    }
+
 }
