@@ -25,6 +25,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.json.JsonObject;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.StreamSupport;
 
 @ApplicationScoped
 public class FilesystemConsumerRoute extends RouteBuilder {
@@ -37,7 +40,7 @@ public class FilesystemConsumerRoute extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        from("file://" + consumerTargetDirectory + "?includeExt=json,yml,yaml,xml&delete=true")
+        from("file://" + consumerTargetDirectory + "?includeExt=json,yml,yaml,xml&delete=true&recursive=true&maxDepth=4")
                 .precondition(String.valueOf(isConsumerEnabled))
                 .id("consumer-filesystem")
                 .choice()
@@ -51,11 +54,24 @@ public class FilesystemConsumerRoute extends RouteBuilder {
                     .endChoice()
                     .when(header(FileConstants.FILE_NAME).regex(".*\\.(xml)"))
                         .process(exchange -> {
-                            String fileName = exchange.getIn().getHeader(FileConstants.FILE_NAME_ONLY, String.class);
-                            String[] split = fileName.split("\\.");
-                            String project = split.length > 2 ? split[split.length - 2] : null;
+                            String projectName;
 
-                            exchange.getIn().setHeader(DocumentRoute.DOCUMENT_PROJECT, project);
+                            String fileRelativePath = exchange.getIn().getHeader(FileConstants.FILE_RELATIVE_PATH, String.class);
+                            String[] fileRelativePathSplit = StreamSupport.stream(Paths.get(fileRelativePath).spliterator(), false)
+                                    .map(Path::toString)
+                                    .toArray(String[]::new);
+
+                            if (fileRelativePathSplit.length > 1) {
+                                // Files where the directory name represents the project
+                                projectName = fileRelativePathSplit[0];
+                            } else {
+                                // Files where the filename follows the pattern anyFilename-withAnyCharacter.projectName.xml
+                                String fileName = exchange.getIn().getHeader(FileConstants.FILE_NAME_ONLY, String.class);
+                                String[] split = fileName.split("\\.");
+                                projectName = split.length > 2 ? split[split.length - 2] : "";
+                            }
+
+                            exchange.getIn().setHeader(DocumentRoute.DOCUMENT_PROJECT, projectName);
                         })
                         .to("direct:import-xml")
                     .endChoice()
