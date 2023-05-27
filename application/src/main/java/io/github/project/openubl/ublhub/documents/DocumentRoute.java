@@ -30,13 +30,14 @@ import io.github.project.openubl.xbuilder.content.models.sunat.percepcionretenci
 import io.github.project.openubl.xbuilder.content.models.sunat.resumen.SummaryDocuments;
 import io.github.project.openubl.xsender.Constants;
 import io.github.project.openubl.xsender.camel.utils.CamelData;
-import io.github.project.openubl.xsender.camel.utils.CamelUtils;
 import io.github.project.openubl.xsender.company.CompanyCredentials;
 import io.github.project.openubl.xsender.company.CompanyURLs;
 import io.github.project.openubl.xsender.files.BillServiceFileAnalyzer;
 import io.github.project.openubl.xsender.files.BillServiceXMLFileAnalyzer;
 import io.github.project.openubl.xsender.files.ZipFile;
 import io.github.project.openubl.xsender.files.xml.XmlContent;
+import io.github.project.openubl.xsender.models.Metadata;
+import io.github.project.openubl.xsender.models.Status;
 import io.github.project.openubl.xsender.models.Sunat;
 import io.github.project.openubl.xsender.models.SunatResponse;
 import io.github.project.openubl.xsender.sunat.BillServiceDestination;
@@ -52,6 +53,7 @@ import org.xml.sax.SAXParseException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.json.JsonObject;
+import java.util.Collections;
 import java.util.Optional;
 
 import static io.github.project.openubl.xsender.camel.utils.CamelUtils.getBillServiceCamelData;
@@ -358,7 +360,19 @@ public class DocumentRoute extends RouteBuilder {
                     exchange.getIn().setBody(camelFileData.getBody());
                     camelFileData.getHeaders().forEach((k, v) -> exchange.getIn().setHeader(k, v));
                 })
-                .to(Constants.XSENDER_BILL_SERVICE_URI)
+
+                .doTry()
+                    .to(Constants.XSENDER_BILL_SERVICE_URI)
+                .doCatch(Throwable.class)
+                    .setBody(exchange -> SunatResponse.builder()
+                            .status(Status.UNKNOWN)
+                            .metadata(Metadata.builder()
+                                    .notes(Collections.emptyList())
+                                    .description("Exception al enviar XML")
+                                    .build())
+                            .build()
+                    )
+                .end()
 
                 .process(exchange -> {
                     SunatResponse sunatResponse = exchange.getIn().getBody(SunatResponse.class);
@@ -377,7 +391,12 @@ public class DocumentRoute extends RouteBuilder {
                     exchange.getIn().setBody(cdrFile);
                 })
 
-                .bean("documentBean", "saveSunatResponse")
+                .choice()
+                    .when(header(SUNAT_RESPONSE).isNotNull())
+                        .bean("documentBean", "saveSunatResponse")
+                    .endChoice()
+                .end()
+
                 .choice()
                     .when(body().isNotNull())
                         .setHeader("shouldZipFile", constant(false))
@@ -385,6 +404,7 @@ public class DocumentRoute extends RouteBuilder {
                         .bean("documentBean", "saveCdr")
                     .endChoice()
                 .end()
+
                 .choice()
                     .when(header(SUNAT_TICKET).isNotNull())
                         .setBody(header(DOCUMENT_ID))
@@ -397,10 +417,13 @@ public class DocumentRoute extends RouteBuilder {
                 .setHeader(DOCUMENT_ID, body())
                 .bean("documentBean", "fetchDocument")
                 .bean("documentBean", "getSunatData")
+
+                .setBody(header(DocumentRoute.DOCUMENT_FILE_ID))
                 .enrich("direct:" + storageType + "-get-file", (oldExchange, newExchange) -> {
                     oldExchange.getIn().setHeader(DOCUMENT_FILE, newExchange.getIn().getBody());
                     return oldExchange;
                 })
+
                 .process(exchange -> {
                     String ticket = exchange.getIn().getHeader(SUNAT_TICKET, String.class);
 
@@ -420,10 +443,35 @@ public class DocumentRoute extends RouteBuilder {
                     BillServiceFileAnalyzer fileAnalyzer = new BillServiceXMLFileAnalyzer(documentFile, urls);
 
                     BillServiceDestination ticketDestination = fileAnalyzer.getVerifyTicketDestination();
-                    CamelData camelTicketData = CamelUtils.getBillServiceCamelData(ticket, ticketDestination, credentials);
+                    CamelData camelTicketData = getBillServiceCamelData(ticket, ticketDestination, credentials);
 
                     exchange.getIn().setBody(camelTicketData.getBody());
                     camelTicketData.getHeaders().forEach((k, v) -> exchange.getIn().setHeader(k, v));
+                })
+
+                .doTry()
+                    .to(Constants.XSENDER_BILL_SERVICE_URI)
+                .doCatch(Throwable.class)
+                .setBody(exchange -> SunatResponse.builder()
+                        .status(Status.UNKNOWN)
+                        .metadata(Metadata.builder()
+                                .notes(Collections.emptyList())
+                                .description("Exception al verificar ticket")
+                                .build())
+                        .build()
+                )
+                .end()
+
+                .process(exchange -> {
+                    SunatResponse sunatResponse = exchange.getIn().getBody(SunatResponse.class);
+
+                    byte[] cdrFile = Optional.ofNullable(sunatResponse)
+                            .flatMap(response -> Optional.ofNullable(response.getSunat()))
+                            .map(Sunat::getCdr)
+                            .orElse(null);
+
+                    exchange.getIn().setHeader(SUNAT_RESPONSE, sunatResponse);
+                    exchange.getIn().setBody(cdrFile);
                 })
                 .bean("documentBean", "saveSunatResponse")
                 .choice()

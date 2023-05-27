@@ -220,7 +220,7 @@ public class DocumentBean {
         UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
         exchange.getIn().setHeader(DocumentRoute.DOCUMENT_PROJECT, documentEntity.getProject());
         exchange.getIn().setHeader(DocumentRoute.DOCUMENT_FILE_ID, documentEntity.getXmlFileId());
-        exchange.getIn().setHeader(DocumentRoute.DOCUMENT_XML_DATA, documentEntity.getXmlData());
+        exchange.getIn().setHeader(DocumentRoute.DOCUMENT_XML_DATA, xmlContentMapper.toXmlContent(documentEntity.getXmlData()));
 
         String ticket = Optional.ofNullable(documentEntity.getSunatResponse())
                 .map(SUNATResponseEntity::getTicket)
@@ -310,6 +310,8 @@ public class DocumentBean {
     ) {
         UBLDocumentEntity documentEntity = documentRepository.findById(documentId);
         documentEntity.setCdrFileId(cdrFileId);
+        documentEntity.setJobInProgress(false);
+
         documentEntity.persist();
     }
 }
