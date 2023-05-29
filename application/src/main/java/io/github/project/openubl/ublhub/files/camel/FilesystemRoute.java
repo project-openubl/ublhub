@@ -16,19 +16,25 @@
  */
 package io.github.project.openubl.ublhub.files.camel;
 
+import com.github.f4b6a3.tsid.TsidFactory;
+import io.github.project.openubl.ublhub.files.FilesManager;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.file.FileConstants;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
-import java.util.UUID;
 
 @ApplicationScoped
 public class FilesystemRoute extends RouteBuilder {
+
+    @Inject
+    TsidFactory tsidFactory;
 
     @ConfigProperty(name = "openubl.storage.type")
     String storageType;
@@ -46,12 +52,16 @@ public class FilesystemRoute extends RouteBuilder {
                         .marshal().zipFile()
                     .endChoice()
                 .end()
-                .setHeader("CamelFileName", () -> UUID.randomUUID() + ".zip")
-                .setHeader("folderName", constant(fileSystemFolder))
+                .process(exchange -> {
+                    String filename = FilesManager.generateZipFilename(tsidFactory, exchange);
+
+                    exchange.getIn().setHeader("folderName", fileSystemFolder);
+                    exchange.getIn().setHeader(FileConstants.FILE_NAME, filename);
+                })
                 .toD("file:${header.folderName}")
                 .process(exchange -> {
                     String folderName = exchange.getIn().getHeader("folderName", String.class);
-                    String fileName = exchange.getIn().getHeader("CamelFileName", String.class);
+                    String fileName = exchange.getIn().getHeader(FileConstants.FILE_NAME, String.class);
 
                     Path resolve = Paths.get(folderName).resolve(fileName);
                     exchange.getIn().setBody(resolve.toString());

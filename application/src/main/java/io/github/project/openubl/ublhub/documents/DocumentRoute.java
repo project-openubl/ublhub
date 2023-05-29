@@ -19,6 +19,8 @@ package io.github.project.openubl.ublhub.documents;
 import io.github.project.openubl.ublhub.documents.exceptions.NoCertificateToSignFoundException;
 import io.github.project.openubl.ublhub.documents.exceptions.NoUBLXMLFileCompliantException;
 import io.github.project.openubl.ublhub.documents.exceptions.ProjectNotFoundException;
+import io.github.project.openubl.ublhub.files.FilesManager;
+import io.github.project.openubl.ublhub.files.UblhubFileConstants;
 import io.github.project.openubl.ublhub.models.jpa.entities.SunatEntity;
 import io.github.project.openubl.xbuilder.content.models.standard.general.CreditNote;
 import io.github.project.openubl.xbuilder.content.models.standard.general.DebitNote;
@@ -53,7 +55,9 @@ import org.xml.sax.SAXParseException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.json.JsonObject;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static io.github.project.openubl.xsender.camel.utils.CamelUtils.getBillServiceCamelData;
@@ -286,6 +290,11 @@ public class DocumentRoute extends RouteBuilder {
                     .handled(true)
                 .end()
 
+                .process(exchange -> {
+                    String projectName = exchange.getIn().getHeader(DocumentRoute.DOCUMENT_PROJECT, String.class);
+                    List<String> baseFolder = Arrays.asList(projectName, UblhubFileConstants.XML_BASE_PATH);
+                    exchange.getIn().setHeader(FilesManager.FILE_FOLDERS, baseFolder);
+                })
                 .setHeader("shouldZipFile", constant(true))
                 .enrich("direct:" + storageType + "-save-file", (oldExchange, newExchange) -> {
                     String documentFileId = newExchange.getIn().getBody(String.class);
@@ -397,6 +406,11 @@ public class DocumentRoute extends RouteBuilder {
                     .endChoice()
                 .end()
 
+                .process(exchange -> {
+                    String projectName = exchange.getIn().getHeader(DocumentRoute.DOCUMENT_PROJECT, String.class);
+                    List<String> baseFolder = Arrays.asList(projectName, UblhubFileConstants.CDR_BASE_PATH);
+                    exchange.getIn().setHeader(FilesManager.FILE_FOLDERS, baseFolder);
+                })
                 .choice()
                     .when(body().isNotNull())
                         .setHeader("shouldZipFile", constant(false))
@@ -476,6 +490,11 @@ public class DocumentRoute extends RouteBuilder {
                 .bean("documentBean", "saveSunatResponse")
                 .choice()
                     .when(body().isNotNull())
+                        .process(exchange -> {
+                            String projectName = exchange.getIn().getHeader(DocumentRoute.DOCUMENT_PROJECT, String.class);
+                            List<String> baseFolder = Arrays.asList(projectName, UblhubFileConstants.CDR_BASE_PATH);
+                            exchange.getIn().setHeader(FilesManager.FILE_FOLDERS, baseFolder);
+                        })
                         .setHeader("shouldZipFile", constant(false))
                         .to("direct:" + storageType + "-save-file")
                         .bean("documentBean", "saveCdr")

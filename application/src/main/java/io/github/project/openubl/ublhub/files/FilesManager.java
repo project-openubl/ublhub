@@ -16,7 +16,9 @@
  */
 package io.github.project.openubl.ublhub.files;
 
+import com.github.f4b6a3.tsid.TsidFactory;
 import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -25,11 +27,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 @ApplicationScoped
 public class FilesManager {
+
+    public static final String FILE_FOLDERS = "ObjectFolders";
+    public static final String DEFAULT_FILENAME = "DefaultFilename";
 
     @Inject
     CamelContext camelContext;
@@ -37,9 +43,10 @@ public class FilesManager {
     @ConfigProperty(name = "openubl.storage.type")
     String storageType;
 
-    public String createFile(byte[] file, boolean shouldZipFile) {
+    public String createFile(List<String> folders, byte[] file, boolean shouldZipFile) {
         Map<String, Object> headers = new HashMap<>();
         headers.put("shouldZipFile", shouldZipFile);
+        headers.put(FilesManager.FILE_FOLDERS, folders);
 
         return camelContext
                 .createProducerTemplate()
@@ -86,4 +93,17 @@ public class FilesManager {
                 .requestBody("direct:" + storageType + "-delete-file", fileID);
     }
 
+    public static String generateZipFilename(TsidFactory tsidFactory, Exchange exchange) {
+        Path fileDir = Paths.get("");
+        List<String> parentFileDirectories = exchange.getIn().getHeader(FilesManager.FILE_FOLDERS, List.class);
+        if (parentFileDirectories != null) {
+            for (String folder : parentFileDirectories) {
+                fileDir = fileDir.resolve(folder);
+            }
+        }
+
+        String filename = Optional.ofNullable(exchange.getIn().getHeader(FilesManager.DEFAULT_FILENAME, String.class))
+                .orElse(tsidFactory.create() + ".zip");
+        return fileDir.resolve(filename).toString();
+    }
 }

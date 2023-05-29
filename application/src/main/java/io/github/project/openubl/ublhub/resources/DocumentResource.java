@@ -61,6 +61,7 @@ import io.quarkus.qute.Engine;
 import io.quarkus.qute.Template;
 import io.quarkus.security.identity.SecurityIdentity;
 import org.apache.camel.ProducerTemplate;
+import org.apache.camel.component.file.FileConstants;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.MultipartForm;
 import org.jboss.resteasy.reactive.RestForm;
@@ -182,7 +183,10 @@ public class DocumentResource {
 
         File file = formData.file.uploadedFile().toFile();
 
-        Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, project);
+        Map<String, Object> headers = Map.of(
+                DocumentRoute.DOCUMENT_PROJECT, project,
+                FileConstants.FILE_NAME, UUID.randomUUID() + ".xml"
+        );
         DocumentImportResult importResult = producerTemplate.requestBodyAndHeaders("direct:import-xml", file, headers, DocumentImportResult.class);
 
         return mapDocumentImportResult(project, importResult);
@@ -199,7 +203,10 @@ public class DocumentResource {
             return documentDtoNotFoundResponse.get();
         }
 
-        Map<String, Object> headers = Map.of(DocumentRoute.DOCUMENT_PROJECT, project);
+        Map<String, Object> headers = Map.of(
+                DocumentRoute.DOCUMENT_PROJECT, project,
+                FileConstants.FILE_NAME, UUID.randomUUID() + ".xml"
+        );
         DocumentImportResult importResult = producerTemplate.requestBodyAndHeaders("direct:import-json", jsonObject, headers, DocumentImportResult.class);
 
         return mapDocumentImportResult(project, importResult);
@@ -258,7 +265,7 @@ public class DocumentResource {
                     .entity(xmlString)
                     .build();
         } else {
-           throw new IllegalStateException("Unexpected result");
+            throw new IllegalStateException("Unexpected result");
         }
     }
 
