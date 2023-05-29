@@ -16,6 +16,8 @@
  */
 package io.github.project.openubl.ublhub.files.camel;
 
+import com.github.f4b6a3.tsid.TsidFactory;
+import io.github.project.openubl.ublhub.files.FilesManager;
 import io.minio.MinioClient;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
@@ -24,14 +26,17 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.UUID;
 
 @ApplicationScoped
 public class MinioFilesRoute extends RouteBuilder {
+
+    @Inject
+    TsidFactory tsidFactory;
 
     @ConfigProperty(name = "openubl.storage.type")
     String storageType;
@@ -69,7 +74,9 @@ public class MinioFilesRoute extends RouteBuilder {
                     .endChoice()
                 .end()
                 .process(exchange -> {
-                    exchange.getIn().setHeader(MinioConstants.OBJECT_NAME, UUID.randomUUID().toString());
+                    String filename = FilesManager.generateZipFilename(tsidFactory, exchange);
+
+                    exchange.getIn().setHeader(MinioConstants.OBJECT_NAME, filename);
                     exchange.getIn().setHeader(MinioConstants.DESTINATION_BUCKET_NAME, s3Bucket);
                 })
                 .toD("minio://" + s3Bucket + "?autoCreateBucket=true&deleteAfterWrite=true&minioClient=#minioClient")

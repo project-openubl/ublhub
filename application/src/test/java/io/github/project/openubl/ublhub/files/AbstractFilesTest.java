@@ -24,6 +24,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -35,11 +36,11 @@ public abstract class AbstractFilesTest {
     @Test
     public void uploadBytes() {
         // Given
-        byte[] file = new byte[]{1,2,3};
+        byte[] file = new byte[]{1, 2, 3};
 
         // When
-        String result1 = filesManager.createFile(file, false);
-        String result2 = filesManager.createFile(file, true);
+        String result1 = filesManager.createFile(Arrays.asList("folderA", "folderB"), file, false);
+        String result2 = filesManager.createFile(Arrays.asList("folderA", "folderB"), file, true);
 
         // Then
         assertNotNull(result1);
@@ -50,7 +51,7 @@ public abstract class AbstractFilesTest {
     public void uploadFile(@TempDir Path tempPath) throws IOException {
         // Given
         String filename = "myfile.xml";
-        byte[] fileContent = new byte[]{1,2,3};
+        byte[] fileContent = new byte[]{1, 2, 3};
         File file = tempPath.resolve(filename).toFile();
         Files.write(fileContent, file);
 
@@ -66,8 +67,8 @@ public abstract class AbstractFilesTest {
     @Test
     public void uploadThenGetFile() {
         // Given
-        byte[] fileContent = new byte[]{1,2,3};
-        String fileId = filesManager.createFile(fileContent, true);
+        byte[] fileContent = new byte[]{1, 2, 3};
+        String fileId = filesManager.createFile(Arrays.asList("folderA", "folderB"), fileContent, true);
 
         // When
         byte[] fileAsBytesWithoutUnzipping = filesManager.getFileAsBytesWithoutUnzipping(fileId);
@@ -81,8 +82,8 @@ public abstract class AbstractFilesTest {
     @Test
     public void uploadFileThenDeleteIt() {
         // Given
-        byte[] fileContent = new byte[]{1,2,3};
-        String fileId = filesManager.createFile(fileContent, true);
+        byte[] fileContent = new byte[]{1, 2, 3};
+        String fileId = filesManager.createFile(Arrays.asList("folderA", "folderB"), fileContent, true);
 
         // When
         filesManager.delete(fileId);
@@ -93,8 +94,8 @@ public abstract class AbstractFilesTest {
     @Test
     public void uploadFileThenGetLink() {
         // Given
-        byte[] fileContent = new byte[]{1,2,3};
-        String fileId = filesManager.createFile(fileContent, true);
+        byte[] fileContent = new byte[]{1, 2, 3};
+        String fileId = filesManager.createFile(Arrays.asList("folderA", "folderB"), fileContent, true);
 
         // When
         String fileLink = filesManager.getFileLink(fileId);

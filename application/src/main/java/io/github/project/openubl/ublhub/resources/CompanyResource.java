@@ -34,6 +34,7 @@ package io.github.project.openubl.ublhub.resources;
  */
 
 import io.github.project.openubl.ublhub.dto.CompanyDto;
+import io.github.project.openubl.ublhub.files.UblhubFileConstants;
 import io.github.project.openubl.ublhub.files.FilesManager;
 import io.github.project.openubl.ublhub.keys.DefaultKeyProviders;
 import io.github.project.openubl.ublhub.keys.component.ComponentOwner;
@@ -56,6 +57,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.function.Function;
@@ -163,7 +165,7 @@ public class CompanyResource {
         if (companyDto.getLogo() != null && !companyDto.getLogo().isEmpty()) {
             String logoBase64 = companyDto.getLogo().trim().replaceFirst("data[:]image[/]([a-z])+;base64,", "");
             byte[] logoBytes = Base64.getDecoder().decode(logoBase64);
-            logoFileId = filesManager.createFile(logoBytes, true);
+            logoFileId = filesManager.createFile(Arrays.asList(project, UblhubFileConstants.IMG_BASE_PATH), logoBytes, true);
         }
 
         companyEntity = companyMapper.updateEntityFromDto(companyDto, CompanyEntity.builder()
@@ -209,7 +211,7 @@ public class CompanyResource {
         if (companyDto.getLogo() != null && !companyDto.getLogo().isEmpty()) {
             String logoBase64 = companyDto.getLogo().trim().replaceFirst("data:image/([a-z])+;base64,", "");
             byte[] logoBytes = Base64.getDecoder().decode(logoBase64);
-            String logoFileId = filesManager.createFile(logoBytes, true);
+            String logoFileId = filesManager.createFile(Arrays.asList(project, UblhubFileConstants.IMG_BASE_PATH), logoBytes, true);
 
             companyEntity.setLogoFileId(logoFileId);
         }

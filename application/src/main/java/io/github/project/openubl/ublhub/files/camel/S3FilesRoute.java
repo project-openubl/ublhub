@@ -16,6 +16,8 @@
  */
 package io.github.project.openubl.ublhub.files.camel;
 
+import com.github.f4b6a3.tsid.TsidFactory;
+import io.github.project.openubl.ublhub.files.FilesManager;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.aws2.s3.AWS2S3Constants;
@@ -31,14 +33,17 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.net.URI;
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.UUID;
 
 @ApplicationScoped
 public class S3FilesRoute extends RouteBuilder {
+
+    @Inject
+    TsidFactory tsidFactory;
 
     @ConfigProperty(name = "openubl.storage.type")
     String storageType;
@@ -117,7 +122,9 @@ public class S3FilesRoute extends RouteBuilder {
                     .endChoice()
                 .end()
                 .process(exchange -> {
-                    exchange.getIn().setHeader(AWS2S3Constants.KEY, UUID.randomUUID().toString());
+                    String filename = FilesManager.generateZipFilename(tsidFactory, exchange);
+
+                    exchange.getIn().setHeader(AWS2S3Constants.KEY, filename);
                     exchange.getIn().setHeader(AWS2S3Constants.BUCKET_DESTINATION_NAME, s3Bucket);
                 })
                 .toD("aws2-s3://" + s3Bucket + "?autoCreateBucket=true&deleteAfterWrite=true&amazonS3Client=#s3client")
