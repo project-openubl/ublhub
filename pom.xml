@@ -37,7 +37,7 @@
 
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>2.15.0.Final</quarkus.platform.version>
+        <quarkus.platform.version>3.0.4.Final</quarkus.platform.version>
         <keycloak.version>18.0.2</keycloak.version>
 
         <maven.compiler.parameters>true</maven.compiler.parameters>
