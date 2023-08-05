@@ -290,12 +290,12 @@ jobs:
           browser: ${{ matrix.browser }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: container-screenshots-${{ matrix.os }}-${{ matrix.browser }}
           path: application/src/main/webapp/cypress/screenshots
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v3
         if: always()
         with:
           name: container-videos-${{ matrix.os }}-${{ matrix.browser }}
