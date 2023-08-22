@@ -283,7 +283,7 @@ jobs:
           export endpoint=$(minikube ip);
           echo "CYPRESS_BASE_URL=https://$endpoint" >> $GITHUB_ENV
       - name: Cypress run
-        uses: cypress-io/github-action@v5
+        uses: cypress-io/github-action@v6
         with:
           working-directory: application/src/main/webapp
           record: false
