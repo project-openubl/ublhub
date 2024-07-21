@@ -1,0 +1,48 @@
+{
+  "actions": {
+    "cancel": "Cancel",
+    "clearAllFilters": "Clear all filters",
+    "createNew": "Create new",
+    "delete": "Delete",
+    "edit": "Edit",
+    "filterBy": "Filter by {{what}}",
+    "selectAll": "Select all",
+    "selectNone": "Select none",
+    "selectPage": "Select page"
+  },
+  "dialog": {
+    "message": {
+      "delete": "This action cannot be undone"
+    },
+    "title": {
+      "deleteWithName": "Delete {{what}} \"{{name}}\"",
+      "new": "New {{what}}"
+    }
+  },
+  "message": {
+    "noDataAvailableBody": "No data available",
+    "noDataAvailableTitle": "No data available",
+    "noResultsFoundBody": "No resulst found",
+    "noResultsFoundTitle": "No results found"
+  },
+  "terms": {
+    "cancel": "Cancel",
+    "create": "Create",
+    "description": "Description",
+    "name": "Name",
+    "project": "Project",
+    "projectDeleted": "Project deleted",
+    "projects": "Projects",
+    "save": "Save"
+  },
+  "toastr": {
+    "fail": {
+      "create": "Failed to create {{type}}.",
+      "save": "Failed to save {{type}}."
+    },
+    "success": {
+      "created": "{{type}} was successfully created.",
+      "saved": "{{type}} was successfully saved."
+    }
+  }
+}

@@ -1,0 +1,22 @@
+[package]
+name = "openubl-storage"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = {version = "4.4.11", features = ["derive", "env"]}
+minio = "0.1.0"
+serde = { version = "1.0.193", features = ["derive"] }
+anyhow = "1.0.78"
+uuid = { version = "1.6.1", features = ["v4"] }
+thiserror = "1.0.53"
+zip = "0.6.6"
+tempfile = "3.9.0"
+reqwest = "0.11.23"
+aws-sdk-s3 = "1.11.0"
+tokio = "1.35.1"
+aws-config = "1.1.1"
+aws-smithy-runtime = "1.1.1"
+aws-smithy-runtime-api = "1.1.1"
