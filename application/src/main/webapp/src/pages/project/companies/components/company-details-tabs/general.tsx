@@ -21,7 +21,7 @@ import { useCompaniesQuery } from "queries/companies";
 
 import { CompanyDto, ProjectDto } from "api/models";
 import { GeneralForm } from "./general-form";
-import { CompanyLogo } from "../company-logo";
+import { CompanyLogo } from "shared/components/company-logo";
 
 interface IGeneralProps {
   project: ProjectDto;

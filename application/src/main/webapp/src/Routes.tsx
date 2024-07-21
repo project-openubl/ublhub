@@ -1,68 +1,51 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import ProjectEditGeneral from "pages/project-edit/general";
+const GettingStarted = lazy(() => import("./pages/getting-started"));
 
-const ProjectList = lazy(() => import("./pages/project-list"));
-const ProjectEdit = lazy(() => import("./pages/project-edit"));
-// const ProjectEditGeneral = lazy(() => import("./pages/project-edit/general"));
-const ProjectEditSunat = lazy(() => import("./pages/project-edit/sunat"));
-const ProjectEditCertificates = lazy(
-  () => import("./pages/project-edit/certificates")
-);
-const ProjectEditCompanies = lazy(
-  () => import("./pages/project-edit/companies")
-);
-
-const DocumentList = lazy(() => import("./pages/document-list"));
+const ProjectWrapper = lazy(() => import("./pages/project"));
+const ProjectSettings = lazy(() => import("./pages/project/settings"));
+const ProjectSunat = lazy(() => import("./pages/project/sunat"));
+const ProjectCertificates = lazy(() => import("./pages/project/certificates"));
+const ProjectCompanies = lazy(() => import("./pages/project/companies"));
+const ProjectDocuments = lazy(() => import("./pages/project/documents"));
 
 export const AppRoutes = () => {
   const routes = [
     {
-      Component: ProjectList,
-      path: "/projects",
-      hasDescendant: true,
+      Component: GettingStarted,
+      path: "/getting-started",
+      hasDescendant: false,
     },
     {
-      Component: ProjectEdit,
+      Component: ProjectWrapper,
       path: "/projects/:projectName",
       children: [
         {
-          Component: () => <Navigate to="general" replace />,
+          Component: () => <Navigate to="settings" replace />,
           path: "",
         },
         {
-          Component: ProjectEditGeneral,
-          path: "general",
+          Component: ProjectSettings,
+          path: "settings",
         },
         {
-          Component: ProjectEditSunat,
+          Component: ProjectSunat,
           path: "sunat",
         },
         {
-          Component: ProjectEditCertificates,
+          Component: ProjectCertificates,
           path: "certificates",
         },
         {
-          Component: ProjectEditCompanies,
+          Component: ProjectCompanies,
           path: "companies",
         },
+        {
+          Component: ProjectDocuments,
+          path: "documents",
+        },
       ],
-    },
-    {
-      Component: ProjectList,
-      path: "/projects",
-      hasDescendant: true,
-    },
-    {
-      Component: DocumentList,
-      path: "/documents",
-      hasDescendant: false,
-    },
-    {
-      Component: DocumentList,
-      path: "/documents/projects/:projectName",
-      hasDescendant: false,
     },
   ];
 
@@ -86,7 +69,7 @@ export const AppRoutes = () => {
             )}
           </Route>
         ))}
-        <Route path="/" element={<Navigate to="/projects" />} />
+        <Route path="/" element={<Navigate to="/getting-started" />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Suspense>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useMatch, useNavigate } from "react-router-dom";
+import { useMatch, useNavigate, useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { StatusIcon, StatusType, useSelectionState } from "@migtools/lib-ui";
@@ -65,7 +65,7 @@ import {
 import { ContextOption, ProjectContextSelector } from "shared/context";
 
 import { formatTimestamp } from "utils/dateUtils";
-import { DocumentDto } from "api/models";
+import { DocumentDto, ProjectDto } from "api/models";
 
 import { DocumentEditor } from "./components/document-editor";
 import { XmlCdrPreview } from "./components/xml-cdr-preview";
@@ -231,8 +231,7 @@ export const DocumentList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const matchSingleProjectPage = useMatch("/documents/projects/:projectName");
-  const projectName = matchSingleProjectPage?.params.projectName;
+  const project = useOutletContext<ProjectDto | null>();
 
   const onProjectContextChange = (context: ContextOption) => {
     navigate("/documents/projects/" + context.key);
@@ -280,7 +279,7 @@ export const DocumentList: React.FC = () => {
     setQueryParams(params);
   }, [filterText, currentPage]);
 
-  const documentsQuery = useDocumentsQuery(projectName || null, queryParams);
+  const documentsQuery = useDocumentsQuery(project?.name || null, queryParams);
 
   const {
     isItemSelected: isRowExpanded,
@@ -387,38 +386,6 @@ export const DocumentList: React.FC = () => {
   }
   return (
     <>
-      <PageSection
-        variant={PageSectionVariants.light}
-        padding={{ default: "noPadding" }}
-      >
-        <Toolbar>
-          <ToolbarContent>
-            <ToolbarItem>{t("terms.projects")}:</ToolbarItem>
-            <ToolbarItem>
-              <ProjectContextSelector
-                contextKeyFromURL={projectName}
-                onChange={onProjectContextChange}
-                props={{
-                  footer: (
-                    <ContextSelectorFooter>
-                      <Button
-                        variant="secondary"
-                        isInline
-                        onClick={() => navigate("/projects")}
-                      >
-                        {t("actions.create-object", {
-                          what: t("terms.project").toLowerCase(),
-                        })}
-                      </Button>
-                    </ContextSelectorFooter>
-                  ),
-                }}
-              />
-            </ToolbarItem>
-          </ToolbarContent>
-        </Toolbar>
-      </PageSection>
-      <Divider />
       <PageSection variant={PageSectionVariants.light}>
         <TextContent>
           <Text component="h1">{t("terms.documents")}</Text>
@@ -427,73 +394,56 @@ export const DocumentList: React.FC = () => {
       </PageSection>
       <Divider />
       <PageSection variant="light" type="nav">
-        <ConditionalRender
-          when={!projectName}
-          then={
-            <Bullseye>
-              <EmptyState>
-                <EmptyStateIcon icon={ArrowUpIcon} />
-                <Title headingLevel="h4" size="lg">
-                  Selecciona un proyecto
-                </Title>
-                <EmptyStateBody>
-                  Selecciona el proyecto al cual deseas acceder.
-                </EmptyStateBody>
-              </EmptyState>
-            </Bullseye>
+        <SimpleTableWithToolbar
+          hasTopPagination
+          hasBottomPagination
+          totalCount={documentsQuery.data?.count || 0}
+          // Sorting
+          sortBy={currentSortBy}
+          onSort={onChangeSortBy}
+          // Pagination
+          currentPage={currentPage}
+          onPageChange={onPageChange}
+          // Table
+          rows={rows}
+          cells={columns}
+          actionResolver={actionResolver}
+          onCollapse={onCollapseRow}
+          // Fech data
+          isLoading={documentsQuery.isLoading}
+          loadingVariant="skeleton"
+          fetchError={documentsQuery.isError}
+          // Toolbar filters
+          filtersApplied={filterText.trim().length > 0}
+          toolbarToggle={
+            <ToolbarItem variant="search-filter">
+              <SearchInput
+                value={filterTextTemp}
+                onChange={(_, value) => setFilterTextTemp(value)}
+                onSearch={() => setFilterText(filterTextTemp)}
+                attributes={[{ attr: "ruc", display: "RUC" }]}
+                advancedSearchDelimiter={":"}
+                hasWordsAttrLabel="Filter text"
+              />
+            </ToolbarItem>
           }
-        >
-          <SimpleTableWithToolbar
-            hasTopPagination
-            hasBottomPagination
-            totalCount={documentsQuery.data?.count || 0}
-            // Sorting
-            sortBy={currentSortBy}
-            onSort={onChangeSortBy}
-            // Pagination
-            currentPage={currentPage}
-            onPageChange={onPageChange}
-            // Table
-            rows={rows}
-            cells={columns}
-            actionResolver={actionResolver}
-            onCollapse={onCollapseRow}
-            // Fech data
-            isLoading={documentsQuery.isLoading}
-            loadingVariant="skeleton"
-            fetchError={documentsQuery.isError}
-            // Toolbar filters
-            filtersApplied={filterText.trim().length > 0}
-            toolbarToggle={
-              <ToolbarItem variant="search-filter">
-                <SearchInput
-                  value={filterTextTemp}
-                  onChange={(_, value) => setFilterTextTemp(value)}
-                  onSearch={() => setFilterText(filterTextTemp)}
-                  attributes={[{ attr: "ruc", display: "RUC" }]}
-                  advancedSearchDelimiter={":"}
-                  hasWordsAttrLabel="Filter text"
-                />
+          toolbarActions={
+            <ToolbarGroup variant="button-group">
+              <ToolbarItem>
+                <Button
+                  type="button"
+                  aria-label="new-document"
+                  variant={ButtonVariant.primary}
+                  onClick={() => documentModal.open("ADD")}
+                >
+                  {t("actions.create-object", {
+                    what: t("terms.document").toLowerCase(),
+                  })}
+                </Button>
               </ToolbarItem>
-            }
-            toolbarActions={
-              <ToolbarGroup variant="button-group">
-                <ToolbarItem>
-                  <Button
-                    type="button"
-                    aria-label="new-document"
-                    variant={ButtonVariant.primary}
-                    onClick={() => documentModal.open("ADD")}
-                  >
-                    {t("actions.create-object", {
-                      what: t("terms.document").toLowerCase(),
-                    })}
-                  </Button>
-                </ToolbarItem>
-              </ToolbarGroup>
-            }
-          />
-        </ConditionalRender>
+            </ToolbarGroup>
+          }
+        />
       </PageSection>
 
       <Modal
@@ -503,9 +453,9 @@ export const DocumentList: React.FC = () => {
         isOpen={documentModal.isOpen}
         onClose={documentModal.close}
       >
-        {projectName && (
+        {project && (
           <DocumentEditor
-            projectName={projectName}
+            projectName={project.name}
             onSaved={documentModal.close}
             onCancel={documentModal.close}
           />
@@ -523,17 +473,17 @@ export const DocumentList: React.FC = () => {
           </Button>,
         ]}
       >
-        {projectName &&
+        {project &&
           rowModal.data &&
           (rowModal.action === "xml" || rowModal.action === "cdr") && (
             <XmlCdrPreview
-              projectName={projectName}
+              projectName={project.name}
               document={rowModal.data}
               variant={rowModal.action === "xml" ? "xml" : "cdr"}
             />
           )}
-        {projectName && rowModal.data && rowModal.action === "pdf" && (
-          <PdfPreview projectName={projectName} document={rowModal.data} />
+        {project && rowModal.data && rowModal.action === "pdf" && (
+          <PdfPreview projectName={project.name} document={rowModal.data} />
         )}
       </Modal>
     </>

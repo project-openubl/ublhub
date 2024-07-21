@@ -1,14 +1,5 @@
 import React, { useReducer, useState } from "react";
-import { useOutletContext } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
-
-import {
-  SimpleTableWithToolbar,
-  useConfirmationContext,
-  useModal,
-  useTable,
-  useTableControls,
-} from "@project-openubl/lib-ui";
 
 import {
   Button,
@@ -33,6 +24,22 @@ import {
 } from "@patternfly/react-table";
 
 import {
+  SimpleTableWithToolbar,
+  useConfirmationContext,
+  useModal,
+  useTable,
+  useTableControls,
+} from "@project-openubl/lib-ui";
+
+import {
+  CompanyDto,
+  ComponentDto,
+  ComponentTypeDto,
+  KeyMetadataDto,
+  ProjectDto,
+} from "api/models";
+
+import {
   useComponentsQuery,
   useDeleteComponentMutation,
   useKeysQuery,
@@ -40,14 +47,8 @@ import {
 import { useServerInfoQuery } from "queries/server-info";
 
 import { KEY_PROVIDERS } from "Constants";
-import {
-  ComponentDto,
-  ComponentTypeDto,
-  KeyMetadataDto,
-  ProjectDto,
-} from "api/models";
 
-import { ComponentForm } from "./components/component-form";
+import { ComponentForm } from "shared/components/component-form";
 
 const ROW_FIELD = "row_field";
 const getRow = (rowData: IRowData): KeyMetadataDto => {
@@ -74,23 +75,33 @@ export const filterByText = (filterText: string, item: KeyMetadataDto) => {
   );
 };
 
-const Certificates: React.FC = () => {
+interface ICertificatesProps {
+  project: ProjectDto;
+  company: CompanyDto;
+}
+
+export const Certificates: React.FC<ICertificatesProps> = ({
+  project,
+  company,
+}) => {
   const { t } = useTranslation();
   const confirmationModal = useConfirmationContext();
 
-  const project = useOutletContext<ProjectDto | null>();
-  const keysQuery = useKeysQuery(project?.name || null, null);
+  const keysQuery = useKeysQuery(project?.name || null, company.ruc || null);
   const serverInfoQuery = useServerInfoQuery();
-  const componentskeysQuery = useComponentsQuery(project?.name || null, null);
+  const componentskeysQuery = useComponentsQuery(
+    project?.name || null,
+    company.ruc || null
+  );
   const deleteComponentMutation = useDeleteComponentMutation(
     project?.name || null,
-    null,
+    company.ruc || null,
     () => {
       confirmationModal.close();
     }
   );
 
-  const viewKeyModal = useModal<"PUBLIC-KEY" | "CERTIFICATE", string>();
+  const viewKeyModal = useModal<"PUBLIC-KEY" | " CERTIFICATE", string>();
   const componentFormModal = useModal<
     "create" | "edit",
     { componentType: ComponentTypeDto; component?: ComponentDto }
@@ -107,7 +118,10 @@ const Certificates: React.FC = () => {
     sortBy: currentSortBy,
     changePage: onPageChange,
     changeSortBy: onChangeSortBy,
-  } = useTableControls({ sortBy: { index: 0, direction: "asc" } });
+  } = useTableControls({
+    sortBy: { index: 0, direction: "asc" },
+    page: { page: 1, perPage: 5 },
+  });
 
   const { pageItems, filteredItems } = useTable<KeyMetadataDto>({
     items: keysQuery.data?.keys || [],
@@ -161,7 +175,9 @@ const Certificates: React.FC = () => {
           title: (
             <Button
               variant="secondary"
-              onClick={() => viewKeyModal.open("CERTIFICATE", item.certificate)}
+              onClick={() =>
+                viewKeyModal.open(" CERTIFICATE", item.certificate)
+              }
             >
               {t("terms.certificate")}
             </Button>
@@ -243,6 +259,7 @@ const Certificates: React.FC = () => {
   return (
     <>
       <SimpleTableWithToolbar
+        variant="compact"
         hasTopPagination
         hasBottomPagination
         totalCount={filteredItems.length}
@@ -282,7 +299,7 @@ const Certificates: React.FC = () => {
                     toggleVariant="primary"
                   >
                     {t("actions.create-object", {
-                      what: t("terms.certificate").toLowerCase(),
+                      what: t("terms.certificate"),
                     })}
                   </DropdownToggle>
                 }
@@ -346,6 +363,7 @@ const Certificates: React.FC = () => {
         {project && project.name && componentFormModal.data && (
           <ComponentForm
             projectName={project.name}
+            companyRuc={company.ruc}
             componentType={componentFormModal.data.componentType}
             component={componentFormModal.data.component}
             onSaved={componentFormModal.close}
@@ -356,5 +374,3 @@ const Certificates: React.FC = () => {
     </>
   );
 };
-
-export default Certificates;

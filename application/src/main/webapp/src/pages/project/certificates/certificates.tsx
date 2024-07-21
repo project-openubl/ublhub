@@ -1,14 +1,28 @@
 import React, { useReducer, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
+
+import {
+  SimpleTableWithToolbar,
+  useConfirmationContext,
+  useModal,
+  useTable,
+  useTableControls,
+} from "@project-openubl/lib-ui";
 
 import {
   Button,
   ButtonVariant,
+  Divider,
   Dropdown,
   DropdownItem,
   DropdownToggle,
   Modal,
+  PageSection,
+  PageSectionVariants,
   SearchInput,
+  Text,
+  TextContent,
   ToolbarGroup,
   ToolbarItem,
 } from "@patternfly/react-core";
@@ -24,22 +38,6 @@ import {
 } from "@patternfly/react-table";
 
 import {
-  SimpleTableWithToolbar,
-  useConfirmationContext,
-  useModal,
-  useTable,
-  useTableControls,
-} from "@project-openubl/lib-ui";
-
-import {
-  CompanyDto,
-  ComponentDto,
-  ComponentTypeDto,
-  KeyMetadataDto,
-  ProjectDto,
-} from "api/models";
-
-import {
   useComponentsQuery,
   useDeleteComponentMutation,
   useKeysQuery,
@@ -47,8 +45,14 @@ import {
 import { useServerInfoQuery } from "queries/server-info";
 
 import { KEY_PROVIDERS } from "Constants";
+import {
+  ComponentDto,
+  ComponentTypeDto,
+  KeyMetadataDto,
+  ProjectDto,
+} from "api/models";
 
-import { ComponentForm } from "../component-form";
+import { ComponentForm } from "shared/components/component-form";
 
 const ROW_FIELD = "row_field";
 const getRow = (rowData: IRowData): KeyMetadataDto => {
@@ -75,33 +79,23 @@ export const filterByText = (filterText: string, item: KeyMetadataDto) => {
   );
 };
 
-interface ICertificatesProps {
-  project: ProjectDto;
-  company: CompanyDto;
-}
-
-export const Certificates: React.FC<ICertificatesProps> = ({
-  project,
-  company,
-}) => {
+export const Certificates: React.FC = () => {
   const { t } = useTranslation();
   const confirmationModal = useConfirmationContext();
 
-  const keysQuery = useKeysQuery(project?.name || null, company.ruc || null);
+  const project = useOutletContext<ProjectDto | null>();
+  const keysQuery = useKeysQuery(project?.name || null, null);
   const serverInfoQuery = useServerInfoQuery();
-  const componentskeysQuery = useComponentsQuery(
-    project?.name || null,
-    company.ruc || null
-  );
+  const componentskeysQuery = useComponentsQuery(project?.name || null, null);
   const deleteComponentMutation = useDeleteComponentMutation(
     project?.name || null,
-    company.ruc || null,
+    null,
     () => {
       confirmationModal.close();
     }
   );
 
-  const viewKeyModal = useModal<"PUBLIC-KEY" | " CERTIFICATE", string>();
+  const viewKeyModal = useModal<"PUBLIC-KEY" | "CERTIFICATE", string>();
   const componentFormModal = useModal<
     "create" | "edit",
     { componentType: ComponentTypeDto; component?: ComponentDto }
@@ -118,10 +112,7 @@ export const Certificates: React.FC<ICertificatesProps> = ({
     sortBy: currentSortBy,
     changePage: onPageChange,
     changeSortBy: onChangeSortBy,
-  } = useTableControls({
-    sortBy: { index: 0, direction: "asc" },
-    page: { page: 1, perPage: 5 },
-  });
+  } = useTableControls({ sortBy: { index: 0, direction: "asc" } });
 
   const { pageItems, filteredItems } = useTable<KeyMetadataDto>({
     items: keysQuery.data?.keys || [],
@@ -175,9 +166,7 @@ export const Certificates: React.FC<ICertificatesProps> = ({
           title: (
             <Button
               variant="secondary"
-              onClick={() =>
-                viewKeyModal.open(" CERTIFICATE", item.certificate)
-              }
+              onClick={() => viewKeyModal.open("CERTIFICATE", item.certificate)}
             >
               {t("terms.certificate")}
             </Button>
@@ -258,72 +247,80 @@ export const Certificates: React.FC<ICertificatesProps> = ({
 
   return (
     <>
-      <SimpleTableWithToolbar
-        variant="compact"
-        hasTopPagination
-        hasBottomPagination
-        totalCount={filteredItems.length}
-        // Sorting
-        sortBy={currentSortBy}
-        onSort={onChangeSortBy}
-        // Pagination
-        currentPage={currentPage}
-        onPageChange={onPageChange}
-        // Table
-        rows={rows}
-        cells={columns}
-        actions={actions}
-        // Fech data
-        isLoading={keysQuery.isLoading}
-        loadingVariant="skeleton"
-        fetchError={keysQuery.isError}
-        // Toolbar filters
-        filtersApplied={filterText.trim().length > 0}
-        toolbarToggle={
-          <ToolbarItem variant="search-filter">
-            <SearchInput
-              value={filterText}
-              onChange={(_, value) => setFilterText(value)}
-            />
-          </ToolbarItem>
-        }
-        toolbarActions={
-          <ToolbarGroup variant="button-group">
-            <ToolbarItem>
-              <Dropdown
-                onSelect={toggleIsNewKeyBtnOpen}
-                toggle={
-                  <DropdownToggle
-                    id="toggle-basic"
-                    onToggle={toggleIsNewKeyBtnOpen}
-                    toggleVariant="primary"
-                  >
-                    {t("actions.create-object", {
-                      what: t("terms.certificate"),
-                    })}
-                  </DropdownToggle>
-                }
-                isOpen={isNewKeyBtnOpen}
-                dropdownItems={serverInfoQuery.data?.componentTypes[
-                  KEY_PROVIDERS
-                ].map((e) => (
-                  <DropdownItem
-                    key={e.id}
-                    component="button"
-                    onClick={() => {
-                      componentFormModal.open("create", {
-                        componentType: e,
-                      });
-                    }}
-                  >
-                    {e.id}
-                  </DropdownItem>
-                ))}
+      <PageSection variant={PageSectionVariants.light}>
+        <TextContent>
+          <Text component="h1">{t("terms.certificates")}</Text>
+          <Text component="small">Certificados usados para firmar archivos XML.</Text>
+        </TextContent>
+      </PageSection>
+      <Divider />
+      <PageSection variant="light" className="pf-u-p-0">
+        <SimpleTableWithToolbar
+          hasTopPagination
+          hasBottomPagination
+          totalCount={filteredItems.length}
+          // Sorting
+          sortBy={currentSortBy}
+          onSort={onChangeSortBy}
+          // Pagination
+          currentPage={currentPage}
+          onPageChange={onPageChange}
+          // Table
+          rows={rows}
+          cells={columns}
+          actions={actions}
+          // Fech data
+          isLoading={keysQuery.isLoading}
+          loadingVariant="skeleton"
+          fetchError={keysQuery.isError}
+          // Toolbar filters
+          filtersApplied={filterText.trim().length > 0}
+          toolbarToggle={
+            <ToolbarItem variant="search-filter">
+              <SearchInput
+                value={filterText}
+                onChange={(_, value) => setFilterText(value)}
               />
             </ToolbarItem>
-          </ToolbarGroup>
-        }
-      />
+          }
+          toolbarActions={
+            <ToolbarGroup variant="button-group">
+              <ToolbarItem>
+                <Dropdown
+                  onSelect={toggleIsNewKeyBtnOpen}
+                  toggle={
+                    <DropdownToggle
+                      id="toggle-basic"
+                      onToggle={toggleIsNewKeyBtnOpen}
+                      toggleVariant="primary"
+                    >
+                      {t("actions.create-object", {
+                        what: t("terms.certificate").toLowerCase(),
+                      })}
+                    </DropdownToggle>
+                  }
+                  isOpen={isNewKeyBtnOpen}
+                  dropdownItems={serverInfoQuery.data?.componentTypes[
+                    KEY_PROVIDERS
+                  ].map((e) => (
+                    <DropdownItem
+                      key={e.id}
+                      component="button"
+                      onClick={() => {
+                        componentFormModal.open("create", {
+                          componentType: e,
+                        });
+                      }}
+                    >
+                      {e.id}
+                    </DropdownItem>
+                  ))}
+                />
+              </ToolbarItem>
+            </ToolbarGroup>
+          }
+        />
+      </PageSection>
 
       <Modal
         variant="small"
@@ -363,7 +360,6 @@ export const Certificates: React.FC<ICertificatesProps> = ({
         {project && project.name && componentFormModal.data && (
           <ComponentForm
             projectName={project.name}
-            companyRuc={company.ruc}
             componentType={componentFormModal.data.componentType}
             component={componentFormModal.data.component}
             onSaved={componentFormModal.close}
