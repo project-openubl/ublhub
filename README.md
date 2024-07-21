@@ -1,20 +1,11 @@
-![CI](https://github.com/project-openubl/ublhub/workflows/CI/badge.svg)
-[![License](https://img.shields.io/badge/Apache-2.0-green.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+## dev-env
 
-[![Project Chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg?style=for-the-badge&logo=zulip)](https://projectopenubl.zulipchat.com/)
+Starting:
 
-# Ublhub
+```shell
+docker-compose -f openubl/deploy/compose/compose.yaml up
+```
 
-Microservicio que administra tus XMLs emitidos a la SUNAT.
-
-- [Application](./application)
-- [Operator](./operator)
-
-## Links
-
-- [Documentación](https://project-openubl.github.io)
-- [Discusiones](https://github.com/project-openubl/ublhub/discussions)
-
-## License
-
-- [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+```shell
+RUST_LOG=info cargo watch -x 'run -p openubl-cli -- server --db-user user --db-password password --oidc-auth-server-url http://localhost:9001/realms/openubl minio --storage-minio-host http://localhost:9002 --storage-minio-access-key admin --storage-minio-secret-key password'
+```

@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = [    
+    "migration",
+    "entity",
+    "common",
+    "api",
+    "server",
+    "cli",
+    "storage",
+    "signature",
+]
+
+default-members = ["cli"]

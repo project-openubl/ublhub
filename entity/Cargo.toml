@@ -1,0 +1,8 @@
+[package]
+name = "openubl-entity"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+sea-orm = { version = "0.12.10", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }

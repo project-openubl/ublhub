@@ -1,0 +1,29 @@
+{
+    "name": "ublhub",
+    "image": "mcr.microsoft.com/devcontainers/rust:bullseye",
+    "features": {
+        "ghcr.io/devcontainers/features/rust:1": {},
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "20"
+        },
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    },
+    "postCreateCommand": "echo \"source /usr/share/bash-completion/completions/git\" >> ~/.bashrc",
+    "customizations": {
+        "vscode": {
+            "settings": {},
+            "extensions": [
+                "vadimcn.vscode-lldb",
+                "rust-lang.rust-analyzer",
+                "tamasfe.even-better-toml",
+                "github.vscode-github-actions",
+                "github.vscode-pull-request-github"
+            ]
+        },
+        "codespaces": {
+            "openFiles": [
+                "README.md"
+            ]
+        }
+    }
+}

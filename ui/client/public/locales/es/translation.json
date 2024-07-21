@@ -1,0 +1,48 @@
+{
+  "actions": {
+    "cancel": "Cancelar",
+    "clearAllFilters": "Limpiar todos los filtros",
+    "createNew": "Crear nuevo",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "filterBy": "Filtrar por {{what}}",
+    "selectAll": "Seleccionar todos",
+    "selectNone": "Seleccionar ninguno",
+    "selectPage": "Seleccionar página"
+  },
+  "dialog": {
+    "message": {
+      "delete": "Esta acción no puede ser revertida."
+    },
+    "title": {
+      "deleteWithName": "Eliminar {{what}} \"{{name}}\"?",
+      "new": "Nuevo {{what}}"
+    }
+  },
+  "message": {
+    "noDataAvailableBody": "No hay datos disponibles para ser mostrados aquí.",
+    "noDataAvailableTitle": "No hay datos disponibles",
+    "noResultsFoundBody": "Ningún resultado coincide con los criterios del filtro. Elimine todos los filtros o borre todos los filtros para mostrar los resultados.",
+    "noResultsFoundTitle": "No se han encontrado resultados"
+  },
+  "terms": {
+    "cancel": "Cancelar",
+    "create": "Crear",
+    "description": "Descripción",
+    "name": "Nombre",
+    "project": "Proyecto",
+    "projectDeleted": "Proyecto eliminado",
+    "projects": "Proyectos",
+    "save": "Guardar"
+  },
+  "toastr": {
+    "fail": {
+      "create": "Error al crear {{type}}.",
+      "save": "Error al guardar {{type}}."
+    },
+    "success": {
+      "created": "{{type}} fue creado.",
+      "saved": "{{type}} fue guardado."
+    }
+  }
+}

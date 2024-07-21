@@ -1,0 +1,29 @@
+[package]
+name = "openubl-server"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Web service for managing UBL files from SUNAT"
+
+[dependencies]
+openubl-api = { path = "../api" }
+openubl-common = { path = "../common" }
+openubl-entity = { path = "../entity" }
+openubl-storage = { path = "../storage" }
+
+xsender = { path = "../../xsender" }
+xbuilder = { path = "../../xbuilder" }
+
+actix-web = "4.4.0"
+serde = { version = "1.0.193", features = ["derive"] }
+sea-orm = { version = "0.12.10", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
+clap = { version = "4.4.11", features = ["derive", "env"] }
+anyhow = "1.0.76"
+env_logger = "0.10.1"
+thiserror = "1.0.50"
+utoipa = { version = "4.1.0", features = ["actix_extras"] }
+utoipa-swagger-ui = { version = "5.0.0", features = ["actix-web"] }
+actix-web-httpauth = "0.8.1"
+actix-4-jwt-auth = { version = "1.2.0" }
+actix-multipart = "0.6.1"
+minio = "0.1.0"
