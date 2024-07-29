@@ -36,7 +36,7 @@
     "axios": "^0.21.2",
     "dayjs": "^1.11.7",
     "ejs": "^3.1.7",
-    "fast-xml-parser": "^4.0.3",
+    "fast-xml-parser": "^4.4.1",
     "file-saver": "^2.0.5",
     "i18next": "^19.8.4",
     "i18next-http-backend": "^1.0.22",
