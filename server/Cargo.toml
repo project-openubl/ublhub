@@ -6,24 +6,28 @@ license = "Apache-2.0"
 description = "Web service for managing UBL files from SUNAT"
 
 [dependencies]
-openubl-api = { path = "../api" }
-openubl-common = { path = "../common" }
-openubl-entity = { path = "../entity" }
-openubl-storage = { path = "../storage" }
+openubl-api = { workspace = true }
+openubl-common = { workspace = true }
+openubl-entity = { workspace = true }
+openubl-storage = { workspace = true }
 
-xsender = { path = "../../xsender" }
-xbuilder = { path = "../../xbuilder" }
+xhandler = { workspace = true }
 
-actix-web = "4.4.0"
-serde = { version = "1.0.193", features = ["derive"] }
-sea-orm = { version = "0.12.10", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
-clap = { version = "4.4.11", features = ["derive", "env"] }
-anyhow = "1.0.76"
-env_logger = "0.10.1"
-thiserror = "1.0.50"
-utoipa = { version = "4.1.0", features = ["actix_extras"] }
-utoipa-swagger-ui = { version = "5.0.0", features = ["actix-web"] }
-actix-web-httpauth = "0.8.1"
-actix-4-jwt-auth = { version = "1.2.0" }
-actix-multipart = "0.6.1"
-minio = "0.1.0"
+actix-web = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+sea-orm = { workspace = true, features = [
+    "sqlx-sqlite",
+    "sqlx-postgres",
+    "runtime-tokio-rustls",
+    "macros",
+] }
+clap = { workspace = true, features = ["derive", "env"] }
+anyhow = { workspace = true }
+env_logger = { workspace = true }
+thiserror = { workspace = true }
+utoipa = { workspace = true, features = ["actix_extras"] }
+utoipa-swagger-ui = { workspace = true, features = ["actix-web"] }
+actix-web-httpauth = { workspace = true }
+actix-4-jwt-auth = { workspace = true }
+actix-multipart = { workspace = true }
+minio = { workspace = true }

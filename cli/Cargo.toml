@@ -6,11 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-openubl-server = { path = "../server" }
+openubl-server = { workspace = true }
 
-clap = { version = "4.4.11", features = ["derive", "env"] }
-anyhow = "1.0.76"
-actix-web = "4.4.1"
-log = "0.4.21"
-postgresql_embedded = "0.9.5"
-tokio = { version = "1.38.0", features = ["full"] }
+clap = { workspace = true, features = ["derive", "env"] }
+anyhow = { workspace = true }
+actix-web = { workspace = true }
+log = { workspace = true }
+tokio = { workspace = true, features = ["full"] }

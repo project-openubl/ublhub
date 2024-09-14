@@ -1,6 +1,8 @@
 {
     "name": "ublhub",
-    "image": "mcr.microsoft.com/devcontainers/rust:bullseye",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
     "features": {
         "ghcr.io/devcontainers/features/rust:1": {},
         "ghcr.io/devcontainers/features/node:1": {
@@ -8,7 +10,7 @@
         },
         "ghcr.io/devcontainers/features/docker-in-docker:2": {}
     },
-    "postCreateCommand": "echo \"source /usr/share/bash-completion/completions/git\" >> ~/.bashrc",
+    "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
     "customizations": {
         "vscode": {
             "settings": {},
