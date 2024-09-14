@@ -19,7 +19,7 @@ use minio::s3::client::Client as MinioClient;
 use minio::s3::creds::StaticProvider;
 use minio::s3::http::BaseUrl;
 use zip::result::{ZipError, ZipResult};
-use zip::write::FileOptions;
+use zip::write::SimpleFileOptions;
 use zip::{ZipArchive, ZipWriter};
 
 use crate::config::Storage;
@@ -239,7 +239,6 @@ impl StorageSystem {
             StorageSystem::Local(_) => fs::read(file_id)?,
             StorageSystem::Minio(bucket, client) => {
                 let object = GetObjectArgs::new(&bucket.name, file_id)?;
-
                 client.get_object(&object).await?.bytes().await?.to_vec()
             }
             StorageSystem::S3(buckets, client) => client
@@ -275,7 +274,7 @@ pub fn create_zip_from_str(content: &str, file_name_inside_zip: &str) -> ZipResu
         let buff = Cursor::new(&mut data);
         let mut zip = ZipWriter::new(buff);
 
-        let file_options = FileOptions::default();
+        let file_options = SimpleFileOptions::default();
         zip.start_file(file_name_inside_zip, file_options)?;
         zip.write_all(content.as_bytes())?;
         zip.finish()?;

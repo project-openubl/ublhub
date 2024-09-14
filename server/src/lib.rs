@@ -31,8 +31,6 @@ pub struct ServerRun {
     #[arg(long, env)]
     pub bootstrap: bool,
 
-    // #[command(flatten)]
-    // pub oidc: openubl_oidc::config::Oidc,
     #[command(subcommand)]
     pub storage: openubl_storage::config::Storage,
 }
@@ -40,17 +38,6 @@ pub struct ServerRun {
 impl ServerRun {
     pub async fn run(self) -> anyhow::Result<ExitCode> {
         env_logger::init();
-
-        // Oidc
-        // let oidc = Oidc::new(OidcConfig::Issuer(self.oidc.auth_server_url.clone().into()))
-        //     .await
-        //     .unwrap();
-        // let oidc_validator = OidcBiscuitValidator {
-        //     options: ValidationOptions {
-        //         issuer: Validation::Validate(self.oidc.auth_server_url.clone()),
-        //         ..ValidationOptions::default()
-        //     },
-        // };
 
         // Database
         let system = match self.bootstrap {
@@ -70,17 +57,12 @@ impl ServerRun {
         // Storage
         let storage = StorageSystem::new(&self.storage).await?;
 
-        // Search Engine
-        // let search_engine = SearchEngineSystem::new(&self.search_engine).await?;
-
         let app_state = Arc::new(AppState { system, storage });
 
         HttpServer::new(move || {
             App::new()
                 .app_data(web::Data::from(app_state.clone()))
                 .wrap(Logger::default())
-                // .wrap(oidc_validator.clone())
-                // .app_data(oidc.clone())
                 .app_data(TempFileConfig::default())
                 .configure(configure)
         })
@@ -95,16 +77,12 @@ impl ServerRun {
 pub struct AppState {
     pub system: InnerSystem,
     pub storage: StorageSystem,
-    // pub search_engine: SearchEngineSystem,
 }
 
 pub fn configure(config: &mut web::ServiceConfig) {
     // Health
     config.service(health::liveness);
     config.service(health::readiness);
-
-    // Files
-    // config.service(files::upload_file);
 
     // Documents
     config.service(list_documents);

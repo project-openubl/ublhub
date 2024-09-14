@@ -6,7 +6,7 @@ use anyhow::anyhow;
 
 use openubl_api::db::{Paginated, Transactional};
 use openubl_entity::document;
-use xsender::prelude::{Credentials, FileSender, FromPath, UblFile, Urls};
+use xhandler::prelude::{Credentials, FileSender, FromPath, UblFile, Urls};
 
 use crate::dto::DocumentDto;
 use crate::server::Error;

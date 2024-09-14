@@ -5,7 +5,7 @@ use sea_query::Order::Desc;
 
 use openubl_entity as entity;
 use openubl_entity::delivery::{TargetSendFileProtocolAction, TargetVerifyTicketProtocolAction};
-use xsender::prelude::*;
+use xhandler::prelude::*;
 
 use crate::db::{Paginated, PaginatedResults, Transactional};
 use crate::system::error::Error;

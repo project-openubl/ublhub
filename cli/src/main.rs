@@ -4,7 +4,7 @@ use std::process::{ExitCode, Termination};
 use std::time::Duration;
 
 use clap::Parser;
-use postgresql_embedded::PostgreSQL;
+use postgresql_embedded::{PostgreSQL, VersionReq};
 use tokio::task::{spawn_local, LocalSet};
 
 #[allow(clippy::large_enum_variant)]
@@ -44,6 +44,7 @@ async fn dev_mode() -> anyhow::Result<ExitCode> {
     let data_dir = work_dir.join("data");
     create_dir_all(&data_dir)?;
     let settings = postgresql_embedded::Settings {
+        version: VersionReq::parse("=16.3.0")?,
         username: "postgres".to_string(),
         password: "openubl".to_string(),
         temporary: false,
@@ -52,7 +53,7 @@ async fn dev_mode() -> anyhow::Result<ExitCode> {
         data_dir,
         ..Default::default()
     };
-    let mut postgresql = PostgreSQL::new(PostgreSQL::default_version(), settings);
+    let mut postgresql = PostgreSQL::new(settings);
     postgresql.setup().await?;
     postgresql.start().await?;
 

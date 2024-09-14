@@ -3,20 +3,23 @@ name = "openubl-api"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-openubl-entity = { path = "../entity" }
-openubl-common = { path = "../common" }
-openubl-migration = { path = "../migration" }
-openubl-storage = { path = "../storage" }
+openubl-entity = { workspace = true }
+openubl-common = { workspace = true }
+openubl-migration = { workspace = true }
+openubl-storage = { workspace = true }
 
-xsender = { path = "../../xsender" }
+xhandler = { workspace = true }
 
-sea-orm = { version = "0.12", features = ["sea-query-binder", "sqlx-postgres", "runtime-tokio-rustls", "macros"] }
-sea-query = "0.30.5"
-async-trait = "0.1.75"
-anyhow = "1.0.76"
-thiserror = "1.0.50"
-serde_json = "1.0.108"
-serde = { version = "1.0.195", features = ["derive"] }
+sea-orm = { workspace = true, features = [
+    "sea-query-binder",
+    "sqlx-postgres",
+    "runtime-tokio-rustls",
+    "macros",
+] }
+sea-query = { workspace = true }
+async-trait = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true, features = ["derive"] }

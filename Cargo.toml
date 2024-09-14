@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = [    
+members = [
     "migration",
     "entity",
     "common",
@@ -12,3 +12,41 @@ members = [
 ]
 
 default-members = ["cli"]
+
+[workspace.dependencies]
+openubl-entity = { path = "./entity" }
+openubl-common = { path = "./common" }
+openubl-migration = { path = "./migration" }
+openubl-storage = { path = "./storage" }
+openubl-server = { path = "./server" }
+openubl-api = { path = "./api" }
+
+xhandler = { git = "https://github.com/project-openubl/xhandler-rust.git", branch = "main"}
+
+sea-orm = "1.0.0"
+sea-query = "0.31"
+async-trait = "0.1.75"
+anyhow = "1.0.76"
+thiserror = "1.0.50"
+serde_json = "1.x"
+serde = "1.x"
+clap = "4.4.11"
+actix-web = "4.4.1"
+log = "0.4.21"
+postgresql_embedded = { version = "0.16.1" }
+tokio = "1.38.0"
+env_logger = "0.11.5"
+utoipa = "4.1.0"
+utoipa-swagger-ui = "7.1.0"
+actix-web-httpauth = "0.8.1"
+actix-4-jwt-auth = "1.2.0"
+actix-multipart = "0.7.2"
+minio = "0.1.0"
+uuid = "1.6.1"
+zip = "2.1.6"
+tempfile = "3.9.0"
+reqwest = "0.11"
+aws-sdk-s3 = "1.11.0"
+aws-config = "1.1.1"
+aws-smithy-runtime = "1.1.1"
+aws-smithy-runtime-api = "1.1.1"

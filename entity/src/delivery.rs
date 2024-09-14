@@ -3,7 +3,7 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
-#[sea_orm(rs_type = "String", db_type = "String(Some(1))")]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::N(1))")]
 pub enum TargetSendFileProtocolAction {
     #[sea_orm(string_value = "B")]
     SoapBill,
@@ -16,7 +16,7 @@ pub enum TargetSendFileProtocolAction {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
-#[sea_orm(rs_type = "String", db_type = "String(Some(1))")]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::N(1))")]
 pub enum TargetVerifyTicketProtocolAction {
     #[sea_orm(string_value = "S")]
     SOAP,
