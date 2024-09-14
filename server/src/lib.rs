@@ -22,7 +22,7 @@ pub mod server;
 /// Run the API server
 #[derive(clap::Args, Debug)]
 pub struct ServerRun {
-    #[arg(short, long, env, default_value = "[::1]:8080")]
+    #[arg(short, long, env, default_value = "0.0.0.0:8080")]
     pub bind_addr: String,
 
     #[command(flatten)]
