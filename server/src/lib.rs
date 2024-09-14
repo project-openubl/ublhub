@@ -41,16 +41,7 @@ impl ServerRun {
 
         // Database
         let system = match self.bootstrap {
-            true => {
-                InnerSystem::bootstrap(
-                    &self.database.username,
-                    &self.database.password,
-                    &self.database.host,
-                    self.database.port,
-                    &self.database.name,
-                )
-                .await?
-            }
+            true => InnerSystem::bootstrap(&self.database).await?,
             false => InnerSystem::with_config(&self.database).await?,
         };
 

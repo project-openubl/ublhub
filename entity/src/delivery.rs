@@ -32,7 +32,7 @@ pub struct Model {
     pub response_ticket: Option<String>,
     pub response_cdr_description: Option<String>,
     pub response_cdr_response_code: Option<String>,
-    pub response_cdr_notes: Option<Vec<String>>,
+    // pub response_cdr_notes: Option<Vec<String>>,
     pub response_error_code: Option<String>,
     pub response_error_message: Option<String>,
 

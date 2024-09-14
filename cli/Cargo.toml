@@ -12,5 +12,4 @@ clap = { workspace = true, features = ["derive", "env"] }
 anyhow = { workspace = true }
 actix-web = { workspace = true }
 log = { workspace = true }
-postgresql_embedded = { workspace = true, features = ["theseus"] }
 tokio = { workspace = true, features = ["full"] }

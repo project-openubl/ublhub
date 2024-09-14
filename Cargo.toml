@@ -33,7 +33,6 @@ serde = "1.x"
 clap = "4.4.11"
 actix-web = "4.4.1"
 log = "0.4.21"
-postgresql_embedded = { version = "0.16.1" }
 tokio = "1.38.0"
 env_logger = "0.11.5"
 utoipa = "4.1.0"

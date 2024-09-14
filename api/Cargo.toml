@@ -13,6 +13,7 @@ xhandler = { workspace = true }
 
 sea-orm = { workspace = true, features = [
     "sea-query-binder",
+    "sqlx-sqlite",
     "sqlx-postgres",
     "runtime-tokio-rustls",
     "macros",

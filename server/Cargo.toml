@@ -15,7 +15,12 @@ xhandler = { workspace = true }
 
 actix-web = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-sea-orm = { workspace = true, features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
+sea-orm = { workspace = true, features = [
+    "sqlx-sqlite",
+    "sqlx-postgres",
+    "runtime-tokio-rustls",
+    "macros",
+] }
 clap = { workspace = true, features = ["derive", "env"] }
 anyhow = { workspace = true }
 env_logger = { workspace = true }

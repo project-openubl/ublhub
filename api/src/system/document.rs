@@ -108,7 +108,7 @@ impl DocumentContext {
                 document_id: Set(self.document.id),
                 response_cdr_response_code: Set(Some(cdr.response_code.clone())),
                 response_cdr_description: Set(Some(cdr.description.clone())),
-                response_cdr_notes: Set(Some(cdr.notes.clone())),
+                // response_cdr_notes: Set(Some(cdr.notes.clone())),
                 ..Default::default()
             },
             SendFileAggregatedResponse::Ticket(ticket) => entity::delivery::ActiveModel {
