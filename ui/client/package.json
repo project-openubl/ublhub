@@ -35,7 +35,7 @@
     "@tanstack/react-query-devtools": "^5.17.9",
     "axios": "^0.21.2",
     "dayjs": "^1.11.7",
-    "ejs": "^3.1.7",
+    "ejs": "^3.1.10",
     "fast-xml-parser": "^4.0.3",
     "file-saver": "^2.0.5",
     "i18next": "^19.8.4",

@@ -27,7 +27,7 @@
     "*.{css,json,md,yaml,yml}": "prettier --write"
   },
   "dependencies": {
-    "ejs": "^3.1.7",
+    "ejs": "^3.1.10",
     "express": "^4.17.3",
     "http-proxy-middleware": "^2.0.6"
   },
