@@ -62,4 +62,12 @@ public class SunatEntity {
     @Column(name = "sunat_url_percepcion_retencion")
     private String sunatUrlPercepcionRetencion;
 
+    @Size(max = 255)
+    @Column(name = "sunat_client_id")
+    private String sunatClientId;
+
+    @Size(max = 255)
+    @Column(name = "sunat_client_secret")
+    private String sunatClientSecret;
+
 }

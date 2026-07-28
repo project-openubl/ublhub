@@ -283,6 +283,14 @@ public class DocumentResource {
         if (documentEntity == null) {
             return documentDtoNotFoundResponse.get();
         }
+        if (documentEntity.isJobInProgress()
+                && documentEntity.getSunatResponse() != null
+                && documentEntity.getSunatResponse().getTicket() != null
+                && documentEntity.getXmlData() != null
+                && "DespatchAdvice".equals(documentEntity.getXmlData().getTipoDocumento())) {
+            producerTemplate.requestBody("direct:verify-ticket", documentId, Object.class);
+            documentEntity = documentRepository.findById(project, documentId);
+        }
 
         DocumentDto dto = documentMapper.toDto(documentEntity);
         return documentDtoSuccessResponse.apply(dto);

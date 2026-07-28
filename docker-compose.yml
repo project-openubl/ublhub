@@ -26,6 +26,8 @@ services:
       POSTGRES_DB: ublhub_db
       POSTGRES_USER: db_username
       POSTGRES_PASSWORD: db_password
+    volumes:
+      - ublhub_postgresql_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U db_username -d ublhub_db" ]
       interval: 10s
@@ -33,7 +35,10 @@ services:
       retries: 5
 
   ublhub:
-    image: quay.io/projectopenubl/ublhub:nightly
+    image: samisoft/ublhub:gre-rest-local
+    build:
+      context: .
+      dockerfile: Dockerfile.samisoft
     ports:
       - 8180:8080
     environment:
@@ -41,8 +46,13 @@ services:
       QUARKUS_DATASOURCE_USERNAME: db_username
       QUARKUS_DATASOURCE_PASSWORD: db_password
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgresql:5432/ublhub_db
+      QUARKUS_OIDC_ENABLED: "false"
       OPENUBL_STORAGE_TYPE: filesystem
       OPENUBL_STORAGE_FILESYSTEM.FOLDER: workspace
+      OPENUBL_STORAGE_FILESYSTEM_DIRECTORY: workspace
+      OPENUBL_SUNAT_GRE_TOKEN_URL: ${UBLHUB_GRE_TOKEN_URL:-https://api-seguridad.sunat.gob.pe/v1/clientessol/{clientId}/oauth2/token/}
+    volumes:
+      - ublhub_workspace:/deployments/workspace
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/q/health" ]
       interval: 10s
@@ -51,3 +61,7 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
+
+volumes:
+  ublhub_postgresql_data:
+  ublhub_workspace:

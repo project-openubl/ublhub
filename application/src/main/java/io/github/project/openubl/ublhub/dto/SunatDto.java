@@ -53,4 +53,8 @@ public class SunatDto {
     @Size(min = 3, max = 250)
     private String password;
 
+    private String clientId;
+
+    private String clientSecret;
+
 }

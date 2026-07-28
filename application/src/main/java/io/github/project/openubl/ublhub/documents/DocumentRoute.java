@@ -54,6 +54,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.xml.sax.SAXParseException;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.JsonObject;
 import java.util.Arrays;
 import java.util.Collections;
@@ -76,6 +77,10 @@ public class DocumentRoute extends RouteBuilder {
 
     public static final String SUNAT_RESPONSE = "sunatResponse";
     public static final String SUNAT_TICKET = "sunatTicket";
+    public static final String SUNAT_GRE_REST = "sunatGreRest";
+
+    @Inject
+    SunatGreRestClient sunatGreRestClient;
 
     Namespaces ns = new Namespaces("ext", "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2")
             .add("ds", "http://www.w3.org/2000/09/xmldsig#");
@@ -349,6 +354,19 @@ public class DocumentRoute extends RouteBuilder {
                 .process(exchange -> {
                     byte[] documentFile = exchange.getIn().getHeader(DOCUMENT_FILE, byte[].class);
                     SunatEntity documentSunatData = exchange.getIn().getHeader(DOCUMENT_SUNAT_DATA, SunatEntity.class);
+                    XmlContent xmlContent = exchange.getIn().getHeader(DOCUMENT_XML_DATA, XmlContent.class);
+
+                    if (isGreRest(xmlContent, documentSunatData)) {
+                        SunatGreRestClient.GreResponse response = sunatGreRestClient.submit(
+                                documentFile,
+                                xmlContent.getRuc(),
+                                xmlContent.getDocumentID(),
+                                documentSunatData
+                        );
+                        exchange.getIn().setHeader(SUNAT_GRE_REST, true);
+                        exchange.getIn().setBody(toSunatResponse(response));
+                        return;
+                    }
 
                     CompanyURLs urls = CompanyURLs.builder()
                             .invoice(documentSunatData.getSunatUrlFactura())
@@ -371,7 +389,14 @@ public class DocumentRoute extends RouteBuilder {
                 })
 
                 .doTry()
-                    .to(Constants.XSENDER_BILL_SERVICE_URI)
+                    .choice()
+                        .when(header(SUNAT_GRE_REST).isEqualTo(true))
+                            .log(LoggingLevel.DEBUG, "GRE submitted using SUNAT REST")
+                        .endChoice()
+                        .otherwise()
+                            .to(Constants.XSENDER_BILL_SERVICE_URI)
+                        .endChoice()
+                    .endDoTry()
                 .doCatch(Throwable.class)
                     .setBody(exchange -> SunatResponse.builder()
                             .status(Status.UNKNOWN)
@@ -443,6 +468,18 @@ public class DocumentRoute extends RouteBuilder {
 
                     byte[] documentFile = exchange.getIn().getHeader(DOCUMENT_FILE, byte[].class);
                     SunatEntity documentSunatData = exchange.getIn().getHeader(DOCUMENT_SUNAT_DATA, SunatEntity.class);
+                    XmlContent xmlContent = exchange.getIn().getHeader(DOCUMENT_XML_DATA, XmlContent.class);
+
+                    if (isGreRest(xmlContent, documentSunatData)) {
+                        SunatGreRestClient.GreResponse response = sunatGreRestClient.verify(
+                                ticket,
+                                xmlContent.getRuc(),
+                                documentSunatData
+                        );
+                        exchange.getIn().setHeader(SUNAT_GRE_REST, true);
+                        exchange.getIn().setBody(toSunatResponse(response));
+                        return;
+                    }
 
                     CompanyURLs urls = CompanyURLs.builder()
                             .invoice(documentSunatData.getSunatUrlFactura())
@@ -464,7 +501,14 @@ public class DocumentRoute extends RouteBuilder {
                 })
 
                 .doTry()
-                    .to(Constants.XSENDER_BILL_SERVICE_URI)
+                    .choice()
+                        .when(header(SUNAT_GRE_REST).isEqualTo(true))
+                            .log(LoggingLevel.DEBUG, "GRE ticket verified using SUNAT REST")
+                        .endChoice()
+                        .otherwise()
+                            .to(Constants.XSENDER_BILL_SERVICE_URI)
+                        .endChoice()
+                    .endDoTry()
                 .doCatch(Throwable.class)
                 .setBody(exchange -> SunatResponse.builder()
                         .status(Status.UNKNOWN)
@@ -500,6 +544,50 @@ public class DocumentRoute extends RouteBuilder {
                         .bean("documentBean", "saveCdr")
                     .endChoice()
                 .end();
+    }
+
+    private static boolean isGreRest(XmlContent xmlContent, SunatEntity config) {
+        return xmlContent != null
+                && "DespatchAdvice".equals(xmlContent.getDocumentType())
+                && config != null
+                && config.getSunatUrlGuiaRemision() != null
+                && config.getSunatUrlGuiaRemision().contains("/v1/contribuyente/gem/comprobantes");
+    }
+
+    private static SunatResponse toSunatResponse(SunatGreRestClient.GreResponse response) {
+        int code = 0;
+        if (response.errorCode() != null) {
+            try {
+                code = Integer.parseInt(response.errorCode());
+            } catch (NumberFormatException ignored) {
+                code = -1;
+            }
+        }
+        Status status = switch (response.state()) {
+            case PENDING -> Status.UNKNOWN;
+            case ACCEPTED -> statusNamed("ACEPTADO");
+            case REJECTED -> statusNamed("RECHAZADO");
+        };
+        return SunatResponse.builder()
+                .status(status)
+                .sunat(Sunat.builder()
+                        .ticket(response.ticket())
+                        .cdr(response.cdr())
+                        .build())
+                .metadata(Metadata.builder()
+                        .responseCode(code)
+                        .description(response.description())
+                        .notes(Collections.emptyList())
+                        .build())
+                .build();
+    }
+
+    private static Status statusNamed(String name) {
+        try {
+            return Status.valueOf(name);
+        } catch (IllegalArgumentException ignored) {
+            return Status.UNKNOWN;
+        }
     }
 
 }

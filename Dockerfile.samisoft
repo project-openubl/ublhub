@@ -1,0 +1,19 @@
+FROM maven:3.9.9-eclipse-temurin-17 AS build
+
+WORKDIR /workspace
+COPY . .
+ENV QUARKUS_OIDC_ENABLED=false
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -B -pl application -am package -DskipTests
+
+FROM eclipse-temurin:17-jre
+
+WORKDIR /deployments
+COPY --from=build /workspace/application/target/quarkus-app/lib/ ./lib/
+COPY --from=build /workspace/application/target/quarkus-app/*.jar ./
+COPY --from=build /workspace/application/target/quarkus-app/app/ ./app/
+COPY --from=build /workspace/application/target/quarkus-app/quarkus/ ./quarkus/
+
+EXPOSE 8080
+ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]

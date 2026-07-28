@@ -28,7 +28,9 @@ public abstract class CompanyMapper {
     @Mapping(target = "sunat.guiaUrl", source = "sunat.sunatUrlGuiaRemision")
     @Mapping(target = "sunat.retencionUrl", source = "sunat.sunatUrlPercepcionRetencion")
     @Mapping(target = "sunat.username", source = "sunat.sunatUsername")
+    @Mapping(target = "sunat.clientId", source = "sunat.sunatClientId")
     @Mapping(target = "sunat.password", ignore = true)
+    @Mapping(target = "sunat.clientSecret", ignore = true)
     public abstract CompanyDto toDto(CompanyEntity entity);
 
     @Mapping(target = "sunat.sunatUrlFactura", source = "sunat.facturaUrl")
@@ -36,6 +38,8 @@ public abstract class CompanyMapper {
     @Mapping(target = "sunat.sunatUrlPercepcionRetencion", source = "sunat.retencionUrl")
     @Mapping(target = "sunat.sunatUsername", source = "sunat.username", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "sunat.sunatPassword", source = "sunat.password", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "sunat.sunatClientId", source = "sunat.clientId", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "sunat.sunatClientSecret", source = "sunat.clientSecret", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     public abstract CompanyEntity updateEntityFromDto(CompanyDto dto, @MappingTarget CompanyEntity entity);
 
 }

@@ -296,7 +296,10 @@ public class DocumentBean {
             sunatResponseEntity.setNotes(metadata.getNotes() != null ? new HashSet<>(metadata.getNotes()) : null);
         });
 
-        boolean shouldVerifyTicket = documentEntity.getSunatResponse() != null && documentEntity.getSunatResponse().getTicket() != null;
+        boolean shouldVerifyTicket = sunatResponseEntity.getTicket() != null
+                && (sunatResponse.getStatus() == null
+                || sunatResponse.getStatus() == io.github.project.openubl.xsender.models.Status.UNKNOWN
+                || sunatResponse.getStatus() == io.github.project.openubl.xsender.models.Status.EN_PROCESO);
         documentEntity.setJobInProgress(shouldVerifyTicket);
 
         documentEntity.persist();
