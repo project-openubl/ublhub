@@ -27,6 +27,10 @@ class SunatGreRestClientTest {
         server = HttpServer.create(new InetSocketAddress(0), 0);
         server.createContext("/oauth/client-id", exchange ->
                 json(exchange, 200, "{\"access_token\":\"test-token\",\"expires_in\":3600}"));
+        server.createContext("/oauth-error/client-id", exchange ->
+                json(exchange, 401,
+                        "{\"error\":\"invalid_grant\","
+                                + "\"error_description\":\"Credenciales OAuth invalidas\"}"));
         server.createContext("/gre/20100066603-09-T001-00000003", exchange -> {
             assertEquals("Bearer test-token", exchange.getRequestHeaders().getFirst("Authorization"));
             String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
@@ -35,6 +39,11 @@ class SunatGreRestClientTest {
             json(exchange, 200,
                     "{\"numTicket\":\"550e8400-e29b-41d4-a716-446655440026\"}");
         });
+        server.createContext("/gre-error/20100066603-09-T001-00000003", exchange ->
+                json(exchange, 422,
+                        "{\"cod\":\"422\",\"msg\":\"Unprocessable Entity\","
+                                + "\"errors\":[{\"codError\":\"3210\","
+                                + "\"desError\":\"Firma digital invalida\"}]}"));
         server.createContext("/gre/envios/550e8400-e29b-41d4-a716-446655440026", exchange -> {
             if (ticketChecks.getAndIncrement() == 0) {
                 json(exchange, 200, "{\"codRespuesta\":\"98\"}");
@@ -92,6 +101,43 @@ class SunatGreRestClientTest {
                 "F001-1",
                 config
         ));
+    }
+
+    @Test
+    void preservesSanitizedSunatHttpErrorDetails() {
+        client.tokenUrl = "http://localhost:" + server.getAddress().getPort()
+                + "/oauth-error/{clientId}";
+
+        IOException error = assertThrows(IOException.class, () -> client.submit(
+                "<DespatchAdvice/>".getBytes(StandardCharsets.UTF_8),
+                "20100066603",
+                "T001-00000003",
+                config
+        ));
+
+        assertEquals(
+                "SUNAT GRE HTTP 401: Credenciales OAuth invalidas",
+                error.getMessage()
+        );
+    }
+
+    @Test
+    void preservesSunatFunctionalValidationDetails() {
+        config.setSunatUrlGuiaRemision(
+                "http://localhost:" + server.getAddress().getPort() + "/gre-error"
+        );
+
+        IOException error = assertThrows(IOException.class, () -> client.submit(
+                "<DespatchAdvice/>".getBytes(StandardCharsets.UTF_8),
+                "20100066603",
+                "T001-00000003",
+                config
+        ));
+
+        assertEquals(
+                "SUNAT GRE HTTP 422: 3210 - Firma digital invalida",
+                error.getMessage()
+        );
     }
 
     private static void json(HttpExchange exchange, int status, String body) throws IOException {

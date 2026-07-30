@@ -357,14 +357,21 @@ public class DocumentRoute extends RouteBuilder {
                     XmlContent xmlContent = exchange.getIn().getHeader(DOCUMENT_XML_DATA, XmlContent.class);
 
                     if (isGreRest(xmlContent, documentSunatData)) {
-                        SunatGreRestClient.GreResponse response = sunatGreRestClient.submit(
-                                documentFile,
-                                xmlContent.getRuc(),
-                                xmlContent.getDocumentID(),
-                                documentSunatData
-                        );
                         exchange.getIn().setHeader(SUNAT_GRE_REST, true);
-                        exchange.getIn().setBody(toSunatResponse(response));
+                        try {
+                            SunatGreRestClient.GreResponse response = sunatGreRestClient.submit(
+                                    documentFile,
+                                    xmlContent.getRuc(),
+                                    xmlContent.getDocumentID(),
+                                    documentSunatData
+                            );
+                            exchange.getIn().setBody(toSunatResponse(response));
+                        } catch (Exception error) {
+                            if (error instanceof InterruptedException) {
+                                Thread.currentThread().interrupt();
+                            }
+                            exchange.getIn().setBody(greFailure(error));
+                        }
                         return;
                     }
 
@@ -577,6 +584,24 @@ public class DocumentRoute extends RouteBuilder {
                 .metadata(Metadata.builder()
                         .responseCode(code)
                         .description(response.description())
+                        .notes(Collections.emptyList())
+                        .build())
+                .build();
+    }
+
+    private static SunatResponse greFailure(Exception error) {
+        String description = Optional.ofNullable(error.getMessage())
+                .orElse(error.getClass().getSimpleName())
+                .replaceAll("(?i)(client_secret|password|access_token)=?[^\\s&]+", "$1=***")
+                .replaceAll("(?i)Bearer\\s+[A-Za-z0-9._-]+", "Bearer ***");
+        if (description.length() > 1000) {
+            description = description.substring(0, 1000);
+        }
+        return SunatResponse.builder()
+                .status(Status.UNKNOWN)
+                .metadata(Metadata.builder()
+                        .responseCode(-1)
+                        .description(description)
                         .notes(Collections.emptyList())
                         .build())
                 .build();

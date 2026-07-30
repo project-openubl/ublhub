@@ -10,6 +10,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.json.JsonValue;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -140,10 +141,51 @@ public class SunatGreRestClient {
             throw new IOException("SUNAT GRE returned non-JSON HTTP " + response.statusCode(), error);
         }
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            String message = json.getString("msg", "SUNAT GRE request failed");
+            String message = functionalError(json);
+            if (message == null) {
+                message = firstString(
+                        json,
+                        "error_description",
+                        "msg",
+                        "message",
+                        "desError",
+                        "error"
+                );
+            }
+            if (message == null || message.isBlank()) {
+                message = "SUNAT GRE request failed";
+            }
             throw new IOException("SUNAT GRE HTTP " + response.statusCode() + ": " + message);
         }
         return json;
+    }
+
+    private static String functionalError(JsonObject json) {
+        if (!json.containsKey("errors")
+                || json.isNull("errors")
+                || json.get("errors").getValueType() != JsonValue.ValueType.ARRAY
+                || json.getJsonArray("errors").isEmpty()
+                || json.getJsonArray("errors").get(0).getValueType()
+                != JsonValue.ValueType.OBJECT) {
+            return null;
+        }
+        JsonObject error = json.getJsonArray("errors").getJsonObject(0);
+        String code = firstString(error, "codError", "cod");
+        String description = firstString(error, "desError", "msg", "message");
+        if (description == null) {
+            return code;
+        }
+        return code == null ? description : code + " - " + description;
+    }
+
+    private static String firstString(JsonObject json, String... keys) {
+        for (String key : keys) {
+            JsonValue value = json.get(key);
+            if (value != null && value.getValueType() == JsonValue.ValueType.STRING) {
+                return json.getString(key);
+            }
+        }
+        return null;
     }
 
     private void assertRestConfiguration(SunatEntity config) {

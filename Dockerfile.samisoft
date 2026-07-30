@@ -4,7 +4,7 @@ WORKDIR /workspace
 COPY . .
 ENV QUARKUS_OIDC_ENABLED=false
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B -pl application -am package -DskipTests
+    mvn -B -pl application -am package -Pui -DskipTests
 
 FROM eclipse-temurin:17-jre
 
