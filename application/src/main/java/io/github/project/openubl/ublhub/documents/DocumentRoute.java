@@ -247,6 +247,7 @@ public class DocumentRoute extends RouteBuilder {
         from("direct:import-xml")
                 .id("import-xml")
                 .bean("documentBean", "validateProject")
+                .convertBodyTo(String.class)
                 .onException(ProjectNotFoundException.class)
                     .setBody(exchange -> DocumentImportResult.builder()
                             .errorMessage("Project not found")
@@ -257,22 +258,17 @@ public class DocumentRoute extends RouteBuilder {
                 .end()
 
                 .choice()
-                    .when(xpath("count(//ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/ds:Signature)", Integer.class, ns).isEqualTo(0))
-                        .choice()
-                            .when(header(DOCUMENT_RUC).isNull())
-                                .setHeader(DOCUMENT_FILE, body())
-                                .bean("documentBean", "generateXmlData")
-                                .process(exchange -> {
-                                    XmlContent xmlContent = exchange.getIn().getHeader(DOCUMENT_XML_DATA, XmlContent.class);
-                                    exchange.getIn().setHeader(DOCUMENT_RUC, xmlContent.getRuc());
-                                })
-                            .otherwise()
-                                .log(LoggingLevel.DEBUG, "Ruc already present")
-                        .bean("documentBean", "sign")
-                    .endChoice()
+                    .when(header(DOCUMENT_RUC).isNull())
+                        .setHeader(DOCUMENT_FILE, body())
+                        .bean("documentBean", "generateXmlData")
+                        .process(exchange -> {
+                            XmlContent xmlContent = exchange.getIn().getHeader(DOCUMENT_XML_DATA, XmlContent.class);
+                            exchange.getIn().setHeader(DOCUMENT_RUC, xmlContent.getRuc());
+                        })
                     .otherwise()
-                        .log(LoggingLevel.DEBUG, "Document signed already")
+                        .log(LoggingLevel.DEBUG, "Ruc already present")
                 .end()
+                .bean("documentBean", "sign")
                 .onException(NoUBLXMLFileCompliantException.class)
                     .setBody(exchange -> DocumentImportResult.builder()
                             .errorMessage("No valid UBL XML file")

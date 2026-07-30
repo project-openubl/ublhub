@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,13 +21,20 @@ class SunatGreRestClientTest {
     private SunatGreRestClient client;
     private SunatEntity config;
     private AtomicInteger ticketChecks;
+    private AtomicReference<String> oauthRequestBody;
 
     @BeforeEach
     void setUp() throws IOException {
         ticketChecks = new AtomicInteger();
+        oauthRequestBody = new AtomicReference<>();
         server = HttpServer.create(new InetSocketAddress(0), 0);
-        server.createContext("/oauth/client-id", exchange ->
-                json(exchange, 200, "{\"access_token\":\"test-token\",\"expires_in\":3600}"));
+        server.createContext("/oauth/client-id", exchange -> {
+            oauthRequestBody.set(new String(
+                    exchange.getRequestBody().readAllBytes(),
+                    StandardCharsets.UTF_8
+            ));
+            json(exchange, 200, "{\"access_token\":\"test-token\",\"expires_in\":3600}");
+        });
         server.createContext("/oauth-error/client-id", exchange ->
                 json(exchange, 401,
                         "{\"error\":\"invalid_grant\","
@@ -101,6 +109,33 @@ class SunatGreRestClientTest {
                 "F001-1",
                 config
         ));
+    }
+
+    @Test
+    void prefixesRucWhenOauthUsernameContainsOnlyTheSolUser() throws Exception {
+        client.submit(
+                "<DespatchAdvice/>".getBytes(StandardCharsets.UTF_8),
+                "20100066603",
+                "T001-00000003",
+                config
+        );
+
+        assertTrue(oauthRequestBody.get().contains("username=20100066603USER"));
+    }
+
+    @Test
+    void doesNotDuplicateRucWhenOauthUsernameIsAlreadyComplete() throws Exception {
+        config.setSunatUsername("20100066603USER");
+
+        client.submit(
+                "<DespatchAdvice/>".getBytes(StandardCharsets.UTF_8),
+                "20100066603",
+                "T001-00000003",
+                config
+        );
+
+        assertTrue(oauthRequestBody.get().contains("username=20100066603USER"));
+        assertFalse(oauthRequestBody.get().contains("2010006660320100066603USER"));
     }
 
     @Test

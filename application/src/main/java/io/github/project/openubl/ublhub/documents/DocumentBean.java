@@ -38,6 +38,7 @@ import io.github.project.openubl.xbuilder.content.models.sunat.percepcionretenci
 import io.github.project.openubl.xbuilder.content.models.sunat.resumen.SummaryDocuments;
 import io.github.project.openubl.xbuilder.enricher.ContentEnricher;
 import io.github.project.openubl.xbuilder.signature.XMLSigner;
+import io.github.project.openubl.xbuilder.signature.XmlSignatureHelper;
 import io.github.project.openubl.xsender.files.xml.XmlContent;
 import io.github.project.openubl.xsender.files.xml.XmlContentProvider;
 import io.github.project.openubl.xsender.models.SunatResponse;
@@ -51,6 +52,8 @@ import org.keycloak.crypto.Algorithm;
 import org.keycloak.crypto.KeyUse;
 import org.keycloak.crypto.KeyWrapper;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -58,10 +61,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.transaction.Transactional;
 import javax.xml.crypto.MarshalException;
+import javax.xml.crypto.dsig.XMLSignature;
 import javax.xml.crypto.dsig.XMLSignatureException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -161,6 +166,11 @@ public class DocumentBean {
             Exchange exchange
     ) throws NoCertificateToSignFoundException, MarshalException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException, ParserConfigurationException, XMLSignatureException, SAXException {
         String algorithm = Algorithm.RS256;
+        Document document = XmlSignatureHelper.convertStringToXMLDocument(body);
+        if (document.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature").getLength() > 0) {
+            exchange.getIn().setBody(document);
+            return;
+        }
 
         KeyWrapper keyWrapper = null;
 
@@ -191,7 +201,12 @@ public class DocumentBean {
                 .certificate(keyWrapper.getCertificate())
                 .build();
 
-        Document signedDocument = XMLSigner.signXML(body, "OPENUBL", rsaKey.getCertificate(), rsaKey.getPrivateKey());
+        Document signedDocument = XMLSigner.signXML(
+                document,
+                "OPENUBL",
+                rsaKey.getCertificate(),
+                rsaKey.getPrivateKey()
+        );
         exchange.getIn().setBody(signedDocument);
     }
 
@@ -233,6 +248,11 @@ public class DocumentBean {
             Exchange exchange
     ) throws ParserConfigurationException, IOException, SAXException, NoUBLXMLFileCompliantException {
         XmlContent xmlContent = XmlContentProvider.getSunatDocument(new ByteArrayInputStream(documentFile));
+        if (xmlContent != null
+                && "DespatchAdvice".equals(xmlContent.getDocumentType())
+                && (xmlContent.getRuc() == null || xmlContent.getRuc().isEmpty())) {
+            xmlContent.setRuc(extractDespatchSupplierRuc(documentFile));
+        }
         if (xmlContent == null ||
                 xmlContent.getDocumentType() == null || xmlContent.getDocumentType().isEmpty() ||
                 xmlContent.getDocumentID() == null || xmlContent.getDocumentID().isEmpty() ||
@@ -241,6 +261,34 @@ public class DocumentBean {
             throw new NoUBLXMLFileCompliantException();
         }
         exchange.getIn().setHeader(DocumentRoute.DOCUMENT_XML_DATA, xmlContent);
+    }
+
+    static String extractDespatchSupplierRuc(byte[] documentFile)
+            throws ParserConfigurationException, IOException, SAXException {
+        Document document = XmlSignatureHelper.convertStringToXMLDocument(
+                new String(documentFile, StandardCharsets.UTF_8)
+        );
+        NodeList suppliers = document.getElementsByTagNameNS(
+                "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+                "DespatchSupplierParty"
+        );
+        if (suppliers.getLength() == 0) {
+            return null;
+        }
+        Element supplier = (Element) suppliers.item(0);
+        NodeList identifications = supplier.getElementsByTagNameNS(
+                "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+                "PartyIdentification"
+        );
+        if (identifications.getLength() == 0) {
+            return null;
+        }
+        Element identification = (Element) identifications.item(0);
+        NodeList ids = identification.getElementsByTagNameNS(
+                "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
+                "ID"
+        );
+        return ids.getLength() == 0 ? null : ids.item(0).getTextContent().trim();
     }
 
     @Transactional
