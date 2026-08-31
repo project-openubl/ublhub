@@ -26,3 +26,28 @@ docker compose up -d
 Persistent volumes retain PostgreSQL data and the `workspace` containing XML
 and CDR files. Do not use `docker compose down -v` unless those local data are
 intentionally being removed.
+
+## Shipment packages
+
+The existing `envio.numeroDeBultos` property is the total number of packages
+or pallets reported in `cbc:TotalTransportHandlingUnitQuantity`. SUNAT does not
+define a separate field to distinguish boxes from pallets.
+
+`envio.numeroDeContenedor` remains supported for a single container. To report
+one or more containers and their optional seals, use:
+
+```json
+{
+  "envio": {
+    "numeroDeBultos": 4,
+    "contenedores": [
+      { "numero": "CONT0000001", "precinto": "PRECINTO-001" },
+      { "numero": "CONT0000002", "precinto": "PRECINTO-002" }
+    ]
+  }
+}
+```
+
+Each entry is rendered as
+`cac:TransportHandlingUnit/cac:Package`, using `cbc:ID` for the container
+number and `cbc:TraceID` for the seal number.

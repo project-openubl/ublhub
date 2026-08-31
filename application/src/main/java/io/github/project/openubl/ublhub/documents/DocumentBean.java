@@ -64,6 +64,7 @@ import javax.xml.crypto.MarshalException;
 import javax.xml.crypto.dsig.XMLSignature;
 import javax.xml.crypto.dsig.XMLSignatureException;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -73,6 +74,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -157,6 +159,17 @@ public class DocumentBean {
         }
 
         return template.data(input).render();
+    }
+
+    public String enhanceGreShipment(
+            @Header(DocumentRoute.DOCUMENT_KIND) String kind,
+            @Header(DocumentRoute.GRE_TRANSPORT_PACKAGES) List<GreShipmentXmlEnhancer.PackageData> packages,
+            @Body String body
+    ) throws ParserConfigurationException, IOException, SAXException, TransformerException {
+        if (!"DespatchAdvice".equals(kind)) {
+            return body;
+        }
+        return GreShipmentXmlEnhancer.enhance(body, packages);
     }
 
     public void sign(

@@ -59,7 +59,8 @@ public class DocumentInputDto {
         VoidedDocuments,
         SummaryDocuments,
         Perception,
-        Retention;
+        Retention,
+        DespatchAdvice;
     }
 
     @Data

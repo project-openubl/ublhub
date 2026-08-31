@@ -74,6 +74,7 @@ public class DocumentRoute extends RouteBuilder {
     public static final String DOCUMENT_FILE = "documentFile";
     public static final String DOCUMENT_FILE_ID = "documentFileId";
     public static final String DOCUMENT_SUNAT_DATA = "documentSunatData";
+    public static final String GRE_TRANSPORT_PACKAGES = "greTransportPackages";
 
     public static final String SUNAT_RESPONSE = "sunatResponse";
     public static final String SUNAT_TICKET = "sunatTicket";
@@ -132,7 +133,8 @@ public class DocumentRoute extends RouteBuilder {
         from("direct:render-json")
                 .id("render-json")
                 .to("direct:enrich-json")
-                .bean("documentBean", "render");
+                .bean("documentBean", "render")
+                .bean("documentBean", "enhanceGreShipment");
 
         from("direct:enrich-json")
                 .id("enrich-json")
@@ -171,6 +173,13 @@ public class DocumentRoute extends RouteBuilder {
                     JsonObject document = json.getJsonObject("spec").getJsonObject("document");
 
                     exchange.getIn().setHeader(DOCUMENT_KIND, kind);
+                    if ("DespatchAdvice".equals(kind)) {
+                        exchange.getIn().setHeader(
+                                GRE_TRANSPORT_PACKAGES,
+                                GreShipmentXmlEnhancer.packagesFrom(document)
+                        );
+                        document = GreShipmentXmlEnhancer.withoutPackages(document);
+                    }
                     exchange.getIn().setBody(document);
                 })
 
